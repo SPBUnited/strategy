@@ -1,3 +1,4 @@
+import asyncio
 import os
 import typing
 
@@ -5,6 +6,7 @@ import attr
 import matlab
 import matlab.engine
 import numpy as np
+from matlab.engine import FutureResult
 
 from bridge.common import config
 
@@ -23,14 +25,21 @@ class MatlabEngine:
             if os.path.isdir(path):
                 self.engine.addpath(os.path.join(matlab_main_dir, path), nargout=0)
 
-    def run_function(self, function_name: str, *args) -> typing.Optional[np.ndarray]:
+    async def run_function(self, function_name: str, *args) -> typing.Optional[np.ndarray]:
         converted_args = [matlab.double(arg) for arg in args]
         engine_function = getattr(self.engine, function_name)
-        result = engine_function(*converted_args)
-        if result:
-            return np.array(result)
-        else:
-            return None
+        future_result = engine_function(*converted_args, background=True)
+        return await self.wait_for_result(future_result)
+        # if future_result:
+        #
+        # else:
+        #     return None
+
+    async def wait_for_result(self, future: FutureResult) -> np.ndarray:
+        while not future.done():
+            await asyncio.sleep(1)
+        return np.array(future.result())
+
 
 
 matlab_engine = MatlabEngine()

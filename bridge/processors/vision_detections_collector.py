@@ -19,7 +19,11 @@ class VisionDetectionsCollector(BaseProcessor):
         self.receiver = ZmqReceiver(port=config.VISION_DETECTIONS_SUBSCRIBE_PORT)
         self._ssl_converter = SSL_WrapperPacket()
 
-    def process(self):
+    async def process(self):
         message = self.receiver.next_message()
         package = self._ssl_converter.FromString(message)
         self.records_writer.write(package)
+        from datetime import datetime
+        time = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
+        with open("tmp/vision_collector.txt", "a") as f:
+            f.write(time + "\n")

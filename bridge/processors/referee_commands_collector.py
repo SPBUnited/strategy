@@ -20,7 +20,7 @@ class RefereeCommandsCollector(BaseProcessor):
         self.records_writer = DataWriter(config.REFEREE_COMMANDS_TOPIC, self.max_records_to_persist)
         self.receiver = ZmqReceiver(port=config.REFEREE_COMMANDS_SUBSCRIBE_PORT)
 
-    def process(self):
+    async def process(self):
         message = self.receiver.next_message()
         parsed_message = json.loads(bytes(message))
         command = RefereeCommand(
@@ -29,3 +29,7 @@ class RefereeCommandsCollector(BaseProcessor):
             isPartOfFieldLeft=parsed_message['is_left'],
         )
         self.records_writer.write(command)
+        from datetime import datetime
+        time = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
+        with open("tmp/referee_collector.txt", "a") as f:
+            f.write(time + "\n")

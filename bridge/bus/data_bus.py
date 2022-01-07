@@ -25,7 +25,7 @@ class DataBus:
 
     def read_from_timestamp(self, topic_name: str, timestamp: float) -> typing.List[Record]:
         records = self.read_all(topic_name)
-        valid_records = [r for r in records if r.timestamp >= timestamp]
+        valid_records = [r for r in records if r.timestamp > timestamp]
         return valid_records
 
 

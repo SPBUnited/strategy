@@ -8,6 +8,7 @@ from bridge.model.referee import RefereeCommand
 from bridge.processors import BaseProcessor
 
 
+# TODO: Refactor this class and corresponding matlab scripts
 @attr.s(auto_attribs=True)
 class MatlabController(BaseProcessor):
 
@@ -35,7 +36,7 @@ class MatlabController(BaseProcessor):
     def get_last_referee_command(self) -> RefereeCommand:
         return self.referee_reader.read_all()[-1].content
 
-    def process(self) -> None:
+    async def process(self) -> None:
         balls = np.zeros(self.BALL_PACKET_SIZE * self.MAX_BALLS_IN_FIELD)
         robots_blue = np.zeros(self.ROBOT_TEAM_PACKET_SIZE)
         robots_yellow = np.zeros(self.ROBOT_TEAM_PACKET_SIZE)
@@ -71,7 +72,7 @@ class MatlabController(BaseProcessor):
                 robots_yellow[robot.robot_id + self.TEAM_ROBOTS_MAX_COUNT * 3] = robot.orientation
 
             referee_command = self.get_last_referee_command()
-            rules = matlab_engine.run_function(
+            rules = await matlab_engine.run_function(
                 "main_func",
                 robots_blue.reshape(self.TEAM_ROBOTS_MAX_COUNT, self.SINGLE_ROBOT_PACKET_SIZE).tolist(),
                 robots_yellow.reshape(self.TEAM_ROBOTS_MAX_COUNT, self.SINGLE_ROBOT_PACKET_SIZE).tolist(),
@@ -82,3 +83,7 @@ class MatlabController(BaseProcessor):
                 [referee_command.isPartOfFieldLeft]
             )
             self.commands_writer.write(rules)
+        from datetime import datetime
+        time = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
+        with open("tmp/matlab_controller.txt", "a") as f:
+            f.write(time + "\n")
