@@ -21,6 +21,8 @@ class VisionDetectionsCollector(BaseProcessor):
 
     async def process(self):
         message = self.receiver.next_message()
+        if not message:
+            return
         package = self._ssl_converter.FromString(message)
         self.records_writer.write(package)
         from datetime import datetime

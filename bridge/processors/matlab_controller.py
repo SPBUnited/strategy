@@ -34,7 +34,10 @@ class MatlabController(BaseProcessor):
         self.commands_writer = DataWriter(config.ROBOT_COMMANDS_TOPIC, self.max_commands_to_persist)
 
     def get_last_referee_command(self) -> RefereeCommand:
-        return self.referee_reader.read_all()[-1].content
+        referee_commands = self.referee_reader.read_new()
+        if referee_commands:
+            return referee_commands[-1]
+        return RefereeCommand(0, 0, False)
 
     async def process(self) -> None:
         balls = np.zeros(self.BALL_PACKET_SIZE * self.MAX_BALLS_IN_FIELD)

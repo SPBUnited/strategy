@@ -22,6 +22,8 @@ class RefereeCommandsCollector(BaseProcessor):
 
     async def process(self):
         message = self.receiver.next_message()
+        if not message:
+            return
         parsed_message = json.loads(bytes(message))
         command = RefereeCommand(
             state=parsed_message['state'],

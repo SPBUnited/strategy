@@ -16,5 +16,8 @@ class ZmqReceiver:
         self.socket.connect(f"tcp://localhost:{self.port}")
         self.socket.subscribe("")
 
-    def next_message(self) -> typing.ByteString:
-        return self.socket.recv()
+    def next_message(self) -> typing.Optional[typing.ByteString]:
+        try:
+            return self.socket.recv(flags=zmq.NOBLOCK)
+        except zmq.ZMQError:
+            return None
