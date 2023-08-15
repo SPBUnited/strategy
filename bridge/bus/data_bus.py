@@ -18,7 +18,11 @@ class DataBus:
         self.data[topic_name].append(record)
 
     def read_all(self, topic_name) -> typing.List[Record]:
-        return list(self.data[topic_name])
+        data = self.data.get(topic_name)
+        if not data:
+            print(f"No data in topic {topic_name}")
+            return []
+        return list(data)
 
     def read_top(self, topic_name: str, count: int) -> typing.List[Record]:
         return self.read_all(topic_name)[-count:]
