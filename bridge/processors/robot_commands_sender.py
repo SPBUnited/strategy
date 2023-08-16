@@ -1,5 +1,6 @@
 import attr
 import zmq
+import typing
 
 from bridge.bus import DataReader
 from bridge.common import config
@@ -9,6 +10,7 @@ from bridge.processors import BaseProcessor
 @attr.s(auto_attribs=True)
 class RobotCommandsSender(BaseProcessor):
 
+    processing_pause: typing.Optional[float] = 0.1
     commands_reader: DataReader = attr.ib(init=False, default=DataReader(config.ROBOT_COMMANDS_TOPIC))
 
     def __attrs_post_init__(self) -> None:

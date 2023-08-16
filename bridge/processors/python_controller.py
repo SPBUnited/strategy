@@ -1,6 +1,6 @@
 import attr
 import numpy as np
-
+import typing
 import struct
 
 from bridge.bus import DataReader, DataWriter
@@ -80,6 +80,7 @@ koef = 1.0
 @attr.s(auto_attribs=True)
 class MatlabController(BaseProcessor):
 
+    processing_pause: typing.Optional[float] = 0.1
     max_commands_to_persist: int = 20
 
     vision_reader: DataReader = attr.ib(init=False, default=DataReader(config.VISION_DETECTIONS_TOPIC))
@@ -114,17 +115,12 @@ class MatlabController(BaseProcessor):
         field_info = np.zeros(self.GEOMETRY_PACKET_SIZE)
         try:
             ssl_package = self.vision_reader.read_new()[0]
-            print(ssl_package)
             geometry = ssl_package.geometry
             if geometry:
                 field_info[0] = geometry.field.field_length
                 field_info[1] = geometry.field.field_width
 
             detection = ssl_package.detection
-            if not detection.robots_blue:
-                return
-            #     print("KEK")
-            #     continue
 
             camera_id = detection.camera_id
             for ball_ind, ball in enumerate(detection.balls):
@@ -138,6 +134,7 @@ class MatlabController(BaseProcessor):
                 robots_blue[robot.robot_id + self.TEAM_ROBOTS_MAX_COUNT] = robot.x
                 robots_blue[robot.robot_id + self.TEAM_ROBOTS_MAX_COUNT * 2] = robot.y
                 robots_blue[robot.robot_id + self.TEAM_ROBOTS_MAX_COUNT * 3] = robot.orientation
+                print(robot.orientation)
 
             for robot in detection.robots_yellow:
                 robots_yellow[robot.robot_id] = camera_id
@@ -145,20 +142,20 @@ class MatlabController(BaseProcessor):
                 robots_yellow[robot.robot_id + self.TEAM_ROBOTS_MAX_COUNT * 2] = robot.y
                 robots_yellow[robot.robot_id + self.TEAM_ROBOTS_MAX_COUNT * 3] = robot.orientation
 
-            referee_command = self.get_last_referee_command()
+            # referee_command = self.get_last_referee_command()
             yRobots = []
             # print(detection.robots_blue)
             for i in range(32):
                 yRobots.append(Robot(i, 0, 0, 0))
                 #yRobots[i].speedR = 15.0
-            # yRobots[10].update(robots_blue[10 + self.TEAM_ROBOTS_MAX_COUNT], robots_blue[6 + self.TEAM_ROBOTS_MAX_COUNT * 2], robots_blue[6 + self.TEAM_ROBOTS_MAX_COUNT * 3])
-            # yRobots[10].rotate_to_point(0,0)
+            #yRobots[10].update(robots_blue[10 + self.TEAM_ROBOTS_MAX_COUNT], robots_blue[10 + self.TEAM_ROBOTS_MAX_COUNT * 2], robots_blue[10 + self.TEAM_ROBOTS_MAX_COUNT * 3])
+            #yRobots[10].rotate_to_point(0,0)
             # yRobots[11].autoKick = 2.0
             # yRobots[11].kickVoltage = 15.0
-            #yRobots[10].speedR = -15.0
-            global koef
-            yRobots[10].speedR = 15 * koef
-            koef *= -1
+            # yRobots[10].speedR = 5.0
+            # global koef
+            # yRobots[10].speedR = 15 * koef
+            # koef *= -1
             # KOEF *= -1
             # yRobots[10].autoKick = 2.0
             # yRobots[10].kickVoltage = 15.0

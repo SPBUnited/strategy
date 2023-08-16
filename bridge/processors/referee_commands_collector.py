@@ -1,5 +1,5 @@
 import json
-
+import typing
 import attr
 
 from bridge.bus import DataWriter
@@ -12,6 +12,7 @@ from bridge.zmq.receiver import ZmqReceiver
 @attr.s(auto_attribs=True)
 class RefereeCommandsCollector(BaseProcessor):
 
+    processing_pause: typing.Optional[float] = 0.1
     max_records_to_persist: int = 30
     records_writer: DataWriter = attr.ib(init=False)
     receiver: ZmqReceiver = attr.ib(init=False)
