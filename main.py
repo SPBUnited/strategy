@@ -1,6 +1,6 @@
 from bridge.common import config
 from bridge.processors import VisionDetectionsCollector, RobotCommandsSender
-from bridge.processors.matlab_controller import MatlabController
+from bridge.processors.python_controller import MatlabController
 from bridge.processors.referee_commands_collector import RefereeCommandsCollector
 from bridge.runner import Runner
 

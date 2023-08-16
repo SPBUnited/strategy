@@ -1,6 +1,8 @@
 import attr
 import numpy as np
 
+import struct
+
 from bridge.bus import DataReader, DataWriter
 from bridge.common import config
 #from bridge.matlab.engine import matlab_engine
@@ -8,6 +10,8 @@ from bridge.model.referee import RefereeCommand
 from bridge.processors import BaseProcessor
 import math
 from bridge.processors.auxiliary import * 
+
+
 
 class Robot:
     def __init__(self, r_id, x, y, angle):
@@ -20,6 +24,7 @@ class Robot:
         self.maxSpeedR = 10
 
         # Changeable params
+        self.koef = 1.0
         self.speedX = 0.0
         self.speedY = 0.0
         self.speedR = 0.0
@@ -68,7 +73,7 @@ class Robot:
         else:
             self.speedR = 0
 
-
+koef = 1.0
 
 
 # TODO: Refactor this class and corresponding matlab scripts
@@ -81,7 +86,7 @@ class MatlabController(BaseProcessor):
     referee_reader: DataReader = attr.ib(init=False, default=DataReader(config.REFEREE_COMMANDS_TOPIC))
     commands_writer: DataWriter = attr.ib(init=False)
 
-    CAMERAS_COUNT: int = 4
+    CAMERAS_COUNT: int = 2
     MAX_BALLS_IN_CAMERA: int = 64
     MAX_BALLS_IN_FIELD: int = CAMERAS_COUNT * MAX_BALLS_IN_CAMERA
     BALL_PACKET_SIZE: int = 3
@@ -107,16 +112,19 @@ class MatlabController(BaseProcessor):
         robots_blue = np.zeros(self.ROBOT_TEAM_PACKET_SIZE)
         robots_yellow = np.zeros(self.ROBOT_TEAM_PACKET_SIZE)
         field_info = np.zeros(self.GEOMETRY_PACKET_SIZE)
-
-        for ssl_package in self.vision_reader.read_new():
+        try:
+            ssl_package = self.vision_reader.read_new()[0]
+            print(ssl_package)
             geometry = ssl_package.geometry
             if geometry:
                 field_info[0] = geometry.field.field_length
                 field_info[1] = geometry.field.field_width
 
             detection = ssl_package.detection
-            if not detection:
-                continue
+            if not detection.robots_blue:
+                return
+            #     print("KEK")
+            #     continue
 
             camera_id = detection.camera_id
             for ball_ind, ball in enumerate(detection.balls):
@@ -139,12 +147,23 @@ class MatlabController(BaseProcessor):
 
             referee_command = self.get_last_referee_command()
             yRobots = []
-            print(detection.robots_blue)
+            # print(detection.robots_blue)
             for i in range(32):
                 yRobots.append(Robot(i, 0, 0, 0))
-            # yRobots[11].update(robots_blue[6 + self.TEAM_ROBOTS_MAX_COUNT], robots_blue[6 + self.TEAM_ROBOTS_MAX_COUNT * 2], robots_blue[6 + self.TEAM_ROBOTS_MAX_COUNT * 3])
-            # yRobots[11].rotate_to_point(0,0)
-            
+                #yRobots[i].speedR = 15.0
+            # yRobots[10].update(robots_blue[10 + self.TEAM_ROBOTS_MAX_COUNT], robots_blue[6 + self.TEAM_ROBOTS_MAX_COUNT * 2], robots_blue[6 + self.TEAM_ROBOTS_MAX_COUNT * 3])
+            # yRobots[10].rotate_to_point(0,0)
+            # yRobots[11].autoKick = 2.0
+            # yRobots[11].kickVoltage = 15.0
+            #yRobots[10].speedR = -15.0
+            global koef
+            yRobots[10].speedR = 15 * koef
+            koef *= -1
+            # KOEF *= -1
+            # yRobots[10].autoKick = 2.0
+            # yRobots[10].kickVoltage = 15.0
+            # yRobots[10].kickerChargeEnable = 1.0
+
             rules = []
             for i in range(32):
                 if yRobots[i].isUsed:
@@ -165,12 +184,12 @@ class MatlabController(BaseProcessor):
                 else:
                     for _ in range(0, 13):
                         rules.append(0.0)            
-            
+        
             #rules = [0.0]*32*13
-            import struct
             b = bytes()
             rules = b.join((struct.pack('d', rule) for rule in rules))
             self.commands_writer.write(rules)
+        except: None
         from datetime import datetime
         time = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
         with open("tmp/matlab_controller.txt", "a") as f:
