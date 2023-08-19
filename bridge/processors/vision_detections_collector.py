@@ -11,7 +11,7 @@ from bridge.zmq.receiver import ZmqReceiver
 @attr.s(auto_attribs=True)
 class VisionDetectionsCollector(BaseProcessor):
 
-    processing_pause: typing.Optional[float] = 0.1
+    processing_pause: typing.Optional[float] = 0.001
     max_records_to_persist: int = 30
     records_writer: DataWriter = attr.ib(init=False)
     receiver: ZmqReceiver = attr.ib(init=False)
