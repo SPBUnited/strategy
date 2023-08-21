@@ -9,17 +9,17 @@ from bridge.common import config
 from bridge.model.referee import RefereeCommand
 from bridge.processors import BaseProcessor
 import math
-from bridge.processors.auxiliary import * 
+import bridge.processors.auxiliary as auxiliary
 
 
 
 class Robot:
-    def __init__(self, r_id, x, y, angle):
+    def __init__(self, r_id, x, y, orientation):
         self.rId = r_id
         self.isUsed = 1
         self.x = x
         self.y = y
-        self.angle = angle
+        self.orientation = orientation
         self.maxSpeed = 6
         self.maxSpeedR = 10
 
@@ -37,10 +37,10 @@ class Robot:
         self.kickerChargeEnable = 0.0
         self.beep = 0.0
 
-    def update(self, x, y, angle):
+    def update(self, x, y, orientation):
         self.x = x
         self.y = y
-        self.angle = angle
+        self.orientation = orientation
         self.kickForward = 0
         self.kickUp = 0
 
@@ -57,28 +57,32 @@ class Robot:
         # Calculate the distance to the ball
         distance_to_point = math.dist((self.x, self.y), (point.x, point.y))
 
-        self.speedX = distance_to_point * math.cos(angle_to_point) * 10
-        self.speedY = distance_to_point * math.sin(angle_to_point) * 10
+        self.speedX = distance_to_point * math.cos(angle_to_point + self.orientation) * 0.03
+        self.speedY = -distance_to_point * math.sin(angle_to_point + self.orientation) * 0.03
+        print(point.x, point.y, self.x, self.y, distance_to_point)
 
-    def rotate_to_point(self, x, y):
-        vx = self.x - x
-        vy = self.y - y
-        ux = -math.cos(self.angle)
-        uy = -math.sin(self.angle)
-        dif = math.atan2(scal_mult(Point(vx, vy), Point(ux, uy)),
-                          vect_mult(Point(vx, vy), Point(ux, uy)))
-        print(dif)
+    def rotate_to_point(self, point):
+        vx = self.x - point.x
+        vy = self.y - point.y
+        ux = -math.cos(self.orientation)
+        uy = -math.sin(self.orientation)
+        dif = -math.atan2(auxiliary.scal_mult(auxiliary.Point(vx, vy), auxiliary.Point(ux, uy)),
+                          auxiliary.vect_mult(auxiliary.Point(vx, vy), auxiliary.Point(ux, uy)))
+
         if abs(dif) > 0.001:
-            self.speedR = dif * 50
+            self.speedR = dif * 30
         else:
             self.speedR = 0
 
 koef = 1.0
 
 yRobots = []
-# print(detection.robots_blue)
-for i in range(32):
+for i in range(16):
     yRobots.append(Robot(i, 0, 0, 0))
+bRobots = []
+for i in range(16):
+    bRobots.append(Robot(i, 0, 0, 0))
+
 
 # TODO: Refactor this class and corresponding matlab scripts
 @attr.s(auto_attribs=True)
@@ -91,7 +95,7 @@ class MatlabController(BaseProcessor):
     referee_reader: DataReader = attr.ib(init=False, default=DataReader(config.REFEREE_COMMANDS_TOPIC))
     commands_writer: DataWriter = attr.ib(init=False)
 
-    CAMERAS_COUNT: int = 2
+    CAMERAS_COUNT: int = 4
     MAX_BALLS_IN_CAMERA: int = 64
     MAX_BALLS_IN_FIELD: int = CAMERAS_COUNT * MAX_BALLS_IN_CAMERA
     BALL_PACKET_SIZE: int = 3
@@ -128,7 +132,6 @@ class MatlabController(BaseProcessor):
                 field_info[1] = geometry.field.field_width
 
             detection = ssl_package.detection
-            # print(detection)
             camera_id = detection.camera_id
             for ball_ind, ball in enumerate(detection.balls):
                 balls[ball_ind + (camera_id - 1) * self.MAX_BALLS_IN_CAMERA] = camera_id
@@ -138,25 +141,22 @@ class MatlabController(BaseProcessor):
             # TODO: Barrier states
             # print(detection.robots_blue)
             for robot in detection.robots_blue:
-                robots_blue[robot.robot_id] = camera_id
-                robots_blue[robot.robot_id + self.TEAM_ROBOTS_MAX_COUNT] = robot.x
-                robots_blue[robot.robot_id + self.TEAM_ROBOTS_MAX_COUNT * 2] = robot.y
-                robots_blue[robot.robot_id + self.TEAM_ROBOTS_MAX_COUNT * 3] = robot.orientation
-                # print(robot.orientation)
+                # robots_blue[robot.robot_id] = camera_id
+                # robots_blue[robot.robot_id + self.TEAM_ROBOTS_MAX_COUNT] = robot.x
+                # robots_blue[robot.robot_id + self.TEAM_ROBOTS_MAX_COUNT * 2] = robot.y
+                # robots_blue[robot.robot_id + self.TEAM_ROBOTS_MAX_COUNT * 3] = robot.orientation
+                bRobots[robot.robot_id].update(robot.x, robot.y, robot.orientation)
 
             for robot in detection.robots_yellow:
-                robots_yellow[robot.robot_id] = camera_id
-                robots_yellow[robot.robot_id + self.TEAM_ROBOTS_MAX_COUNT] = robot.x
-                robots_yellow[robot.robot_id + self.TEAM_ROBOTS_MAX_COUNT * 2] = robot.y
-                robots_yellow[robot.robot_id + self.TEAM_ROBOTS_MAX_COUNT * 3] = robot.orientation
+                # robots_yellow[robot.robot_id] = camera_id
+                # robots_yellow[robot.robot_id + self.TEAM_ROBOTS_MAX_COUNT] = robot.x
+                # robots_yellow[robot.robot_id + self.TEAM_ROBOTS_MAX_COUNT * 2] = robot.y
+                # robots_yellow[robot.robot_id + self.TEAM_ROBOTS_MAX_COUNT * 3] = robot.orientation
+                yRobots[robot.robot_id].update(robot.x, robot.y, robot.orientation)
 
             # referee_command = self.get_last_referee_command()
             
                 #yRobots[i].speedR = 15.0
-            if detection.robots_blue:
-                yRobots[10].update(robots_blue[3 + self.TEAM_ROBOTS_MAX_COUNT], robots_blue[3 + self.TEAM_ROBOTS_MAX_COUNT * 2], robots_blue[3 + self.TEAM_ROBOTS_MAX_COUNT * 3])
-                yRobots[10].rotate_to_point(0,0)
-                yRobots[10].speedY = 20
             # yRobots[11].autoKick = 2.0
             # yRobots[11].kickVoltage = 15.0
             # yRobots[10].speedR = 5.0
@@ -169,7 +169,29 @@ class MatlabController(BaseProcessor):
             # yRobots[10].kickerChargeEnable = 1.0
 
             rules = []
-            for i in range(32):
+
+            bRobots[0].go_to_point(auxiliary.Point(0, 0))
+            yRobots[0].go_to_point(auxiliary.Point(0, 0))
+            
+            for i in range(self.TEAM_ROBOTS_MAX_COUNT):
+                if yRobots[i].isUsed:
+                    rules.append(0)
+                    rules.append(bRobots[i].speedX)
+                    rules.append(bRobots[i].speedY)
+                    rules.append(bRobots[i].speedR)
+                    rules.append(bRobots[i].kickForward)
+                    rules.append(bRobots[i].kickUp)
+                    rules.append(bRobots[i].autoKick)
+                    rules.append(bRobots[i].kickerVoltage)
+                    rules.append(bRobots[i].dribblerEnable)
+                    rules.append(bRobots[i].speedDribbler)
+                    rules.append(bRobots[i].kickerChargeEnable)
+                    rules.append(bRobots[i].beep)            
+                    rules.append(0)
+                else:
+                    for _ in range(0, 13):
+                        rules.append(0.0)    
+            for i in range(self.TEAM_ROBOTS_MAX_COUNT):
                 if yRobots[i].isUsed:
                     rules.append(0)
                     rules.append(yRobots[i].speedX)
@@ -182,14 +204,13 @@ class MatlabController(BaseProcessor):
                     rules.append(yRobots[i].dribblerEnable)
                     rules.append(yRobots[i].speedDribbler)
                     rules.append(yRobots[i].kickerChargeEnable)
-                    rules.append(yRobots[i].beep)
-                    
+                    rules.append(yRobots[i].beep)            
                     rules.append(0)
                 else:
                     for _ in range(0, 13):
-                        rules.append(0.0)            
-        
-            #rules = [0.0]*32*13
+                        rules.append(0.0)    
+          
+                    
             b = bytes()
             rules = b.join((struct.pack('d', rule) for rule in rules))
             self.commands_writer.write(rules)
