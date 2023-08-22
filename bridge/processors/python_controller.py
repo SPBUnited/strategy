@@ -57,8 +57,8 @@ class Robot:
         # Calculate the distance to the ball
         distance_to_point = math.dist((self.x, self.y), (point.x, point.y))
 
-        self.speedX = distance_to_point * math.cos(angle_to_point + self.orientation) * 0.03
-        self.speedY = -distance_to_point * math.sin(angle_to_point + self.orientation) * 0.03
+        self.speedX = distance_to_point * math.cos(angle_to_point - self.orientation) * 0.03
+        self.speedY = distance_to_point * math.sin(angle_to_point - self.orientation) * 0.03
         print(point.x, point.y, self.x, self.y, distance_to_point)
 
     def rotate_to_point(self, point):
@@ -66,16 +66,16 @@ class Robot:
         vy = self.y - point.y
         ux = -math.cos(self.orientation)
         uy = -math.sin(self.orientation)
-        dif = -math.atan2(auxiliary.scal_mult(auxiliary.Point(vx, vy), auxiliary.Point(ux, uy)),
+        dif = math.atan2(auxiliary.scal_mult(auxiliary.Point(vx, vy), auxiliary.Point(ux, uy)),
                           auxiliary.vect_mult(auxiliary.Point(vx, vy), auxiliary.Point(ux, uy)))
 
         if abs(dif) > 0.001:
-            self.speedR = dif * 30
+            self.speedR = dif * 15
         else:
             self.speedR = 0
 
-koef = 1.0
-
+koef = [1, 1, 1, 1]
+cur = 0
 yRobots = []
 for i in range(16):
     yRobots.append(Robot(i, 0, 0, 0))
@@ -124,6 +124,7 @@ class MatlabController(BaseProcessor):
         ssl_package = 0
         try:
             ssl_package = self.vision_reader.read_new()[-1]
+            print(ssl_package)
         except: None
         if ssl_package:            
             geometry = ssl_package.geometry
@@ -169,10 +170,27 @@ class MatlabController(BaseProcessor):
             # yRobots[10].kickerChargeEnable = 1.0
 
             rules = []
-
-            bRobots[0].go_to_point(auxiliary.Point(0, 0))
-            yRobots[0].go_to_point(auxiliary.Point(0, 0))
+            global cur
+            print(cur)
             
+            
+            gotoPoint = auxiliary.Point(koef[0] * koef[2] * 1500, koef[1] * koef[3] * 1000)
+            bRobots[3].go_to_point(gotoPoint)
+            yRobots[3].go_to_point(gotoPoint)
+            
+            bRobots[9].speedX = bRobots[3].speedX
+            bRobots[9].speedY = bRobots[3].speedY
+
+            if (bRobots[3].x - gotoPoint.x) ** 2 + (bRobots[3].y - gotoPoint.y) ** 2 < 100000:
+                koef[cur] *= -1
+                cur += 1
+                if cur == 4:
+                    cur = 0
+            print((bRobots[3].x - gotoPoint.x) ** 2 + (bRobots[3].y - gotoPoint.y) ** 2)
+            bRobots[3].rotate_to_point(auxiliary.Point(0,0))
+            bRobots[9].speedR = bRobots[3].speedR
+
+
             for i in range(self.TEAM_ROBOTS_MAX_COUNT):
                 if yRobots[i].isUsed:
                     rules.append(0)
