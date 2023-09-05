@@ -2,6 +2,7 @@ import attr
 import numpy as np
 import typing
 import struct
+import time
 
 from bridge.bus import DataReader, DataWriter
 from bridge.common import config
@@ -39,7 +40,7 @@ class Robot:
         self.x = x
         self.y = y
         self.orientation = orientation
-        self.maxSpeed = 6
+        self.maxSpeed = 40
         self.maxSpeedR = 10
         self.color = color
 
@@ -56,6 +57,7 @@ class Robot:
         self.speedDribbler = 0.0
         self.kickerChargeEnable = 0.0
         self.beep = 0.0
+        self.acc = 3
 
     def update(self, x, y, orientation):
         self.x = x
@@ -79,9 +81,9 @@ class Robot:
 
         # Check if there are any robots in the way
         obstacles = []
-        print('--------------------------')
 
-        obstacle_distance_threshold = 1000  # Adjust this threshold
+        obstacle_distance_threshold = 700  # Adjust this threshold
+        obstacle_distance_to_line_threshold = 300
 
         for i in range(len(y_team.robots)):
             r = y_team.robot(i)
@@ -97,7 +99,7 @@ class Robot:
                         # Calculate the distance from y_robot to the closest point on the line
                         distance_to_line = auxiliary.dist(r, closest_point)
                         
-                        if distance_to_line < obstacle_distance_threshold:
+                        if distance_to_line < obstacle_distance_to_line_threshold:
                             obstacles.append(r)
                             print(r.rId)
 
@@ -115,23 +117,23 @@ class Robot:
                         # Calculate the distance from y_robot to the closest point on the line
                         distance_to_line = auxiliary.dist(r, closest_point)
                         
-                        if distance_to_line < obstacle_distance_threshold:
+                        if distance_to_line < obstacle_distance_to_line_threshold:
                             obstacles.append(r)
                             print(r.rId)
 
         if len(obstacles) == 0:
             # No obstacles, go directly to the target point
-            self.go_to_point(target_point)
+            self.go_to_point(target_point, 1)
         else:
-            # Find the closest obstacle
+           # Find the closest obstacle
             closest_obstacle = min(obstacles, key=lambda robot: math.dist((self.x, self.y), (robot.x, robot.y)))
 
             # Calculate the angle to the obstacle
             angle_to_obstacle = math.atan2(closest_obstacle.y - self.y, closest_obstacle.x - self.x)
 
-            # Calculate the tangent points
-            angle_offset = math.pi / 2
-            tangent_distance = 100  # Adjust this distance
+            # Calculate the distances to the tangent points
+            tangent_distance = 100
+            angle_offset = math.asin(100 / tangent_distance)
             tangent_point1 = auxiliary.Point(
                 self.x + tangent_distance * math.cos(angle_to_obstacle + angle_offset),
                 self.y + tangent_distance * math.sin(angle_to_obstacle + angle_offset)
@@ -141,29 +143,39 @@ class Robot:
                 self.y + tangent_distance * math.sin(angle_to_obstacle - angle_offset)
             )
 
-            # Choose the closer tangent point as the detour point
-            if math.dist((self.x, self.y), (tangent_point1.x, tangent_point1.y)) < math.dist((self.x, self.y), (tangent_point2.x, tangent_point2.y)):
+            # Check which tangent point is closer to the target point
+            dist_to_tangent1 = auxiliary.dist(tangent_point1, target_point)
+            dist_to_tangent2 = auxiliary.dist(tangent_point2, target_point)
+
+            if dist_to_tangent1 < dist_to_tangent2:
                 detour_point = tangent_point1
             else:
                 detour_point = tangent_point2
 
             # Go to the detour point
-            self.go_to_point(detour_point)
+            self.go_to_point(detour_point, 0)
 
 
-    def go_to_point(self, point):
+    def go_to_point(self, point, is_final_point):
         # Calculate the angle to the ball
         angle_to_point = math.atan2(point.y - self.y, point.x - self.x)
 
         # Calculate the distance to the ball
         distance_to_point = math.dist((self.x, self.y), (point.x, point.y))
 
-        if IS_SIMULATOR_USED:
-            self.speedX = distance_to_point * math.cos(angle_to_point - self.orientation) * 0.03
-            self.speedY = -distance_to_point * math.sin(angle_to_point - self.orientation) * 0.03
+        if is_final_point:
+            newSpeed = min(self.maxSpeed, distance_to_point * 0.07)
         else:
-            self.speedX = distance_to_point * math.cos(angle_to_point - self.orientation) * 0.03
-            self.speedY = distance_to_point * math.sin(angle_to_point - self.orientation) * 0.03
+            newSpeed = self.maxSpeed
+
+        self.speedX = newSpeed * math.cos(angle_to_point - self.orientation)
+        self.speedY = newSpeed * math.sin(angle_to_point - self.orientation)
+
+        if IS_SIMULATOR_USED:
+            self.speedY *= -1
+
+    def get_speed(self, distance):
+        pass
 
 
     def rotate_to_point(self, point):
@@ -205,6 +217,9 @@ class MatlabController(BaseProcessor):
     ROBOT_TEAM_PACKET_SIZE: int = SINGLE_ROBOT_PACKET_SIZE * TEAM_ROBOTS_MAX_COUNT
 
     GEOMETRY_PACKET_SIZE: int = 2
+    print(time.time())
+    cur_time = time.time()
+    dt = 0
 
     b_team = Team()
     y_team = Team()
@@ -224,8 +239,6 @@ class MatlabController(BaseProcessor):
 
     async def process(self) -> None:
         balls = np.zeros(self.BALL_PACKET_SIZE * self.MAX_BALLS_IN_FIELD)
-        robots_blue = np.zeros(self.ROBOT_TEAM_PACKET_SIZE)
-        robots_yellow = np.zeros(self.ROBOT_TEAM_PACKET_SIZE)
         field_info = np.zeros(self.GEOMETRY_PACKET_SIZE)
         ssl_package = 0
         try:
@@ -251,11 +264,15 @@ class MatlabController(BaseProcessor):
             for robot in detection.robots_yellow:
                 self.y_team.robot(robot.robot_id).update(robot.x, robot.y, robot.orientation)
 
+            stg = Team()
             # referee_command = self.get_last_referee_command()
-            #for i in range(6):
-            #    self.y_team.robot(i).go_to_point(stg.point_on_line(self.b_team.robot(i), auxiliary.Point(4500, 0), 300))
-            self.y_team.robot(3).go_to_point_with_detour(auxiliary.Point(0, 0), self.y_team, self.b_team)
-            
+            self.y_team.robot(0).go_to_point_with_detour(auxiliary.Point(4300, 0), self.b_team, self.y_team)
+            self.y_team.robot(0).rotate_to_point(auxiliary.Point(self.y_team.robot(0).x, -3000))
+            for i in range(1, 6):
+                self.y_team.robot(i).go_to_point_with_detour(stg.point_on_line(self.b_team.robot(i), auxiliary.Point(4500, 0), 300), self.b_team, self.y_team)
+                self.y_team.robot(i).rotate_to_point(self.b_team.robot(i))
+            #self.y_team.robot(3).go_to_point_with_detour(auxiliary.Point(0, 0), self.b_team, self.y_team)
+            #self.y_team.robot(3).go_to_point_with_detour(stg.point_on_line(self.b_team.robot(3), auxiliary.Point(4500, 0), 300), self.b_team, self.y_team)
             rules = []
 
             for i in range(self.TEAM_ROBOTS_MAX_COUNT):
@@ -294,13 +311,14 @@ class MatlabController(BaseProcessor):
                 else:
                     for _ in range(0, 13):
                         rules.append(0.0)    
-          
-                    
+                     
+            self.dt = time.time() - self.cur_time
+            self.cur_time = time.time()
             b = bytes()
             rules = b.join((struct.pack('d', rule) for rule in rules))
             self.commands_writer.write(rules)
         # except: None
         from datetime import datetime
-        time = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
+        time1 = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
         with open("tmp/matlab_controller.txt", "a") as f:
-            f.write(time + "\n")
+            f.write(time1 + "\n")
