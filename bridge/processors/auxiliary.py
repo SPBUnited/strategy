@@ -1,6 +1,5 @@
 import math
 
-
 class Point:
     def __init__(self, x, y):
         self.x = x
@@ -149,3 +148,12 @@ def closest_point_on_line(point1, point2, point):
     )
     
     return closest_point
+
+def point_on_line(robot, point, distance):
+        angle_to_point = math.atan2(point.y - robot.y, point.x - robot.x)
+
+        # Calculate the new point on the line at the specified distance from the robot
+        new_x = robot.x + distance * math.cos(angle_to_point)
+        new_y = robot.y + distance * math.sin(angle_to_point)
+        return Point(new_x, new_y)
+
