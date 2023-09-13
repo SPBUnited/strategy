@@ -5,7 +5,7 @@ import bridge.processors.const as const
 class Robot:
     def __init__(self, color, r_id, x, y, orientation):
         self.rId = r_id
-        self.isUsed = 1
+        self.isUsed = 0
         self.x = x
         self.y = y
         self.orientation = orientation
@@ -41,6 +41,8 @@ class Robot:
         self.kickUp = 1
 
     def go_to_point_with_detour(self, target_point, y_team, b_team):
+        if auxiliary.dist(self, target_point) < 500:
+            self.go_to_point(target_point, 1)
         # Calculate the angle to the target point
         angle_to_point = math.atan2(target_point.y - self.y, target_point.x - self.x)
 
@@ -50,7 +52,7 @@ class Robot:
         # Check if there are any robots in the way
         obstacles = []
 
-        obstacle_distance_threshold = 700  # Adjust this threshold
+        obstacle_distance_threshold = 600 # Adjust this threshold
         obstacle_distance_to_line_threshold = 300
 
         for i in range(y_team.robots_amount()):
@@ -122,7 +124,7 @@ class Robot:
             self.go_to_point(detour_point, 0)
 
 
-    def go_to_point(self, point, is_final_point):
+    def go_to_point(self, point, is_final_point = 1):
         # Calculate the angle to the ball
         angle_to_point = math.atan2(point.y - self.y, point.x - self.x)
 

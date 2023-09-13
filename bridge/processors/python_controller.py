@@ -70,9 +70,11 @@ class MatlabController(BaseProcessor):
             # TODO: Barrier states
             for robot in detection.robots_blue:
                 self.b_team.robot(robot.robot_id).update(robot.x, robot.y, robot.orientation)
+                self.b_team.robot(robot.robot_id).isUsed = 1
 
             for robot in detection.robots_yellow:
                 self.y_team.robot(robot.robot_id).update(robot.x, robot.y, robot.orientation)
+                self.y_team.robot(robot.robot_id).isUsed = 1
 
             self.y_team.play(self.b_team, self.ball)
 
