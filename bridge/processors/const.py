@@ -23,4 +23,7 @@ MAX_SPEED_R = 10
 ACCELERATION = 3
 BASE_KICKER_VOLTAGE = 15.0
 ##################################################
+# GEOMETRY CONSTS
 
+BALL_R = 0.05
+ROBOT_R = 0.2

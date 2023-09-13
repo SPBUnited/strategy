@@ -30,11 +30,13 @@ class Entity:
 
     """
     Обновить положение и рассчитать исходя из этого скорость и ускорение
+    !!! Вызывать один раз за итерацию с постоянной частотой !!!
 
     @todo Реализовать расчет скоростей и ускорений
     """
-    def update(self, pos):
+    def update(self, pos, angle):
         self.pos = pos
+        self.angle = angle
 
     """ Геттер положения """
     def getPos(self) -> aux.Point:
