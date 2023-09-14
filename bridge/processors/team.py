@@ -63,12 +63,34 @@ class Team:
             c = 0
             for i in range(len(self.used_robots())):
                 if self.robot(i).rId not in used_robots_id:
-                    if k % 2 == 0:
-                        self.robot(i).go_to_point(auxiliary.Point(const.SIDE * 3200, ball.y - 200 * k / 2 + 200 * c))
-                        self.robot(i).rotate_to_point(ball)
+                    if abs(ball.y) > 800:
+                        bY =  800 * ball.y / abs(ball.y)
+                        print(ball.x)
+                        if abs(ball.x) < 3500:
+                            bX = 3200
+                        else:
+                            bX = ball.x
+                            
                     else:
-                        self.robot(i).go_to_point(auxiliary.Point(const.SIDE * 3200, ball.y - 200 * (k - 1) + 200 * c))
-                        self.robot(i).rotate_to_point(ball)
+                        bY = ball.y
+                        bX = 3400
+                    if k % 2 == 0:
+                        if bX == ball.x:
+                            self.robot(i).go_to_point(auxiliary.Point(const.SIDE * bX - 200 * k / 2 + 200 * c, 1200 * ball.y / abs(ball.y)))
+                            self.robot(i).rotate_to_point(auxiliary.Point(self.robot(i).x, 5000 * ball.y / abs(ball.y)))
+                            
+                        else:
+                            self.robot(i).go_to_point(auxiliary.Point(const.SIDE * bX, bY - 200 * k / 2 + 200 * c))
+                            self.robot(i).rotate_to_point(auxiliary.Point(0, self.robot(i).y))
+                            
+                    else:
+                        if bX == ball.x:
+                            self.robot(i).go_to_point(auxiliary.Point(const.SIDE * bX - 200 * (k - 1) + 200 * c, 1200 * ball.y / abs(ball.y)))
+                            self.robot(i).rotate_to_point(auxiliary.Point(self.robot(i).x, 5000 * ball.y / abs(ball.y)))
+                            
+                        else:
+                            self.robot(i).go_to_point(auxiliary.Point(const.SIDE * bX, bY - 200 * (k - 1) + 200 * c))
+                            self.robot(i).rotate_to_point(auxiliary.Point(0, self.robot(i).y))
                     c += 1
     
         
