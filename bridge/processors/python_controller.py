@@ -76,15 +76,24 @@ class MatlabController(BaseProcessor):
                 self.y_team.robot(robot.robot_id).update(robot.x, robot.y, robot.orientation)
                 self.y_team.robot(robot.robot_id).isUsed = 1
 
-            self.y_team.play(self.b_team, self.ball)
+            #self.y_team.play(self.b_team, self.ball)
 
             # referee_command = self.get_last_referee_command()
             #for i in range(1, 6):
             #    self.y_team.robot(i).go_to_point_with_detour(auxiliary.point_on_line(self.b_team.robot(i), auxiliary.Point(4500, 0), 300), self.b_team, self.y_team)
             #    self.y_team.robot(i).rotate_to_point(self.b_team.robot(i))
             #self.y_team.robot(3).go_to_point_with_detour(auxiliary.Point(0, 0), self.b_team, self.y_team)
-            #self.y_team.robot(3).go_to_point_with_detour(stg.point_on_line(self.b_team.robot(3), auxiliary.Point(4500, 0), 300), self.b_team, self.y_team)
+            #
+            #self.b_team.robot(3).go_to_point_with_detour(auxiliary.point_on_line(self.ball, auxiliary.Point(4500, 0), -300), self.b_team, self.y_team)
             rules = []
+
+            self.b_team.robot(3).rotate_to_point(auxiliary.Point(4500, 0))
+            if auxiliary.dist(self.b_team.robot(3), self.ball) < 150:
+                self.b_team.robot(3).go_to_point(self.ball)
+                self.b_team.robot(3).kick_forward()
+            else:
+                self.b_team.robot(3).go_to_point_with_detour(auxiliary.point_on_line(self.ball, auxiliary.Point(4500, 0), -300), self.b_team, self.y_team)
+            
 
             for i in range(const.TEAM_ROBOTS_MAX_COUNT):
                 if self.b_team.robot(i).isUsed:
@@ -92,8 +101,8 @@ class MatlabController(BaseProcessor):
                     rules.append(self.b_team.robot(i).speedX)
                     rules.append(self.b_team.robot(i).speedY)
                     rules.append(self.b_team.robot(i).speedR)
-                    rules.append(self.b_team.robot(i).kickForward)
                     rules.append(self.b_team.robot(i).kickUp)
+                    rules.append(self.b_team.robot(i).kickForward)
                     rules.append(self.b_team.robot(i).autoKick)
                     rules.append(self.b_team.robot(i).kickerVoltage)
                     rules.append(self.b_team.robot(i).dribblerEnable)

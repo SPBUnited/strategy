@@ -22,6 +22,6 @@ GEOMETRY_PACKET_SIZE: int = 2
 MAX_SPEED = 30
 MAX_SPEED_R = 7
 ACCELERATION = 3
-BASE_KICKER_VOLTAGE = 15.0
+BASE_KICKER_VOLTAGE = 7.0
 ##################################################
 
