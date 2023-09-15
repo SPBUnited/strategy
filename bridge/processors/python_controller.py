@@ -16,6 +16,8 @@ import math
 import bridge.processors.auxiliary as auxiliary
 
 import bridge.processors.field as field
+import bridge.processors.router as router
+import bridge.processors.strategy as strategy
 
 # TODO: Refactor this class and corresponding matlab scripts
 @attr.s(auto_attribs=True)
@@ -40,6 +42,8 @@ class MatlabController(BaseProcessor):
         b_team.add_robot(robot.Robot('b', i, 10e10, 10e10, 0))
 
     field = field.Field()
+    router = router.Router()
+    strategy = strategy.Strategy()
 
     def __attrs_post_init__(self):
         self.commands_writer = DataWriter(config.ROBOT_COMMANDS_TOPIC, self.max_commands_to_persist)
@@ -81,14 +85,25 @@ class MatlabController(BaseProcessor):
                 self.y_team.robot(robot.robot_id).update(robot.x, robot.y, robot.orientation)
                 self.field.updateYelRobot(robot.robot_id, auxiliary.Point(robot.x, robot.y), robot.orientation)
 
+            waypoints = self.strategy.process(self.field)
+            for i in range(6):
+                self.router.setWaypoint(i, waypoints[i])
+            self.router.calcRoutes(self.field)
+
+            for i in range(1, 6):
+                self.y_team.robot(i).go_to_point_with_detour(self.router.getRoute(i)[-1].pos, self.b_team, self.y_team)
+                self.y_team.robot(i).rotate_to_angle(self.router.getRoute(i)[-1].angle)
+
+
+
             # self.y_team.play(self.b_team, self.ball)
 
-            # referee_command = self.get_last_referee_command()
-            for i in range(1, 6):
-               self.y_team.robot(i).go_to_point_with_detour(auxiliary.point_on_line(self.b_team.robot(i), auxiliary.Point(4500, 0), 300), self.b_team, self.y_team)
-               self.y_team.robot(i).rotate_to_point(self.b_team.robot(i))
-            #self.y_team.robot(3).go_to_point_with_detour(auxiliary.Point(0, 0), self.b_team, self.y_team)
-            #self.y_team.robot(3).go_to_point_with_detour(stg.point_on_line(self.b_team.robot(3), auxiliary.Point(4500, 0), 300), self.b_team, self.y_team)
+            # # referee_command = self.get_last_referee_command()
+            # for i in range(1, 6):
+            #    self.y_team.robot(i).go_to_point_with_detour(auxiliary.point_on_line(self.b_team.robot(i), auxiliary.Point(4500, 0), 300), self.b_team, self.y_team)
+            #    self.y_team.robot(i).rotate_to_point(self.b_team.robot(i))
+            # #self.y_team.robot(3).go_to_point_with_detour(auxiliary.Point(0, 0), self.b_team, self.y_team)
+            # #self.y_team.robot(3).go_to_point_with_detour(stg.point_on_line(self.b_team.robot(3), auxiliary.Point(4500, 0), 300), self.b_team, self.y_team)
             rules = []
 
             for i in range(const.TEAM_ROBOTS_MAX_COUNT):

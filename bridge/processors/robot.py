@@ -143,6 +143,22 @@ class Robot:
     def get_speed(self, distance):
         pass
 
+    def rotate_to_angle(self, angle):
+        err = angle - self.orientation
+        err = err % (2*math.pi)
+        if err > math.pi:
+            err -= 2*math.pi
+        
+        err *= -1
+
+        if const.IS_SIMULATOR_USED:
+            err *= -1
+
+        if abs(err) > 0.001:
+            self.speedR = err * 30
+        else:
+            self.speedR = 0
+
 
     def rotate_to_point(self, point):
         vx = self.x - point.x
