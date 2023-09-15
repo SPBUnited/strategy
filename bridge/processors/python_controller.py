@@ -15,6 +15,10 @@ from bridge.processors import BaseProcessor
 import math
 import bridge.processors.auxiliary as auxiliary
 
+import bridge.processors.field as field
+import bridge.processors.router as router
+import bridge.processors.strategy as strategy
+
 # TODO: Refactor this class and corresponding matlab scripts
 @attr.s(auto_attribs=True)
 class MatlabController(BaseProcessor):
@@ -36,6 +40,10 @@ class MatlabController(BaseProcessor):
         y_team.add_robot(robot.Robot('y', i, 10e10, 10e10, 0))
     for i in range(const.TEAM_ROBOTS_MAX_COUNT):
         b_team.add_robot(robot.Robot('b', i, 10e10, 10e10, 0))
+
+    field = field.Field()
+    router = router.Router()
+    strategy = strategy.Strategy()
 
     def __attrs_post_init__(self):
         self.commands_writer = DataWriter(config.ROBOT_COMMANDS_TOPIC, self.max_commands_to_persist)
@@ -66,25 +74,26 @@ class MatlabController(BaseProcessor):
                 balls[ball_ind + const.MAX_BALLS_IN_FIELD + (camera_id - 1) * const.MAX_BALLS_IN_CAMERA] = ball.x
                 balls[ball_ind + 2 * const.MAX_BALLS_IN_FIELD + (camera_id - 1) * const.MAX_BALLS_IN_CAMERA] = ball.y
                 self.ball = auxiliary.Point(ball.x, ball.y)
+                self.field.updateBall(self.ball)
 
             # TODO: Barrier states
             for robot in detection.robots_blue:
                 self.b_team.robot(robot.robot_id).update(robot.x, robot.y, robot.orientation)
-                self.b_team.robot(robot.robot_id).isUsed = 1
+                self.field.updateBluRobot(robot.robot_id, auxiliary.Point(robot.x, robot.y), robot.orientation)
 
             for robot in detection.robots_yellow:
                 self.y_team.robot(robot.robot_id).update(robot.x, robot.y, robot.orientation)
-                self.y_team.robot(robot.robot_id).isUsed = 1
+                self.field.updateYelRobot(robot.robot_id, auxiliary.Point(robot.x, robot.y), robot.orientation)
 
-            #self.y_team.play(self.b_team, self.ball)
+            waypoints = self.strategy.process(self.field)
+            for i in range(6):
+                self.router.setWaypoint(i, waypoints[i])
+            self.router.calcRoutes(self.field)
 
-            # referee_command = self.get_last_referee_command()
-            #for i in range(1, 6):
-            #    self.y_team.robot(i).go_to_point_with_detour(auxiliary.point_on_line(self.b_team.robot(i), auxiliary.Point(4500, 0), 300), self.b_team, self.y_team)
-            #    self.y_team.robot(i).rotate_to_point(self.b_team.robot(i))
-            #self.y_team.robot(3).go_to_point_with_detour(auxiliary.Point(0, 0), self.b_team, self.y_team)
-            #
-            #self.b_team.robot(3).go_to_point_with_detour(auxiliary.point_on_line(self.ball, auxiliary.Point(4500, 0), -300), self.b_team, self.y_team)
+            for i in range(1, 6):
+                self.y_team.robot(i).go_to_point_with_detour(self.router.getRoute(i)[-1].pos, self.b_team, self.y_team)
+                self.y_team.robot(i).rotate_to_angle(self.router.getRoute(i)[-1].angle)
+
             rules = []
 
             self.b_team.robot(3).rotate_to_point(auxiliary.Point(4500, 0))
