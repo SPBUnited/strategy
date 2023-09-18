@@ -1,5 +1,5 @@
 import bridge.processors.const as const
-import bridge.processors.auxiliary as auxiliary
+import bridge.processors.auxiliary as aux
 
 class Team:
     def __init__(self, gk_id):
@@ -27,36 +27,36 @@ class Team:
         for i in range(len(rbs_rIds)):
             def2 = self.find_nearest_robot(enemy.robot(rbs_rIds[i]), self, used_robots_id)
             used_robots_id.append(def2.rId)
-            self.robot(def2.rId).go_to_point_with_detour(auxiliary.point_on_line(enemy.robot(rbs_rIds[i]) , ball, 300), enemy, self)
+            self.robot(def2.rId).go_to_point_with_detour(aux.point_on_line(enemy.robot(rbs_rIds[i]) , ball, 300), enemy, self)
             self.robot(def2.rId).rotate_to_point(enemy.robot(rbs_rIds[i]))
 
 
-        self.robot(def1.rId).go_to_point_with_detour(auxiliary.point_on_line(robot_with_ball, auxiliary.Point(const.SIDE * 4500, 0), 300), enemy, self)
+        self.robot(def1.rId).go_to_point_with_detour(aux.point_on_line(robot_with_ball, aux.Point(const.SIDE * 4500, 0), 300), enemy, self)
         self.robot(def1.rId).rotate_to_point(robot_with_ball)
         if len(self.used_robots()) - len(used_robots_id) == 1:
             for i in range(len(self.used_robots())):
                 if self.robot(i).rId not in used_robots_id:
-                    self.robot(i).go_to_point_with_detour(auxiliary.Point(const.SIDE * 4000, 2000), enemy, self)
+                    self.robot(i).go_to_point_with_detour(aux.Point(const.SIDE * 4000, 2000), enemy, self)
                     self.robot(i).rotate_to_point(ball)
         elif len(self.used_robots()) - len(used_robots_id) == 2:
-            def2 = self.find_nearest_robot(auxiliary.Point(const.SIDE * -4000, 1500), self, used_robots_id)
+            def2 = self.find_nearest_robot(aux.Point(const.SIDE * -4000, 1500), self, used_robots_id)
             used_robots_id.append(def2.rId)
-            self.robot(def2.rId).go_to_point_with_detour(auxiliary.Point(const.SIDE * -4000, 1500), enemy, self)
+            self.robot(def2.rId).go_to_point_with_detour(aux.Point(const.SIDE * -4000, 1500), enemy, self)
             self.robot(def2.rId).rotate_to_point(ball)
 
             for i in range(const.TEAM_ROBOTS_MAX_COUNT):
                 if self.robot(i).rId not in used_robots_id:
-                    self.robot(i).go_to_point_with_detour(auxiliary.Point(const.SIDE * -4000, -1500), enemy, self)
+                    self.robot(i).go_to_point_with_detour(aux.Point(const.SIDE * -4000, -1500), enemy, self)
                     self.robot(i).rotate_to_point(ball)
         else:
-            def2 = self.find_nearest_robot(auxiliary.Point(const.SIDE * -4000, 1500), self, used_robots_id)
+            def2 = self.find_nearest_robot(aux.Point(const.SIDE * -4000, 1500), self, used_robots_id)
             used_robots_id.append(def2.rId)
-            self.robot(def2.rId).go_to_point_with_detour(auxiliary.Point(const.SIDE * -4000, 1500), enemy, self)
+            self.robot(def2.rId).go_to_point_with_detour(aux.Point(const.SIDE * -4000, 1500), enemy, self)
             self.robot(def2.rId).rotate_to_point(ball)
             
-            def2 = self.find_nearest_robot(auxiliary.Point(const.SIDE * -4000, -1500), self, used_robots_id)
+            def2 = self.find_nearest_robot(aux.Point(const.SIDE * -4000, -1500), self, used_robots_id)
             used_robots_id.append(def2.rId)
-            self.robot(def2.rId).go_to_point_with_detour(auxiliary.Point(const.SIDE * -4000, -1500), enemy, self)
+            self.robot(def2.rId).go_to_point_with_detour(aux.Point(const.SIDE * -4000, -1500), enemy, self)
             self.robot(def2.rId).rotate_to_point(ball)
 
             k = len(self.used_robots()) - len(used_robots_id)
@@ -76,32 +76,26 @@ class Team:
                         bX = 3400
                     if k % 2 == 0:
                         if bX == ball.x:
-                            self.robot(i).go_to_point(auxiliary.Point(const.SIDE * bX - 200 * k / 2 + 200 * c, 1200 * ball.y / abs(ball.y)))
-                            self.robot(i).rotate_to_point(auxiliary.Point(self.robot(i).x, 5000 * ball.y / abs(ball.y)))
+                            self.robot(i).go_to_point(aux.Point(const.SIDE * bX - 200 * k / 2 + 200 * c, 1200 * ball.y / abs(ball.y)))
+                            self.robot(i).rotate_to_point(aux.Point(self.robot(i).x, 5000 * ball.y / abs(ball.y)))
                             
                         else:
-                            self.robot(i).go_to_point(auxiliary.Point(const.SIDE * bX, bY - 200 * k / 2 + 200 * c))
-                            self.robot(i).rotate_to_point(auxiliary.Point(0, self.robot(i).y))
+                            self.robot(i).go_to_point(aux.Point(const.SIDE * bX, bY - 200 * k / 2 + 200 * c))
+                            self.robot(i).rotate_to_point(aux.Point(0, self.robot(i).y))
                             
                     else:
                         if bX == ball.x:
-                            self.robot(i).go_to_point(auxiliary.Point(const.SIDE * bX - 200 * (k - 1) + 200 * c, 1200 * ball.y / abs(ball.y)))
-                            self.robot(i).rotate_to_point(auxiliary.Point(self.robot(i).x, 5000 * ball.y / abs(ball.y)))
+                            self.robot(i).go_to_point(aux.Point(const.SIDE * bX - 200 * (k - 1) + 200 * c, 1200 * ball.y / abs(ball.y)))
+                            self.robot(i).rotate_to_point(aux.Point(self.robot(i).x, 5000 * ball.y / abs(ball.y)))
                             
                         else:
-                            self.robot(i).go_to_point(auxiliary.Point(const.SIDE * bX, bY - 200 * (k - 1) + 200 * c))
-                            self.robot(i).rotate_to_point(auxiliary.Point(0, self.robot(i).y))
+                            self.robot(i).go_to_point(aux.Point(const.SIDE * bX, bY - 200 * (k - 1) + 200 * c))
+                            self.robot(i).rotate_to_point(aux.Point(0, self.robot(i).y))
                     c += 1
-    
-        
-
-
-            
-
 
     def gk(self, enemy):
-        self.robot(self.gk_id).go_to_point_with_detour(auxiliary.Point(const.SIDE * 4300, 0), enemy, self)
-        self.robot(self.gk_id).rotate_to_point(auxiliary.Point(self.robot(self.gk_id).x, -3000))
+        self.robot(self.gk_id).go_to_point_with_detour(aux.Point(const.SIDE * 4300, 0), enemy, self)
+        self.robot(self.gk_id).rotate_to_point(aux.Point(self.robot(self.gk_id).x, -3000))
         
     def add_robot(self, robot):
         self._robots.append(robot)
@@ -128,7 +122,7 @@ class Team:
         for i in range(0, const.TEAM_ROBOTS_MAX_COUNT):
             if team.robot(i).rId in avoid:
                 continue
-            if auxiliary.dist(robot, team.robot(i)) < dist:
-                dist = auxiliary.dist(robot, team.robot(i))
+            if aux.dist(robot, team.robot(i)) < dist:
+                dist = aux.dist(robot, team.robot(i))
                 id = i
         return team.robot(id)
