@@ -84,14 +84,17 @@ class MatlabController(BaseProcessor):
             for robot in detection.robots_yellow:
                 self.y_team.robot(robot.robot_id).update(robot.x, robot.y, robot.orientation)
                 self.field.updateYelRobot(robot.robot_id, auxiliary.Point(robot.x, robot.y), robot.orientation)
+                self.y_team.robot(robot.robot_id).isUsed = 1
 
             waypoints = self.strategy.process(self.field)
             for i in range(6):
                 self.router.setWaypoint(i, waypoints[i])
             self.router.calcRoutes(self.field)
 
-            for i in range(1, 6):
-                self.y_team.robot(i).go_to_point_with_detour(self.router.getRoute(i)[-1].pos, self.b_team, self.y_team)
+            # TODO алгоритм следования по траектории
+            for i in range(6):
+                # self.y_team.robot(i).go_to_point_with_detour(self.router.getRoute(i)[-1].pos, self.b_team, self.y_team)
+                self.y_team.robot(i).go_to_point_vector_field(self.router.getRoute(i)[-1].pos, self.field)
                 self.y_team.robot(i).rotate_to_angle(self.router.getRoute(i)[-1].angle)
 
             rules = []

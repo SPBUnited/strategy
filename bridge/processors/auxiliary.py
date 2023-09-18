@@ -14,6 +14,24 @@ class Point:
     def __sub__(self, p):
         return self + -p
 
+    def __mul__(self, a: float):
+        return Point(self.x * a, self.y * a)
+
+    def __truediv__(self, a: float):
+        return self * (1/a)
+
+    def __pow__(self, a: float):
+        return Point(self.x ** a, self.y ** a)
+
+    def __eq__(self, p):
+        return self.x == p.x and self.y == p.y
+
+    def mag(self):
+        return math.hypot(self.x, self.y)
+
+    def unity(self):
+        return self/self.mag()
+
 
 class Line:
     def __init__(self, start_x, start_y, end_x, end_y):
@@ -122,9 +140,12 @@ def get_line_intersection(line1_start, line1_end, line2_start, line2_end):
 def vect_mult(v, u):
     return v.x * u.x + v.y * u.y
 
-
 def scal_mult(v, u):
     return v.x * u.y - v.y * u.x
+
+def rotate(p: Point, angle: float):
+    return Point(p.x * math.cos(angle) - p.y * math.sin(angle),
+                 p.y * math.cos(angle) + p.x * math.sin(angle))
 
 
 def format_angle(ang):

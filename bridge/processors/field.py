@@ -17,6 +17,7 @@ class Field:
         self.ball = entity.Entity(aux.Point(0,0), 0, const.BALL_R)
         self.b_team = [ entity.Entity(aux.Point(0,0), 0, const.ROBOT_R) for _ in range(const.TEAM_ROBOTS_MAX_COUNT)]
         self.y_team = [ entity.Entity(aux.Point(0,0), 0, const.ROBOT_R) for _ in range(const.TEAM_ROBOTS_MAX_COUNT)]
+        self.all_bots = [*self.b_team, *self.y_team]
 
     """
     Обновить положение мяча
