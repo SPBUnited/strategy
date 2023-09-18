@@ -48,23 +48,42 @@ class Robot:
 
         self_pos = aux.Point(self.x, self.y)
 
+        sep_dist = 400
+
         closest_robot = None
         closest_dist = math.inf
+        closest_separation = 0
 
+        # Расчет теней роботов для векторного поля
         for r in field.b_team:
             robot_separation = aux.dist(aux.closest_point_on_line(self_pos, target_point, r.getPos()), r.getPos())
             robot_dist = aux.dist(self_pos, r.getPos())
-            if robot_separation < 200 and robot_dist < closest_dist:
+            if robot_separation < sep_dist and robot_dist < closest_dist:
                 closest_robot = r
                 closest_dist = robot_dist
+                closest_separation = robot_separation
 
         vel_vec = target_point - self_pos
         if closest_robot != None:
             side = aux.vect_mult(closest_robot.getPos() - self_pos, target_point - self_pos)
-            offset_angle = math.pi/4 if side < 0 else -math.pi/4
-            vel_vec = aux.rotate(closest_robot.getPos() - self_pos, offset_angle)
+            # offset_angle_val = 200*math.pi/6 * closest_dist**(-2)
+            offset_angle_val = -2 * math.atan((sep_dist - closest_separation)/(2*(closest_dist)))
+            offset_angle = offset_angle_val if side < 0 else -offset_angle_val
+            vel_vec = aux.rotate(target_point - self_pos, offset_angle)
 
-        # vel_vec = vel_vec.unity()
+        vel_vec = vel_vec.unity()
+
+        Fsum = aux.Point(0,0)
+
+        # Расчет силы взаимодействия роботов
+        for r in field.all_bots:
+            delta_pos = self_pos - r.getPos()
+            if delta_pos == aux.Point(0,0):
+                continue
+            F = delta_pos * 40 * (1 / delta_pos.mag()**3)
+            Fsum = Fsum + F
+
+        vel_vec = vel_vec + Fsum
 
         # Calculate the angle to the ball
         angle_to_point = math.atan2(vel_vec.y, vel_vec.x)

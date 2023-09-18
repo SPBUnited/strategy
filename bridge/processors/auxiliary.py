@@ -20,6 +20,12 @@ class Point:
     def __truediv__(self, a: float):
         return self * (1/a)
 
+    def __pow__(self, a: float):
+        return Point(self.x ** a, self.y ** a)
+
+    def __eq__(self, p):
+        return self.x == p.x and self.y == p.y
+
     def mag(self):
         return math.hypot(self.x, self.y)
 
