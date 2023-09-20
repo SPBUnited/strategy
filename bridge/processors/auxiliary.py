@@ -26,10 +26,17 @@ class Point:
     def __eq__(self, p):
         return self.x == p.x and self.y == p.y
 
+    def __str__(self):
+        # return "x = " + str(self.x) + ", y = " + str(self.y)
+        return f'x = {self.x:.4f}, y = {self.y:.4f}'
+
     def mag(self):
         return math.hypot(self.x, self.y)
 
     def unity(self):
+        if self.mag() == 0:
+            print("БАГА, .unity от нулевого вектора")
+            return Point(1, 0)
         return self/self.mag()
 
 
@@ -138,10 +145,10 @@ def get_line_intersection(line1_start, line1_end, line2_start, line2_end):
 
 
 def vect_mult(v, u):
-    return v.x * u.x + v.y * u.y
+    return v.x * u.y - v.y * u.x
 
 def scal_mult(v, u):
-    return v.x * u.y - v.y * u.x
+    return v.x * u.x + v.x * u.x
 
 def rotate(p: Point, angle: float):
     return Point(p.x * math.cos(angle) - p.y * math.sin(angle),

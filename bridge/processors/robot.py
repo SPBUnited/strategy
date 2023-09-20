@@ -48,16 +48,18 @@ class Robot:
 
         self_pos = aux.Point(self.x, self.y)
 
-        sep_dist = 400
+        sep_dist = 500
 
         closest_robot = None
         closest_dist = math.inf
         closest_separation = 0
 
         # Расчет теней роботов для векторного поля
-        for r in field.b_team:
+        for r in field.all_bots:
             robot_separation = aux.dist(aux.closest_point_on_line(self_pos, target_point, r.getPos()), r.getPos())
             robot_dist = aux.dist(self_pos, r.getPos())
+            if robot_dist == 0:
+                continue
             if robot_separation < sep_dist and robot_dist < closest_dist:
                 closest_robot = r
                 closest_dist = robot_dist
@@ -76,19 +78,17 @@ class Robot:
         Fsum = aux.Point(0,0)
 
         # Расчет силы взаимодействия роботов
-        for r in field.all_bots:
-            delta_pos = self_pos - r.getPos()
-            if delta_pos == aux.Point(0,0):
-                continue
-            F = delta_pos * 40 * (1 / delta_pos.mag()**3)
-            Fsum = Fsum + F
+        # for r in field.all_bots:
+        #     delta_pos = self_pos - r.getPos()
+        #     if delta_pos == aux.Point(0,0):
+        #         continue
+        #     F = delta_pos * 40 * (1 / delta_pos.mag()**3)
+        #     Fsum = Fsum + F
 
         vel_vec = vel_vec + Fsum
 
-        # Calculate the angle to the ball
         angle_to_point = math.atan2(vel_vec.y, vel_vec.x)
 
-        # Calculate the distance to the ball
         distance_to_point = aux.dist(self_pos, target_point)
 
         newSpeed = min(self.maxSpeed, distance_to_point * 0.07)
@@ -227,8 +227,8 @@ class Robot:
         vy = self.y - point.y
         ux = -math.cos(self.orientation)
         uy = -math.sin(self.orientation)
-        dif = math.atan2(aux.scal_mult(aux.Point(vx, vy), aux.Point(ux, uy)),
-                            aux.vect_mult(aux.Point(vx, vy), aux.Point(ux, uy)))
+        dif = math.atan2(aux.vect_mult(aux.Point(vx, vy), aux.Point(ux, uy)),
+                            aux.scal_mult(aux.Point(vx, vy), aux.Point(ux, uy)))
         if const.IS_SIMULATOR_USED:
             dif *= -1
 
