@@ -11,6 +11,8 @@
 
 import math
 import bridge.processors.auxiliary as aux
+import bridge.processors.entity as entity
+
 
 class Entity:
 
@@ -51,7 +53,7 @@ class Entity:
         return self.acc
     
     """ Геттер угла """
-    def getR(self) -> float:
+    def getAngle(self) -> float:
         return self.angle
     
     """ Геттер радиуса """

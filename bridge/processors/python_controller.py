@@ -78,13 +78,13 @@ class MatlabController(BaseProcessor):
 
             # TODO: Barrier states
             for robot in detection.robots_blue:
-                self.b_team.robot(robot.robot_id).update(robot.x, robot.y, robot.orientation)
-                self.field.updateBluRobot(robot.robot_id, auxiliary.Point(robot.x, robot.y), robot.orientation)
+                #self.b_team.robot(robot.robot_id).update(robot.x, robot.y, robot.orientation)
+                self.field.updateBluRobot(robot.robot_id, auxiliary.Point(robot.x, robot.y), robot.orientation, time.time())
 
             for robot in detection.robots_yellow:
-                self.y_team.robot(robot.robot_id).update(robot.x, robot.y, robot.orientation)
-                self.field.updateYelRobot(robot.robot_id, auxiliary.Point(robot.x, robot.y), robot.orientation)
-                self.y_team.robot(robot.robot_id).isUsed = 1
+                #self.y_team.robot(robot.robot_id).update(robot.x, robot.y, robot.orientation)
+                self.field.updateYelRobot(robot.robot_id, auxiliary.Point(robot.x, robot.y), robot.orientation, time.time())
+                #self.y_team.robot(robot.robot_id).isUsed = 1
 
             waypoints = self.strategy.process(self.field)
             for i in range(6):
@@ -94,51 +94,52 @@ class MatlabController(BaseProcessor):
             # TODO алгоритм следования по траектории
             for i in range(6):
                 # self.y_team.robot(i).go_to_point_with_detour(self.router.getRoute(i)[-1].pos, self.b_team, self.y_team)
-                self.y_team.robot(i).go_to_point_vector_field(self.router.getRoute(i)[-1].pos, self.field)
-                self.y_team.robot(i).rotate_to_angle(self.router.getRoute(i)[-1].angle)
+                self.field.y_team[i].go_to_point_vector_field(self.router.getRoute(i)[-1].pos, self.field)
+                self.field.y_team[i].rotate_to_angle(self.router.getRoute(i)[-1].angle)
+                #self.field.y_team[i].rotate_to_point(auxiliary.Point(0, 0))
 
             rules = []
 
-            self.b_team.robot(3).rotate_to_point(auxiliary.Point(4500, 0))
+            '''self.b_team.robot(3).rotate_to_point(auxiliary.Point(4500, 0))
             if auxiliary.dist(self.b_team.robot(3), self.ball) < 150:
                 self.b_team.robot(3).go_to_point(self.ball)
                 self.b_team.robot(3).kick_forward()
             else:
-                self.b_team.robot(3).go_to_point_with_detour(auxiliary.point_on_line(self.ball, auxiliary.Point(4500, 0), -300), self.b_team, self.y_team)
+                self.b_team.robot(3).go_to_point_with_detour(auxiliary.point_on_line(self.ball, auxiliary.Point(4500, 0), -300), self.b_team, self.y_team)'''
             
 
             for i in range(const.TEAM_ROBOTS_MAX_COUNT):
-                if self.b_team.robot(i).isUsed:
+                if self.field.b_team[i].isUsed:
                     rules.append(0)
-                    rules.append(self.b_team.robot(i).speedX)
-                    rules.append(self.b_team.robot(i).speedY)
-                    rules.append(self.b_team.robot(i).speedR)
-                    rules.append(self.b_team.robot(i).kickUp)
-                    rules.append(self.b_team.robot(i).kickForward)
-                    rules.append(self.b_team.robot(i).autoKick)
-                    rules.append(self.b_team.robot(i).kickerVoltage)
-                    rules.append(self.b_team.robot(i).dribblerEnable)
-                    rules.append(self.b_team.robot(i).speedDribbler)
-                    rules.append(self.b_team.robot(i).kickerChargeEnable)
-                    rules.append(self.b_team.robot(i).beep)            
+                    rules.append(self.field.b_team[i].speedX)
+                    rules.append(self.field.b_team[i].speedY)
+                    rules.append(self.field.b_team[i].speedR)
+                    rules.append(self.field.b_team[i].kickForward)
+                    rules.append(self.field.b_team[i].kickUp)
+                    rules.append(self.field.b_team[i].autoKick)
+                    rules.append(self.field.b_team[i].kickerVoltage)
+                    rules.append(self.field.b_team[i].dribblerEnable)
+                    rules.append(self.field.b_team[i].speedDribbler)
+                    rules.append(self.field.b_team[i].kickerChargeEnable)
+                    rules.append(self.field.b_team[i].beep)            
                     rules.append(0)
                 else:
                     for _ in range(0, 13):
                         rules.append(0.0)    
             for i in range(const.TEAM_ROBOTS_MAX_COUNT):
-                if self.y_team.robot(i).isUsed:
+                if self.field.y_team[i].isUsed:
                     rules.append(0)
-                    rules.append(self.y_team.robot(i).speedX)
-                    rules.append(self.y_team.robot(i).speedY)
-                    rules.append(self.y_team.robot(i).speedR)
-                    rules.append(self.y_team.robot(i).kickForward)
-                    rules.append(self.y_team.robot(i).kickUp)
-                    rules.append(self.y_team.robot(i).autoKick)
-                    rules.append(self.y_team.robot(i).kickerVoltage)
-                    rules.append(self.y_team.robot(i).dribblerEnable)
-                    rules.append(self.y_team.robot(i).speedDribbler)
-                    rules.append(self.y_team.robot(i).kickerChargeEnable)
-                    rules.append(self.y_team.robot(i).beep)            
+                    rules.append(self.field.y_team[i].speedX)
+                    rules.append(self.field.y_team[i].speedY)
+                    rules.append(self.field.y_team[i].speedR)
+                    rules.append(self.field.y_team[i].kickUp)
+                    rules.append(self.field.y_team[i].kickForward)
+                    rules.append(self.field.y_team[i].autoKick)
+                    rules.append(self.field.y_team[i].kickerVoltage)
+                    rules.append(self.field.y_team[i].dribblerEnable)
+                    rules.append(self.field.y_team[i].speedDribbler)
+                    rules.append(self.field.y_team[i].kickerChargeEnable)
+                    rules.append(self.field.y_team[i].beep)            
                     rules.append(0)
                 else:
                     for _ in range(0, 13):
