@@ -76,6 +76,12 @@ class MatlabController(BaseProcessor):
                 self.ball = auxiliary.Point(ball.x, ball.y)
                 self.field.updateBall(self.ball)
 
+            for i in range(const.TEAM_ROBOTS_MAX_COUNT):
+                if time.time() - self.field.b_team[i].lastUpdate > 0.15:
+                    self.field.b_team[i].used(0)
+                if time.time() - self.field.y_team[i].lastUpdate > 0.15:
+                    self.field.y_team[i].used(0)
+
             # TODO: Barrier states
             for robot in detection.robots_blue:
                 #self.b_team.robot(robot.robot_id).update(robot.x, robot.y, robot.orientation)
@@ -100,16 +106,8 @@ class MatlabController(BaseProcessor):
 
             rules = []
 
-            self.b_team.robot(3).rotate_to_point(auxiliary.Point(4500, 0))
-            if auxiliary.dist(self.b_team.robot(3), self.ball) < 300 and \
-                auxiliary.scal_mult((self.field.ball.pos - self.field.b_team[3].pos).unity(), (self.field.y_goal - self.field.b_team[3].pos).unity()) > 0.9:
-                self.b_team.robot(3).go_to_point(self.ball)
-                self.b_team.robot(3).kick_forward()
-            else:
-                self.b_team.robot(3).go_to_point_with_detour(auxiliary.point_on_line(self.ball, auxiliary.Point(4500, 0), -200), self.b_team, self.y_team)
-
             for i in range(const.TEAM_ROBOTS_MAX_COUNT):
-                if self.field.b_team[i].isUsed:
+                if self.field.b_team[i].is_used():
                     rules.append(0)
                     rules.append(self.field.b_team[i].speedX)
                     rules.append(self.field.b_team[i].speedY)
@@ -127,7 +125,7 @@ class MatlabController(BaseProcessor):
                     for _ in range(0, 13):
                         rules.append(0.0)    
             for i in range(const.TEAM_ROBOTS_MAX_COUNT):
-                if self.field.y_team[i].isUsed:
+                if self.field.y_team[i].is_used():
                     rules.append(0)
                     rules.append(self.field.y_team[i].speedX)
                     rules.append(self.field.y_team[i].speedY)

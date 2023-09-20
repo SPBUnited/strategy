@@ -36,7 +36,7 @@ class Point:
 
     def unity(self):
         if self.mag() == 0:
-            print("БАГА, .unity от нулевого вектора")
+            #print("БАГА, .unity от нулевого вектора")
             return Point(1, 0)
         return self/self.mag()
 
@@ -161,8 +161,8 @@ def find_nearest_robot(robot, team, avoid = []):
     for i in range(0, const.TEAM_ROBOTS_MAX_COUNT):
         if i in avoid or not team[i].isUsed:
             continue
-        if dist(robot.getPos(), team[i].getPos()) < minDist:
-            minDist = dist(robot.getPos(), team[i].getPos())
+        if dist(robot, team[i].getPos()) < minDist:
+            minDist = dist(robot, team[i].getPos())
             id = i
     return team[id]
 
@@ -206,8 +206,13 @@ def point_on_line(robot, point, distance):
         new_y = robot.y + distance * math.sin(angle_to_point)
         return Point(new_x, new_y)
 
-def robot_angle_to_point(robot, point):
-    dpos = robot - point
+def angle_to_point(point1, point2):
+    dpos = -point1 + point2
     angle = math.atan2(dpos.y, dpos.x)
 
-    return -angle
+    return angle
+
+def sign(num):
+    if num == 0:
+        return 0
+    return num / abs(num)
