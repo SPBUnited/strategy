@@ -1,3 +1,5 @@
+import bridge.processors.auxiliary as aux
+
 ##################################################
 # GAME SETTING CONSTS
 GK = 5
@@ -28,3 +30,4 @@ BASE_KICKER_VOLTAGE = 7.0
 
 BALL_R = 0.05
 ROBOT_R = 0.2
+GRAVEYARD_POS = aux.Point(-10000, 0)
