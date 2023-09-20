@@ -51,9 +51,12 @@ class Entity:
         return self.acc
     
     """ Геттер угла """
-    def getR(self) -> float:
+    def getAngle(self) -> float:
         return self.angle
     
     """ Геттер радиуса """
     def getR(self) -> float:
         return self.R
+
+    def __str__(self) -> str:
+        return str(self.pos)
