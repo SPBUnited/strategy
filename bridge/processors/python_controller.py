@@ -100,13 +100,13 @@ class MatlabController(BaseProcessor):
 
             rules = []
 
-            '''self.b_team.robot(3).rotate_to_point(auxiliary.Point(4500, 0))
-            if auxiliary.dist(self.b_team.robot(3), self.ball) < 150:
+            self.b_team.robot(3).rotate_to_point(auxiliary.Point(4500, 0))
+            if auxiliary.dist(self.b_team.robot(3), self.ball) < 300 and \
+                auxiliary.scal_mult((self.field.ball.pos - self.field.b_team[3].pos).unity(), (self.field.y_goal - self.field.b_team[3].pos).unity()) > 0.9:
                 self.b_team.robot(3).go_to_point(self.ball)
                 self.b_team.robot(3).kick_forward()
             else:
-                self.b_team.robot(3).go_to_point_with_detour(auxiliary.point_on_line(self.ball, auxiliary.Point(4500, 0), -300), self.b_team, self.y_team)'''
-            
+                self.b_team.robot(3).go_to_point_with_detour(auxiliary.point_on_line(self.ball, auxiliary.Point(4500, 0), -200), self.b_team, self.y_team)
 
             for i in range(const.TEAM_ROBOTS_MAX_COUNT):
                 if self.field.b_team[i].isUsed:

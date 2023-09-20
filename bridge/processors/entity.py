@@ -59,3 +59,6 @@ class Entity:
     """ Геттер радиуса """
     def getR(self) -> float:
         return self.R
+
+    def __str__(self) -> str:
+        return str(self.pos)

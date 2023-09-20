@@ -28,7 +28,7 @@ class Strategy:
 
     def debug(self, field: field.Field):
         waypoints = [None]*const.TEAM_ROBOTS_MAX_COUNT
-        for i in range(6):
+        for i in range(1, 6):
             bbotpos = field.b_team[i].getPos()
             ybotpos = field.y_team[i].getPos()
             pos = aux.point_on_line(bbotpos, aux.Point(4500, 0), 300)
@@ -38,6 +38,10 @@ class Strategy:
 
             waypoint = wp.Waypoint(aux.Point(0, 0), angle, wp.WType.ENDPOINT)
             waypoints[i] = waypoint
+
+        gk_pos = aux.point_on_line(field.y_goal, field.ball.pos, 800)
+        gk_angle = math.pi
+        waypoints[0] = wp.Waypoint(gk_pos, gk_angle, wp.WType.ENDPOINT)
         return waypoints
 
     def defence(self, field: field.Field):

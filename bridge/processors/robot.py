@@ -55,7 +55,7 @@ class Robot(entity.Entity):
         enemy = field.b_team
         self_pos = self.getPos()
 
-        sep_dist = 400
+        sep_dist = 500
 
         closest_robot = None
         closest_dist = math.inf
@@ -79,11 +79,13 @@ class Robot(entity.Entity):
 
 
         # Расчет теней роботов для векторного поля
-        for r in enemy:
+        for r in field.all_bots:
             robot_separation = aux.dist(aux.closest_point_on_line(self_pos, target_point, r.getPos()), r.getPos())
             if self.rId == 1:
                 print(r.rId,robot_separation)
             robot_dist = aux.dist(self_pos, r.getPos())
+            if robot_dist == 0:
+                continue
             if robot_separation < sep_dist and robot_dist < closest_dist:
                 closest_robot = r
                 closest_dist = robot_dist
@@ -102,19 +104,17 @@ class Robot(entity.Entity):
         Fsum = aux.Point(0,0)
 
         # Расчет силы взаимодействия роботов
-        for r in field.all_bots:
-            delta_pos = self_pos - r.getPos()
-            if delta_pos == aux.Point(0,0):
-                continue
-            F = delta_pos * 40 * (1 / delta_pos.mag()**3)
-            Fsum = Fsum + F
+        # for r in field.all_bots:
+        #     delta_pos = self_pos - r.getPos()
+        #     if delta_pos == aux.Point(0,0):
+        #         continue
+        #     F = delta_pos * 40 * (1 / delta_pos.mag()**3)
+        #     Fsum = Fsum + F
 
         vel_vec = vel_vec + Fsum
 
-        # Calculate the angle to the ball
         angle_to_point = math.atan2(vel_vec.y, vel_vec.x)
 
-        # Calculate the distance to the ball
         distance_to_point = aux.dist(self_pos, target_point)
 
         newSpeed = min(const.MAX_SPEED, distance_to_point * 0.07)
