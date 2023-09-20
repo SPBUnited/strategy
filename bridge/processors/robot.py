@@ -2,38 +2,43 @@ import math
 import bridge.processors.auxiliary as aux
 import bridge.processors.const as const
 import bridge.processors.field as field
+import bridge.processors.entity as entity
 
-class Robot:
-    def __init__(self, color, r_id, x, y, orientation):
+class Robot(entity.Entity):
+    def __init__(self, pos, angle, R, color, r_id):
+        self.pos = pos
+        self.vel = aux.Point(0, 0)
+        self.acc = aux.Point(0, 0)
+        self.angle = angle
+        self.R = R
+
         self.rId = r_id
         self.isUsed = 0
-        self.x = x
-        self.y = y
-        self.orientation = orientation
-        self.maxSpeed = const.MAX_SPEED
-        self.maxSpeedR = const.MAX_SPEED_R
         self.color = color
+        self.lastUpdate = 0
 
-        # Changeable params
-        self.speedX = 0.0
-        self.speedY = 0.0
-        self.speedR = 0.0
-        self.kickUp = 0.0
-        self.kickForward = 0.0
-        self.autoKick = 0.0
-        self.kickerVoltage = const.BASE_KICKER_VOLTAGE
-        self.dribblerEnable = 0.0
-        self.speedDribbler = 0.0
-        self.kickerChargeEnable = 0.0
-        self.beep = 0.0
-        self.acc = const.ACCELERATION
+        self.speedX = 0
+        self.speedY = 0
+        self.speedR = 0
+        self.kickUp = 0
+        self.kickForward = 0
+        self.autoKick = 0
+        self.kickerVoltage = 0
+        self.dribblerEnable = 0
+        self.speedDribbler = 0
+        self.kickerChargeEnable = 0
+        self.beep = 0   
 
-    def update(self, x, y, orientation):
-        self.x = x
-        self.y = y
-        self.orientation = orientation
+    def used(self, a):
+        self.isUsed = a
+
+    def update(self, pos, angle, t):
+        self.pos = pos
+        self.angle = angle
         self.kickForward = 0
         self.kickUp = 0
+        self.isUsed = 1
+        self.lastUpdate = t
 
     def kick_forward(self):
         self.kickForward = 1
@@ -41,22 +46,43 @@ class Robot:
     def kick_up(self):
         self.kickUp = 1
 
+
     """
     Двигаться в целевую точку согласно векторному полю
     """
     def go_to_point_vector_field(self, target_point, field: field.Field):
 
-        self_pos = aux.Point(self.x, self.y)
+        enemy = field.b_team
+        self_pos = self.getPos()
 
         sep_dist = 400
 
         closest_robot = None
         closest_dist = math.inf
         closest_separation = 0
+        angle_to_point = math.atan2(target_point.y - self.getPos().y, target_point.x - self.getPos().x)
+
+        for r in enemy:
+            if r != self:
+                robot_dist = aux.dist(self_pos, r.getPos()) 
+                if robot_dist < sep_dist and aux.dist(self.getPos(), target_point) != 0:
+                    angle_to_robot = math.atan2(r.getPos().y - self.getPos().y, r.getPos().x - self.getPos().x)
+                    angle_difference = abs(angle_to_robot - angle_to_point)
+                    if angle_difference < math.pi / 4: 
+                        closest_point = aux.closest_point_on_line(self.getPos(), target_point, r.getPos())      
+                        robot_separation = aux.dist(r.getPos(), closest_point)
+                        
+                        if robot_dist < closest_dist:
+                            closest_robot = r
+                            closest_dist = robot_dist
+                            closest_separation = robot_separation
+
 
         # Расчет теней роботов для векторного поля
-        for r in field.b_team:
+        for r in enemy:
             robot_separation = aux.dist(aux.closest_point_on_line(self_pos, target_point, r.getPos()), r.getPos())
+            if self.rId == 1:
+                print(r.rId,robot_separation)
             robot_dist = aux.dist(self_pos, r.getPos())
             if robot_separation < sep_dist and robot_dist < closest_dist:
                 closest_robot = r
@@ -64,7 +90,7 @@ class Robot:
                 closest_separation = robot_separation
 
         vel_vec = target_point - self_pos
-        if closest_robot != None:
+        if closest_robot != None and closest_dist != 0:
             side = aux.vect_mult(closest_robot.getPos() - self_pos, target_point - self_pos)
             # offset_angle_val = 200*math.pi/6 * closest_dist**(-2)
             offset_angle_val = -2 * math.atan((sep_dist - closest_separation)/(2*(closest_dist)))
@@ -91,14 +117,10 @@ class Robot:
         # Calculate the distance to the ball
         distance_to_point = aux.dist(self_pos, target_point)
 
-        newSpeed = min(self.maxSpeed, distance_to_point * 0.07)
+        newSpeed = min(const.MAX_SPEED, distance_to_point * 0.07)
 
-        self.speedX = newSpeed * math.cos(angle_to_point - self.orientation)
-        self.speedY = newSpeed * math.sin(angle_to_point - self.orientation)
-
-        if const.IS_SIMULATOR_USED:
-            self.speedY *= -1
-        pass
+        self.speedX = newSpeed * math.cos(angle_to_point - self.getAngle())
+        self.speedY = -newSpeed * math.sin(angle_to_point - self.getAngle())
 
     def go_to_point_with_detour(self, target_point, y_team, b_team):
         if aux.dist(self, target_point) < 500:
@@ -196,17 +218,14 @@ class Robot:
         else:
             newSpeed = self.maxSpeed
 
-        self.speedX = newSpeed * math.cos(angle_to_point - self.orientation)
-        self.speedY = newSpeed * math.sin(angle_to_point - self.orientation)
+        self.speedX = newSpeed * math.cos(angle_to_point - self.getAngle())
+        self.speedY = newSpeed * math.sin(angle_to_point - self.getAngle())
 
         if const.IS_SIMULATOR_USED:
             self.speedY *= -1
 
-    def get_speed(self, distance):
-        pass
-
     def rotate_to_angle(self, angle):
-        err = angle - self.orientation
+        err = angle - self.getAngle()
         err = err % (2*math.pi)
         if err > math.pi:
             err -= 2*math.pi
@@ -223,16 +242,14 @@ class Robot:
 
 
     def rotate_to_point(self, point):
-        vx = self.x - point.x
-        vy = self.y - point.y
-        ux = -math.cos(self.orientation)
-        uy = -math.sin(self.orientation)
+        vx = self.getPos().x - point.x
+        vy = self.getPos().y - point.y
+        ux = -math.cos(self.getAngle())
+        uy = -math.sin(self.getAngle())
         dif = math.atan2(aux.scal_mult(aux.Point(vx, vy), aux.Point(ux, uy)),
                             aux.vect_mult(aux.Point(vx, vy), aux.Point(ux, uy)))
-        if const.IS_SIMULATOR_USED:
-            dif *= -1
 
         if abs(dif) > 0.001:
-            self.speedR = dif * 30
+            self.speedR = -dif * 15
         else:
             self.speedR = 0

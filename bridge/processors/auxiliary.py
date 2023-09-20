@@ -1,4 +1,5 @@
 import math
+import bridge.processors.const as const
 
 class Point:
     def __init__(self, x, y):
@@ -30,7 +31,10 @@ class Point:
         return math.hypot(self.x, self.y)
 
     def unity(self):
-        return self/self.mag()
+        if self.mag() > 1:
+            return self/self.mag()
+        else:
+            return self * self.mag()
 
 
 class Line:
@@ -147,6 +151,17 @@ def rotate(p: Point, angle: float):
     return Point(p.x * math.cos(angle) - p.y * math.sin(angle),
                  p.y * math.cos(angle) + p.x * math.sin(angle))
 
+def find_nearest_robot(robot, team, avoid = []):
+    id = -1
+    minDist = 10e10
+    for i in range(0, const.TEAM_ROBOTS_MAX_COUNT):
+        if i in avoid or not team[i].isUsed:
+            continue
+        if dist(robot.getPos(), team[i].getPos()) < minDist:
+            minDist = dist(robot.getPos(), team[i].getPos())
+            id = i
+    return team[id]
+
 
 def format_angle(ang):
     while ang > math.pi:
@@ -187,3 +202,8 @@ def point_on_line(robot, point, distance):
         new_y = robot.y + distance * math.sin(angle_to_point)
         return Point(new_x, new_y)
 
+def robot_angle_to_point(robot, point):
+    dpos = robot - point
+    angle = math.atan2(dpos.y, dpos.x)
+
+    return -angle
