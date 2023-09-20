@@ -32,6 +32,9 @@ class Robot(entity.Entity):
     def used(self, a):
         self.isUsed = a
 
+    def is_used(self):
+        return self.isUsed
+
     def update(self, pos, angle, t):
         self.pos = pos
         self.angle = angle
@@ -81,8 +84,6 @@ class Robot(entity.Entity):
         # Расчет теней роботов для векторного поля
         for r in field.all_bots:
             robot_separation = aux.dist(aux.closest_point_on_line(self_pos, target_point, r.getPos()), r.getPos())
-            if self.rId == 1:
-                print(r.rId,robot_separation)
             robot_dist = aux.dist(self_pos, r.getPos())
             if robot_dist == 0:
                 continue
@@ -253,3 +254,7 @@ class Robot(entity.Entity):
             self.speedR = -dif * 15
         else:
             self.speedR = 0
+
+    def __str__(self) -> str:
+        return str(str(self.color) + " " + str(self.rId) + " " + str(self.pos))
+
