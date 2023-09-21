@@ -87,6 +87,8 @@ class MatlabController(BaseProcessor):
                 self.field.updateYelRobot(robot.robot_id, auxiliary.Point(robot.x, robot.y), robot.orientation)
                 self.y_team.robot(robot.robot_id).isUsed = 1
 
+            self.y_team.robot(3).isUsed = 0
+
             waypoints = self.strategy.process(self.field)
             for i in range(6):
                 self.router.setWaypoint(i, waypoints[i])
@@ -100,7 +102,7 @@ class MatlabController(BaseProcessor):
 
             rules = []
 
-            self.b_team.robot(3).rotate_to_point(auxiliary.Point(4500, 0))
+            self.b_team.robot(3).rotate_to_point(auxiliary.Point(4500, 300))
             if auxiliary.dist(self.b_team.robot(3), self.ball) < 300 and \
                 auxiliary.scal_mult((self.field.ball.pos - self.field.b_team[3].pos).unity(), (self.field.y_goal - self.field.b_team[3].pos).unity()) > 0.9:
                 self.b_team.robot(3).go_to_point(self.ball)
