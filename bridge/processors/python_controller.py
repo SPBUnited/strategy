@@ -34,12 +34,7 @@ class MatlabController(BaseProcessor):
     dt = 0
     ball = auxiliary.Point(0, 0)
 
-    b_team = team.Team(const.GK)
-    y_team = team.Team(const.ENEMY_GK)
-    for i in range(const.TEAM_ROBOTS_MAX_COUNT):
-        y_team.add_robot(robot.Robot('y', i, 10e10, 10e10, 0))
-    for i in range(const.TEAM_ROBOTS_MAX_COUNT):
-        b_team.add_robot(robot.Robot('b', i, 10e10, 10e10, 0))
+    controll_team = [robot.Robot(const.GRAVEYARD_POS, 0, const.ROBOT_R, 'b', i) for i in range(const.TEAM_ROBOTS_MAX_COUNT)]
 
     field = field.Field()
     router = router.Router()
@@ -77,18 +72,26 @@ class MatlabController(BaseProcessor):
                 self.field.updateBall(self.ball)
 
             for i in range(const.TEAM_ROBOTS_MAX_COUNT):
-                if time.time() - self.field.b_team[i].lastUpdate > 0.15:
+                if time.time() - self.field.b_team[i].last_update() > 0.3:
                     self.field.b_team[i].used(0)
-                if time.time() - self.field.y_team[i].lastUpdate > 0.15:
+                if time.time() - self.field.y_team[i].last_update() > 0.3:
                     self.field.y_team[i].used(0)
 
             # TODO: Barrier states
             for robot in detection.robots_blue:
                 #self.b_team.robot(robot.robot_id).update(robot.x, robot.y, robot.orientation)
+                if time.time() - self.field.b_team[i].last_update() > 0.1:
+                    self.field.b_team[i].used(0)
+                else: 
+                    self.field.b_team[i].used(1)
                 self.field.updateBluRobot(robot.robot_id, auxiliary.Point(robot.x, robot.y), robot.orientation, time.time())
 
             for robot in detection.robots_yellow:
                 #self.y_team.robot(robot.robot_id).update(robot.x, robot.y, robot.orientation)
+                if time.time() - self.field.y_team[i].last_update() > 0.1:
+                    self.field.y_team[i].used(0)
+                else: 
+                    self.field.y_team[i].used(1)
                 self.field.updateYelRobot(robot.robot_id, auxiliary.Point(robot.x, robot.y), robot.orientation, time.time())
                 #self.y_team.robot(robot.robot_id).isUsed = 1
 
@@ -106,43 +109,27 @@ class MatlabController(BaseProcessor):
 
             rules = []
 
+            for r in self.controll_team:
+                r.clear_fields()
+
             for i in range(const.TEAM_ROBOTS_MAX_COUNT):
-                if self.field.b_team[i].is_used():
-                    rules.append(0)
-                    rules.append(self.field.b_team[i].speedX)
-                    rules.append(self.field.b_team[i].speedY)
-                    rules.append(self.field.b_team[i].speedR)
-                    rules.append(self.field.b_team[i].kickForward)
-                    rules.append(self.field.b_team[i].kickUp)
-                    rules.append(self.field.b_team[i].autoKick)
-                    rules.append(self.field.b_team[i].kickerVoltage)
-                    rules.append(self.field.b_team[i].dribblerEnable)
-                    rules.append(self.field.b_team[i].speedDribbler)
-                    rules.append(self.field.b_team[i].kickerChargeEnable)
-                    rules.append(self.field.b_team[i].beep)            
-                    rules.append(0)
-                else:
-                    for _ in range(0, 13):
-                        rules.append(0.0)    
+                rules.append(0)
+                rules.append(self.controll_team[i].speedX)
+                rules.append(self.controll_team[i].speedY)
+                rules.append(self.controll_team[i].speedR)
+                rules.append(self.controll_team[i].kickForward)
+                rules.append(self.controll_team[i].kickUp)
+                rules.append(self.controll_team[i].autoKick)
+                rules.append(self.controll_team[i].kickerVoltage)
+                rules.append(self.controll_team[i].dribblerEnable)
+                rules.append(self.controll_team[i].speedDribbler)
+                rules.append(self.controll_team[i].kickerChargeEnable)
+                rules.append(self.controll_team[i].beep)            
+                rules.append(0)
             for i in range(const.TEAM_ROBOTS_MAX_COUNT):
-                if self.field.y_team[i].is_used():
-                    rules.append(0)
-                    rules.append(self.field.y_team[i].speedX)
-                    rules.append(self.field.y_team[i].speedY)
-                    rules.append(self.field.y_team[i].speedR)
-                    rules.append(self.field.y_team[i].kickUp)
-                    rules.append(self.field.y_team[i].kickForward)
-                    rules.append(self.field.y_team[i].autoKick)
-                    rules.append(self.field.y_team[i].kickerVoltage)
-                    rules.append(self.field.y_team[i].dribblerEnable)
-                    rules.append(self.field.y_team[i].speedDribbler)
-                    rules.append(self.field.y_team[i].kickerChargeEnable)
-                    rules.append(self.field.y_team[i].beep)            
-                    rules.append(0)
-                else:
-                    for _ in range(0, 13):
-                        rules.append(0.0)    
-                     
+                for _ in range(0, 13):
+                    rules.append(0.0)    
+                    
             self.dt = time.time() - self.cur_time
             self.cur_time = time.time()
             b = bytes()
