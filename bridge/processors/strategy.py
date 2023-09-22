@@ -15,7 +15,7 @@ class States(Enum):
 
 class Strategy:
     def __init__(self) -> None:
-        self.state = States.DEFENCE
+        self.state = States.DEBUG
 
     """
     Рассчитать конечные точки для каждого робота
@@ -38,6 +38,10 @@ class Strategy:
 
             waypoint = wp.Waypoint(pos, angle, wp.WType.ENDPOINT)
             waypoints[i] = waypoint
+
+        dpos = aux.Point(0, 0)
+        dangle = 0*math.pi
+        waypoints[1] = wp.Waypoint(dpos, dangle, wp.WType.ENDPOINT)
 
         gk_pos = aux.point_on_line(field.y_goal, field.ball.pos, 800)
 
