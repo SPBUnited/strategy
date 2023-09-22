@@ -34,13 +34,15 @@ class Robot(entity.Entity):
 
     def is_used(self):
         return self.isUsed
+    
+    def last_update(self):
+        return self.lastUpdate
 
     def update(self, pos, angle, t):
         self.pos = pos
         self.angle = angle
         self.kickForward = 0
         self.kickUp = 0
-        self.isUsed = 1
         self.lastUpdate = t
 
     def kick_forward(self):
@@ -48,6 +50,32 @@ class Robot(entity.Entity):
 
     def kick_up(self):
         self.kickUp = 1
+
+    def copy_control_fields(self, robot):
+        self.speedX = robot.speedX
+        self.speedY = robot.speedY
+        self.speedR = robot.speedR
+        self.kickUp = robot.kickUp
+        self.kickForward = robot.kickForward
+        self.autoKick = robot.autoKick
+        self.kickerVoltage = robot.kickerVoltage
+        self.dribblerEnable = robot.dribblerEnable
+        self.speedDribbler = robot.speedDribbler
+        self.kickerChargeEnable = robot.kickerChargeEnable
+        self.beep = robot.beep
+
+    def clear_fields(self):
+        self.speedX = 0
+        self.speedY = 0
+        self.speedR = 0
+        self.kickUp = 0
+        self.kickForward = 0
+        self.autoKick = 0
+        self.kickerVoltage = 0
+        self.dribblerEnable = 0
+        self.speedDribbler = 0
+        self.kickerChargeEnable = 0
+        self.beep = 0 
 
 
     """
