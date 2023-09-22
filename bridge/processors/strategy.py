@@ -9,6 +9,9 @@ import bridge.processors.auxiliary as aux
 import math
 from enum import Enum
 
+#!v DEBUG ONLY
+import time
+
 class States(Enum):
     DEBUG = 0
     DEFENCE = 1
@@ -39,7 +42,9 @@ class Strategy:
             waypoint = wp.Waypoint(pos, angle, wp.WType.ENDPOINT)
             waypoints[i] = waypoint
 
-        dpos = aux.Point(0, 0)
+        timer = time.time()
+        dpos = aux.Point(1000 + 200*((timer//2)%2), -1000)
+        # print( dpos )
         dangle = 0*math.pi
         waypoints[1] = wp.Waypoint(dpos, dangle, wp.WType.ENDPOINT)
 

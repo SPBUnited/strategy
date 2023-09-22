@@ -153,7 +153,25 @@ class Robot(entity.Entity):
 
         distance_to_point = aux.dist(self_pos, target_point)
 
-        newSpeed = min(const.MAX_SPEED, distance_to_point * 0.07)
+        curEnt = None
+        for r in field.y_team:
+            if (self_pos - r.pos).mag() == 0:
+                curEnt = r
+                break
+
+        if curEnt == None:
+            return
+        
+        curSpeed = curEnt.vel.mag()
+
+        # newSpeed = min(const.MAX_SPEED, distance_to_point * 0.07)
+        k = 0
+        gain = 0.3
+        err = distance_to_point + curSpeed * k
+        u = min(max(err * gain, -const.MAX_SPEED), const.MAX_SPEED)
+        newSpeed = u
+
+        print(self_pos, target_point, '%.2f'%newSpeed, '%.2f'%angle_to_point, '%.2f'%self.getAngle())
 
         self.speedX = newSpeed * math.cos(angle_to_point - self.getAngle())
         self.speedY = -newSpeed * math.sin(angle_to_point - self.getAngle())
