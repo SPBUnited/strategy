@@ -11,6 +11,8 @@
 
 import math
 import bridge.processors.auxiliary as aux
+import bridge.processors.entity as entity
+
 
 class FOD:
     def __init__(self, T, dT):
