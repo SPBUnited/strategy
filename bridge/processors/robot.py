@@ -58,6 +58,13 @@ class Robot(entity.Entity):
         enemy = field.b_team
         self_pos = self.getPos()
 
+        if (self_pos - target_point).mag() == 0:
+            self.speedX = 0
+            self.speedY = 0
+            return
+
+
+
         sep_dist = 500
 
         closest_robot = None
