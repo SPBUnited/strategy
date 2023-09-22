@@ -21,7 +21,7 @@ GEOMETRY_PACKET_SIZE: int = 2
 
 ##################################################
 # ROBOT SETTING CONSTS
-MAX_SPEED = 30
+MAX_SPEED = 40
 MAX_SPEED_R = 7
 ACCELERATION = 3
 BASE_KICKER_VOLTAGE = 7.0

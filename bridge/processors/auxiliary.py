@@ -29,7 +29,7 @@ class Point:
 
     def __str__(self):
         # return "x = " + str(self.x) + ", y = " + str(self.y)
-        return f'x = {self.x:.4f}, y = {self.y:.4f}'
+        return f'x = {self.x:.2f}, y = {self.y:.2f}'
 
     def mag(self):
         return math.hypot(self.x, self.y)
