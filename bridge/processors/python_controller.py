@@ -95,8 +95,6 @@ class MatlabController(BaseProcessor):
                 self.field.updateYelRobot(robot.robot_id, auxiliary.Point(robot.x, robot.y), robot.orientation, time.time())
                 #self.y_team.robot(robot.robot_id).isUsed = 1
 
-            self.y_team.robot(1).isUsed = 1
-
             waypoints = self.strategy.process(self.field)
             waypoints[1].pos = auxiliary.Point(0, 0)
             for i in range(6):
@@ -122,6 +120,8 @@ class MatlabController(BaseProcessor):
 
             for r in self.controll_team:
                 r.clear_fields()
+
+            self.controll_team[11].copy_control_fields(self.field.y_team[1])
 
             for i in range(const.TEAM_ROBOTS_MAX_COUNT):
                 rules.append(0)
