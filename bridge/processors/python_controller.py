@@ -96,7 +96,6 @@ class MatlabController(BaseProcessor):
                 #self.y_team.robot(robot.robot_id).isUsed = 1
 
             waypoints = self.strategy.process(self.field)
-            waypoints[1].pos = auxiliary.Point(0, 0)
             for i in range(6):
                 self.router.setWaypoint(i, waypoints[i])
             self.router.calcRoutes(self.field)
