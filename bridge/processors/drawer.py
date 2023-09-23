@@ -6,8 +6,8 @@ import pygame
 
 import bridge.processors.auxiliary as aux
 
-WIDTH = 900
-HEIGHT = 600
+WIDTH = 600
+HEIGHT = 400
 FPS = 30
 
 FIELD_WIDTH = 9000
@@ -23,8 +23,12 @@ VIOLET = (204,102,204)
 RED = (199,59,50)
 BROWN = (153,95,61)
 BLACK = (30,40,50)
+
+FIELD_WHITE = (255, 255, 255)
 FIELD_GREEN = (8, 132, 20)
 BALL_RED = (255, 80, 0)
+BOT_YELLOW = (255, 255, 0)
+BOT_BLUE = (0, 0, 255)
 
 """
 Метакласс для реализации паттерна singleton
@@ -63,7 +67,48 @@ class Drawer(metaclass=Singleton):
         drwrad = self.scale2scr(50)
         pygame.draw.circle(self.screen, BALL_RED, drwpos, drwrad)
 
-    def drawVec(self, start: aux.Point, end: aux.Point):
+    def drawAbsVec(self, start: aux.Point, end: aux.Point, color = BLUE):
         drwstart = self.vec2pos(start)
-        drwend = self.vec2pos(start + end)
-        pygame.draw.line(self.screen, BLUE, drwstart, drwend)
+        drwend = self.vec2pos(end)
+        pygame.draw.line(self.screen, color, drwstart, drwend)
+
+    def drawDVec(self, start: aux.Point, delta: aux.Point, color = BLUE):
+        drwstart = self.vec2pos(start)
+        drwend = self.vec2pos(start + delta)
+        pygame.draw.line(self.screen, color, drwstart, drwend)
+
+    def drawBot(self, pos: aux.Point, angle: float, color):
+        COLOR = BOT_BLUE if color == 'b' else BOT_YELLOW
+        drwpos = self.vec2pos(pos)
+        drwrad = self.scale2scr(180/2)
+        pygame.draw.circle(self.screen, COLOR, drwpos, drwrad)
+
+    def drawField(self):
+        self.screen.fill(FIELD_GREEN)
+        # field outline
+        tlpos = self.vec2pos(aux.Point(-FIELD_WIDTH/2, FIELD_HEIGHT/2))
+        fsize = (self.scale2scr(FIELD_WIDTH), self.scale2scr(FIELD_HEIGHT))
+        pygame.draw.rect(self.screen, FIELD_WHITE, (tlpos, fsize), 1)
+
+        # center lines
+        top = self.vec2pos(aux.Point(0, FIELD_HEIGHT/2))
+        bottom = self.vec2pos(aux.Point(0, -FIELD_HEIGHT/2))
+        left = self.vec2pos(aux.Point(-FIELD_WIDTH/2, 0))
+        right = self.vec2pos(aux.Point(FIELD_WIDTH/2, 0))
+        pygame.draw.line(self.screen, FIELD_WHITE, top, bottom, 1)
+        pygame.draw.line(self.screen, FIELD_WHITE, left, right, 1)
+
+        # center circle
+        center = self.vec2pos(aux.Point(0, 0))
+        rad = self.scale2scr(500)
+        pygame.draw.circle(self.screen, FIELD_WHITE, center, rad, 1)
+
+        # defence rects
+        # left
+        tlpos = self.vec2pos(aux.Point(-FIELD_WIDTH/2, 1000))
+        fsize = (self.scale2scr(1000), self.scale2scr(2000))
+        pygame.draw.rect(self.screen, FIELD_WHITE, (tlpos, fsize), 1)
+        # right
+        tlpos = self.vec2pos(aux.Point(FIELD_WIDTH/2 - 1000, 1000))
+        fsize = (self.scale2scr(1000), self.scale2scr(2000))
+        pygame.draw.rect(self.screen, FIELD_WHITE, (tlpos, fsize), 1)

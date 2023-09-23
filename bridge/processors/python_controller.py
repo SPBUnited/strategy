@@ -102,6 +102,8 @@ class MatlabController(BaseProcessor):
             #     print(r.is_used(), end=" ")
             #     # print(r.last_update(), end=" ")
             # print()
+            
+            self.field.draw()
 
             waypoints = self.strategy.process(self.field)
             for i in range(6):
@@ -153,10 +155,6 @@ class MatlabController(BaseProcessor):
             b = bytes()
             rules = b.join((struct.pack('d', rule) for rule in rules))
             self.commands_writer.write(rules)
-            
-            drw.Drawer().screen.fill(drw.FIELD_GREEN)
-
-            self.field.draw()
 
             drw.Drawer().flip()
         # except: None
