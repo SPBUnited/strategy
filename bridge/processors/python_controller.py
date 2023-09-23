@@ -19,6 +19,8 @@ import bridge.processors.field as field
 import bridge.processors.router as router
 import bridge.processors.strategy as strategy
 
+import bridge.processors.drawer as drw
+
 # TODO: Refactor this class and corresponding matlab scripts
 @attr.s(auto_attribs=True)
 class MatlabController(BaseProcessor):
@@ -95,13 +97,19 @@ class MatlabController(BaseProcessor):
                 self.field.updateYelRobot(robot.robot_id, auxiliary.Point(robot.x, robot.y), robot.orientation, time.time())
                 #self.y_team.robot(robot.robot_id).isUsed = 1
 
+            # print(time.time(), end=" ")
+            # for r in self.field.all_bots:
+            #     print(r.is_used(), end=" ")
+            #     # print(r.last_update(), end=" ")
+            # print()
+
             waypoints = self.strategy.process(self.field)
             for i in range(6):
                 self.router.setWaypoint(i, waypoints[i])
             self.router.calcRoutes(self.field)
 
             # TODO алгоритм следования по траектории
-            for i in range(6):
+            for i in range(1,2):
                 # self.y_team.robot(i).go_to_point_with_detour(self.router.getRoute(i)[-1].pos, self.b_team, self.y_team)
                 self.field.y_team[i].go_to_point_vector_field(self.router.getRoute(i)[-1].pos, self.field)
                 self.field.y_team[i].rotate_to_angle(self.router.getRoute(i)[-1].angle)
@@ -145,6 +153,12 @@ class MatlabController(BaseProcessor):
             b = bytes()
             rules = b.join((struct.pack('d', rule) for rule in rules))
             self.commands_writer.write(rules)
+            
+            drw.Drawer().screen.fill(drw.GREEN)
+
+            self.field.draw()
+
+            drw.Drawer().flip()
         # except: None
         from datetime import datetime
         time1 = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
