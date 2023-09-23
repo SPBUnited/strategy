@@ -92,7 +92,7 @@ class Robot(entity.Entity):
         sep_dist = 300
 
         closest_robot = None
-        closest_dist = math.inf
+        closest_dist = (self_pos - target_point).mag()
         closest_separation = 0
         angle_to_point = math.atan2(target_point.y - self.getPos().y, target_point.x - self.getPos().x)
 
@@ -102,7 +102,9 @@ class Robot(entity.Entity):
                 continue
             robot_separation = aux.dist(aux.closest_point_on_line(self_pos, target_point, r.getPos()), r.getPos())
             robot_dist = aux.dist(self_pos, r.getPos())
-            if robot_separation < sep_dist and robot_dist < closest_dist:
+            angle_cos = aux.scal_mult( (r.getPos() - self_pos).unity(), (target_point - self_pos).unity() )
+            # sep_angle = math.acos(angle_cos)
+            if robot_separation < sep_dist and robot_dist < closest_dist and angle_cos > 0.7:
                 closest_robot = r
                 closest_dist = robot_dist
                 closest_separation = robot_separation
