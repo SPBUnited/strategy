@@ -15,11 +15,16 @@ FIELD_HEIGHT = 6000
 SCALE_FACTOR = WIDTH/FIELD_WIDTH
 
 # Задаем цвета
-WHITE = (255, 255, 255)
-BLACK = (0, 0, 0)
-RED = (255, 0, 0)
-GREEN = (8, 132, 20)
-BLUE = (0, 0, 255)
+WHITE = (255,230,210)
+YELLOW = (255,180,0)
+BLUE = (50,180,255)
+GREEN = (10,200,50)
+VIOLET = (204,102,204)
+RED = (199,59,50)
+BROWN = (153,95,61)
+BLACK = (30,40,50)
+FIELD_GREEN = (8, 132, 20)
+BALL_RED = (255, 80, 0)
 
 """
 Метакласс для реализации паттерна singleton
@@ -56,7 +61,7 @@ class Drawer(metaclass=Singleton):
     def drawBall(self, pos: aux.Point):
         drwpos = self.vec2pos(pos)
         drwrad = self.scale2scr(50)
-        pygame.draw.circle(self.screen, RED, drwpos, drwrad)
+        pygame.draw.circle(self.screen, BALL_RED, drwpos, drwrad)
 
     def drawVec(self, start: aux.Point, end: aux.Point):
         drwstart = self.vec2pos(start)
