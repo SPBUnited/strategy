@@ -43,7 +43,8 @@ class Strategy:
             waypoints[i] = waypoint
 
         timer = time.time()
-        dpos = aux.Point(1000 + 200*((timer//2)%2), -1000)
+        # timer = 0
+        dpos = aux.Point(500 + 1500*((timer//6)%2), -1000)
         # print( dpos )
         dangle = 0*math.pi
         waypoints[1] = wp.Waypoint(dpos, dangle, wp.WType.ENDPOINT)
