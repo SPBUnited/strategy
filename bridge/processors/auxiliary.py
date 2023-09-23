@@ -148,7 +148,7 @@ def vect_mult(v, u):
     return v.x * u.y - v.y * u.x
 
 def scal_mult(v, u):
-    return v.x * u.x + v.x * u.x
+    return v.x * u.x + v.y * u.y
 
 def rotate(p: Point, angle: float):
     return Point(p.x * math.cos(angle) - p.y * math.sin(angle),
