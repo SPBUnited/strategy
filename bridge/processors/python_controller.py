@@ -72,26 +72,26 @@ class MatlabController(BaseProcessor):
                 self.field.updateBall(self.ball)
 
             for i in range(const.TEAM_ROBOTS_MAX_COUNT):
-                if time.time() - self.field.b_team[i].last_update() > 0.3:
+                if time.time() - self.field.b_team[i].last_update() > 1:
                     self.field.b_team[i].used(0)
-                if time.time() - self.field.y_team[i].last_update() > 0.3:
+                if time.time() - self.field.y_team[i].last_update() > 1:
                     self.field.y_team[i].used(0)
 
             # TODO: Barrier states
             for robot in detection.robots_blue:
-                #self.b_team.robot(robot.robot_id).update(robot.x, robot.y, robot.orientation)
-                if time.time() - self.field.b_team[i].last_update() > 0.1:
-                    self.field.b_team[i].used(0)
+                # self.b_team.robot(robot.robot_id).update(robot.x, robot.y, robot.orientation)
+                if time.time() - self.field.b_team[robot.robot_id].last_update() > 0.3:
+                    self.field.b_team[robot.robot_id].used(0)
                 else: 
-                    self.field.b_team[i].used(1)
+                    self.field.b_team[robot.robot_id].used(1)
                 self.field.updateBluRobot(robot.robot_id, auxiliary.Point(robot.x, robot.y), robot.orientation, time.time())
 
             for robot in detection.robots_yellow:
-                #self.y_team.robot(robot.robot_id).update(robot.x, robot.y, robot.orientation)
-                if time.time() - self.field.y_team[i].last_update() > 0.1:
-                    self.field.y_team[i].used(0)
+                # self.y_team.robot(robot.robot_id).update(robot.x, robot.y, robot.orientation)
+                if time.time() - self.field.y_team[robot.robot_id].last_update() > 0.3:
+                    self.field.y_team[robot.robot_id].used(0)
                 else: 
-                    self.field.y_team[i].used(1)
+                    self.field.y_team[robot.robot_id].used(1)
                 self.field.updateYelRobot(robot.robot_id, auxiliary.Point(robot.x, robot.y), robot.orientation, time.time())
                 #self.y_team.robot(robot.robot_id).isUsed = 1
 

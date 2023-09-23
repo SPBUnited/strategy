@@ -93,35 +93,19 @@ class Robot(entity.Entity):
 
 
 
-        sep_dist = 500
+        sep_dist = 300
 
         closest_robot = None
         closest_dist = math.inf
         closest_separation = 0
         angle_to_point = math.atan2(target_point.y - self.getPos().y, target_point.x - self.getPos().x)
 
-        for r in enemy:
-            if r != self:
-                robot_dist = aux.dist(self_pos, r.getPos()) 
-                if robot_dist < sep_dist and aux.dist(self.getPos(), target_point) != 0:
-                    angle_to_robot = math.atan2(r.getPos().y - self.getPos().y, r.getPos().x - self.getPos().x)
-                    angle_difference = abs(angle_to_robot - angle_to_point)
-                    if angle_difference < math.pi / 4: 
-                        closest_point = aux.closest_point_on_line(self.getPos(), target_point, r.getPos())      
-                        robot_separation = aux.dist(r.getPos(), closest_point)
-                        
-                        if robot_dist < closest_dist:
-                            closest_robot = r
-                            closest_dist = robot_dist
-                            closest_separation = robot_separation
-
-
         # Расчет теней роботов для векторного поля
         for r in field.all_bots:
+            if r == self or r.is_used() == 0:
+                continue
             robot_separation = aux.dist(aux.closest_point_on_line(self_pos, target_point, r.getPos()), r.getPos())
             robot_dist = aux.dist(self_pos, r.getPos())
-            if robot_dist == 0:
-                continue
             if robot_separation < sep_dist and robot_dist < closest_dist:
                 closest_robot = r
                 closest_dist = robot_dist
@@ -171,7 +155,7 @@ class Robot(entity.Entity):
         u = min(max(err * gain, -const.MAX_SPEED), const.MAX_SPEED)
         newSpeed = u
 
-        print(self_pos, target_point, '%.2f'%newSpeed, '%.2f'%angle_to_point, '%.2f'%self.getAngle())
+        # print(self_pos, target_point, '%.2f'%newSpeed, '%.2f'%angle_to_point, '%.2f'%self.getAngle())
 
         self.speedX = newSpeed * math.cos(angle_to_point - self.getAngle())
         self.speedY = -newSpeed * math.sin(angle_to_point - self.getAngle())
