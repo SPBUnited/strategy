@@ -49,8 +49,15 @@ class Field:
     """
     def draw(self):
         drawer = drw.Drawer()
+
+        drawer.drawField()
+
         drawer.drawBall(self.ball.pos)
-        drawer.drawVec(self.ball.pos, self.ball.vel)
+        drawer.drawDVec(self.ball.pos, self.ball.vel)
+        
+        for r in self.all_bots:
+            drawer.drawBot(r.pos, r.angle, r.color)
+            drawer.drawDVec(r.pos, r.vel)
         
 
     """
