@@ -7,11 +7,7 @@ import bridge.processors.drawer as drw
 
 class Robot(entity.Entity):
     def __init__(self, pos, angle, R, color, r_id):
-        self.pos = pos
-        self.vel = aux.Point(0, 0)
-        self.acc = aux.Point(0, 0)
-        self.angle = angle
-        self.R = R
+        super().__init__(pos, angle, R)
 
         self.rId = r_id
         self.isUsed = 0
@@ -40,8 +36,7 @@ class Robot(entity.Entity):
         return self.lastUpdate
 
     def update(self, pos, angle, t):
-        self.pos = pos
-        self.angle = angle
+        super().update(pos, angle)
         self.kickForward = 0
         self.kickUp = 0
         self.lastUpdate = t
