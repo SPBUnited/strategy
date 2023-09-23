@@ -154,7 +154,7 @@ class MatlabController(BaseProcessor):
             rules = b.join((struct.pack('d', rule) for rule in rules))
             self.commands_writer.write(rules)
             
-            drw.Drawer().screen.fill(drw.GREEN)
+            drw.Drawer().screen.fill(drw.FIELD_GREEN)
 
             self.field.draw()
 
