@@ -7,11 +7,11 @@ import bridge.processors.const as const
 import bridge.processors.robot as robot
 import bridge.processors.team as team
 
-from bridge.bus import DataReader, DataWriter
-from bridge.common import config
+from strategy_bridge.bus import DataReader, DataWriter
+from strategy_bridge.common import config
 #from bridge.matlab.engine import matlab_engine
-from bridge.model.referee import RefereeCommand
-from bridge.processors import BaseProcessor
+from strategy_bridge.model.referee import RefereeCommand
+from strategy_bridge.processors import BaseProcessor
 import math
 import bridge.processors.auxiliary as auxiliary
 
