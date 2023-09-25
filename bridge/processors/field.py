@@ -5,7 +5,7 @@ import bridge.processors.entity as entity
 import bridge.processors.auxiliary as aux
 import bridge.processors.const as const
 import bridge.processors.robot as robot
-import bridge.processors.drawer as drw
+#import bridge.processors.drawer as drw
 
 class Field:
     """
@@ -47,7 +47,7 @@ class Field:
     """
     Отрисовать текущую ситуацию на поле в ящике
     """
-    def draw(self):
+    '''def draw(self):
         drawer = drw.Drawer()
 
         drawer.drawField()
@@ -57,7 +57,7 @@ class Field:
         
         for r in self.all_bots:
             drawer.drawBot(r.pos, r.angle, r.color)
-            drawer.drawDVec(r.pos, r.vel)
+            drawer.drawDVec(r.pos, r.vel)'''
         
 
     """
