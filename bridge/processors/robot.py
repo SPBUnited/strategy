@@ -90,7 +90,7 @@ class Robot(entity.Entity):
 
 
 
-        sep_dist = 300
+        sep_dist = 500
 
         closest_robot = None
         closest_dist = math.inf
@@ -112,7 +112,7 @@ class Robot(entity.Entity):
 
         vel_vec = target_point - self_pos
         angle_cos = aux.scal_mult((r.getPos() - self_pos).unity(), (target_point - self_pos).unity())
-        if closest_robot != None and closest_dist != 0 and angle_cos > 0.7:
+        if closest_robot != None and closest_dist != 0:
             side = aux.vect_mult(closest_robot.getPos() - self_pos, target_point - self_pos)
             # offset_angle_val = 200*math.pi/6 * closest_dist**(-2)
             offset_angle_val = -2 * math.atan((sep_dist - closest_separation)/(2*(closest_dist)))

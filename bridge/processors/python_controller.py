@@ -18,6 +18,8 @@ import bridge.processors.auxiliary as auxiliary
 import bridge.processors.field as field
 import bridge.processors.router as router
 import bridge.processors.strategy as strategy
+import bridge.processors.waypoint as wp
+
 
 #import bridge.processors.drawer as drw
 
@@ -113,7 +115,12 @@ class MatlabController(BaseProcessor):
             # TODO алгоритм следования по траектории
             for i in range(6):
                 # self.y_team.robot(i).go_to_point_with_detour(self.router.getRoute(i)[-1].pos, self.b_team, self.y_team)
-                self.field.b_team[i].go_to_point_vector_field(self.router.getRoute(i)[-1].pos, self.field)
+                print(i, self.router.getRoute(i)[-1].type)
+                if self.router.getRoute(i)[-1].type == wp.WType.IGNOREOBSTACLES:
+                    self.field.b_team[i].go_to_point(self.router.getRoute(i)[-1].pos)
+                else:
+                    self.field.b_team[i].go_to_point_vector_field(self.router.getRoute(i)[-1].pos, self.field)
+
                 self.field.b_team[i].rotate_to_angle(self.router.getRoute(i)[-1].angle)
                 #self.field.b_team[i].rotate_to_angle(0)
                 #self.field.b_team[i].rotate_to_angle(math.pi)

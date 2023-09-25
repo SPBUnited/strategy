@@ -20,6 +20,12 @@ class Strategy:
     def __init__(self) -> None:
         self.state = States.DEFENCE
 
+        #DEFENCE
+        self.old_def_helper = -1
+        self.old_def = -1
+        self.steal_flag = 0
+
+
     """
     Рассчитать конечные точки для каждого робота
     """
@@ -28,13 +34,18 @@ class Strategy:
             return self.debug(field)
         elif self.state == States.DEFENCE:
             return self.defence(field)
+        
+        if self.state != States.DEFENCE:
+            self.old_def_helper = -1
+            self.old_def = -1
+            self.steal_flag = 0
 
     def debug(self, field: field.Field):
         waypoints = [None]*const.TEAM_ROBOTS_MAX_COUNT
         for i in range(1, 6):
             bbotpos = field.b_team[i].getPos()
             ybotpos = field.y_team[i].getPos()
-            pos = aux.point_on_line(bbotpos, aux.Point(4500, 0), 300)
+            pos = aux.point_on_line(bbotpos, aux.Point(const.GOAL_X, 0), 300)
             
             dpos = bbotpos - ybotpos
             angle = math.atan2(dpos.y, dpos.x)
@@ -84,9 +95,12 @@ class Strategy:
 
         def1 = aux.find_nearest_robot(robot_with_ball.getPos(), allies, used_robots_id)
 
-        targetPoint = aux.point_on_line(robot_with_ball.getPos(), aux.Point(const.SIDE * 4500, 0), dist_between)
+        if def1.rId == self.old_def_helper:
+            def1 = allies[self.old_def]
+        targetPoint = aux.point_on_line(robot_with_ball.getPos(), aux.Point(const.SIDE * const.GOAL_X, 0), dist_between)
         waypoint = wp.Waypoint(targetPoint, aux.angle_to_point(targetPoint, robot_with_ball.getPos()), wp.WType.ENDPOINT)
         waypoints[def1.rId] = waypoint
+        self.old_def = def1.rId
 
 
         used_robots_id.append(def1.rId)
@@ -105,6 +119,27 @@ class Strategy:
             targetPoint = aux.point_on_line(rivals[rbs_rIds[i]].getPos(), field.ball.getPos(), dist_between)
             waypoint = wp.Waypoint(targetPoint, aux.angle_to_point(targetPoint, field.ball.getPos()), wp.WType.ENDPOINT)
             waypoints[defender.rId] = waypoint
+
+        if totalRobots - len(used_robots_id) > 0:
+            def1Helper = aux.find_nearest_robot(robot_with_ball.getPos(), allies, used_robots_id)
+            #targetPoint = aux.point_on_line(field.ball.getPos(), robot_with_ball.getPos(), dist_between)
+            targetPoint = aux.point_on_line(field.ball.getPos(), robot_with_ball.getPos(), -dist_between + 150)
+            waypoint = wp.Waypoint(targetPoint, aux.angle_to_point(def1Helper.getPos(), field.ball.getPos()), wp.WType.ENDPOINT)
+            used_robots_id.append(def1Helper.rId)
+            self.old_def_helper = def1Helper.rId
+            if aux.dist(def1Helper.getPos(), targetPoint) < 100 or self.steal_flag:
+                self.steal_flag = 1
+                def1Helper.dribblerEnable = 1
+                def1Helper.speedDribbler = 15
+                waypoint = wp.Waypoint(field.ball.getPos(), aux.angle_to_point(def1Helper.getPos(), field.ball.getPos()), wp.WType.IGNOREOBSTACLES)   
+            waypoints[def1Helper.rId] = waypoint
+            if aux.dist(def1Helper.getPos(), targetPoint) < 1500:
+                targetPoint = aux.point_on_line(robot_with_ball.getPos(), aux.Point(const.SIDE * const.GOAL_X, 0), dist_between + 300)
+                waypoint = wp.Waypoint(targetPoint, aux.angle_to_point(targetPoint, robot_with_ball.getPos()), wp.WType.ENDPOINT)
+                waypoints[def1.rId] = waypoint
+
+
+
         if totalRobots - len(used_robots_id) == 1:
              for r in worksRobots:
                 i = r.rId
