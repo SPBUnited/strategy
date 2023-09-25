@@ -84,6 +84,8 @@ class Strategy:
         worksRobots = []
         for i in range(const.TEAM_ROBOTS_MAX_COUNT):
             if allies[i].is_used():
+                allies[i].dribblerEnable = 0
+                allies[i].autoKick = 0
                 worksRobots.append(allies[i])
         totalRobots = len(worksRobots)
 
@@ -131,6 +133,8 @@ class Strategy:
                 self.steal_flag = 1
                 def1Helper.dribblerEnable = 1
                 def1Helper.speedDribbler = 15
+                if aux.dist(def1Helper.getPos(), targetPoint) < 200:
+                    def1Helper.kick_up()
                 waypoint = wp.Waypoint(field.ball.getPos(), aux.angle_to_point(def1Helper.getPos(), field.ball.getPos()), wp.WType.IGNOREOBSTACLES)   
             waypoints[def1Helper.rId] = waypoint
             if aux.dist(def1Helper.getPos(), targetPoint) < 1500:
