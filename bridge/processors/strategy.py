@@ -76,8 +76,9 @@ class Strategy:
                 worksRobots.append(allies[i])
         totalRobots = len(worksRobots)
 
-
-        used_robots_id = [0]
+        used_robots_id = []
+        if allies[0].is_used():
+            used_robots_id = [0]
         robot_with_ball = aux.find_nearest_robot(field.ball.getPos(), rivals)
         
 
@@ -104,7 +105,7 @@ class Strategy:
             targetPoint = aux.point_on_line(rivals[rbs_rIds[i]].getPos(), field.ball.getPos(), dist_between)
             waypoint = wp.Waypoint(targetPoint, aux.angle_to_point(targetPoint, field.ball.getPos()), wp.WType.ENDPOINT)
             waypoints[defender.rId] = waypoint
-        if totalRobots - len(used_robots_id) == 0:
+        if totalRobots - len(used_robots_id) == 1:
              for r in worksRobots:
                 i = r.rId
                 if i not in used_robots_id:
@@ -112,7 +113,7 @@ class Strategy:
                     waypoint = wp.Waypoint(targetPoint, aux.angle_to_point(targetPoint, field.ball.getPos()), wp.WType.ENDPOINT)
                     waypoints[i] = waypoint
                     used_robots_id.append(i)
-        elif totalRobots - len(used_robots_id) == 1:
+        elif totalRobots - len(used_robots_id) == 2:
             def2 = aux.find_nearest_robot(aux.Point(const.SIDE * -xAttack, 1500), allies, used_robots_id)
             used_robots_id.append(def2.rId)
             targetPoint = aux.Point(const.SIDE * -xAttack, 1500)
