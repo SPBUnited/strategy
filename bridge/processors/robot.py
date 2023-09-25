@@ -21,10 +21,10 @@ class Robot(entity.Entity):
         self.kickUp = 0
         self.kickForward = 0
         self.autoKick = 0
-        self.kickerVoltage = 0
+        self.kickerVoltage = 15
         self.dribblerEnable = 0
         self.speedDribbler = 0
-        self.kickerChargeEnable = 0
+        self.kickerChargeEnable = 1
         self.beep = 0   
 
     def used(self, a):

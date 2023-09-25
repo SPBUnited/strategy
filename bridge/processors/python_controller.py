@@ -115,7 +115,6 @@ class MatlabController(BaseProcessor):
             # TODO алгоритм следования по траектории
             for i in range(6):
                 # self.y_team.robot(i).go_to_point_with_detour(self.router.getRoute(i)[-1].pos, self.b_team, self.y_team)
-                print(i, self.router.getRoute(i)[-1].type)
                 if self.router.getRoute(i)[-1].type == wp.WType.IGNOREOBSTACLES:
                     self.field.b_team[i].go_to_point(self.router.getRoute(i)[-1].pos)
                 else:
