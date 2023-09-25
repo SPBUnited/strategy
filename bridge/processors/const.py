@@ -35,3 +35,4 @@ KP = 0.1
 BALL_R = 0.05
 ROBOT_R = 0.2
 GRAVEYARD_POS = aux.Point(-10000, 0)
+GOAL_X = 3000

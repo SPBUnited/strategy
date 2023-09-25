@@ -20,8 +20,8 @@ class Field:
         self.b_team = [ robot.Robot(const.GRAVEYARD_POS, 0, const.ROBOT_R, 'b', i) for i in range(const.TEAM_ROBOTS_MAX_COUNT)]
         self.y_team = [ robot.Robot(const.GRAVEYARD_POS, 0, const.ROBOT_R, 'y', i) for i in range(const.TEAM_ROBOTS_MAX_COUNT)]
         self.all_bots = [*self.b_team, *self.y_team]
-        self.y_goal = aux.Point(4500, 0)
-        self.b_goal = aux.Point(-4500, 0)
+        self.y_goal = aux.Point(const.GOAL_X, 0)
+        self.b_goal = aux.Point(-const.GOAL_X, 0)
 
     """
     Обновить положение мяча
