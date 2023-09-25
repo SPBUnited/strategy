@@ -19,7 +19,7 @@ import bridge.processors.field as field
 import bridge.processors.router as router
 import bridge.processors.strategy as strategy
 
-import bridge.processors.drawer as drw
+#import bridge.processors.drawer as drw
 
 # TODO: Refactor this class and corresponding matlab scripts
 @attr.s(auto_attribs=True)
@@ -103,7 +103,7 @@ class MatlabController(BaseProcessor):
             #     # print(r.last_update(), end=" ")
             # print()
             
-            self.field.draw()
+            #self.field.draw()
 
             waypoints = self.strategy.process(self.field)
             for i in range(6):
@@ -111,11 +111,21 @@ class MatlabController(BaseProcessor):
             self.router.calcRoutes(self.field)
 
             # TODO алгоритм следования по траектории
-            for i in range(1,2):
+            for i in range(6):
                 # self.y_team.robot(i).go_to_point_with_detour(self.router.getRoute(i)[-1].pos, self.b_team, self.y_team)
-                self.field.y_team[i].go_to_point_vector_field(self.router.getRoute(i)[-1].pos, self.field)
-                self.field.y_team[i].rotate_to_angle(self.router.getRoute(i)[-1].angle)
-                #self.field.y_team[i].rotate_to_point(auxiliary.Point(0, 0))
+                self.field.b_team[i].go_to_point_vector_field(self.router.getRoute(i)[-1].pos, self.field)
+                self.field.b_team[i].rotate_to_angle(self.router.getRoute(i)[-1].angle)
+                #self.field.b_team[i].rotate_to_angle(0)
+                #self.field.b_team[i].rotate_to_angle(math.pi)
+
+            dbg = 0
+
+            if dbg:
+                self.field.b_team[5].go_to_point_vector_field(auxiliary.Point(1000, 1000), self.field)
+                self.field.b_team[3].go_to_point_vector_field(auxiliary.Point(700, 1300), self.field)
+                self.field.b_team[5].rotate_to_angle(0)
+                self.field.b_team[3].rotate_to_angle(0)
+
 
             rules = []
 
@@ -130,9 +140,13 @@ class MatlabController(BaseProcessor):
             for r in self.controll_team:
                 r.clear_fields()
 
-            self.controll_team[11].copy_control_fields(self.field.y_team[1])
+            self.controll_team[10].copy_control_fields(self.field.b_team[5])
+            self.controll_team[11].copy_control_fields(self.field.b_team[3])
+            self.controll_team[12].copy_control_fields(self.field.b_team[1])
+
 
             for i in range(const.TEAM_ROBOTS_MAX_COUNT):
+                self.controll_team[i].remake_speed()
                 rules.append(0)
                 rules.append(self.controll_team[i].speedX)
                 rules.append(self.controll_team[i].speedY)
@@ -156,7 +170,7 @@ class MatlabController(BaseProcessor):
             rules = b.join((struct.pack('d', rule) for rule in rules))
             self.commands_writer.write(rules)
 
-            drw.Drawer().flip()
+            #drw.Drawer().flip()
         # except: None
         from datetime import datetime
         time1 = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
