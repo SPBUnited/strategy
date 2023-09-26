@@ -9,9 +9,12 @@ import bridge.processors.team as team
 
 from strategy_bridge.bus import DataReader, DataWriter
 from strategy_bridge.common import config
-#from bridge.matlab.engine import matlab_engine
 from strategy_bridge.model.referee import RefereeCommand
 from strategy_bridge.processors import BaseProcessor
+from strategy_bridge.bus import DataBus
+from strategy_bridge.utils.debugger import debugger
+from strategy_bridge.pb.messages_robocup_ssl_wrapper_pb2 import SSL_WrapperPacket
+
 import math
 import bridge.processors.auxiliary as auxiliary
 
@@ -30,8 +33,8 @@ class MatlabController(BaseProcessor):
     processing_pause: typing.Optional[float] = 0.001
     max_commands_to_persist: int = 20
 
-    vision_reader: DataReader = attr.ib(init=False, default=DataReader(config.VISION_DETECTIONS_TOPIC))
-    referee_reader: DataReader = attr.ib(init=False, default=DataReader(config.REFEREE_COMMANDS_TOPIC))
+    vision_reader: DataReader = attr.ib(init=False)
+    referee_reader: DataReader = attr.ib(init=False)
     commands_writer: DataWriter = attr.ib(init=False)
 
     cur_time = time.time()
@@ -44,23 +47,29 @@ class MatlabController(BaseProcessor):
     router = router.Router()
     strategy = strategy.Strategy()
 
-    def __attrs_post_init__(self):
-        self.commands_writer = DataWriter(config.ROBOT_COMMANDS_TOPIC, self.max_commands_to_persist)
+    def initialize(self, data_bus: DataBus) -> None:
+        super(MatlabController, self).initialize(data_bus)
+        self.vision_reader = DataReader(data_bus, config.VISION_DETECTIONS_TOPIC)
+        self.referee_reader = DataReader(data_bus, config.REFEREE_COMMANDS_TOPIC)
+        self.commands_writer = DataWriter(data_bus, config.ROBOT_COMMANDS_TOPIC, self.max_commands_to_persist)
+        self._ssl_converter = SSL_WrapperPacket()
 
     def get_last_referee_command(self) -> RefereeCommand:
         referee_commands = self.referee_reader.read_new()
         if referee_commands:
-            return referee_commands[-1]
+            return referee_commands[-1].content
         return RefereeCommand(0, 0, False)
 
-    async def process(self) -> None:
+    @debugger
+    def process(self) -> None:
         balls = np.zeros(const.BALL_PACKET_SIZE * const.MAX_BALLS_IN_FIELD)
         field_info = np.zeros(const.GEOMETRY_PACKET_SIZE)
         ssl_package = 0
         try:
-            ssl_package = self.vision_reader.read_new()[-1]
+            ssl_package = self.vision_reader.read_new()[-1].content
         except: None
-        if ssl_package:            
+        if ssl_package:
+            ssl_package = self._ssl_converter.FromString(ssl_package)
             geometry = ssl_package.geometry
             if geometry:
                 field_info[0] = geometry.field.field_length
