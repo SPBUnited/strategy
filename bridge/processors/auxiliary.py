@@ -29,15 +29,15 @@ class Point:
 
     def __str__(self):
         # return "x = " + str(self.x) + ", y = " + str(self.y)
-        return f'x = {self.x:.4f}, y = {self.y:.4f}'
+        return f'x = {self.x:.2f}, y = {self.y:.2f}'
 
     def mag(self):
         return math.hypot(self.x, self.y)
 
     def unity(self):
         if self.mag() == 0:
-            #print("БАГА, .unity от нулевого вектора")
-            return Point(1, 0)
+            #raise ValueError("БАГА, .unity от нулевого вектора")
+            return self
         return self/self.mag()
 
 
@@ -149,7 +149,7 @@ def vect_mult(v, u):
     return v.x * u.y - v.y * u.x
 
 def scal_mult(v, u):
-    return v.x * u.x + v.x * u.x
+    return v.x * u.x + v.y * u.y
 
 def rotate(p: Point, angle: float):
     return Point(p.x * math.cos(angle) - p.y * math.sin(angle),

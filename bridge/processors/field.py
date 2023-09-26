@@ -5,6 +5,7 @@ import bridge.processors.entity as entity
 import bridge.processors.auxiliary as aux
 import bridge.processors.const as const
 import bridge.processors.robot as robot
+#import bridge.processors.drawer as drw
 
 class Field:
     """
@@ -19,8 +20,8 @@ class Field:
         self.b_team = [ robot.Robot(const.GRAVEYARD_POS, 0, const.ROBOT_R, 'b', i) for i in range(const.TEAM_ROBOTS_MAX_COUNT)]
         self.y_team = [ robot.Robot(const.GRAVEYARD_POS, 0, const.ROBOT_R, 'y', i) for i in range(const.TEAM_ROBOTS_MAX_COUNT)]
         self.all_bots = [*self.b_team, *self.y_team]
-        self.y_goal = aux.Point(4500, 0)
-        self.b_goal = aux.Point(-4500, 0)
+        self.y_goal = aux.Point(const.GOAL_X, 0)
+        self.b_goal = aux.Point(-const.GOAL_X, 0)
 
     """
     Обновить положение мяча
@@ -42,6 +43,22 @@ class Field:
     """
     def updateYelRobot(self, idx, pos, angle, t):
         self.y_team[idx].update(pos, angle, t)
+
+    """
+    Отрисовать текущую ситуацию на поле в ящике
+    """
+    '''def draw(self):
+        drawer = drw.Drawer()
+
+        drawer.drawField()
+
+        drawer.drawBall(self.ball.pos)
+        drawer.drawDVec(self.ball.pos, self.ball.vel)
+        
+        for r in self.all_bots:
+            drawer.drawBot(r.pos, r.angle, r.color)
+            drawer.drawDVec(r.pos, r.vel)'''
+        
 
     """
     Получить объект мяча

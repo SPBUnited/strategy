@@ -3,20 +3,65 @@ import bridge.processors.auxiliary as aux
 import bridge.processors.const as const
 import bridge.processors.field as field
 import bridge.processors.entity as entity
+#import bridge.processors.drawer as drw
 
 class Robot(entity.Entity):
     def __init__(self, pos, angle, R, color, r_id):
-        self.pos = pos
-        self.vel = aux.Point(0, 0)
-        self.acc = aux.Point(0, 0)
-        self.angle = angle
-        self.R = R
+        super().__init__(pos, angle, R)
 
         self.rId = r_id
         self.isUsed = 0
         self.color = color
         self.lastUpdate = 0
+        self.errOld = 0
 
+        self.speedX = 0
+        self.speedY = 0
+        self.speedR = 0
+        self.kickUp = 0
+        self.kickForward = 0
+        self.autoKick = 0
+        self.kickerVoltage = 15
+        self.dribblerEnable = 0
+        self.speedDribbler = 0
+        self.kickerChargeEnable = 1
+        self.beep = 0   
+
+    def used(self, a):
+        self.isUsed = a
+
+    def is_used(self):
+        return self.isUsed
+    
+    def last_update(self):
+        return self.lastUpdate
+
+    def update(self, pos, angle, t):
+        super().update(pos, angle)
+        self.kickForward = 0
+        self.kickUp = 0
+        self.lastUpdate = t
+
+    def kick_forward(self):
+        self.kickForward = 1
+
+    def kick_up(self):
+        self.kickUp = 1
+
+    def copy_control_fields(self, robot):
+        self.speedX = robot.speedX
+        self.speedY = robot.speedY
+        self.speedR = robot.speedR
+        self.kickUp = robot.kickUp
+        self.kickForward = robot.kickForward
+        self.autoKick = robot.autoKick
+        self.kickerVoltage = robot.kickerVoltage
+        self.dribblerEnable = robot.dribblerEnable
+        self.speedDribbler = robot.speedDribbler
+        self.kickerChargeEnable = robot.kickerChargeEnable
+        self.beep = robot.beep
+
+    def clear_fields(self):
         self.speedX = 0
         self.speedY = 0
         self.speedR = 0
@@ -27,27 +72,7 @@ class Robot(entity.Entity):
         self.dribblerEnable = 0
         self.speedDribbler = 0
         self.kickerChargeEnable = 0
-        self.beep = 0   
-
-    def used(self, a):
-        self.isUsed = a
-
-    def is_used(self):
-        return self.isUsed
-
-    def update(self, pos, angle, t):
-        self.pos = pos
-        self.angle = angle
-        self.kickForward = 0
-        self.kickUp = 0
-        self.isUsed = 1
-        self.lastUpdate = t
-
-    def kick_forward(self):
-        self.kickForward = 1
-
-    def kick_up(self):
-        self.kickUp = 1
+        self.beep = 0 
 
 
     """
@@ -58,6 +83,13 @@ class Robot(entity.Entity):
         enemy = field.b_team
         self_pos = self.getPos()
 
+        if (self_pos - target_point).mag() == 0:
+            self.speedX = 0
+            self.speedY = 0
+            return
+
+
+
         sep_dist = 500
 
         closest_robot = None
@@ -65,24 +97,10 @@ class Robot(entity.Entity):
         closest_separation = 0
         angle_to_point = math.atan2(target_point.y - self.getPos().y, target_point.x - self.getPos().x)
 
-        for r in enemy:
-            if r != self:
-                robot_dist = aux.dist(self_pos, r.getPos()) 
-                if robot_dist < sep_dist and aux.dist(self.getPos(), target_point) != 0:
-                    angle_to_robot = math.atan2(r.getPos().y - self.getPos().y, r.getPos().x - self.getPos().x)
-                    angle_difference = abs(angle_to_robot - angle_to_point)
-                    if angle_difference < math.pi / 4: 
-                        closest_point = aux.closest_point_on_line(self.getPos(), target_point, r.getPos())      
-                        robot_separation = aux.dist(r.getPos(), closest_point)
-                        
-                        if robot_dist < closest_dist:
-                            closest_robot = r
-                            closest_dist = robot_dist
-                            closest_separation = robot_separation
-
-
         # Расчет теней роботов для векторного поля
         for r in field.all_bots:
+            if r == self or r.is_used() == 0:
+                continue
             robot_separation = aux.dist(aux.closest_point_on_line(self_pos, target_point, r.getPos()), r.getPos())
             robot_dist = aux.dist(self_pos, r.getPos())
             if robot_dist == 0:
@@ -93,6 +111,7 @@ class Robot(entity.Entity):
                 closest_separation = robot_separation
 
         vel_vec = target_point - self_pos
+        angle_cos = aux.scal_mult((r.getPos() - self_pos).unity(), (target_point - self_pos).unity())
         if closest_robot != None and closest_dist != 0:
             side = aux.vect_mult(closest_robot.getPos() - self_pos, target_point - self_pos)
             # offset_angle_val = 200*math.pi/6 * closest_dist**(-2)
@@ -102,26 +121,43 @@ class Robot(entity.Entity):
 
         vel_vec = vel_vec.unity()
 
+        '''drawer = drw.Drawer()
+        if closest_robot != None:
+            drawer.drawAbsVec(self_pos, closest_robot.pos, drw.RED)
+        drawer.drawDVec(self_pos, vel_vec*closest_dist, drw.YELLOW)'''
+
         Fsum = aux.Point(0,0)
 
         # Расчет силы взаимодействия роботов
-        # for r in field.all_bots:
-        #     delta_pos = self_pos - r.getPos()
-        #     if delta_pos == aux.Point(0,0):
-        #         continue
-        #     F = delta_pos * 40 * (1 / delta_pos.mag()**3)
-        #     Fsum = Fsum + F
+        for r in field.all_bots:
+             delta_pos = self_pos - r.getPos()
+             if delta_pos == aux.Point(0,0):
+                 continue
+             F = delta_pos * 40 * (1 / delta_pos.mag()**3)
+             Fsum = Fsum + F
 
         vel_vec = vel_vec + Fsum
 
         angle_to_point = math.atan2(vel_vec.y, vel_vec.x)
 
         distance_to_point = aux.dist(self_pos, target_point)
+        
 
-        newSpeed = min(const.MAX_SPEED, distance_to_point * 0.07)
+        distance_to_point = aux.dist(self_pos, target_point)
+
+        newSpeed = min(const.MAX_SPEED, distance_to_point * const.KP)
 
         self.speedX = newSpeed * math.cos(angle_to_point - self.getAngle())
         self.speedY = -newSpeed * math.sin(angle_to_point - self.getAngle())
+
+    def remake_speed(self):
+        vecSpeed = math.sqrt(self.speedX ** 2 + self.speedY ** 2)
+        rSpeed = abs(self.speedR)
+
+        vecSpeed *= ((const.MAX_SPEED_R - rSpeed) / const.MAX_SPEED_R) ** 5
+        ang = math.atan2(self.speedY, self.speedX)
+        self.speedX = vecSpeed * math.cos(ang)
+        self.speedY = vecSpeed * math.sin(ang)
 
     def go_to_point_with_detour(self, target_point, y_team, b_team):
         if aux.dist(self, target_point) < 500:
@@ -209,16 +245,15 @@ class Robot(entity.Entity):
 
     def go_to_point(self, point, is_final_point = 1):
         # Calculate the angle to the ball
-        angle_to_point = math.atan2(point.y - self.y, point.x - self.x)
+        angle_to_point = math.atan2(point.y - self.getPos().y, point.x - self.getPos().x)
 
         # Calculate the distance to the ball
-        distance_to_point = math.dist((self.x, self.y), (point.x, point.y))
+        distance_to_point = math.dist((self.getPos().x, self.getPos().y), (point.x, point.y))
 
         if is_final_point:
-            newSpeed = min(self.maxSpeed, distance_to_point * 0.07)
+            newSpeed = min(const.MAX_SPEED, distance_to_point * const.KP)
         else:
-            newSpeed = self.maxSpeed
-
+            newSpeed = const.MAX_SPEED
         self.speedX = newSpeed * math.cos(angle_to_point - self.getAngle())
         self.speedY = newSpeed * math.sin(angle_to_point - self.getAngle())
 
@@ -231,15 +266,11 @@ class Robot(entity.Entity):
         if err > math.pi:
             err -= 2*math.pi
         
-        err *= -1
-
-        if const.IS_SIMULATOR_USED:
-            err *= -1
-
         if abs(err) > 0.001:
-            self.speedR = err * 30
+            self.speedR = min(err * const.R_KP + (err - self.errOld) * const.R_KD, const.MAX_SPEED_R)
         else:
             self.speedR = 0
+        self.errOld = err
 
 
     def rotate_to_point(self, point):
@@ -247,13 +278,15 @@ class Robot(entity.Entity):
         vy = self.getPos().y - point.y
         ux = -math.cos(self.getAngle())
         uy = -math.sin(self.getAngle())
-        dif = math.atan2(aux.scal_mult(aux.Point(vx, vy), aux.Point(ux, uy)),
-                            aux.vect_mult(aux.Point(vx, vy), aux.Point(ux, uy)))
+        err = -math.atan2(aux.vect_mult(aux.Point(vx, vy), aux.Point(ux, uy)),
+                            aux.scal_mult(aux.Point(vx, vy), aux.Point(ux, uy)))
 
-        if abs(dif) > 0.001:
-            self.speedR = -dif * 15
+        if abs(err) > 0.001:
+            self.speedR = min(err * const.R_KP + (err - self.errOld) * const.R_KD, const.MAX_SPEED_R)
         else:
             self.speedR = 0
+        self.errOld = err
+
 
     def __str__(self) -> str:
         return str(str(self.color) + " " + str(self.rId) + " " + str(self.pos))
