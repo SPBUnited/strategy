@@ -7,19 +7,24 @@ import bridge.processors.const as const
 import bridge.processors.robot as robot
 import bridge.processors.team as team
 
-from bridge.bus import DataReader, DataWriter
-from bridge.common import config
-#from bridge.matlab.engine import matlab_engine
-from bridge.model.referee import RefereeCommand
-from bridge.processors import BaseProcessor
+from strategy_bridge.bus import DataReader, DataWriter
+from strategy_bridge.common import config
+from strategy_bridge.model.referee import RefereeCommand
+from strategy_bridge.processors import BaseProcessor
+from strategy_bridge.bus import DataBus
+from strategy_bridge.utils.debugger import debugger
+from strategy_bridge.pb.messages_robocup_ssl_wrapper_pb2 import SSL_WrapperPacket
+
 import math
 import bridge.processors.auxiliary as auxiliary
 
 import bridge.processors.field as field
 import bridge.processors.router as router
 import bridge.processors.strategy as strategy
+import bridge.processors.waypoint as wp
 
-import bridge.processors.drawer as drw
+
+#import bridge.processors.drawer as drw
 
 # TODO: Refactor this class and corresponding matlab scripts
 @attr.s(auto_attribs=True)
@@ -28,8 +33,8 @@ class MatlabController(BaseProcessor):
     processing_pause: typing.Optional[float] = 0.001
     max_commands_to_persist: int = 20
 
-    vision_reader: DataReader = attr.ib(init=False, default=DataReader(config.VISION_DETECTIONS_TOPIC))
-    referee_reader: DataReader = attr.ib(init=False, default=DataReader(config.REFEREE_COMMANDS_TOPIC))
+    vision_reader: DataReader = attr.ib(init=False)
+    referee_reader: DataReader = attr.ib(init=False)
     commands_writer: DataWriter = attr.ib(init=False)
 
     cur_time = time.time()
@@ -42,23 +47,29 @@ class MatlabController(BaseProcessor):
     router = router.Router()
     strategy = strategy.Strategy()
 
-    def __attrs_post_init__(self):
-        self.commands_writer = DataWriter(config.ROBOT_COMMANDS_TOPIC, self.max_commands_to_persist)
+    def initialize(self, data_bus: DataBus) -> None:
+        super(MatlabController, self).initialize(data_bus)
+        self.vision_reader = DataReader(data_bus, config.VISION_DETECTIONS_TOPIC)
+        self.referee_reader = DataReader(data_bus, config.REFEREE_COMMANDS_TOPIC)
+        self.commands_writer = DataWriter(data_bus, config.ROBOT_COMMANDS_TOPIC, self.max_commands_to_persist)
+        self._ssl_converter = SSL_WrapperPacket()
 
     def get_last_referee_command(self) -> RefereeCommand:
         referee_commands = self.referee_reader.read_new()
         if referee_commands:
-            return referee_commands[-1]
+            return referee_commands[-1].content
         return RefereeCommand(0, 0, False)
 
-    async def process(self) -> None:
+    @debugger
+    def process(self) -> None:
         balls = np.zeros(const.BALL_PACKET_SIZE * const.MAX_BALLS_IN_FIELD)
         field_info = np.zeros(const.GEOMETRY_PACKET_SIZE)
         ssl_package = 0
         try:
-            ssl_package = self.vision_reader.read_new()[-1]
+            ssl_package = self.vision_reader.read_new()[-1].content
         except: None
-        if ssl_package:            
+        if ssl_package:
+            ssl_package = self._ssl_converter.FromString(ssl_package)
             geometry = ssl_package.geometry
             if geometry:
                 field_info[0] = geometry.field.field_length
@@ -103,7 +114,7 @@ class MatlabController(BaseProcessor):
             #     # print(r.last_update(), end=" ")
             # print()
             
-            self.field.draw()
+            #self.field.draw()
 
             waypoints = self.strategy.process(self.field)
             for i in range(6):
@@ -111,11 +122,25 @@ class MatlabController(BaseProcessor):
             self.router.calcRoutes(self.field)
 
             # TODO алгоритм следования по траектории
-            for i in range(1,2):
+            for i in range(6):
                 # self.y_team.robot(i).go_to_point_with_detour(self.router.getRoute(i)[-1].pos, self.b_team, self.y_team)
-                self.field.y_team[i].go_to_point_vector_field(self.router.getRoute(i)[-1].pos, self.field)
-                self.field.y_team[i].rotate_to_angle(self.router.getRoute(i)[-1].angle)
-                #self.field.y_team[i].rotate_to_point(auxiliary.Point(0, 0))
+                if self.router.getRoute(i)[-1].type == wp.WType.IGNOREOBSTACLES:
+                    self.field.b_team[i].go_to_point(self.router.getRoute(i)[-1].pos)
+                else:
+                    self.field.b_team[i].go_to_point_vector_field(self.router.getRoute(i)[-1].pos, self.field)
+
+                self.field.b_team[i].rotate_to_angle(self.router.getRoute(i)[-1].angle)
+                #self.field.b_team[i].rotate_to_angle(0)
+                #self.field.b_team[i].rotate_to_angle(math.pi)
+
+            dbg = 0
+
+            if dbg:
+                self.field.b_team[5].go_to_point_vector_field(auxiliary.Point(1000, 1000), self.field)
+                self.field.b_team[3].go_to_point_vector_field(auxiliary.Point(700, 1300), self.field)
+                self.field.b_team[5].rotate_to_angle(0)
+                self.field.b_team[3].rotate_to_angle(0)
+
 
             rules = []
 
@@ -130,9 +155,13 @@ class MatlabController(BaseProcessor):
             for r in self.controll_team:
                 r.clear_fields()
 
-            self.controll_team[11].copy_control_fields(self.field.y_team[1])
+            self.controll_team[10].copy_control_fields(self.field.b_team[5])
+            self.controll_team[11].copy_control_fields(self.field.b_team[3])
+            self.controll_team[12].copy_control_fields(self.field.b_team[1])
+
 
             for i in range(const.TEAM_ROBOTS_MAX_COUNT):
+                self.controll_team[i].remake_speed()
                 rules.append(0)
                 rules.append(self.controll_team[i].speedX)
                 rules.append(self.controll_team[i].speedY)
@@ -156,7 +185,7 @@ class MatlabController(BaseProcessor):
             rules = b.join((struct.pack('d', rule) for rule in rules))
             self.commands_writer.write(rules)
 
-            drw.Drawer().flip()
+            #drw.Drawer().flip()
         # except: None
         from datetime import datetime
         time1 = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
