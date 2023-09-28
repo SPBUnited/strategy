@@ -23,9 +23,6 @@ import bridge.processors.router as router
 import bridge.processors.strategy as strategy
 import bridge.processors.waypoint as wp
 
-
-#import bridge.processors.drawer as drw
-
 # TODO: Refactor this class and corresponding matlab scripts
 @attr.s(auto_attribs=True)
 class MatlabController(BaseProcessor):
@@ -108,14 +105,6 @@ class MatlabController(BaseProcessor):
                 self.field.updateYelRobot(robot.robot_id, auxiliary.Point(robot.x, robot.y), robot.orientation, time.time())
                 #self.y_team.robot(robot.robot_id).isUsed = 1
 
-            # print(time.time(), end=" ")
-            # for r in self.field.all_bots:
-            #     print(r.is_used(), end=" ")
-            #     # print(r.last_update(), end=" ")
-            # print()
-            
-            #self.field.draw()
-
             waypoints = self.strategy.process(self.field)
             for i in range(6):
                 self.router.setWaypoint(i, waypoints[i])
@@ -184,8 +173,6 @@ class MatlabController(BaseProcessor):
             b = bytes()
             rules = b.join((struct.pack('d', rule) for rule in rules))
             self.commands_writer.write(rules)
-
-            #drw.Drawer().flip()
         # except: None
         from datetime import datetime
         time1 = datetime.now().strftime("%d/%m/%Y %H:%M:%S")

@@ -3,7 +3,6 @@ import bridge.processors.auxiliary as aux
 import bridge.processors.const as const
 import bridge.processors.field as field
 import bridge.processors.entity as entity
-#import bridge.processors.drawer as drw
 
 class Robot(entity.Entity):
     def __init__(self, pos, angle, R, color, r_id):
@@ -120,11 +119,6 @@ class Robot(entity.Entity):
             vel_vec = aux.rotate(target_point - self_pos, offset_angle)
 
         vel_vec = vel_vec.unity()
-
-        '''drawer = drw.Drawer()
-        if closest_robot != None:
-            drawer.drawAbsVec(self_pos, closest_robot.pos, drw.RED)
-        drawer.drawDVec(self_pos, vel_vec*closest_dist, drw.YELLOW)'''
 
         Fsum = aux.Point(0,0)
 
