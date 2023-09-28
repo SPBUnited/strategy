@@ -5,7 +5,6 @@ import struct
 import time
 import bridge.processors.const as const
 import bridge.processors.robot as robot
-import bridge.processors.team as team
 
 from strategy_bridge.bus import DataReader, DataWriter
 from strategy_bridge.common import config
@@ -57,124 +56,155 @@ class MatlabController(BaseProcessor):
             return referee_commands[-1].content
         return RefereeCommand(0, 0, False)
 
-    @debugger
-    def process(self) -> None:
+    def read_vision(self) -> bool:
         balls = np.zeros(const.BALL_PACKET_SIZE * const.MAX_BALLS_IN_FIELD)
         field_info = np.zeros(const.GEOMETRY_PACKET_SIZE)
         ssl_package = 0
         try:
             ssl_package = self.vision_reader.read_new()[-1].content
         except: None
-        if ssl_package:
-            ssl_package = self._ssl_converter.FromString(ssl_package)
-            geometry = ssl_package.geometry
-            if geometry:
-                field_info[0] = geometry.field.field_length
-                field_info[1] = geometry.field.field_width
+        if not ssl_package:
+            return False
 
-            detection = ssl_package.detection
-            camera_id = detection.camera_id
-            for ball_ind, ball in enumerate(detection.balls):
-                balls[ball_ind + (camera_id - 1) * const.MAX_BALLS_IN_CAMERA] = camera_id
-                balls[ball_ind + const.MAX_BALLS_IN_FIELD + (camera_id - 1) * const.MAX_BALLS_IN_CAMERA] = ball.x
-                balls[ball_ind + 2 * const.MAX_BALLS_IN_FIELD + (camera_id - 1) * const.MAX_BALLS_IN_CAMERA] = ball.y
-                self.ball = auxiliary.Point(ball.x, ball.y)
-                self.field.updateBall(self.ball)
+        ssl_package = self._ssl_converter.FromString(ssl_package)
+        geometry = ssl_package.geometry
+        if geometry:
+            field_info[0] = geometry.field.field_length
+            field_info[1] = geometry.field.field_width
 
-            for i in range(const.TEAM_ROBOTS_MAX_COUNT):
-                if time.time() - self.field.b_team[i].last_update() > 1:
-                    self.field.b_team[i].used(0)
-                if time.time() - self.field.y_team[i].last_update() > 1:
-                    self.field.y_team[i].used(0)
+        detection = ssl_package.detection
+        camera_id = detection.camera_id
+        for ball_ind, ball in enumerate(detection.balls):
+            balls[ball_ind + (camera_id - 1) * const.MAX_BALLS_IN_CAMERA] = camera_id
+            balls[ball_ind + const.MAX_BALLS_IN_FIELD + (camera_id - 1) * const.MAX_BALLS_IN_CAMERA] = ball.x
+            balls[ball_ind + 2 * const.MAX_BALLS_IN_FIELD + (camera_id - 1) * const.MAX_BALLS_IN_CAMERA] = ball.y
+            self.ball = auxiliary.Point(ball.x, ball.y)
+            self.field.updateBall(self.ball)
 
-            # TODO: Barrier states
-            for robot in detection.robots_blue:
-                # self.b_team.robot(robot.robot_id).update(robot.x, robot.y, robot.orientation)
-                if time.time() - self.field.b_team[robot.robot_id].last_update() > 0.3:
-                    self.field.b_team[robot.robot_id].used(0)
-                else: 
-                    self.field.b_team[robot.robot_id].used(1)
-                self.field.updateBluRobot(robot.robot_id, auxiliary.Point(robot.x, robot.y), robot.orientation, time.time())
+        # for i in range(const.TEAM_ROBOTS_MAX_COUNT):
+        #     if time.time() - self.field.b_team[i].last_update() > 1:
+        #         self.field.b_team[i].used(0)
+        #     if time.time() - self.field.y_team[i].last_update() > 1:
+        #         self.field.y_team[i].used(0)
 
-            for robot in detection.robots_yellow:
-                # self.y_team.robot(robot.robot_id).update(robot.x, robot.y, robot.orientation)
-                if time.time() - self.field.y_team[robot.robot_id].last_update() > 0.3:
-                    self.field.y_team[robot.robot_id].used(0)
-                else: 
-                    self.field.y_team[robot.robot_id].used(1)
-                self.field.updateYelRobot(robot.robot_id, auxiliary.Point(robot.x, robot.y), robot.orientation, time.time())
-                #self.y_team.robot(robot.robot_id).isUsed = 1
+        # TODO: Barrier states
+        for robot in detection.robots_blue:
+            # self.b_team.robot(robot.robot_id).update(robot.x, robot.y, robot.orientation)
+            if time.time() - self.field.b_team[robot.robot_id].last_update() > 0.3:
+                # self.field.b_team[robot.robot_id].used(0)
+                pass
+            else: 
+                self.field.b_team[robot.robot_id].used(1)
+            self.field.updateBluRobot(robot.robot_id, auxiliary.Point(robot.x, robot.y), robot.orientation, time.time())
+            if robot.robot_id == 0:
+                print(robot.x, robot.y)
 
-            waypoints = self.strategy.process(self.field)
-            for i in range(6):
-                self.router.setWaypoint(i, waypoints[i])
-            self.router.calcRoutes(self.field)
+        for robot in detection.robots_yellow:
+            # self.y_team.robot(robot.robot_id).update(robot.x, robot.y, robot.orientation)
+            if time.time() - self.field.y_team[robot.robot_id].last_update() > 0.3:
+                # self.field.y_team[robot.robot_id].used(0)
+                pass
+            else: 
+                self.field.y_team[robot.robot_id].used(1)
+            self.field.updateYelRobot(robot.robot_id, auxiliary.Point(robot.x, robot.y), robot.orientation, time.time())
+            #self.y_team.robot(robot.robot_id).isUsed = 1
+        return True
+    
+    """
+    Рассчитать стратегию, тактику и физику для роботов на поле
+    """
+    def control_loop(self):
+        waypoints = self.strategy.process(self.field)
+        for i in range(6):
+            self.router.setWaypoint(i, waypoints[i])
+        self.router.calcRoutes(self.field)
 
-            # TODO алгоритм следования по траектории
-            for i in range(6):
-                # self.y_team.robot(i).go_to_point_with_detour(self.router.getRoute(i)[-1].pos, self.b_team, self.y_team)
-                if self.router.getRoute(i)[-1].type == wp.WType.IGNOREOBSTACLES:
-                    self.field.b_team[i].go_to_point(self.router.getRoute(i)[-1].pos)
-                else:
-                    self.field.b_team[i].go_to_point_vector_field(self.router.getRoute(i)[-1].pos, self.field)
+        # TODO алгоритм следования по траектории
+        # TODO Убрать артефакты
+        for i in range(1):
+            # self.y_team.robot(i).go_to_point_with_detour(self.router.getRoute(i)[-1].pos, self.b_team, self.y_team)
+            if self.router.getRoute(i)[-1].type == wp.WType.IGNOREOBSTACLES:
+                self.field.b_team[i].go_to_point(self.router.getRoute(i)[-1].pos)
+            else:
+                self.field.b_team[i].go_to_point_vector_field(self.router.getRoute(i)[-1].pos, self.field)
 
-                self.field.b_team[i].rotate_to_angle(self.router.getRoute(i)[-1].angle)
-                #self.field.b_team[i].rotate_to_angle(0)
-                #self.field.b_team[i].rotate_to_angle(math.pi)
+            self.field.b_team[i].rotate_to_angle(self.router.getRoute(i)[-1].angle)
+            #self.field.b_team[i].rotate_to_angle(0)
+            #self.field.b_team[i].rotate_to_angle(math.pi)
 
-            dbg = 0
+        dbg = 0
 
-            if dbg:
-                self.field.b_team[5].go_to_point_vector_field(auxiliary.Point(1000, 1000), self.field)
-                self.field.b_team[3].go_to_point_vector_field(auxiliary.Point(700, 1300), self.field)
-                self.field.b_team[5].rotate_to_angle(0)
-                self.field.b_team[3].rotate_to_angle(0)
+        if dbg:
+            self.field.b_team[5].go_to_point_vector_field(auxiliary.Point(1000, 1000), self.field)
+            self.field.b_team[3].go_to_point_vector_field(auxiliary.Point(700, 1300), self.field)
+            self.field.b_team[5].rotate_to_angle(0)
+            self.field.b_team[3].rotate_to_angle(0)
 
+    """
+    Определить связь номеров роботов с каналами управления
+    """
+    def control_assign(self):
+        for r in self.controll_team:
+            r.clear_fields()
 
-            rules = []
+        # TODO Задавать соответствие списком
+        for i in range(6):
+            self.controll_team[i].copy_control_fields(self.field.b_team[i])
 
-            # self.b_team.robot(3).rotate_to_point(auxiliary.Point(4500, 500))
-            # if auxiliary.dist(self.b_team.robot(3), self.ball) < 300 and \
-            #     auxiliary.scal_mult((self.field.ball.pos - self.field.b_team[3].pos).unity(), (self.field.y_goal - self.field.b_team[3].pos).unity()) > 0.9:
-            #     self.b_team.robot(3).go_to_point(self.ball)
-            #     self.b_team.robot(3).kick_forward()
-            # else:
-            #     self.b_team.robot(3).go_to_point_with_detour(auxiliary.point_on_line(self.ball, auxiliary.Point(4500, 0), -200), self.b_team, self.y_team)
+    """
+    Сформировать массив команд для отправки на роботов
+    """
+    def get_rules(self):
+        rules = []
 
-            for r in self.controll_team:
-                r.clear_fields()
+        for i in range(const.TEAM_ROBOTS_MAX_COUNT):
+            # self.controll_team[i].remake_speed()
+            rules.append(0)
+            rules.append(self.controll_team[i].speedX)
+            rules.append(self.controll_team[i].speedY)
+            rules.append(self.controll_team[i].speedR)
+            rules.append(self.controll_team[i].kickForward)
+            rules.append(self.controll_team[i].kickUp)
+            rules.append(self.controll_team[i].autoKick)
+            rules.append(self.controll_team[i].kickerVoltage)
+            rules.append(self.controll_team[i].dribblerEnable)
+            rules.append(self.controll_team[i].speedDribbler)
+            rules.append(self.controll_team[i].kickerChargeEnable)
+            rules.append(self.controll_team[i].beep)            
+            rules.append(0)
+        for i in range(const.TEAM_ROBOTS_MAX_COUNT):
+            for _ in range(0, 13):
+                rules.append(0.0)
+            
+        b = bytes()
+        rules = b.join((struct.pack('d', rule) for rule in rules))
+        return rules
 
-            self.controll_team[10].copy_control_fields(self.field.b_team[5])
-            self.controll_team[11].copy_control_fields(self.field.b_team[3])
-            self.controll_team[12].copy_control_fields(self.field.b_team[1])
+    """
+    Выполнить цикл процессора
+    
+    \offtop Что означает @debugger?
+    """
+    @debugger
+    def process(self) -> None:
 
+        ts_check = False
+        while(time.time() - self.cur_time < const.Ts):
+            ts_check = True
+        if not ts_check:
+            print("ПРЕВЫШЕН ПЕРИОД КВАНТОВАНИЯ НА: ", '%.3f' % (time.time() - self.cur_time - const.Ts))
 
-            for i in range(const.TEAM_ROBOTS_MAX_COUNT):
-                self.controll_team[i].remake_speed()
-                rules.append(0)
-                rules.append(self.controll_team[i].speedX)
-                rules.append(self.controll_team[i].speedY)
-                rules.append(self.controll_team[i].speedR)
-                rules.append(self.controll_team[i].kickForward)
-                rules.append(self.controll_team[i].kickUp)
-                rules.append(self.controll_team[i].autoKick)
-                rules.append(self.controll_team[i].kickerVoltage)
-                rules.append(self.controll_team[i].dribblerEnable)
-                rules.append(self.controll_team[i].speedDribbler)
-                rules.append(self.controll_team[i].kickerChargeEnable)
-                rules.append(self.controll_team[i].beep)            
-                rules.append(0)
-            for i in range(const.TEAM_ROBOTS_MAX_COUNT):
-                for _ in range(0, 13):
-                    rules.append(0.0)    
-                    
-            self.dt = time.time() - self.cur_time
-            self.cur_time = time.time()
-            b = bytes()
-            rules = b.join((struct.pack('d', rule) for rule in rules))
-            self.commands_writer.write(rules)
-        # except: None
-        from datetime import datetime
-        time1 = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
-        with open("tmp/matlab_controller.txt", "a") as f:
-            f.write(time1 + "\n")
+        self.dt = time.time() - self.cur_time
+        # print('%.3f'%self.dt)
+        self.cur_time = time.time()
+
+        self.read_vision()
+
+        print(self.field.b_team[0].pos)
+        self.control_loop()
+        self.control_assign()
+        # print(self.controll_team[0].speedX, self.controll_team[0].speedY, self.controll_team[0].speedR)
+        rules = self.get_rules()
+        # print(rules)
+        self.commands_writer.write(rules)
+
