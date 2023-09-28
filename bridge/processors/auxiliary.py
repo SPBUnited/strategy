@@ -36,7 +36,8 @@ class Point:
 
     def unity(self):
         if self.mag() == 0:
-            raise ValueError("БАГА, .unity от нулевого вектора")
+            #raise ValueError("БАГА, .unity от нулевого вектора")
+            return self
         return self/self.mag()
 
 
