@@ -57,58 +57,62 @@ class MatlabController(BaseProcessor):
         return RefereeCommand(0, 0, False)
 
     def read_vision(self) -> bool:
+        status = False
+
         balls = np.zeros(const.BALL_PACKET_SIZE * const.MAX_BALLS_IN_FIELD)
         field_info = np.zeros(const.GEOMETRY_PACKET_SIZE)
-        ssl_package = 0
-        try:
-            ssl_package = self.vision_reader.read_new()[-1].content
-        except: None
-        if not ssl_package:
-            return False
 
-        ssl_package = self._ssl_converter.FromString(ssl_package)
-        geometry = ssl_package.geometry
-        if geometry:
-            field_info[0] = geometry.field.field_length
-            field_info[1] = geometry.field.field_width
+        queue = self.vision_reader.read_new()
 
-        detection = ssl_package.detection
-        camera_id = detection.camera_id
-        for ball_ind, ball in enumerate(detection.balls):
-            balls[ball_ind + (camera_id - 1) * const.MAX_BALLS_IN_CAMERA] = camera_id
-            balls[ball_ind + const.MAX_BALLS_IN_FIELD + (camera_id - 1) * const.MAX_BALLS_IN_CAMERA] = ball.x
-            balls[ball_ind + 2 * const.MAX_BALLS_IN_FIELD + (camera_id - 1) * const.MAX_BALLS_IN_CAMERA] = ball.y
-            self.ball = auxiliary.Point(ball.x, ball.y)
-            self.field.updateBall(self.ball)
+        for ssl_package in queue:
+            try:
+                ssl_package_content = ssl_package.content
+            except:
+                None
+            if not ssl_package_content:
+                continue
 
-        # for i in range(const.TEAM_ROBOTS_MAX_COUNT):
-        #     if time.time() - self.field.b_team[i].last_update() > 1:
-        #         self.field.b_team[i].used(0)
-        #     if time.time() - self.field.y_team[i].last_update() > 1:
-        #         self.field.y_team[i].used(0)
+            status = True
 
-        # TODO: Barrier states
-        for robot in detection.robots_blue:
-            # self.b_team.robot(robot.robot_id).update(robot.x, robot.y, robot.orientation)
-            if time.time() - self.field.b_team[robot.robot_id].last_update() > 0.3:
-                # self.field.b_team[robot.robot_id].used(0)
-                pass
-            else: 
-                self.field.b_team[robot.robot_id].used(1)
-            self.field.updateBluRobot(robot.robot_id, auxiliary.Point(robot.x, robot.y), robot.orientation, time.time())
-            if robot.robot_id == 0:
-                print(robot.x, robot.y)
+            ssl_package_content = self._ssl_converter.FromString(ssl_package_content)
+            geometry = ssl_package_content.geometry
+            if geometry:
+                field_info[0] = geometry.field.field_length
+                field_info[1] = geometry.field.field_width
 
-        for robot in detection.robots_yellow:
-            # self.y_team.robot(robot.robot_id).update(robot.x, robot.y, robot.orientation)
-            if time.time() - self.field.y_team[robot.robot_id].last_update() > 0.3:
-                # self.field.y_team[robot.robot_id].used(0)
-                pass
-            else: 
-                self.field.y_team[robot.robot_id].used(1)
-            self.field.updateYelRobot(robot.robot_id, auxiliary.Point(robot.x, robot.y), robot.orientation, time.time())
-            #self.y_team.robot(robot.robot_id).isUsed = 1
-        return True
+            detection = ssl_package_content.detection
+            camera_id = detection.camera_id
+            for ball_ind, ball in enumerate(detection.balls):
+                balls[ball_ind + (camera_id - 1) * const.MAX_BALLS_IN_CAMERA] = camera_id
+                balls[ball_ind + const.MAX_BALLS_IN_FIELD + (camera_id - 1) * const.MAX_BALLS_IN_CAMERA] = ball.x
+                balls[ball_ind + 2 * const.MAX_BALLS_IN_FIELD + (camera_id - 1) * const.MAX_BALLS_IN_CAMERA] = ball.y
+                self.ball = auxiliary.Point(ball.x, ball.y)
+                self.field.updateBall(self.ball)
+
+            for i in range(const.TEAM_ROBOTS_MAX_COUNT):
+                if time.time() - self.field.b_team[i].last_update() > 1:
+                    self.field.b_team[i].used(0)
+                if time.time() - self.field.y_team[i].last_update() > 1:
+                    self.field.y_team[i].used(0)
+
+            # TODO: Barrier states
+            for robot in detection.robots_blue:
+                # self.b_team.robot(robot.robot_id).update(robot.x, robot.y, robot.orientation)
+                if time.time() - self.field.b_team[robot.robot_id].last_update() > 0.3:
+                    self.field.b_team[robot.robot_id].used(0)
+                else: 
+                    self.field.b_team[robot.robot_id].used(1)
+                self.field.updateBluRobot(robot.robot_id, auxiliary.Point(robot.x, robot.y), robot.orientation, time.time())
+
+            for robot in detection.robots_yellow:
+                # self.y_team.robot(robot.robot_id).update(robot.x, robot.y, robot.orientation)
+                if time.time() - self.field.y_team[robot.robot_id].last_update() > 0.3:
+                    self.field.y_team[robot.robot_id].used(0)
+                else: 
+                    self.field.y_team[robot.robot_id].used(1)
+                self.field.updateYelRobot(robot.robot_id, auxiliary.Point(robot.x, robot.y), robot.orientation, time.time())
+                #self.y_team.robot(robot.robot_id).isUsed = 1
+        return status
     
     """
     Рассчитать стратегию, тактику и физику для роботов на поле
@@ -195,16 +199,11 @@ class MatlabController(BaseProcessor):
             print("ПРЕВЫШЕН ПЕРИОД КВАНТОВАНИЯ НА: ", '%.3f' % (time.time() - self.cur_time - const.Ts))
 
         self.dt = time.time() - self.cur_time
-        # print('%.3f'%self.dt)
         self.cur_time = time.time()
 
         self.read_vision()
-
-        print(self.field.b_team[0].pos)
         self.control_loop()
         self.control_assign()
-        # print(self.controll_team[0].speedX, self.controll_team[0].speedY, self.controll_team[0].speedR)
         rules = self.get_rules()
-        # print(rules)
         self.commands_writer.write(rules)
 
