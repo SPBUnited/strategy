@@ -62,7 +62,7 @@ class Strategy:
 
         gk_pos = aux.point_on_line(field.y_goal, field.ball.pos, 800)
 
-        if field.ball.vel.mag() > 1000:
+        if field.ball.vel.mag() > 500:
             gk_pos = aux.closest_point_on_line(field.ball.pos, field.ball.vel.unity()*100000, field.y_team[0].pos)
 
         gk_angle = math.pi
