@@ -37,7 +37,7 @@ class MatlabController(BaseProcessor):
     dt = 0
     ball = auxiliary.Point(0, 0)
 
-    controll_team = [robot.Robot(const.GRAVEYARD_POS, 0, const.ROBOT_R, 'b', i) for i in range(const.TEAM_ROBOTS_MAX_COUNT)]
+    controll_team = [robot.Robot(const.GRAVEYARD_POS, 0, const.ROBOT_R, 'b', i) for i in range(const.ROBOTS_MAX_COUNT)]
 
     field = field.Field()
     router = router.Router()
@@ -125,7 +125,7 @@ class MatlabController(BaseProcessor):
 
         # TODO алгоритм следования по траектории
         # TODO Убрать артефакты
-        for i in range(1):
+        for i in range(6):
             # self.y_team.robot(i).go_to_point_with_detour(self.router.getRoute(i)[-1].pos, self.b_team, self.y_team)
             if self.router.getRoute(i)[-1].type == wp.WType.IGNOREOBSTACLES:
                 self.field.b_team[i].go_to_point(self.router.getRoute(i)[-1].pos)
@@ -153,7 +153,12 @@ class MatlabController(BaseProcessor):
 
         # TODO Задавать соответствие списком
         for i in range(6):
-            self.controll_team[i].copy_control_fields(self.field.b_team[i])
+            if const.OUR_COLOR == 'b':
+                self.field.b_team[i].remake_speed()
+                self.controll_team[i].copy_control_fields(self.field.b_team[i])
+            else:
+                self.field.y_team[i].remake_speed()
+                self.controll_team[i].copy_control_fields(self.field.y_team[i])
 
     """
     Сформировать массив команд для отправки на роботов
@@ -161,7 +166,7 @@ class MatlabController(BaseProcessor):
     def get_rules(self):
         rules = []
 
-        for i in range(const.TEAM_ROBOTS_MAX_COUNT):
+        for i in range(const.ROBOTS_MAX_COUNT):
             # self.controll_team[i].remake_speed()
             rules.append(0)
             rules.append(self.controll_team[i].speedX)
