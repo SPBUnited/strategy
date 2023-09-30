@@ -20,6 +20,9 @@ GEOMETRY_PACKET_SIZE: int = 2
 ##################################################
 
 ##################################################
+# CONTROL CONSTS
+Ts = 0.020 # 20ms
+
 # ROBOT SETTING CONSTS
 MAX_SPEED = 100
 MAX_SPEED_R = 50
