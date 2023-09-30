@@ -245,7 +245,7 @@ class Robot(entity.Entity):
         distance_to_point = math.dist((self.getPos().x, self.getPos().y), (point.x, point.y))
 
         if is_final_point:
-            newSpeed = min(const.MAX_SPEED, distance_to_point * const.KP)
+            newSpeed = min(const.MAX_SPEED,  distance_to_point * const.KP)
         else:
             newSpeed = const.MAX_SPEED
         self.speedX = newSpeed * math.cos(angle_to_point - self.getAngle())
