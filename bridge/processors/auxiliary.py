@@ -34,6 +34,9 @@ class Point:
     def mag(self):
         return math.hypot(self.x, self.y)
 
+    def arg(self):
+        return math.atan2(self.y, self.x)
+
     def unity(self):
         if self.mag() == 0:
             #raise ValueError("БАГА, .unity от нулевого вектора")
@@ -226,6 +229,9 @@ def point_on_line(robot, point, distance):
         new_x = robot.x + distance * math.cos(angle_to_point)
         new_y = robot.y + distance * math.sin(angle_to_point)
         return Point(new_x, new_y)
+    
+def LERP(p1, p2, t):
+    return p1*(1-t) + p2*t
 
 def angle_to_point(point1, point2):
     dpos = -point1 + point2
