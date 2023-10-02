@@ -114,10 +114,10 @@ class MatlabController(BaseProcessor):
                 #self.y_team.robot(robot.robot_id).isUsed = 1
         return status
     
-    """
-    Рассчитать стратегию, тактику и физику для роботов на поле
-    """
     def control_loop(self):
+        """
+        Рассчитать стратегию, тактику и физику для роботов на поле
+        """
         waypoints = self.strategy.process(self.field)
         for i in range(6):
             self.router.setWaypoint(i, waypoints[i])
@@ -144,10 +144,10 @@ class MatlabController(BaseProcessor):
             self.field.b_team[5].rotate_to_angle(0)
             self.field.b_team[3].rotate_to_angle(0)
 
-    """
-    Определить связь номеров роботов с каналами управления
-    """
     def control_assign(self):
+        """
+        Определить связь номеров роботов с каналами управления
+        """
         for r in self.controll_team:
             r.clear_fields()
 
@@ -155,10 +155,10 @@ class MatlabController(BaseProcessor):
         for i in range(6):
             self.controll_team[i].copy_control_fields(self.field.b_team[i])
 
-    """
-    Сформировать массив команд для отправки на роботов
-    """
     def get_rules(self):
+        """
+        Сформировать массив команд для отправки на роботов
+        """
         rules = []
 
         for i in range(const.TEAM_ROBOTS_MAX_COUNT):
@@ -184,13 +184,13 @@ class MatlabController(BaseProcessor):
         rules = b.join((struct.pack('d', rule) for rule in rules))
         return rules
 
-    """
-    Выполнить цикл процессора
-    
-    \offtop Что означает @debugger?
-    """
     @debugger
     def process(self) -> None:
+        """
+        Выполнить цикл процессора
+        
+        \offtop Что означает @debugger?
+        """
 
         ts_check = False
         while(time.time() - self.cur_time < const.Ts):
