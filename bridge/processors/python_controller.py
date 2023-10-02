@@ -171,19 +171,19 @@ class MatlabController(BaseProcessor):
         dbg_bot_id_LCS = 3
         dbg_bot_id_ctrl = 11
 
-        # self.controll_team[dbg_bot_id_ctrl].copy_control_fields(self.field.b_team[dbg_bot_id_LCS])
+        self.controll_team[dbg_bot_id_ctrl].copy_control_fields(self.field.b_team[dbg_bot_id_LCS])
 
         # self.controll_team[dbg_bot_id_ctrl].speedX = self.square.get()
         # self.controll_team[dbg_bot_id_ctrl].speedY = self.square.get()
         # self.controll_team[dbg_bot_id_ctrl].speedR = self.square.get()
-        self.controll_team[dbg_bot_id_ctrl].update_vel_xyw(auxiliary.Point(self.square.get(), 0), 0)
+        # self.controll_team[dbg_bot_id_ctrl].update_vel_xyw(auxiliary.Point(self.square.get(), 0), 0)
         # self.controll_team[dbg_bot_id_ctrl].update_vel_xyw(auxiliary.Point(self.sine.get(), self.cosine.get()), 0)
 
-        print(self.square.get(),
-              '%d'%auxiliary.rotate(self.field.b_team[dbg_bot_id_LCS].vel, -self.field.b_team[dbg_bot_id_LCS].angle).x,
-              '%d'%auxiliary.rotate(self.field.b_team[dbg_bot_id_LCS].vel, -self.field.b_team[dbg_bot_id_LCS].angle).y,
-              '%.2f'%self.field.b_team[dbg_bot_id_LCS].anglevel,
-              )
+        # print(self.square.get(),
+        #       '%d'%auxiliary.rotate(self.field.b_team[dbg_bot_id_LCS].vel, -self.field.b_team[dbg_bot_id_LCS].angle).x,
+        #       '%d'%auxiliary.rotate(self.field.b_team[dbg_bot_id_LCS].vel, -self.field.b_team[dbg_bot_id_LCS].angle).y,
+        #       '%.2f'%self.field.b_team[dbg_bot_id_LCS].anglevel,
+        #       )
 
 
     def get_rules(self):
