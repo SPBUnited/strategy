@@ -45,9 +45,9 @@ class Robot(entity.Entity):
         self.RcompFdy = entity.FOD(self.Twy, const.Ts)
         self.RcompFfy = entity.FOLP(self.Twy, const.Ts)
 
-        self.xxTF = 0.2
+        self.xxTF = 0.1
         self.xxFlp = entity.FOLP(self.xxTF, const.Ts)
-        self.yyTF = 0.2
+        self.yyTF = 0.1
         self.yyFlp = entity.FOLP(self.yyTF, const.Ts)
 
 
@@ -181,20 +181,26 @@ class Robot(entity.Entity):
         curSpeed = self.vel.mag()
 
         maxSpeed = 1500
+        maxAngSpeed = 4
         # k = 0.3
-        k = 0
-        gain = 1.3
+        k = 0.2
+        gain = 6
         err = distance_to_point - curSpeed * k
         u = min(max(err * gain, -maxSpeed), maxSpeed)
         print('%d'%distance_to_point, '%d'%curSpeed, err, u)
         transl_vel = vel_vec * u
 
-        err = target_point.angle - self.getAngle()
-        err = err % (2*math.pi)
-        if err > math.pi:
-            err -= 2*math.pi
+        aerr = target_point.angle - self.getAngle()
+        aerr = aerr % (2*math.pi)
+        if aerr > math.pi:
+            aerr -= 2*math.pi
+
+        k_a = 0.04
+        gain_a = 8
         
-        ang_vel = err * 2
+        aerr -= self.anglevel * k_a
+        u_a = min(max(aerr * gain_a, -maxAngSpeed), maxAngSpeed)
+        ang_vel = u_a
 
         # print(transl_vel, '%.2f'%err, '%.2f'%self.angle)
 
