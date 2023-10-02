@@ -136,7 +136,7 @@ class MatlabController(BaseProcessor):
             #self.field.b_team[i].rotate_to_angle(0)
             #self.field.b_team[i].rotate_to_angle(math.pi)
 
-        dbg = 0
+        dbg = 1
 
         if dbg:
             self.field.b_team[5].go_to_point_vector_field(auxiliary.Point(1000, 1000), self.field)
@@ -152,8 +152,10 @@ class MatlabController(BaseProcessor):
             r.clear_fields()
 
         # TODO Задавать соответствие списком
-        for i in range(6):
-            self.controll_team[i].copy_control_fields(self.field.b_team[i])
+        self.controll_team[11].copy_control_fields(self.field.b_team[3])
+        
+        #for i in range(6):
+        #    self.controll_team[i].copy_control_fields(self.field.b_team[i])
 
     """
     Сформировать массив команд для отправки на роботов
@@ -162,7 +164,7 @@ class MatlabController(BaseProcessor):
         rules = []
 
         for i in range(const.TEAM_ROBOTS_MAX_COUNT):
-            # self.controll_team[i].remake_speed()
+            self.controll_team[i].remake_speed()
             rules.append(0)
             rules.append(self.controll_team[i].speedX)
             rules.append(self.controll_team[i].speedY)
