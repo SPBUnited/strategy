@@ -3,6 +3,7 @@ import bridge.processors.auxiliary as aux
 import bridge.processors.const as const
 import bridge.processors.field as field
 import bridge.processors.entity as entity
+import bridge.processors.waypoint as wp
 
 class Robot(entity.Entity):
     def __init__(self, pos, angle, R, color, r_id):
@@ -25,6 +26,15 @@ class Robot(entity.Entity):
         self.speedDribbler = 0
         self.kickerChargeEnable = 1
         self.beep = 0   
+
+        self.Kxx = 833/20
+        self.Kyy = -833/20
+        self.Kww = 1.25/20
+        self.Kwy = -0.001
+        self.Twy = 0.15
+        self.RcompFdy = entity.FOD(self.Twy, const.Ts)
+        self.RcompFfy = entity.FOLP(self.Twy, const.Ts)
+
 
     def used(self, a):
         self.isUsed = a
@@ -73,34 +83,47 @@ class Robot(entity.Entity):
         self.kickerChargeEnable = 0
         self.beep = 0 
 
+    def update_vel_xyw(self, vel: aux.Point, wvel: float):
+        """
+        Выполнить тик регуляторов скорости робота
 
-    """
-    Двигаться в целевую точку согласно векторному полю
-    """
-    def go_to_point_vector_field(self, target_point, field: field.Field):
+        vel - требуемый вектор скорости [мм/с] \\
+        wvel - требуемая угловая скорость [рад/с]
+        """
+        self.speedX = 1/self.Kxx * aux.rotate(vel, -self.angle).x
+        self.speedY = 1/self.Kyy * aux.rotate(vel, -self.angle).y
 
+        # RcompY = self.Kwy * self.RcompFfy.process(self.RcompFdy.process(self.speedY))
+        # RcompY = self.Kwy * self.RcompFdy.process(abs(float(self.speedY)**2))
+        RcompY = 0
+        self.speedR = 1/self.Kww * (wvel - RcompY)
+        # print(vel, wvel)
+
+    def go_to_point_vector_field(self, target_point: wp.Waypoint, field: field.Field):
+        """
+        Двигаться в целевую точку согласно векторному полю
+        """
         enemy = field.b_team
         self_pos = self.getPos()
 
-        if (self_pos - target_point).mag() == 0:
+        if (self_pos - target_point.pos).mag() == 0:
             self.speedX = 0
             self.speedY = 0
             return
 
-
-
         sep_dist = 500
+        ball_sep_dist = 150
 
         closest_robot = None
         closest_dist = math.inf
         closest_separation = 0
-        angle_to_point = math.atan2(target_point.y - self.getPos().y, target_point.x - self.getPos().x)
+        angle_to_point = math.atan2(target_point.pos.y - self.getPos().y, target_point.pos.x - self.getPos().x)
 
         # Расчет теней роботов для векторного поля
         for r in field.all_bots:
             if r == self or r.is_used() == 0:
                 continue
-            robot_separation = aux.dist(aux.closest_point_on_line(self_pos, target_point, r.getPos()), r.getPos())
+            robot_separation = aux.dist(aux.closest_point_on_line(self_pos, target_point.pos, r.getPos()), r.getPos())
             robot_dist = aux.dist(self_pos, r.getPos())
             if robot_dist == 0:
                 continue
@@ -109,40 +132,56 @@ class Robot(entity.Entity):
                 closest_dist = robot_dist
                 closest_separation = robot_separation
 
-        vel_vec = target_point - self_pos
-        angle_cos = aux.scal_mult((r.getPos() - self_pos).unity(), (target_point - self_pos).unity())
+        ball_separation = aux.dist(aux.closest_point_on_line(self_pos, target_point.pos, field.ball.getPos()), field.ball.getPos())
+        ball_dist = aux.dist(self_pos, field.ball.getPos())
+        if ball_separation < ball_sep_dist and ball_dist < closest_dist:
+            closest_robot = field.ball
+            closest_dist = ball_dist
+            closest_separation = ball_separation
+
+        vel_vec = target_point.pos - self_pos
+        # angle_cos = aux.scal_mult((closest_robot.getPos() - self_pos).unity(), (target_point.pos - self_pos).unity())
         if closest_robot != None and closest_dist != 0:
-            side = aux.vect_mult(closest_robot.getPos() - self_pos, target_point - self_pos)
+            side = aux.vect_mult(closest_robot.getPos() - self_pos, target_point.pos - self_pos)
             # offset_angle_val = 200*math.pi/6 * closest_dist**(-2)
             offset_angle_val = -2 * math.atan((sep_dist - closest_separation)/(2*(closest_dist)))
             offset_angle = offset_angle_val if side < 0 else -offset_angle_val
-            vel_vec = aux.rotate(target_point - self_pos, offset_angle)
+            vel_vec = aux.rotate(target_point.pos - self_pos, offset_angle)
 
         vel_vec = vel_vec.unity()
 
         Fsum = aux.Point(0,0)
 
         # Расчет силы взаимодействия роботов
-        for r in field.all_bots:
-             delta_pos = self_pos - r.getPos()
-             if delta_pos == aux.Point(0,0):
-                 continue
-             F = delta_pos * 40 * (1 / delta_pos.mag()**3)
-             Fsum = Fsum + F
+        # for r in field.all_bots:
+        #      delta_pos = self_pos - r.getPos()
+        #      if delta_pos == aux.Point(0,0):
+        #          continue
+        #      F = delta_pos * 40 * (1 / delta_pos.mag()**3)
+        #      Fsum = Fsum + F
 
-        vel_vec = vel_vec + Fsum
+        distance_to_point = aux.dist(self_pos, target_point.pos)
+        # transl_vel = vel_vec * min(1500, distance_to_point * 10)
 
-        angle_to_point = math.atan2(vel_vec.y, vel_vec.x)
+        curSpeed = self.vel.mag()
 
-        distance_to_point = aux.dist(self_pos, target_point)
+        maxSpeed = 1000
+        k = 0.3
+        k2 = 0.0
+        gain = 10
+        err = distance_to_point - curSpeed * k - curSpeed**2 * k2
+        u = min(max(err * gain, -maxSpeed), maxSpeed)
+        # print('%d'%distance_to_point, '%d'%curSpeed, err, u)
+        transl_vel = vel_vec * u
+
+        err = target_point.angle - self.getAngle()
+        err = err % (2*math.pi)
+        if err > math.pi:
+            err -= 2*math.pi
         
+        ang_vel = err * 1
 
-        distance_to_point = aux.dist(self_pos, target_point)
-
-        newSpeed = min(const.MAX_SPEED, distance_to_point * const.KP)
-
-        self.speedX = newSpeed * math.cos(angle_to_point - self.getAngle())
-        self.speedY = -newSpeed * math.sin(angle_to_point - self.getAngle())
+        self.update_vel_xyw(transl_vel, ang_vel)
 
     def remake_speed(self):
         vecSpeed = math.sqrt(self.speedX ** 2 + self.speedY ** 2)
