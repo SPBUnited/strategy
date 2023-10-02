@@ -26,6 +26,7 @@ class Signal:
         {
             'SQUARE': self.square,
             'SINE': self.sine,
+            'COSINE': self.cosine
         }
     
     def get(self):
@@ -36,3 +37,6 @@ class Signal:
 
     def sine(self):
         return self.amp * math.sin(2*math.pi*(time.time() - self.T0)/self.period) + self.offset
+        
+    def cosine(self):
+        return self.amp * math.cos(2*math.pi*(time.time() - self.T0)/self.period) + self.offset
