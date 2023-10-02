@@ -18,7 +18,7 @@ class States(Enum):
 
 class Strategy:
     def __init__(self) -> None:
-        self.state = States.DEFENCE
+        self.state = States.DEBUG
 
         #DEFENCE
         self.old_def_helper = -1
@@ -42,32 +42,53 @@ class Strategy:
 
     def debug(self, field: field.Field):
         waypoints = [None]*const.TEAM_ROBOTS_MAX_COUNT
-        for i in range(1, 6):
-            bbotpos = field.b_team[i].getPos()
-            ybotpos = field.y_team[i].getPos()
-            pos = aux.point_on_line(bbotpos, aux.Point(const.GOAL_X, 0), 300)
+        for i in range(0, 6):
+            bbotpos = field.y_team[i].getPos()
+            ybotpos = field.b_team[i].getPos()
+            # pos = aux.point_on_line(bbotpos, -aux.Point(const.GOAL_DX, 0), 300)
+            pos = aux.Point(-3000 + 500*i, 2000)
             
-            dpos = bbotpos - ybotpos
-            angle = math.atan2(dpos.y, dpos.x)
+            # dpos = bbotpos - ybotpos
+            # angle = math.atan2(dpos.y, dpos.x)
+            angle = 0
 
             waypoint = wp.Waypoint(pos, angle, wp.WType.ENDPOINT)
             waypoints[i] = waypoint
-
-        timer = time.time()
-        # timer = 0
-        dpos = aux.Point(500 + 1500*((timer//6)%2), -1000)
-        # print( dpos )
-        dangle = 0*math.pi
-        waypoints[1] = wp.Waypoint(dpos, dangle, wp.WType.ENDPOINT)
-
-        gk_pos = aux.point_on_line(field.y_goal, field.ball.pos, 800)
-
-        if field.ball.vel.mag() > 500:
-            gk_pos = aux.closest_point_on_line(field.ball.pos, field.ball.vel.unity()*100000, field.y_team[0].pos)
-
-        gk_angle = math.pi
-        waypoints[0] = wp.Waypoint(gk_pos, gk_angle, wp.WType.ENDPOINT)
+        robot_with_ball = aux.find_nearest_robot(field.ball.getPos(), field.b_team)
+        self.gk_go(field, waypoints, [4], robot_with_ball)
         return waypoints
+
+    def gk_go(self, field: field.Field, waypoints, gk_wall_idx_list, robot_with_ball):
+        """
+        Расчет требуемых положений вратаря и стенки
+        
+        [in] field - объект Field(), ситуация на поле
+        [out] waypoints - ссылка на массив путевых точек, который будет изменен!
+        [in] gk_wall_idx_list - массив индексов вратаря и стенки. Нулевой элемент всегда индекс вратаря
+        Дальше индексы роботов в стенке, кол-во от 0 до 3
+        [in] robot_with_ball - текущий робот с мячом
+        """
+        try:
+            gk_pos = aux.LERP(aux.point_on_line(field.b_goal, field.ball.pos, 500),
+                          aux.get_line_intersection(robot_with_ball.pos, robot_with_ball.pos + aux.rotate(aux.Point(1, 0), robot_with_ball.angle),
+                                                    const.B_GOAL_D - aux.Point(0, 500), const.B_GOAL_U + aux.Point(0, 500), 'RS') + aux.Point(400, 0),
+                          0.5)
+            print(robot_with_ball.angle)
+        except:
+            gk_pos = aux.point_on_line(field.b_goal, field.ball.pos, 400)
+
+        if field.ball.vel.mag() > 500 and \
+            aux.get_line_intersection(const.B_GOAL_D + aux.Point(0, -500),
+                                      const.B_GOAL_U + aux.Point(0, 500),
+                                      field.ball.getPos(),
+                                      field.ball.getPos() + field.ball.getVel(),
+                                      'SR'
+                                      ) is not None:
+            gk_pos = aux.closest_point_on_line(field.ball.pos, field.ball.vel.unity()*1000000, field.b_team[gk_wall_idx_list[0]].pos)
+            print("GK INTERCEPT", time.time())
+
+        gk_angle = 0*math.pi
+        waypoints[gk_wall_idx_list[0]] = wp.Waypoint(gk_pos, gk_angle, wp.WType.ENDPOINT)
 
     def defence(self, field: field.Field):
         rivals = field.y_team
@@ -99,7 +120,7 @@ class Strategy:
 
         if def1.rId == self.old_def_helper:
             def1 = allies[self.old_def]
-        targetPoint = aux.point_on_line(robot_with_ball.getPos(), aux.Point(const.SIDE * const.GOAL_X, 0), dist_between)
+        targetPoint = aux.point_on_line(robot_with_ball.getPos(), aux.Point(const.SIDE * const.GOAL_DX, 0), dist_between)
         waypoint = wp.Waypoint(targetPoint, aux.angle_to_point(targetPoint, robot_with_ball.getPos()), wp.WType.ENDPOINT)
         waypoints[def1.rId] = waypoint
         self.old_def = def1.rId
@@ -138,7 +159,7 @@ class Strategy:
                 waypoint = wp.Waypoint(field.ball.getPos(), aux.angle_to_point(def1Helper.getPos(), field.ball.getPos()), wp.WType.IGNOREOBSTACLES)   
             waypoints[def1Helper.rId] = waypoint
             if aux.dist(def1Helper.getPos(), targetPoint) < 1500:
-                targetPoint = aux.point_on_line(robot_with_ball.getPos(), aux.Point(const.SIDE * const.GOAL_X, 0), dist_between + 300)
+                targetPoint = aux.point_on_line(robot_with_ball.getPos(), aux.Point(const.SIDE * const.GOAL_DX, 0), dist_between + 300)
                 waypoint = wp.Waypoint(targetPoint, aux.angle_to_point(targetPoint, robot_with_ball.getPos()), wp.WType.ENDPOINT)
                 waypoints[def1.rId] = waypoint
 
