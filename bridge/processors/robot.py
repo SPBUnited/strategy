@@ -27,13 +27,28 @@ class Robot(entity.Entity):
         self.kickerChargeEnable = 1
         self.beep = 0   
 
-        self.Kxx = 833/20
-        self.Kyy = -833/20
-        self.Kww = 1.25/20
-        self.Kwy = -0.001
+        #v! SIM
+        # self.Kxx = 833/20
+        # self.Kyy = -833/20
+        # self.Kww = 1.25/20
+        # self.Kwy = -0.001
+        # self.Twy = 0.15
+        # self.RcompFdy = entity.FOD(self.Twy, const.Ts)
+        # self.RcompFfy = entity.FOLP(self.Twy, const.Ts)
+
+        #v! REAL
+        self.Kxx = 250/20
+        self.Kyy = -250/20
+        self.Kww = 6/20
+        self.Kwy = 0
         self.Twy = 0.15
         self.RcompFdy = entity.FOD(self.Twy, const.Ts)
         self.RcompFfy = entity.FOLP(self.Twy, const.Ts)
+
+        self.xxTF = 0.2
+        self.xxFlp = entity.FOLP(self.xxTF, const.Ts)
+        self.yyTF = 0.2
+        self.yyFlp = entity.FOLP(self.yyTF, const.Ts)
 
 
     def used(self, a):
@@ -90,8 +105,8 @@ class Robot(entity.Entity):
         vel - требуемый вектор скорости [мм/с] \\
         wvel - требуемая угловая скорость [рад/с]
         """
-        self.speedX = 1/self.Kxx * aux.rotate(vel, -self.angle).x
-        self.speedY = 1/self.Kyy * aux.rotate(vel, -self.angle).y
+        self.speedX = self.xxFlp.process(1/self.Kxx * aux.rotate(vel, -self.angle).x)
+        self.speedY = self.yyFlp.process(1/self.Kyy * aux.rotate(vel, -self.angle).y)
 
         # RcompY = self.Kwy * self.RcompFfy.process(self.RcompFdy.process(self.speedY))
         # RcompY = self.Kwy * self.RcompFdy.process(abs(float(self.speedY)**2))
@@ -165,13 +180,13 @@ class Robot(entity.Entity):
 
         curSpeed = self.vel.mag()
 
-        maxSpeed = 1000
-        k = 0.3
-        k2 = 0.0
-        gain = 10
-        err = distance_to_point - curSpeed * k - curSpeed**2 * k2
+        maxSpeed = 1500
+        # k = 0.3
+        k = 0
+        gain = 1.3
+        err = distance_to_point - curSpeed * k
         u = min(max(err * gain, -maxSpeed), maxSpeed)
-        # print('%d'%distance_to_point, '%d'%curSpeed, err, u)
+        print('%d'%distance_to_point, '%d'%curSpeed, err, u)
         transl_vel = vel_vec * u
 
         err = target_point.angle - self.getAngle()
@@ -179,7 +194,10 @@ class Robot(entity.Entity):
         if err > math.pi:
             err -= 2*math.pi
         
-        ang_vel = err * 1
+        ang_vel = err * 2
+
+        # print(transl_vel, '%.2f'%err, '%.2f'%self.angle)
+
 
         self.update_vel_xyw(transl_vel, ang_vel)
 

@@ -21,12 +21,13 @@ import bridge.processors.field as field
 import bridge.processors.router as router
 import bridge.processors.strategy as strategy
 import bridge.processors.waypoint as wp
+import bridge.processors.signal as signal
 
 # TODO: Refactor this class and corresponding matlab scripts
 @attr.s(auto_attribs=True)
 class MatlabController(BaseProcessor):
 
-    processing_pause: typing.Optional[float] = 0.001
+    processing_pause: typing.Optional[float] = const.Ts - 0.004
     max_commands_to_persist: int = 20
 
     vision_reader: DataReader = attr.ib(init=False)
@@ -125,25 +126,37 @@ class MatlabController(BaseProcessor):
 
         # TODO алгоритм следования по траектории
         # TODO Убрать артефакты
-        for i in range(1):
+        for i in range(3, 4):
             # self.y_team.robot(i).go_to_point_with_detour(self.router.getRoute(i)[-1].pos, self.b_team, self.y_team)
             if self.router.getRoute(i)[-1].type == wp.WType.IGNOREOBSTACLES:
                 self.field.b_team[i].go_to_point(self.router.getRoute(i)[-1].pos)
             else:
-                self.field.b_team[i].go_to_point_vector_field(self.router.getRoute(i)[-1].pos, self.field)
+                self.field.b_team[i].go_to_point_vector_field(self.router.getRoute(i)[-1], self.field)
 
-            self.field.b_team[i].rotate_to_angle(self.router.getRoute(i)[-1].angle)
-            #self.field.b_team[i].rotate_to_angle(0)
-            #self.field.b_team[i].rotate_to_angle(math.pi)
+        # dbg = 0
 
-        dbg = 0
+        # if dbg:
+        #     self.field.b_team[5].go_to_point_vector_field(auxiliary.Point(1000, 1000), self.field)
+        #     self.field.b_team[3].go_to_point_vector_field(auxiliary.Point(700, 1300), self.field)
+        #     self.field.b_team[5].rotate_to_angle(0)
+        #     self.field.b_team[3].rotate_to_angle(0)
 
-        if dbg:
-            self.field.b_team[5].go_to_point_vector_field(auxiliary.Point(1000, 1000), self.field)
-            self.field.b_team[3].go_to_point_vector_field(auxiliary.Point(700, 1300), self.field)
-            self.field.b_team[5].rotate_to_angle(0)
-            self.field.b_team[3].rotate_to_angle(0)
+        # self.field.b_team[3].rotate_to_point(auxiliary.Point(-4500, 000))
+        # if auxiliary.dist(self.field.b_team[3].pos, self.field.ball.pos) < 300 and \
+        #     auxiliary.scal_mult((self.field.ball.pos - self.field.b_team[3].pos).unity(), (self.field.b_goal - self.field.b_team[3].pos).unity()) > 0.9:
+        #     self.field.b_team[3].go_to_point(self.field.ball.pos)
+        #     self.field.b_team[3].kick_up()
+        # else:
+        #     self.field.b_team[3].go_to_point_vector_field(
+        #         wp.Waypoint(
+        #             auxiliary.point_on_line(self.field.ball.pos, auxiliary.Point(-4500, 0), -200),
+        #             -3.14-0.7,
+        #             wp.WType.ENDPOINT),
+        #         self.field)
 
+    square = signal.Signal(2, 'SQUARE', lohi=(-1000, 1000))
+    sine = signal.Signal(2, 'SINE', ampoffset=(1000, 0))
+    cosine = signal.Signal(2, 'COSINE', ampoffset=(1000, 0))
     def control_assign(self):
         """
         Определить связь номеров роботов с каналами управления
@@ -152,8 +165,26 @@ class MatlabController(BaseProcessor):
             r.clear_fields()
 
         # TODO Задавать соответствие списком
-        for i in range(6):
-            self.controll_team[i].copy_control_fields(self.field.b_team[i])
+        # for i in range(6):
+        #     self.controll_team[i].copy_control_fields(self.field.b_team[i])
+
+        dbg_bot_id_LCS = 3
+        dbg_bot_id_ctrl = 11
+
+        # self.controll_team[dbg_bot_id_ctrl].copy_control_fields(self.field.b_team[dbg_bot_id_LCS])
+
+        # self.controll_team[dbg_bot_id_ctrl].speedX = self.square.get()
+        # self.controll_team[dbg_bot_id_ctrl].speedY = self.square.get()
+        # self.controll_team[dbg_bot_id_ctrl].speedR = self.square.get()
+        self.controll_team[dbg_bot_id_ctrl].update_vel_xyw(auxiliary.Point(self.square.get(), 0), 0)
+        # self.controll_team[dbg_bot_id_ctrl].update_vel_xyw(auxiliary.Point(self.sine.get(), self.cosine.get()), 0)
+
+        print(self.square.get(),
+              '%d'%auxiliary.rotate(self.field.b_team[dbg_bot_id_LCS].vel, -self.field.b_team[dbg_bot_id_LCS].angle).x,
+              '%d'%auxiliary.rotate(self.field.b_team[dbg_bot_id_LCS].vel, -self.field.b_team[dbg_bot_id_LCS].angle).y,
+              '%.2f'%self.field.b_team[dbg_bot_id_LCS].anglevel,
+              )
+
 
     def get_rules(self):
         """
@@ -179,7 +210,7 @@ class MatlabController(BaseProcessor):
         for i in range(const.TEAM_ROBOTS_MAX_COUNT):
             for _ in range(0, 13):
                 rules.append(0.0)
-            
+        
         b = bytes()
         rules = b.join((struct.pack('d', rule) for rule in rules))
         return rules
@@ -200,6 +231,8 @@ class MatlabController(BaseProcessor):
 
         self.dt = time.time() - self.cur_time
         self.cur_time = time.time()
+
+        print(self.dt)
 
         self.read_vision()
         self.control_loop()
