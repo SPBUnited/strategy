@@ -210,7 +210,7 @@ class Strategy:
                             waypoints[allies[i].rId] = waypoint                       
                         else:
                             used_robots_id.append(allies[i].rId)
-                            targetPoint = aux.Point(const.SIDE * bX, bY - 200 * k / 2 + 200 * c)
+                            targetPoint = aux.Point(const.SIDE * bX, (bY - 200 * k / 2 + 200 * c) * const.SIDE)
                             waypoint = wp.Waypoint(targetPoint, aux.angle_to_point(allies[i].getPos(), aux.Point(0, allies[i].getPos().y)), wp.WType.ENDPOINT)
                             waypoints[allies[i].rId] = waypoint                          
                     else:
@@ -221,7 +221,7 @@ class Strategy:
                             waypoints[allies[i].rId] = waypoint          
                         else:
                             used_robots_id.append(allies[i].rId)
-                            targetPoint = aux.Point(const.SIDE * bX, bY - 200 * (k - 1) + 200 * c)
+                            targetPoint = aux.Point(const.SIDE * bX, (bY - 200 * (k - 1) + 200 * c) * const.SIDE)
                             waypoint = wp.Waypoint(targetPoint, aux.angle_to_point(allies[i].getPos(), aux.Point(0, allies[i].getPos().y)), wp.WType.ENDPOINT)
                             waypoints[allies[i].rId] = waypoint  
                     c += 1
