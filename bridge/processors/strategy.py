@@ -49,8 +49,8 @@ class Strategy:
             bbotpos = field.y_team[i].getPos()
             ybotpos = field.b_team[i].getPos()
             # pos = aux.point_on_line(bbotpos, -aux.Point(const.GOAL_DX, 0), 300)
-            # pos = aux.Point(500*i, -1000)
-            pos = aux.Point(1000 + self.square.get(), -1000)
+            pos = aux.Point(-500*i, -1000)
+            # pos = aux.Point(1000 + self.square.get(), -1000)
             
             # dpos = bbotpos - ybotpos
             # angle = math.atan2(dpos.y, dpos.x)
@@ -79,7 +79,7 @@ class Strategy:
                           aux.get_line_intersection(robot_with_ball.pos, robot_with_ball.pos + aux.rotate(aux.Point(1, 0), robot_with_ball.angle),
                                                     const.Y_GOAL_D - aux.Point(0, 500), const.Y_GOAL_U + aux.Point(0, 500), 'RS') - aux.Point(400, 0),
                           0.5)
-            print(robot_with_ball.angle)
+            # print(robot_with_ball.angle)
         except:
             gk_pos = aux.point_on_line(field.y_goal, field.ball.pos, 400)
 
