@@ -27,7 +27,7 @@ import bridge.processors.signal as signal
 @attr.s(auto_attribs=True)
 class MatlabController(BaseProcessor):
 
-    processing_pause: typing.Optional[float] = const.Ts - 0.004
+    processing_pause: typing.Optional[float] = const.Ts - 0.01
     max_commands_to_persist: int = 20
 
     vision_reader: DataReader = attr.ib(init=False)
@@ -122,16 +122,12 @@ class MatlabController(BaseProcessor):
         waypoints = self.strategy.process(self.field)
         for i in range(6):
             self.router.setWaypoint(i, waypoints[i])
-        self.router.calcRoutes(self.field)
+        self.router.reRoute(self.field)
 
         # TODO алгоритм следования по траектории
         # TODO Убрать артефакты
-        for i in range(3, 4):
-            # self.y_team.robot(i).go_to_point_with_detour(self.router.getRoute(i)[-1].pos, self.b_team, self.y_team)
-            if self.router.getRoute(i)[-1].type == wp.WType.IGNOREOBSTACLES:
-                self.field.b_team[i].go_to_point(self.router.getRoute(i)[-1].pos)
-            else:
-                self.field.b_team[i].go_to_point_vector_field(self.router.getRoute(i)[-1], self.field)
+        for i in range(0, 6):
+            self.field.b_team[i].go_route(self.router.getRoute(i), self.field)
 
         # dbg = 0
 
@@ -165,13 +161,13 @@ class MatlabController(BaseProcessor):
             r.clear_fields()
 
         # TODO Задавать соответствие списком
-        # for i in range(6):
-        #     self.controll_team[i].copy_control_fields(self.field.b_team[i])
+        for i in range(6):
+            self.controll_team[i].copy_control_fields(self.field.b_team[i])
 
-        dbg_bot_id_LCS = 3
-        dbg_bot_id_ctrl = 11
+        # dbg_bot_id_LCS = 3
+        # dbg_bot_id_ctrl = 3
 
-        self.controll_team[dbg_bot_id_ctrl].copy_control_fields(self.field.b_team[dbg_bot_id_LCS])
+        # self.controll_team[dbg_bot_id_ctrl].copy_control_fields(self.field.b_team[dbg_bot_id_LCS])
 
         # self.controll_team[dbg_bot_id_ctrl].speedX = self.square.get()
         # self.controll_team[dbg_bot_id_ctrl].speedY = self.square.get()
@@ -232,7 +228,7 @@ class MatlabController(BaseProcessor):
         self.dt = time.time() - self.cur_time
         self.cur_time = time.time()
 
-        print(self.dt)
+        # print(self.dt)
 
         self.read_vision()
         self.control_loop()
