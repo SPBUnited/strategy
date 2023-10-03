@@ -122,12 +122,10 @@ class Robot(entity.Entity):
 
         angle0 = aux.LERP(angle60, target_point.angle, aux.minmax(dist/500, 0, 1))
 
-        MAX_SPEED = 1500
-        MAX_ANG_SPEED = 4
         k = 0.2
         gain = 6
         err = dist - cur_speed * k
-        u = aux.minmax(err * gain, -MAX_SPEED, MAX_SPEED)
+        u = aux.minmax(err * gain, -const.MAX_SPEED, const.MAX_SPEED)
         # print('%d'%dist, '%d'%cur_speed, err, u)
         transl_vel = vel0 * u
 
@@ -140,7 +138,7 @@ class Robot(entity.Entity):
         gain_a = 1
         
         aerr -= self.anglevel * k_a
-        u_a = min(max(aerr * gain_a, -MAX_ANG_SPEED), MAX_ANG_SPEED)
+        u_a = min(max(aerr * gain_a, -const.MAX_ANG_SPEED), const.MAX_ANG_SPEED)
         ang_vel = u_a
 
         # print(transl_vel, '%.2f'%err, '%.2f'%self.angle)

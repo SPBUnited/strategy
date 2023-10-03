@@ -39,7 +39,7 @@ class MatlabController(BaseProcessor):
     ball = auxiliary.Point(0, 0)
 
     controll_team = [robot.Robot(const.GRAVEYARD_POS, 0, const.ROBOT_R, 'b', i) for i in range(const.TEAM_ROBOTS_MAX_COUNT)]
-
+    our_team = None
     field = field.Field()
     router = router.Router()
     strategy = strategy.Strategy()
@@ -119,6 +119,11 @@ class MatlabController(BaseProcessor):
         """
         Рассчитать стратегию, тактику и физику для роботов на поле
         """
+        if const.OUR_COLOR == 'b':
+            self.our_team = self.field.b_team
+        else:
+            self.our_team = self.field.y_team
+
         waypoints = self.strategy.process(self.field)
         for i in range(6):
             self.router.setWaypoint(i, waypoints[i])
@@ -127,7 +132,7 @@ class MatlabController(BaseProcessor):
         # TODO алгоритм следования по траектории
         # TODO Убрать артефакты
         for i in range(0, 6):
-            self.field.b_team[i].go_route(self.router.getRoute(i), self.field)
+            self.our_team[i].go_route(self.router.getRoute(i), self.field)
 
         # dbg = 0
 
@@ -160,11 +165,11 @@ class MatlabController(BaseProcessor):
         for r in self.controll_team:
             r.clear_fields()
 
-        # TODO Задавать соответствие списком
-        #self.controll_team[3].copy_control_fields(self.field.b_team[3])
-        
+        # TODO Задавать соответствие списком        
         for i in range(6):
-            self.controll_team[i].copy_control_fields(self.field.b_team[i])
+            self.controll_team[i].copy_control_fields(self.our_team[i])
+
+        #self.controll_team[3].copy_control_fields(self.field.b_team[3])
 
         # dbg_bot_id_LCS = 3
         # dbg_bot_id_ctrl = 3
@@ -191,7 +196,7 @@ class MatlabController(BaseProcessor):
         rules = []
 
         for i in range(const.TEAM_ROBOTS_MAX_COUNT):
-            self.controll_team[i].remake_speed()
+            #self.controll_team[i].remake_speed()
             rules.append(0)
             rules.append(self.controll_team[i].speedX)
             rules.append(self.controll_team[i].speedY)
