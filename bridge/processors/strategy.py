@@ -19,7 +19,7 @@ class States(Enum):
 
 class Strategy:
     def __init__(self) -> None:
-        self.state = States.DEBUG
+        self.state = States.DEFENCE
 
         #DEFENCE
         self.old_def_helper = -1
@@ -32,14 +32,19 @@ class Strategy:
     """
     def process(self, field: field.Field):
         if self.state == States.DEBUG:
-            return self.debug(field)
+            waypoints = self.debug(field)
         elif self.state == States.DEFENCE:
-            return self.defence(field)
+            waypoints = self.defence(field)
         
         if self.state != States.DEFENCE:
             self.old_def_helper = -1
             self.old_def = -1
             self.steal_flag = 0
+
+        robot_with_ball = aux.find_nearest_robot(field.ball.getPos(), field.y_team)
+        self.gk_go(field, waypoints, [const.GK], robot_with_ball)
+        return waypoints
+
 
     square = signal.Signal(8, 'SQUARE', lohi=(-1000, 1000))
     square_ang = signal.Signal(8, 'SQUARE', lohi=(0, 3.14))
@@ -61,7 +66,7 @@ class Strategy:
             waypoints[i] = waypoint
 
         robot_with_ball = aux.find_nearest_robot(field.ball.getPos(), field.b_team)
-        self.gk_go(field, waypoints, [3], robot_with_ball)
+        self.gk_go(field, waypoints, [const.GK], robot_with_ball)
         return waypoints
 
     def gk_go(self, field: field.Field, waypoints, gk_wall_idx_list, robot_with_ball):
@@ -75,18 +80,18 @@ class Strategy:
         [in] robot_with_ball - текущий робот с мячом
         """
         try:
-            gk_pos = aux.LERP(aux.point_on_line(field.y_goal, field.ball.pos, 500),
+            gk_pos = aux.LERP(aux.point_on_line(field.b_goal, field.ball.pos, 500),
                           aux.get_line_intersection(robot_with_ball.pos, robot_with_ball.pos + aux.rotate(aux.Point(1, 0), robot_with_ball.angle),
                                                     const.Y_GOAL_D - aux.Point(0, 500), const.Y_GOAL_U + aux.Point(0, 500), 'RS') - aux.Point(400, 0),
                           0.5)
             # print(robot_with_ball.angle)
         except:
-            gk_pos = aux.point_on_line(field.y_goal, field.ball.pos, 400)
+            gk_pos = aux.point_on_line(field.b_goal, field.ball.pos, 400)
 
         # print(field.ball.vel.mag())
         if field.ball.vel.mag() > 100 and \
-            aux.get_line_intersection(const.Y_GOAL_D + aux.Point(0, -500),
-                                      const.Y_GOAL_U + aux.Point(0, 500),
+            aux.get_line_intersection(const.B_GOAL_D + aux.Point(0, -500),
+                                      const.B_GOAL_U + aux.Point(0, 500),
                                       field.ball.getPos(),
                                       field.ball.getPos() + field.ball.getVel(),
                                       'SR'
@@ -98,16 +103,18 @@ class Strategy:
         waypoints[gk_wall_idx_list[0]] = wp.Waypoint(gk_pos, gk_angle, wp.WType.ENDPOINT)
 
     def defence(self, field: field.Field):
-        rivals = field.y_team
-        allies = field.b_team
+        if const.OUR_COLOR == 'b':
+            rivals = field.y_team
+            allies = field.b_team
+        else:
+            rivals = field.b_team
+            allies = field.y_team
+
         dist_between = 200
         waypoints = [None]*const.TEAM_ROBOTS_MAX_COUNT
         for i in range(6):
             waypoint = wp.Waypoint(allies[i].getPos(), allies[i].getAngle(), wp.WType.ENDPOINT)
             waypoints[i] = waypoint
-        gk_pos = aux.Point(-4000, 0)#aux.point_on_line(field.b_goal, field.ball.pos, -0)
-        gk_angle = 0
-        waypoints[const.GK] = wp.Waypoint(gk_pos, gk_angle, wp.WType.ENDPOINT)
 
         worksRobots = []
         for i in range(const.TEAM_ROBOTS_MAX_COUNT):
@@ -129,7 +136,7 @@ class Strategy:
         '''if def1.rId == self.old_def_helper:
             def1 = allies[self.old_def]'''
 
-        targetPoint = aux.point_on_line(robot_with_ball.getPos(), aux.Point(const.SIDE * const.GOAL_X, 0), dist_between)
+        targetPoint = aux.point_on_line(robot_with_ball.getPos(), aux.Point(const.SIDE * const.GOAL_DX, 0), dist_between)
         waypoint = wp.Waypoint(targetPoint, aux.angle_to_point(targetPoint, robot_with_ball.getPos()), wp.WType.ENDPOINT)
         waypoints[def1.rId] = waypoint
         self.old_def = def1.rId
