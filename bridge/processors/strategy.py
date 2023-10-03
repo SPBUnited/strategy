@@ -49,16 +49,18 @@ class Strategy:
             bbotpos = field.y_team[i].getPos()
             ybotpos = field.b_team[i].getPos()
             # pos = aux.point_on_line(bbotpos, -aux.Point(const.GOAL_DX, 0), 300)
-            pos = aux.Point(-500*i, -1000)
+            pos = aux.Point(-500*i, -3000)
             # pos = aux.Point(1000 + self.square.get(), -1000)
             
             # dpos = bbotpos - ybotpos
             # angle = math.atan2(dpos.y, dpos.x)
             # angle = self.square_ang.get()
-            angle = math.pi/3
+            angle = math.pi/3 * 0
 
             waypoint = wp.Waypoint(pos, angle, wp.WType.ENDPOINT)
             waypoints[i] = waypoint
+        
+        waypoints[1].pos = aux.Point(1000, self.square.get() -1000)
 
         robot_with_ball = aux.find_nearest_robot(field.ball.getPos(), field.b_team)
         self.gk_go(field, waypoints, [3], robot_with_ball)
@@ -75,18 +77,18 @@ class Strategy:
         [in] robot_with_ball - текущий робот с мячом
         """
         try:
-            gk_pos = aux.LERP(aux.point_on_line(field.y_goal, field.ball.pos, 500),
+            gk_pos = aux.LERP(aux.point_on_line(field.ally_goal.center, field.ball.pos, const.GK_FORW),
                           aux.get_line_intersection(robot_with_ball.pos, robot_with_ball.pos + aux.rotate(aux.Point(1, 0), robot_with_ball.angle),
-                                                    const.Y_GOAL_D - aux.Point(0, 500), const.Y_GOAL_U + aux.Point(0, 500), 'RS') - aux.Point(400, 0),
+                                                    field.ally_goal.down, field.ally_goal.up, 'RS') + const.GK_FORW*field.ally_goal.eye_forw,
                           0.5)
             # print(robot_with_ball.angle)
         except:
-            gk_pos = aux.point_on_line(field.y_goal, field.ball.pos, 400)
+            gk_pos = aux.point_on_line(field.ally_goal.center, field.ball.pos, const.GK_FORW)
 
         # print(field.ball.vel.mag())
         if field.ball.vel.mag() > 100 and \
-            aux.get_line_intersection(const.Y_GOAL_D + aux.Point(0, -500),
-                                      const.Y_GOAL_U + aux.Point(0, 500),
+            aux.get_line_intersection(field.ally_goal.down,
+                                      field.ally_goal.up,
                                       field.ball.getPos(),
                                       field.ball.getPos() + field.ball.getVel(),
                                       'SR'
@@ -105,7 +107,7 @@ class Strategy:
         for i in range(6):
             waypoint = wp.Waypoint(allies[i].getPos(), allies[i].getAngle(), wp.WType.ENDPOINT)
             waypoints[i] = waypoint
-        gk_pos = aux.point_on_line(field.y_goal, field.ball.pos, 800)
+        gk_pos = aux.point_on_line(field.ally_goal.center, field.ball.pos, 800)
         gk_angle = math.pi
         waypoints[0] = wp.Waypoint(gk_pos, gk_angle, wp.WType.ENDPOINT)
 

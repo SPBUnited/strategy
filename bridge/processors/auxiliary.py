@@ -43,6 +43,8 @@ class Point:
             return self
         return self/self.mag()
 
+i = Point(1, 0)
+j = Point(0, 1)
 
 class Line:
     def __init__(self, start_x, start_y, end_x, end_y):
@@ -243,6 +245,15 @@ def angle_to_point(point1, point2):
     dpos = -point1 + point2
     angle = math.atan2(dpos.y, dpos.x)
 
+    return angle
+
+def wind_down_angle(angle: float):
+    """
+    Привести угол к диапазону [-pi, pi]
+    """
+    angle = angle % (2*math.pi)
+    if angle > math.pi:
+        angle -= 2*math.pi
     return angle
 
 def sign(num):
