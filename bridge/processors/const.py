@@ -42,12 +42,7 @@ KP = 0.1
 BALL_R = 0.05
 ROBOT_R = 0.2
 GRAVEYARD_POS = aux.Point(-10000, 0)
-GOAL_DX = 2500
-GOAL_DY = 500
+GOAL_DX = 4500
+GOAL_DY = 1000
 
-B_GOAL_C = aux.Point(-GOAL_DX, 0)
-B_GOAL_U = aux.Point(-GOAL_DX, GOAL_DY)
-B_GOAL_D = aux.Point(-GOAL_DX, -GOAL_DY)
-Y_GOAL_C = aux.Point(GOAL_DX, 0)
-Y_GOAL_U = aux.Point(GOAL_DX, GOAL_DY)
-Y_GOAL_D = aux.Point(GOAL_DX, -GOAL_DY)
+GK_FORW = 800

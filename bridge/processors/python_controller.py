@@ -40,7 +40,7 @@ class MatlabController(BaseProcessor):
 
     controll_team = [robot.Robot(const.GRAVEYARD_POS, 0, const.ROBOT_R, 'b', i) for i in range(const.TEAM_ROBOTS_MAX_COUNT)]
 
-    field = field.Field()
+    field = field.Field('b')
     router = router.Router()
     strategy = strategy.Strategy()
 

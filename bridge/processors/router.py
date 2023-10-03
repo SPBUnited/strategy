@@ -40,12 +40,17 @@ class Router:
         enemy = field.y_team
         self_pos = allies[idx].getPos()
         target_point = self.routes[idx][-1]
+        dist = (self_pos - target_point.pos).mag()
+
+        vector_field_threshold = 200
+        if dist < vector_field_threshold:
+            return None
 
         sep_dist = 500
         ball_sep_dist = 150
 
         closest_robot = None
-        closest_dist = math.inf
+        closest_dist = dist
         closest_separation = 0
         angle_to_point = math.atan2(target_point.pos.y - self_pos.y, target_point.pos.x - self_pos.x)
 

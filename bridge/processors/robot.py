@@ -118,9 +118,29 @@ class Robot(entity.Entity):
         # else:
         #     angle0 = target_point.angle
 
-        angle60 = (target_point.pos - self.pos).arg() + math.pi/3 * aux.sign(end_point.angle - (target_point.pos - self.pos).arg())
+        dangle = (target_point.pos - self.pos).arg()
+        rangle = aux.wind_down_angle(self.angle - dangle)
+        twpangle = aux.wind_down_angle(target_point.angle - dangle)
 
-        angle0 = aux.LERP(angle60, target_point.angle, aux.minmax(dist/500, 0, 1))
+        angle60_abs = math.pi/3 if abs(rangle) < math.pi/2 else 2*math.pi/3
+        angle60_sign = aux.sign(twpangle + rangle)
+
+        angle60 = dangle + angle60_abs * angle60_sign
+
+        # angle60 = (target_point.pos - self.pos).arg() + \
+        #     math.pi/3 * \
+        #     aux.sign(end_point.angle - (target_point.pos - self.pos).arg()) + \
+        #     0
+            # -math.pi/3 * \
+            # aux.sign(aux.vect_mult(aux.rotate(aux.i, end_point.angle), target_point.pos - self.pos))
+
+        lerp_angles = [target_point.angle, angle60]
+        # if lerp_angles[1] - lerp_angles[0] > math.pi:
+        #     lerp_angles[1] -= 2*math.pi
+        # elif lerp_angles[1] - lerp_angles[0] < math.pi:
+        #     lerp_angles[1] += 2*math.pi
+
+        angle0 = aux.LERP(lerp_angles[0], lerp_angles[1], aux.minmax((dist-100)/1000, 0, 1))
 
         MAX_SPEED = 1500
         MAX_ANG_SPEED = 4
@@ -131,10 +151,7 @@ class Robot(entity.Entity):
         # print('%d'%dist, '%d'%cur_speed, err, u)
         transl_vel = vel0 * u
 
-        aerr = angle0 - self.getAngle()
-        aerr = aerr % (2*math.pi)
-        if aerr > math.pi:
-            aerr -= 2*math.pi
+        aerr = aux.wind_down_angle(angle0 - self.getAngle())
 
         k_a = 0.04
         gain_a = 1
