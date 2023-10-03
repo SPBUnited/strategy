@@ -6,6 +6,7 @@ import bridge.processors.field as field
 import bridge.processors.waypoint as wp
 import bridge.processors.const as const
 import bridge.processors.auxiliary as aux
+import bridge.processors.signal as signal
 import math
 from enum import Enum
 
@@ -18,7 +19,7 @@ class States(Enum):
 
 class Strategy:
     def __init__(self) -> None:
-        self.state = States.DEFENCE
+        self.state = States.DEBUG
 
         #DEFENCE
         self.old_def_helper = -1
@@ -40,34 +41,61 @@ class Strategy:
             self.old_def = -1
             self.steal_flag = 0
 
+    square = signal.Signal(8, 'SQUARE', lohi=(-1000, 1000))
+    square_ang = signal.Signal(8, 'SQUARE', lohi=(0, 3.14))
     def debug(self, field: field.Field):
         waypoints = [None]*const.TEAM_ROBOTS_MAX_COUNT
-        for i in range(1, 6):
-            bbotpos = field.b_team[i].getPos()
-            ybotpos = field.y_team[i].getPos()
-            pos = aux.point_on_line(bbotpos, aux.Point(const.GOAL_X, 0), 300)
+        for i in range(0, 6):
+            bbotpos = field.y_team[i].getPos()
+            ybotpos = field.b_team[i].getPos()
+            # pos = aux.point_on_line(bbotpos, -aux.Point(const.GOAL_DX, 0), 300)
+            pos = aux.Point(-500*i, -1000)
+            # pos = aux.Point(1000 + self.square.get(), -1000)
             
-            dpos = bbotpos - ybotpos
-            angle = math.atan2(dpos.y, dpos.x)
+            # dpos = bbotpos - ybotpos
+            # angle = math.atan2(dpos.y, dpos.x)
+            # angle = self.square_ang.get()
+            angle = math.pi/3
 
             waypoint = wp.Waypoint(pos, angle, wp.WType.ENDPOINT)
             waypoints[i] = waypoint
 
-        timer = time.time()
-        # timer = 0
-        dpos = aux.Point(500 + 1500*((timer//6)%2), -1000)
-        # print( dpos )
-        dangle = 0*math.pi
-        waypoints[1] = wp.Waypoint(dpos, dangle, wp.WType.ENDPOINT)
-
-        gk_pos = aux.point_on_line(field.y_goal, field.ball.pos, 800)
-
-        if field.ball.vel.mag() > 500:
-            gk_pos = aux.closest_point_on_line(field.ball.pos, field.ball.vel.unity()*100000, field.y_team[0].pos)
-
-        gk_angle = math.pi
-        waypoints[0] = wp.Waypoint(gk_pos, gk_angle, wp.WType.ENDPOINT)
+        robot_with_ball = aux.find_nearest_robot(field.ball.getPos(), field.b_team)
+        self.gk_go(field, waypoints, [3], robot_with_ball)
         return waypoints
+
+    def gk_go(self, field: field.Field, waypoints, gk_wall_idx_list, robot_with_ball):
+        """
+        Расчет требуемых положений вратаря и стенки
+        
+        [in] field - объект Field(), ситуация на поле
+        [out] waypoints - ссылка на массив путевых точек, который будет изменен!
+        [in] gk_wall_idx_list - массив индексов вратаря и стенки. Нулевой элемент всегда индекс вратаря
+        Дальше индексы роботов в стенке, кол-во от 0 до 3
+        [in] robot_with_ball - текущий робот с мячом
+        """
+        try:
+            gk_pos = aux.LERP(aux.point_on_line(field.y_goal, field.ball.pos, 500),
+                          aux.get_line_intersection(robot_with_ball.pos, robot_with_ball.pos + aux.rotate(aux.Point(1, 0), robot_with_ball.angle),
+                                                    const.Y_GOAL_D - aux.Point(0, 500), const.Y_GOAL_U + aux.Point(0, 500), 'RS') - aux.Point(400, 0),
+                          0.5)
+            # print(robot_with_ball.angle)
+        except:
+            gk_pos = aux.point_on_line(field.y_goal, field.ball.pos, 400)
+
+        # print(field.ball.vel.mag())
+        if field.ball.vel.mag() > 100 and \
+            aux.get_line_intersection(const.Y_GOAL_D + aux.Point(0, -500),
+                                      const.Y_GOAL_U + aux.Point(0, 500),
+                                      field.ball.getPos(),
+                                      field.ball.getPos() + field.ball.getVel(),
+                                      'SR'
+                                      ) is not None:
+            gk_pos = aux.closest_point_on_line(field.ball.pos, field.ball.vel.unity()*1000000, field.b_team[gk_wall_idx_list[0]].pos)
+            # print("GK INTERCEPT", time.time())
+
+        gk_angle = math.pi/2
+        waypoints[gk_wall_idx_list[0]] = wp.Waypoint(gk_pos, gk_angle, wp.WType.ENDPOINT)
 
     def defence(self, field: field.Field):
         rivals = field.y_team

@@ -34,6 +34,9 @@ class Point:
     def mag(self):
         return math.hypot(self.x, self.y)
 
+    def arg(self):
+        return math.atan2(self.y, self.x)
+
     def unity(self):
         if self.mag() == 0:
             #raise ValueError("БАГА, .unity от нулевого вектора")
@@ -112,8 +115,18 @@ def calculate_path_length(start_point, end_point, obstacles):
 
     return path_length
 
+def get_line_intersection(line1_start, line1_end, line2_start, line2_end, is_inf = 'SS'):
+    """
+    Получить точку пересечения отрезков или прямых
 
-def get_line_intersection(line1_start, line1_end, line2_start, line2_end):
+    is_inf задает ограничения на точку пересечения. Имеет вид 'AB', параметр A
+    задает параметры первой прямой, B - второй.
+
+    S(egment) - задан отрезок
+    R(ay) - задан луч (начало - _start, направление - _end), точка пересечения валидна только
+    если находится на луче _start-_end
+    L(ine) - задана прямая
+    """
     # Calculate the differences
     delta_x1 = line1_end.x - line1_start.x
     delta_y1 = line1_end.y - line1_start.y
@@ -121,7 +134,7 @@ def get_line_intersection(line1_start, line1_end, line2_start, line2_end):
     delta_y2 = line2_end.y - line2_start.y
 
     # Calculate the determinants
-    determinant = delta_x1 * delta_y2 - delta_x2 * delta_y1
+    determinant = delta_y1 * delta_x2 - delta_y2 * delta_x1
 
     if determinant == 0:
         # The lines are parallel or coincident
@@ -135,13 +148,24 @@ def get_line_intersection(line1_start, line1_end, line2_start, line2_end):
     t1 = (delta_x_start * delta_y2 - delta_x2 * delta_y_start) / determinant
     t2 = (delta_x_start * delta_y1 - delta_x1 * delta_y_start) / determinant
 
-    if 0 <= t1 <= 1 and 0 <= t2 <= 1:
-        # The lines intersect within their segments
-        intersection_x = line1_start.x + t1 * delta_x1
-        intersection_y = line1_start.y + t1 * delta_y1
-        return Point(intersection_x, intersection_y)
+    intersection_x = line1_start.x + t1 * delta_x1
+    intersection_y = line1_start.y + t1 * delta_y1
+    p = Point(intersection_x, intersection_y)
 
-    # The lines do not intersect within their segments
+    first_valid = False
+    second_valid = False
+    if is_inf[0] == 'S' and 0 <= t1 <= 1 or \
+        is_inf[0] == 'R' and t1 >= 0 or \
+        is_inf[0] == 'L':
+        first_valid = True
+    if is_inf[1] == 'S' and 0 <= t2 <= 1 or \
+        is_inf[1] == 'R' and t2 >= 0 or \
+        is_inf[1] == 'L':
+        second_valid = True
+
+    if first_valid and second_valid:
+        return p
+
     return None
 
 
@@ -205,6 +229,15 @@ def point_on_line(robot, point, distance):
         new_x = robot.x + distance * math.cos(angle_to_point)
         new_y = robot.y + distance * math.sin(angle_to_point)
         return Point(new_x, new_y)
+    
+def LERP(p1, p2, t):
+    return p1*(1-t) + p2*t
+
+def minmax(x, a, b):
+    """
+    Возвращает ближайшее к x число из диапазона [a, b]
+    """
+    return min(max(x, a), b)
 
 def angle_to_point(point1, point2):
     dpos = -point1 + point2
