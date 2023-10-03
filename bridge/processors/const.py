@@ -10,7 +10,7 @@ CAMERAS_COUNT: int = 4
 MAX_BALLS_IN_CAMERA: int = 64
 MAX_BALLS_IN_FIELD: int = CAMERAS_COUNT * MAX_BALLS_IN_CAMERA
 BALL_PACKET_SIZE: int = 3
-SIDE = 1 #1 if our goal on plus coords on X. -1 if our goal on minus coords on X.
+SIDE = -1 #1 if our goal on plus coords on X. -1 if our goal on minus coords on X.
 
 ROBOTS_MAX_COUNT: int = 32
 TEAM_ROBOTS_MAX_COUNT: int = ROBOTS_MAX_COUNT // 2

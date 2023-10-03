@@ -125,7 +125,7 @@ class MatlabController(BaseProcessor):
 
         # TODO алгоритм следования по траектории
         # TODO Убрать артефакты
-        for i in range(1):
+        for i in range(6):
             # self.y_team.robot(i).go_to_point_with_detour(self.router.getRoute(i)[-1].pos, self.b_team, self.y_team)
             if self.router.getRoute(i)[-1].type == wp.WType.IGNOREOBSTACLES:
                 self.field.b_team[i].go_to_point(self.router.getRoute(i)[-1].pos)
@@ -136,14 +136,6 @@ class MatlabController(BaseProcessor):
             #self.field.b_team[i].rotate_to_angle(0)
             #self.field.b_team[i].rotate_to_angle(math.pi)
 
-        dbg = 1
-
-        if dbg:
-            self.field.b_team[5].go_to_point_vector_field(auxiliary.Point(1000, 1000), self.field)
-            self.field.b_team[3].go_to_point_vector_field(auxiliary.Point(700, 1300), self.field)
-            self.field.b_team[5].rotate_to_angle(0)
-            self.field.b_team[3].rotate_to_angle(0)
-
     """
     Определить связь номеров роботов с каналами управления
     """
@@ -152,10 +144,10 @@ class MatlabController(BaseProcessor):
             r.clear_fields()
 
         # TODO Задавать соответствие списком
-        self.controll_team[11].copy_control_fields(self.field.b_team[3])
+        #self.controll_team[3].copy_control_fields(self.field.b_team[3])
         
-        #for i in range(6):
-        #    self.controll_team[i].copy_control_fields(self.field.b_team[i])
+        for i in range(6):
+            self.controll_team[i].copy_control_fields(self.field.b_team[i])
 
     """
     Сформировать массив команд для отправки на роботов
