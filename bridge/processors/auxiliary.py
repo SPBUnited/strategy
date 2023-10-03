@@ -233,6 +233,12 @@ def point_on_line(robot, point, distance):
 def LERP(p1, p2, t):
     return p1*(1-t) + p2*t
 
+def minmax(x, a, b):
+    """
+    Возвращает ближайшее к x число из диапазона [a, b]
+    """
+    return min(max(x, a), b)
+
 def angle_to_point(point1, point2):
     dpos = -point1 + point2
     angle = math.atan2(dpos.y, dpos.x)
