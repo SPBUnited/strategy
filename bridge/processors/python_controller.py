@@ -1,7 +1,6 @@
 import attr
 import numpy as np
 import typing
-import struct
 import time
 import bridge.processors.const as const
 import bridge.processors.robot as robot
@@ -23,12 +22,16 @@ import bridge.processors.strategy as strategy
 import bridge.processors.waypoint as wp
 import bridge.processors.signal as signal
 
+from bridge.processors.robot_command_sink import Sink, CommandSink
+
 # TODO: Refactor this class and corresponding matlab scripts
 @attr.s(auto_attribs=True)
 class MatlabController(BaseProcessor):
 
     processing_pause: typing.Optional[float] = const.Ts - 0.01
     max_commands_to_persist: int = 20
+    our_color: str = 'b'
+    sink: Sink = Sink()
 
     vision_reader: DataReader = attr.ib(init=False)
     referee_reader: DataReader = attr.ib(init=False)
@@ -38,18 +41,17 @@ class MatlabController(BaseProcessor):
     dt = 0
     ball = auxiliary.Point(0, 0)
 
-    controll_team = [robot.Robot(const.GRAVEYARD_POS, 0, const.ROBOT_R, 'b', i) for i in range(const.TEAM_ROBOTS_MAX_COUNT)]
-
-    field = field.Field('b')
-    router = router.Router()
-    strategy = strategy.Strategy()
-
     def initialize(self, data_bus: DataBus) -> None:
         super(MatlabController, self).initialize(data_bus)
         self.vision_reader = DataReader(data_bus, config.VISION_DETECTIONS_TOPIC)
         self.referee_reader = DataReader(data_bus, config.REFEREE_COMMANDS_TOPIC)
         self.commands_writer = DataWriter(data_bus, config.ROBOT_COMMANDS_TOPIC, self.max_commands_to_persist)
         self._ssl_converter = SSL_WrapperPacket()
+
+        self.controll_team = [robot.Robot(const.GRAVEYARD_POS, 0, const.ROBOT_R, self.our_color, i) for i in range(const.TEAM_ROBOTS_MAX_COUNT)]
+        self.field = field.Field(self.our_color)
+        self.router = router.Router()
+        self.strategy = strategy.Strategy()
 
     def get_last_referee_command(self) -> RefereeCommand:
         referee_commands = self.referee_reader.read_new()
@@ -127,7 +129,7 @@ class MatlabController(BaseProcessor):
         # TODO алгоритм следования по траектории
         # TODO Убрать артефакты
         for i in range(0, 6):
-            self.field.b_team[i].go_route(self.router.getRoute(i), self.field)
+            self.field.allies[i].go_route(self.router.getRoute(i), self.field)
 
         # dbg = 0
 
@@ -160,56 +162,12 @@ class MatlabController(BaseProcessor):
         for r in self.controll_team:
             r.clear_fields()
 
-        # TODO Задавать соответствие списком
-        for i in range(6):
-            self.controll_team[i].copy_control_fields(self.field.b_team[i])
-
-        # dbg_bot_id_LCS = 3
-        # dbg_bot_id_ctrl = 3
-
-        # self.controll_team[dbg_bot_id_ctrl].copy_control_fields(self.field.b_team[dbg_bot_id_LCS])
-
-        # self.controll_team[dbg_bot_id_ctrl].speedX = self.square.get()
-        # self.controll_team[dbg_bot_id_ctrl].speedY = self.square.get()
-        # self.controll_team[dbg_bot_id_ctrl].speedR = self.square.get()
-        # self.controll_team[dbg_bot_id_ctrl].update_vel_xyw(auxiliary.Point(self.square.get(), 0), 0)
-        # self.controll_team[dbg_bot_id_ctrl].update_vel_xyw(auxiliary.Point(self.sine.get(), self.cosine.get()), 0)
-
-        # print(self.square.get(),
-        #       '%d'%auxiliary.rotate(self.field.b_team[dbg_bot_id_LCS].vel, -self.field.b_team[dbg_bot_id_LCS].angle).x,
-        #       '%d'%auxiliary.rotate(self.field.b_team[dbg_bot_id_LCS].vel, -self.field.b_team[dbg_bot_id_LCS].angle).y,
-        #       '%.2f'%self.field.b_team[dbg_bot_id_LCS].anglevel,
-        #       )
-
-
-    def get_rules(self):
-        """
-        Сформировать массив команд для отправки на роботов
-        """
-        rules = []
-
-        for i in range(const.TEAM_ROBOTS_MAX_COUNT):
-            # self.controll_team[i].remake_speed()
-            rules.append(0)
-            rules.append(self.controll_team[i].speedX)
-            rules.append(self.controll_team[i].speedY)
-            rules.append(self.controll_team[i].speedR)
-            rules.append(self.controll_team[i].kickForward)
-            rules.append(self.controll_team[i].kickUp)
-            rules.append(self.controll_team[i].autoKick)
-            rules.append(self.controll_team[i].kickerVoltage)
-            rules.append(self.controll_team[i].dribblerEnable)
-            rules.append(self.controll_team[i].speedDribbler)
-            rules.append(self.controll_team[i].kickerChargeEnable)
-            rules.append(self.controll_team[i].beep)            
-            rules.append(0)
-        for i in range(const.TEAM_ROBOTS_MAX_COUNT):
-            for _ in range(0, 13):
-                rules.append(0.0)
-        
-        b = bytes()
-        rules = b.join((struct.pack('d', rule) for rule in rules))
-        return rules
+        print(self.sink.b_control_team[0])
+        self.sink.write_ctrl(
+            self.our_color,
+            self.field.allies,
+            [0, 1, 2, 3, 4, 5])
+        print(self.sink.b_control_team[0])
 
     @debugger
     def process(self) -> None:
@@ -228,11 +186,11 @@ class MatlabController(BaseProcessor):
         self.dt = time.time() - self.cur_time
         self.cur_time = time.time()
 
-        # print(self.dt)
+        # print(self.our_color)
 
         self.read_vision()
         self.control_loop()
         self.control_assign()
-        rules = self.get_rules()
+        rules = self.sink.get_rules()
         self.commands_writer.write(rules)
 
