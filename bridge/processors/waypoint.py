@@ -22,3 +22,6 @@ class Waypoint:
         self.pos = pos
         self.angle = angle
         self.type = type
+
+    def __str__(self):
+        return "WP: " + str(self.pos) + "; angle = %.2f"%self.angle + "; type = " + str(self.type)

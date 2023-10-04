@@ -36,14 +36,17 @@ class Router:
                 self.routes[i].insert(-1, pth_wp)
 
     def calcVectorField(self, idx, field: field.Field):
-        allies = field.b_team
-        enemy = field.y_team
+        allies = field.allies
+        enemy = field.enemies
         self_pos = allies[idx].getPos()
         target_point = self.routes[idx][-1]
         dist = (self_pos - target_point.pos).mag()
 
         vector_field_threshold = 200
         if dist < vector_field_threshold:
+            return None
+
+        if self.routes[idx][-1].type == wp.WType.IGNOREOBSTACLES:
             return None
 
         sep_dist = 500
