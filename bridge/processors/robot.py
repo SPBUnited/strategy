@@ -107,7 +107,7 @@ class Robot(entity.Entity):
         for wpt in route:
             dist += (wpt.pos - last_wp_pos).mag()
             last_wp_pos = wpt.pos
-        
+
         target_point = route[0]
         end_point = route[-1]
 
@@ -183,5 +183,5 @@ class Robot(entity.Entity):
         Ограничить управляющее воздействие"""
 
     def __str__(self) -> str:
-        return str(str(self.color) + " " + str(self.rId) + " " + str(self.pos))
+        return str(str(self.color) + " " + str(self.rId) + " " + str(self.pos) + " " + str(self.speedX) + " " + str(self.speedY)) + " " + str(self.speedR)
 
