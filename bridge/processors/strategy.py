@@ -46,8 +46,6 @@ class Strategy:
     def debug(self, field: field.Field):
         waypoints = [None]*const.TEAM_ROBOTS_MAX_COUNT
         for i in range(0, 6):
-            bbotpos = field.y_team[i].getPos()
-            ybotpos = field.b_team[i].getPos()
             # pos = aux.point_on_line(bbotpos, -aux.Point(const.GOAL_DX, 0), 300)
             pos = aux.Point(-500*i, -3000)
             # pos = aux.Point(1000 + self.square.get(), -1000)
@@ -62,7 +60,7 @@ class Strategy:
         
         waypoints[1].pos = aux.Point(1000, self.square.get() -1000)
 
-        robot_with_ball = aux.find_nearest_robot(field.ball.getPos(), field.b_team)
+        robot_with_ball = aux.find_nearest_robot(field.ball.getPos(), field.enemies)
         self.gk_go(field, waypoints, [3], robot_with_ball)
         return waypoints
 
@@ -100,8 +98,8 @@ class Strategy:
         waypoints[gk_wall_idx_list[0]] = wp.Waypoint(gk_pos, gk_angle, wp.WType.ENDPOINT)
 
     def defence(self, field: field.Field):
-        rivals = field.y_team
-        allies = field.b_team
+        rivals = field.enemies
+        allies = field.allies
         dist_between = 200
         waypoints = [None]*const.TEAM_ROBOTS_MAX_COUNT
         for i in range(6):
@@ -165,10 +163,10 @@ class Strategy:
                 def1Helper.speedDribbler = 15
                 if aux.dist(def1Helper.getPos(), targetPoint) < 200:
                     def1Helper.kick_up()
-                waypoint = wp.Waypoint(field.ball.getPos(), aux.angle_to_point(def1Helper.getPos(), field.ball.getPos()), wp.WType.IGNOREOBSTACLES)   
+                waypoint = wp.Waypoint(field.ball.getPos(), aux.angle_to_point(def1Helper.getPos(), field.ball.getPos()), wp.WType.IGNOREOBSTACLES)
             waypoints[def1Helper.rId] = waypoint
             if aux.dist(def1Helper.getPos(), targetPoint) < 1500:
-                targetPoint = aux.point_on_line(robot_with_ball.getPos(), aux.Point(const.SIDE * const.GOAL_DX, 0), dist_between + 300)
+                targetPoint = aux.point_on_line(robot_with_ball.getPos(), field.ally_goal.center, dist_between + 300)
                 waypoint = wp.Waypoint(targetPoint, aux.angle_to_point(targetPoint, robot_with_ball.getPos()), wp.WType.ENDPOINT)
                 waypoints[def1.rId] = waypoint
 
