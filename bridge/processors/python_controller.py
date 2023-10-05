@@ -38,6 +38,8 @@ class MatlabController(BaseProcessor):
     dt = 0
     ball = auxiliary.Point(0, 0)
 
+    count_halt_cmd = 0
+
     controll_team = [robot.Robot(const.GRAVEYARD_POS, 0, const.ROBOT_R, 'b', i) for i in range(const.TEAM_ROBOTS_MAX_COUNT)]
     our_team = None
     field = field.Field()
@@ -97,8 +99,51 @@ class MatlabController(BaseProcessor):
                     self.field.y_team[i].used(0)
 
             curCmd = self.get_last_referee_command()
-            if curCmd.state != 0:
-                print(curCmd)
+            if curCmd.state == 0:
+                self.count_halt_cmd += 1
+            else:
+                self.count_halt_cmd = 0
+                if curCmd.state == 1:
+                    self.strategy.changeGameState(strategy.GameStates.STOP, curCmd.commandForTeam)
+                elif curCmd.state == 2:
+                    self.strategy.changeGameState(strategy.GameStates.RUN, curCmd.commandForTeam)
+                elif curCmd.state == 3:
+                    self.strategy.changeGameState(strategy.GameStates.TIMEOUT, curCmd.commandForTeam)
+                elif curCmd.state == 4:
+                    print("Uknown command")
+                elif curCmd.state == 5:
+                    self.strategy.changeGameState(strategy.GameStates.PREPARE_KICKOFF, curCmd.commandForTeam)
+                elif curCmd.state == 6:
+                    self.strategy.changeGameState(strategy.GameStates.KICKOFF, curCmd.commandForTeam)
+                elif curCmd.state == 7:
+                    self.strategy.changeGameState(strategy.GameStates.PREPARE_PENALTY, curCmd.commandForTeam)
+                elif curCmd.state == 8:
+                    self.strategy.changeGameState(strategy.GameStates.PENALTY, curCmd.commandForTeam)
+                elif curCmd.state == 9:
+                    self.strategy.changeGameState(strategy.GameStates.FREE_KICK, curCmd.commandForTeam)
+                elif curCmd.state == 10:
+                    print("Uknown command")
+                elif curCmd.state == 11:
+                    self.strategy.changeGameState(strategy.GameStates.BALL_PLACMENT, curCmd.commandForTeam)
+                
+            if self.count_halt_cmd > 10:
+                self.strategy.changeGameState(strategy.GameStates.HALT, curCmd.commandForTeam)
+
+            '''
+            if curCmd.state == 0:
+                print("STOP")
+            elif curCmd.state == 1:
+                print("")
+            elif curCmd.state == 1:
+                print("")
+            elif curCmd.state == 1:
+                print("")
+            elif curCmd.state == 1:
+                print("")
+
+
+            '''
+
 
             # TODO: Barrier states
             for robot in detection.robots_blue:
