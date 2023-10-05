@@ -128,6 +128,8 @@ class Robot(entity.Entity):
         u = aux.minmax(err * gain, -const.MAX_SPEED, const.MAX_SPEED)
         # print('%d'%dist, '%d'%cur_speed, err, u)
         transl_vel = vel0 * u
+        if end_point.type == wp.WType.STOP:
+            transl_vel *= 0
 
         aerr = angle0 - self.getAngle()
         aerr = aerr % (2*math.pi)

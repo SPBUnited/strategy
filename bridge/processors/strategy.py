@@ -130,7 +130,12 @@ class Strategy:
             elif self.game_status == GameStates.HALT:
                 for i in range(const.TEAM_ROBOTS_MAX_COUNT):
                     if self.allies[i].is_used():
-                        waypoint = wp.Waypoint(self.allies[i].getPos(), self.allies[i].getAngle(), wp.WType.ENDPOINT)
+                        waypoint = wp.Waypoint(self.allies[i].getPos(), self.allies[i].getAngle(), wp.WType.STOP)
+                        waypoints[i] = waypoint
+            elif self.game_status == GameStates.PREPARE_PENALTY:
+                for i in range(const.TEAM_ROBOTS_MAX_COUNT):
+                    if self.allies[i].is_used():
+                        waypoint = wp.Waypoint(self.allies[i].getPos(), self.allies[i].getAngle(), wp.WType.STOP)
                         waypoints[i] = waypoint
 
 
