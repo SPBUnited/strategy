@@ -49,25 +49,26 @@ class Router:
         closest_separation = 0
         angle_to_point = math.atan2(target_point.pos.y - self_pos.y, target_point.pos.x - self_pos.x)
 
-        # Расчет теней роботов для векторного поля
-        for r in field.all_bots:
-            if r == self or r.is_used() == 0:
-                continue
-            robot_separation = aux.dist(aux.closest_point_on_line(self_pos, target_point.pos, r.getPos()), r.getPos())
-            robot_dist = aux.dist(self_pos, r.getPos())
-            if robot_dist == 0:
-                continue
-            if robot_separation < sep_dist and robot_dist < closest_dist:
-                closest_robot = r
-                closest_dist = robot_dist
-                closest_separation = robot_separation
+        if target_point.type != wp.WType.IGNOREOBSTACLES:
+            # Расчет теней роботов для векторного поля
+            for r in field.all_bots:
+                if r == self or r.is_used() == 0:
+                    continue
+                robot_separation = aux.dist(aux.closest_point_on_line(self_pos, target_point.pos, r.getPos()), r.getPos())
+                robot_dist = aux.dist(self_pos, r.getPos())
+                if robot_dist == 0:
+                    continue
+                if robot_separation < sep_dist and robot_dist < closest_dist:
+                    closest_robot = r
+                    closest_dist = robot_dist
+                    closest_separation = robot_separation
 
-        ball_separation = aux.dist(aux.closest_point_on_line(self_pos, target_point.pos, field.ball.getPos()), field.ball.getPos())
-        ball_dist = aux.dist(self_pos, field.ball.getPos())
-        if ball_separation < ball_sep_dist and ball_dist < closest_dist:
-            closest_robot = field.ball
-            closest_dist = ball_dist
-            closest_separation = ball_separation
+            ball_separation = aux.dist(aux.closest_point_on_line(self_pos, target_point.pos, field.ball.getPos()), field.ball.getPos())
+            ball_dist = aux.dist(self_pos, field.ball.getPos())
+            if ball_separation < ball_sep_dist and ball_dist < closest_dist:
+                closest_robot = field.ball
+                closest_dist = ball_dist
+                closest_separation = ball_separation
 
         passthrough_wp_pos = target_point.pos - self_pos
         # angle_cos = aux.scal_mult((closest_robot.getPos() - self_pos).unity(), (target_point.pos - self_pos).unity())
