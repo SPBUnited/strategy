@@ -96,6 +96,10 @@ class MatlabController(BaseProcessor):
                 if time.time() - self.field.y_team[i].last_update() > 1:
                     self.field.y_team[i].used(0)
 
+            curCmd = self.get_last_referee_command()
+            if curCmd.state != 0:
+                print(curCmd)
+
             # TODO: Barrier states
             for robot in detection.robots_blue:
                 # self.b_team.robot(robot.robot_id).update(robot.x, robot.y, robot.orientation)
