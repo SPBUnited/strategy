@@ -16,6 +16,7 @@ class WType(Enum):
     IGNOREOBSTACLES = 2 # Двигаться в точку игнорируя препятствия
     KICK_IMMEDIATE = 3 # Захватить мяч и мгновенно его пнуть
     KICK_HALT = 4 # Захватить мяч не пиная
+    STOP = 5 # Kostil for stopping 
 
 class Waypoint:
     def __init__(self, pos: aux.Point, angle: float, type: WType) -> None:
