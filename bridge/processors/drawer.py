@@ -43,23 +43,14 @@ class Singleton(type):
 
 class Drawer(metaclass=Singleton):
     def __init__(self):
-        pass
-
-    def disable(self):
-        self.enabled = False
-
-    def enable(self):
         # Создаем игру и окно
         pygame.init()
         pygame.mixer.init()
         self.screen = pygame.display.set_mode((WIDTH, HEIGHT))
         pygame.display.set_caption("My Game")
         self.clock = pygame.time.Clock()
-        self.enabled = True
 
     def flip(self):
-        if not self.enabled: return
-
         # После отрисовки всего, переворачиваем экран
         pygame.display.flip()
 
@@ -72,37 +63,27 @@ class Drawer(metaclass=Singleton):
         return (x, y)
 
     def drawBall(self, pos: aux.Point):
-        if not self.enabled: return
-
         drwpos = self.vec2pos(pos)
         drwrad = self.scale2scr(50)
         pygame.draw.circle(self.screen, BALL_RED, drwpos, drwrad)
 
     def drawAbsVec(self, start: aux.Point, end: aux.Point, color = BLUE):
-        if not self.enabled: return
-
         drwstart = self.vec2pos(start)
         drwend = self.vec2pos(end)
         pygame.draw.line(self.screen, color, drwstart, drwend)
 
     def drawDVec(self, start: aux.Point, delta: aux.Point, color = BLUE):
-        if not self.enabled: return
-
         drwstart = self.vec2pos(start)
         drwend = self.vec2pos(start + delta)
         pygame.draw.line(self.screen, color, drwstart, drwend)
 
     def drawBot(self, pos: aux.Point, angle: float, color):
-        if not self.enabled: return
-
         COLOR = BOT_BLUE if color == 'b' else BOT_YELLOW
         drwpos = self.vec2pos(pos)
         drwrad = self.scale2scr(180/2)
         pygame.draw.circle(self.screen, COLOR, drwpos, drwrad)
 
     def drawField(self):
-        if not self.enabled: return
-
         self.screen.fill(FIELD_GREEN)
         # field outline
         tlpos = self.vec2pos(aux.Point(-FIELD_WIDTH/2, FIELD_HEIGHT/2))

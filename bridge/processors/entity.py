@@ -12,7 +12,6 @@
 import math
 import bridge.processors.auxiliary as aux
 import bridge.processors.entity as entity
-import bridge.processors.const as const
 
 
 class FOD:
@@ -31,22 +30,6 @@ class FOD:
     def getVal(self):
         return self.out
 
-class FOLP:
-    def __init__(self, T, dT):
-        self.T = T
-        self.dT = dT
-        self.I = 0
-        self.out = 0
-
-    def process(self, x):
-        err = x - self.out
-        self.I += err * self.dT
-        self.out = self.I/self.T
-        return self.out
-
-    def getVal(self):
-        return self.out
-
 class Entity:
 
     """
@@ -57,8 +40,8 @@ class Entity:
     @param R Радиус объекта [м]
     """
     def __init__(self, pos, angle, R) -> None:
-        T = 0.05
-        dT = const.Ts
+        T = 0.2
+        dT = 1/30
 
         self.pos = pos
         self.vel = aux.Point(0, 0)
@@ -68,8 +51,6 @@ class Entity:
         self.accFx = FOD(T, dT)
         self.accFy = FOD(T, dT)
         self.angle = angle
-        self.anglevel = 0
-        self.velFr = FOD(T, dT)
         self.R = R
 
     """
@@ -85,7 +66,6 @@ class Entity:
         self.vel.y = self.velFy.process(self.pos.y)
         self.acc.x = self.accFx.process(self.vel.x)
         self.acc.y = self.accFy.process(self.vel.y)
-        self.anglevel = self.velFr.process(self.angle)
 
     """ Геттер положения """
     def getPos(self) -> aux.Point:
