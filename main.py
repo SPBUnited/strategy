@@ -11,10 +11,10 @@ if __name__ == '__main__':
 
     # TODO: Move list of processors to config
     processors = [
-        VisionDetectionsCollector(processing_pause=0.001),
-        RefereeCommandsCollector(processing_pause=0.1),
-        MatlabController(),
-        RobotCommandsSender(processing_pause=0.001)
+        VisionDetectionsCollector(processing_pause=0.001, should_debug=True),
+        RefereeCommandsCollector(processing_pause=0.01, should_debug=True),
+        MatlabController(should_debug=True),
+        RobotCommandsSender(processing_pause=0.001, should_debug=True)
     ]
 
     runner = Runner(processors=processors)
