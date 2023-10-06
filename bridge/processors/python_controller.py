@@ -22,34 +22,34 @@ import bridge.processors.strategy as strategy
 import bridge.processors.waypoint as wp
 import bridge.processors.signal as signal
 
-from bridge.processors.robot_command_sink import Sink, CommandSink
+from bridge.processors.robot_command_sink import CommandSink
 
 # TODO: Refactor this class and corresponding matlab scripts
 @attr.s(auto_attribs=True)
 class MatlabController(BaseProcessor):
 
-    processing_pause: typing.Optional[float] = const.Ts - 0.01
     max_commands_to_persist: int = 20
     our_color: str = 'b'
-    sink: Sink = Sink()
 
     vision_reader: DataReader = attr.ib(init=False)
     referee_reader: DataReader = attr.ib(init=False)
-    commands_writer: DataWriter = attr.ib(init=False)
+    commands_sink_writer: DataWriter = attr.ib(init=False)
 
     cur_time = time.time()
     dt = 0
     ball = auxiliary.Point(0, 0)
 
+    ctrl_mapping = [i for i in range(const.TEAM_ROBOTS_MAX_COUNT)]
+
     def initialize(self, data_bus: DataBus) -> None:
         super(MatlabController, self).initialize(data_bus)
         self.vision_reader = DataReader(data_bus, config.VISION_DETECTIONS_TOPIC)
         self.referee_reader = DataReader(data_bus, config.REFEREE_COMMANDS_TOPIC)
-        self.commands_writer = DataWriter(data_bus, config.ROBOT_COMMANDS_TOPIC, self.max_commands_to_persist)
+        self.commands_sink_writer = DataWriter(data_bus, "SINK_TOPIC", 20)
         self._ssl_converter = SSL_WrapperPacket()
 
-        self.controll_team = [robot.Robot(const.GRAVEYARD_POS, 0, const.ROBOT_R, self.our_color, i) for i in range(const.TEAM_ROBOTS_MAX_COUNT)]
-        self.field = field.Field(self.our_color)
+        # self.controll_team = [robot.Robot(const.GRAVEYARD_POS, 0, const.ROBOT_R, self.our_color, i) for i in range(const.TEAM_ROBOTS_MAX_COUNT)]
+        self.field = field.Field(self.ctrl_mapping, self.our_color)
         self.router = router.Router()
         self.strategy = strategy.Strategy()
 
@@ -159,15 +159,8 @@ class MatlabController(BaseProcessor):
         """
         Определить связь номеров роботов с каналами управления
         """
-        for r in self.controll_team:
-            r.clear_fields()
-
-        print(self.sink.b_control_team[0])
-        self.sink.write_ctrl(
-            self.our_color,
-            self.field.allies,
-            [0, 1, 2, 3, 4, 5])
-        print(self.sink.b_control_team[0])
+        for i in range(const.TEAM_ROBOTS_MAX_COUNT):
+            self.commands_sink_writer.write(self.field.allies[i])
 
     @debugger
     def process(self) -> None:
@@ -177,20 +170,12 @@ class MatlabController(BaseProcessor):
         \offtop Что означает @debugger?
         """
 
-        ts_check = False
-        while(time.time() - self.cur_time < const.Ts):
-            ts_check = True
-        if not ts_check:
-            print("ПРЕВЫШЕН ПЕРИОД КВАНТОВАНИЯ НА: ", '%.3f' % (time.time() - self.cur_time - const.Ts))
-
         self.dt = time.time() - self.cur_time
         self.cur_time = time.time()
 
+        print(self.dt)
         # print(self.our_color)
 
         self.read_vision()
         self.control_loop()
         self.control_assign()
-        rules = self.sink.get_rules()
-        self.commands_writer.write(rules)
-

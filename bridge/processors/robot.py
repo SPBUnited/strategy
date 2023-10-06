@@ -7,10 +7,11 @@ import bridge.processors.waypoint as wp
 from typing import List
 
 class Robot(entity.Entity):
-    def __init__(self, pos, angle, R, color, r_id):
+    def __init__(self, pos, angle, R, color, r_id, ctrl_id):
         super().__init__(pos, angle, R)
 
         self.rId = r_id
+        self.ctrlId = ctrl_id
         self.isUsed = 0
         self.color = color
         self.lastUpdate = 0

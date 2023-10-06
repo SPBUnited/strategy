@@ -25,10 +25,10 @@ class Field:
     TODO Сделать инициализацию реальными параметрами для корректного
     определения скоростей и ускорений в первые секунды
     """
-    def __init__(self, ally_color = 'b') -> None:
+    def __init__(self, ctrl_mapping, ally_color = 'b') -> None:
         self.ball = entity.Entity(const.GRAVEYARD_POS, 0, const.BALL_R)
-        self.b_team = [ robot.Robot(const.GRAVEYARD_POS, 0, const.ROBOT_R, 'b', i) for i in range(const.TEAM_ROBOTS_MAX_COUNT)]
-        self.y_team = [ robot.Robot(const.GRAVEYARD_POS, 0, const.ROBOT_R, 'y', i) for i in range(const.TEAM_ROBOTS_MAX_COUNT)]
+        self.b_team = [ robot.Robot(const.GRAVEYARD_POS, 0, const.ROBOT_R, 'b', i, ctrl_mapping[i]) for i in range(const.TEAM_ROBOTS_MAX_COUNT)]
+        self.y_team = [ robot.Robot(const.GRAVEYARD_POS, 0, const.ROBOT_R, 'y', i, ctrl_mapping[i]) for i in range(const.TEAM_ROBOTS_MAX_COUNT)]
         self.all_bots = [*self.b_team, *self.y_team]
         self.y_goal = Goal(const.GOAL_DX, const.GOAL_DY)
         self.b_goal = Goal(-const.GOAL_DX, const.GOAL_DY)
