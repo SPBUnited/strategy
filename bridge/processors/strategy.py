@@ -58,7 +58,7 @@ class Strategy:
             waypoint = wp.Waypoint(pos, angle, wp.WType.ENDPOINT)
             waypoints[i] = waypoint
         
-        waypoints[1].pos = aux.Point(1000, self.square.get() -1000)
+        waypoints[2] = wp.Waypoint(field.ball.getPos(), (field.enemy_goal.center - field.ball.getPos()).arg(), wp.WType.KICK_IMMEDIATE)
 
         robot_with_ball = aux.find_nearest_robot(field.ball.getPos(), field.enemies)
         self.gk_go(field, waypoints, [3], robot_with_ball)

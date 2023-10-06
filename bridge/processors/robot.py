@@ -98,7 +98,12 @@ class Robot(entity.Entity):
         self.dribblerEnable = 0
         self.speedDribbler = 0
         self.kickerChargeEnable = 0
-        self.beep = 0 
+        self.beep = 0
+    
+    def is_kick_aligned(self, target: wp.Waypoint):
+        return (self.pos - target.pos).mag() < const.KICK_ALIGN_DIST and \
+            abs(aux.wind_down_angle(self.angle - target.angle)) < const.KICK_ALIGN_ANGLE and \
+            abs(aux.wind_down_angle((target.pos - self.pos).arg() - target.angle)) < const.KICK_ALIGN_OFFSET
 
     def go_route(self, route: List[wp.Waypoint], field: field.Field):
         cur_speed = self.vel.mag()
@@ -114,32 +119,16 @@ class Robot(entity.Entity):
 
         vel0 = (self.pos - target_point.pos).unity()
 
-        # if target_point.type == wp.WType.PASSTHROUGH:
-        #     angle0 = (target_point.pos - self.pos).arg() + math.pi/3 * aux.sign(end_point.angle - (target_point.pos - self.pos).arg())
-        # else:
-        #     angle0 = target_point.angle
-
         dangle = (target_point.pos - self.pos).arg()
         rangle = aux.wind_down_angle(self.angle - dangle)
         twpangle = aux.wind_down_angle(target_point.angle - dangle)
 
-        angle60_abs = math.pi/3 if abs(rangle) < math.pi/2 else 2*math.pi/3
+        angle60_abs = math.pi/4 if abs(rangle) < math.pi/2 else 2*math.pi/3
         angle60_sign = aux.sign(twpangle + rangle)
 
         angle60 = dangle + angle60_abs * angle60_sign
 
-        # angle60 = (target_point.pos - self.pos).arg() + \
-        #     math.pi/3 * \
-        #     aux.sign(end_point.angle - (target_point.pos - self.pos).arg()) + \
-        #     0
-            # -math.pi/3 * \
-            # aux.sign(aux.vect_mult(aux.rotate(aux.i, end_point.angle), target_point.pos - self.pos))
-
         lerp_angles = [target_point.angle, angle60]
-        # if lerp_angles[1] - lerp_angles[0] > math.pi:
-        #     lerp_angles[1] -= 2*math.pi
-        # elif lerp_angles[1] - lerp_angles[0] < math.pi:
-        #     lerp_angles[1] += 2*math.pi
 
         angle0 = aux.LERP(lerp_angles[0], lerp_angles[1], aux.minmax((dist-100)/1000, 0, 1))
 
@@ -147,15 +136,31 @@ class Robot(entity.Entity):
         MAX_ANG_SPEED = 4
         k = 0.2
         gain = 6
+        k_a = 0.04
+        gain_a = 1
+
+        if end_point.type == wp.WType.KICK_IMMEDIATE:
+
+            # print(self.is_kick_aligned(end_point))
+
+            k = 0.6
+            gain = 2
+            gain_a = 1
+            angle0 = aux.LERP(lerp_angles[0], lerp_angles[1], aux.minmax((dist-400)/1000, 0, 1))
+        if end_point.type == wp.WType.KICK_IMMEDIATE and self.is_kick_aligned(end_point):
+            vel0 = (self.pos - end_point.pos).unity()
+            angle0 = end_point.angle
+            dist = 400
+            self.autoKick = 1
+        else:
+            self.autoKick = 0
+
         err = dist - cur_speed * k
         u = aux.minmax(err * gain, -MAX_SPEED, MAX_SPEED)
-        # print('%d'%dist, '%d'%cur_speed, err, u)
         transl_vel = vel0 * u
 
         aerr = aux.wind_down_angle(angle0 - self.getAngle())
 
-        k_a = 0.04
-        gain_a = 1
         
         aerr -= self.anglevel * k_a
         u_a = min(max(aerr * gain_a, -MAX_ANG_SPEED), MAX_ANG_SPEED)

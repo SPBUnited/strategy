@@ -31,15 +31,19 @@ class Router:
             if len(self.routes[i]) == 0:
                 continue
 
+            if self.routes[i][-1].type == wp.WType.KICK_IMMEDIATE:
+                if not field.allies[i].is_kick_aligned(self.routes[i][-1]):
+                    align_wp = self.calcKickWP(i, field)
+                    self.routes[i].insert(-1, align_wp)
             pth_wp = self.calcVectorField(i, field)
             if pth_wp is not None:
-                self.routes[i].insert(-1, pth_wp)
+                self.routes[i].insert(0, pth_wp)
 
     def calcVectorField(self, idx, field: field.Field):
         allies = field.allies
         enemy = field.enemies
         self_pos = allies[idx].getPos()
-        target_point = self.routes[idx][-1]
+        target_point = self.routes[idx][0]
         dist = (self_pos - target_point.pos).mag()
 
         vector_field_threshold = 200
@@ -95,6 +99,21 @@ class Router:
             passthrough_wp = None
 
         return passthrough_wp
+
+    def calcKickWP(self, idx, field: field.Field):
+        target_point = self.routes[idx][-1]
+        target_pos = target_point.pos
+        target_angle = target_point.angle
+
+        align_pos = target_pos - aux.rotate(aux.i, target_angle)*const.KICK_ALIGN_DIST
+        align_angle = target_angle
+        align_type = wp.WType.KICK_ALIGN
+        align_wp = wp.Waypoint(
+            align_pos,
+            align_angle,
+            align_type
+        )
+        return align_wp
 
     """
     Получить маршрут для робота с индексом idx
