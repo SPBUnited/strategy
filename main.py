@@ -4,21 +4,21 @@ from strategy_bridge.processors.referee_commands_collector import RefereeCommand
 from strategy_bridge.runner import Runner
 
 from bridge.processors.python_controller import MatlabController
-from bridge.processors.robot_command_sink import Sink, CommandSink
+from bridge.processors.robot_command_sink import CommandSink
+import bridge.processors.const as const
 
 if __name__ == '__main__':
 
     config.init_logging("./logs")
 
-    msink = Sink()
-
     # TODO: Move list of processors to config
     processors = [
         VisionDetectionsCollector(processing_pause=0.001, should_debug=True),
         RefereeCommandsCollector(processing_pause=0.1, should_debug=True),
-        MatlabController(our_color='y', should_debug=True),
-        # CommandSink(processing_pause = 0.01, sink=msink),
-        RobotCommandsSender(processing_pause=0.01, should_debug=True)
+        MatlabController(our_color='b', should_debug=True, processing_pause=const.Ts, reduce_pause_on_process_time=True),
+        # MatlabController(our_color='y', should_debug=True),
+        CommandSink(processing_pause = const.Ts/2, should_debug=True),
+        RobotCommandsSender(processing_pause = const.Ts/2, should_debug=True)
     ]
 
     runner = Runner(processors=processors)

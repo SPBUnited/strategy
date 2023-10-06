@@ -18,27 +18,40 @@ import bridge.processors.robot as robot
 import bridge.processors.const as const
 
 @attr.s(auto_attribs=True)
-class Sink():
+class CommandSink(BaseProcessor):
 
-    b_control_team = [robot.Robot(const.GRAVEYARD_POS, 0, const.ROBOT_R, 'b', i) for i in range(const.TEAM_ROBOTS_MAX_COUNT)]
-    y_control_team = [robot.Robot(const.GRAVEYARD_POS, 0, const.ROBOT_R, 'y', i) for i in range(const.TEAM_ROBOTS_MAX_COUNT)]
+    processing_pause: typing.Optional[int] = 0.01
+    max_commands_to_persist: int = 20
+    commands_sink_reader: DataReader = attr.ib(init=False)
+    commands_writer: DataWriter = attr.ib(init=False)
 
-    def __init__(self):
-        pass
+    b_control_team = [robot.Robot(const.GRAVEYARD_POS, 0, const.ROBOT_R, 'b', i, 0) for i in range(const.TEAM_ROBOTS_MAX_COUNT)]
+    y_control_team = [robot.Robot(const.GRAVEYARD_POS, 0, const.ROBOT_R, 'y', i, 0) for i in range(const.TEAM_ROBOTS_MAX_COUNT)]
 
-    def write_ctrl(self, color, robots, mapping):
-        print("WRITE")
-        # print(self.b_control_team)
-        if color == 'b':
-            for i in range(len(mapping)):
-                self.b_control_team[mapping[i]].copy_control_fields(robots[i])
-        elif color == 'y':
-            for i in range(len(mapping)):
-                self.y_control_team[mapping[i]].copy_control_fields(robots[i])
+
+    def initialize(self, data_bus: DataBus) -> None:
+        super(CommandSink, self).initialize(data_bus)
+        self.commands_sink_reader = DataReader(data_bus, "SINK_TOPIC", 20)
+        self.commands_writer = DataWriter(data_bus, config.ROBOT_COMMANDS_TOPIC, self.max_commands_to_persist)
+
+    def process(self) -> None:
         
+        cmds = self.commands_sink_reader.read_new()
+
+        for cmd in cmds:
+            r = cmd.content
+            rId = r.rId
+            ctrlId = r.ctrlId
+            if r.color == 'b':
+                self.b_control_team[ctrlId].copy_control_fields(r)
+            elif r.color == 'y':
+                self.y_control_team[ctrlId].copy_control_fields(r)
+        
+        rules = self.get_rules()
+
+        self.commands_writer.write(rules)
+
     def get_rules(self):
-        print("GET")
-        # print(self.b_control_team)
         """
         Сформировать массив команд для отправки на роботов
         """
@@ -76,22 +89,3 @@ class Sink():
         b = bytes()
         rules = b.join((struct.pack('d', rule) for rule in rules))
         return rules
-
-@attr.s(auto_attribs=True)
-class CommandSink(BaseProcessor):
-
-    processing_pause: typing.Optional[int] = 0.1
-    max_commands_to_persist: int = 20
-    commands_writer: DataWriter = attr.ib(init=False)
-    sink: Sink = Sink()
-
-    def initialize(self, data_bus: DataBus) -> None:
-        super(CommandSink, self).initialize(data_bus)
-        self.commands_writer = DataWriter(data_bus, config.ROBOT_COMMANDS_TOPIC, self.max_commands_to_persist)
-
-    def process(self) -> None:
-        print(self.sink.b_control_team[0])
-        rules = self.sink.get_rules()
-        print(self.sink.b_control_team[0])
-        # print(rules)
-        self.commands_writer.write(rules)
