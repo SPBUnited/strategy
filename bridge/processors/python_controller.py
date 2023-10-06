@@ -37,7 +37,6 @@ class MatlabController(BaseProcessor):
 
     cur_time = time.time()
     dt = 0
-    ball = auxiliary.Point(0, 0)
 
     ctrl_mapping = [i for i in range(const.TEAM_ROBOTS_MAX_COUNT)]
 
@@ -48,7 +47,6 @@ class MatlabController(BaseProcessor):
         self.commands_sink_writer = DataWriter(data_bus, "SINK_TOPIC", 20)
         self._ssl_converter = SSL_WrapperPacket()
 
-        # self.controll_team = [robot.Robot(const.GRAVEYARD_POS, 0, const.ROBOT_R, self.our_color, i) for i in range(const.TEAM_ROBOTS_MAX_COUNT)]
         self.field = field.Field(self.ctrl_mapping, self.our_color)
         self.router = router.Router()
         self.strategy = strategy.Strategy()
@@ -89,8 +87,7 @@ class MatlabController(BaseProcessor):
                 balls[ball_ind + (camera_id - 1) * const.MAX_BALLS_IN_CAMERA] = camera_id
                 balls[ball_ind + const.MAX_BALLS_IN_FIELD + (camera_id - 1) * const.MAX_BALLS_IN_CAMERA] = ball.x
                 balls[ball_ind + 2 * const.MAX_BALLS_IN_FIELD + (camera_id - 1) * const.MAX_BALLS_IN_CAMERA] = ball.y
-                self.ball = auxiliary.Point(ball.x, ball.y)
-                self.field.updateBall(self.ball)
+                self.field.updateBall(auxiliary.Point(ball.x, ball.y))
 
             for i in range(const.TEAM_ROBOTS_MAX_COUNT):
                 if time.time() - self.field.b_team[i].last_update() > 1:
@@ -100,7 +97,6 @@ class MatlabController(BaseProcessor):
 
             # TODO: Barrier states
             for robot in detection.robots_blue:
-                # self.b_team.robot(robot.robot_id).update(robot.x, robot.y, robot.orientation)
                 if time.time() - self.field.b_team[robot.robot_id].last_update() > 0.3:
                     self.field.b_team[robot.robot_id].used(0)
                 else: 
@@ -108,13 +104,11 @@ class MatlabController(BaseProcessor):
                 self.field.updateBluRobot(robot.robot_id, auxiliary.Point(robot.x, robot.y), robot.orientation, time.time())
 
             for robot in detection.robots_yellow:
-                # self.y_team.robot(robot.robot_id).update(robot.x, robot.y, robot.orientation)
                 if time.time() - self.field.y_team[robot.robot_id].last_update() > 0.3:
                     self.field.y_team[robot.robot_id].used(0)
                 else: 
                     self.field.y_team[robot.robot_id].used(1)
                 self.field.updateYelRobot(robot.robot_id, auxiliary.Point(robot.x, robot.y), robot.orientation, time.time())
-                #self.y_team.robot(robot.robot_id).isUsed = 1
         return status
     
     def control_loop(self):
@@ -130,27 +124,6 @@ class MatlabController(BaseProcessor):
         # TODO Убрать артефакты
         for i in range(0, 6):
             self.field.allies[i].go_route(self.router.getRoute(i), self.field)
-
-        # dbg = 0
-
-        # if dbg:
-        #     self.field.b_team[5].go_to_point_vector_field(auxiliary.Point(1000, 1000), self.field)
-        #     self.field.b_team[3].go_to_point_vector_field(auxiliary.Point(700, 1300), self.field)
-        #     self.field.b_team[5].rotate_to_angle(0)
-        #     self.field.b_team[3].rotate_to_angle(0)
-
-        # self.field.b_team[3].rotate_to_point(auxiliary.Point(-4500, 000))
-        # if auxiliary.dist(self.field.b_team[3].pos, self.field.ball.pos) < 300 and \
-        #     auxiliary.scal_mult((self.field.ball.pos - self.field.b_team[3].pos).unity(), (self.field.b_goal - self.field.b_team[3].pos).unity()) > 0.9:
-        #     self.field.b_team[3].go_to_point(self.field.ball.pos)
-        #     self.field.b_team[3].kick_up()
-        # else:
-        #     self.field.b_team[3].go_to_point_vector_field(
-        #         wp.Waypoint(
-        #             auxiliary.point_on_line(self.field.ball.pos, auxiliary.Point(-4500, 0), -200),
-        #             -3.14-0.7,
-        #             wp.WType.ENDPOINT),
-        #         self.field)
 
     square = signal.Signal(2, 'SQUARE', lohi=(-1000, 1000))
     sine = signal.Signal(2, 'SINE', ampoffset=(1000, 0))
