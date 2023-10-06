@@ -99,7 +99,7 @@ class Strategy:
         gk_angle = math.pi/2
         waypoints[gk_wall_idx_list[0]] = wp.Waypoint(gk_pos, gk_angle, wp.WType.ENDPOINT)
 
-        print(field.isBallInGoalSq())
+        # print(field.isBallInGoalSq())
         if field.isBallInGoalSq() and field.ball.vel.mag() < 100:
             waypoints[gk_wall_idx_list[0]] = wp.Waypoint(field.ball.pos, field.ally_goal.eye_forw.arg(), wp.WType.KICK_IMMEDIATE)
 
