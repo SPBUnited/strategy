@@ -101,7 +101,7 @@ class Robot(entity.Entity):
         self.beep = 0
     
     def is_kick_aligned(self, target: wp.Waypoint):
-        return (self.pos - target.pos).mag() < const.KICK_ALIGN_DIST and \
+        return (self.pos - target.pos).mag() < const.KICK_ALIGN_DIST*const.KICK_ALIGN_DIST_MULT and \
             abs(aux.wind_down_angle(self.angle - target.angle)) < const.KICK_ALIGN_ANGLE and \
             abs(aux.wind_down_angle((target.pos - self.pos).arg() - target.angle)) < const.KICK_ALIGN_OFFSET
 
@@ -141,7 +141,7 @@ class Robot(entity.Entity):
 
         if end_point.type == wp.WType.KICK_IMMEDIATE:
 
-            # print(self.is_kick_aligned(end_point))
+            # print("IS KICK ALIGNED: ", self.is_kick_aligned(end_point))
 
             k = 0.6
             gain = 2
@@ -166,7 +166,8 @@ class Robot(entity.Entity):
         u_a = min(max(aerr * gain_a, -MAX_ANG_SPEED), MAX_ANG_SPEED)
         ang_vel = u_a
 
-        # print(transl_vel, '%.2f'%err, '%.2f'%self.angle)
+        # if self.rId == 0 and self.color == 'b':
+        #     print(self.is_kick_aligned(end_point), '%.2f'%angle60, '%.2f'%end_point.angle, '%.2f'%angle0, '%.2f'%aerr, '%.2f'%self.angle)
         self.update_vel_xyw(transl_vel, ang_vel)
 
     def update_vel_xyw(self, vel: aux.Point, wvel: float):

@@ -16,14 +16,23 @@ import bridge.processors.const as const
 
 
 class FOD:
-    def __init__(self, T, dT):
+    def __init__(self, T, dT, is_angle = False):
         self.T = T
         self.dT = dT
         self.I = 0
         self.out = 0
+        self.is_angle = is_angle
 
     def process(self, x):
         err = x - self.I
+        if self.is_angle:
+            # print(err, x, self.I)
+            if err > math.pi:
+                err -= 2*math.pi
+                self.I += 2*math.pi
+            elif err < -math.pi:
+                err += 2*math.pi
+                self.I -= 2*math.pi
         self.out = err/self.T
         self.I += self.out * self.dT
         return self.out
@@ -69,7 +78,7 @@ class Entity:
         self.accFy = FOD(T, dT)
         self.angle = angle
         self.anglevel = 0
-        self.velFr = FOD(T, dT)
+        self.velFr = FOD(T, dT, True)
         self.R = R
 
     """

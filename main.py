@@ -16,7 +16,7 @@ if __name__ == '__main__':
         VisionDetectionsCollector(processing_pause=0.001, should_debug=True),
         RefereeCommandsCollector(processing_pause=0.1, should_debug=True),
         MatlabController(our_color='b', should_debug=True, processing_pause=const.Ts, reduce_pause_on_process_time=True),
-        # MatlabController(our_color='y', should_debug=True, processing_pause=const.Ts, reduce_pause_on_process_time=True),
+        MatlabController(our_color='y', should_debug=True, processing_pause=const.Ts, reduce_pause_on_process_time=True),
         CommandSink(processing_pause = const.Ts/2, should_debug=True),
         RobotCommandsSender(processing_pause = const.Ts/2, should_debug=True)
     ]

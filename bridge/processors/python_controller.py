@@ -173,7 +173,7 @@ class MatlabController(BaseProcessor):
         self.dt = time.time() - self.cur_time
         self.cur_time = time.time()
 
-        print(self.dt)
+        # print(self.dt)
         # print(self.our_color)
 
         self.read_vision()
