@@ -47,7 +47,7 @@ class Strategy:
         waypoints = [None]*const.TEAM_ROBOTS_MAX_COUNT
         for i in range(0, 6):
             # pos = aux.point_on_line(bbotpos, -aux.Point(const.GOAL_DX, 0), 300)
-            pos = aux.Point(-500*i, -3000)
+            pos = -field.ally_goal.eye_forw*500*i -field.ally_goal.eye_up*3000
             # pos = aux.Point(1000 + self.square.get(), -1000)
             
             # dpos = bbotpos - ybotpos
@@ -58,10 +58,12 @@ class Strategy:
             waypoint = wp.Waypoint(pos, angle, wp.WType.ENDPOINT)
             waypoints[i] = waypoint
         
+        waypoints[1].pos = field.ally_goal.eye_forw*1000 + field.ally_goal.eye_up * (self.square.get() - 1000)
+
         waypoints[2] = wp.Waypoint(field.ball.getPos(), (field.enemy_goal.center - field.ball.getPos()).arg(), wp.WType.KICK_IMMEDIATE)
 
         robot_with_ball = aux.find_nearest_robot(field.ball.getPos(), field.enemies)
-        self.gk_go(field, waypoints, [3], robot_with_ball)
+        self.gk_go(field, waypoints, [0], robot_with_ball)
         return waypoints
 
     def gk_go(self, field: field.Field, waypoints, gk_wall_idx_list, robot_with_ball):
@@ -91,11 +93,16 @@ class Strategy:
                                       field.ball.getPos() + field.ball.getVel(),
                                       'SR'
                                       ) is not None:
-            gk_pos = aux.closest_point_on_line(field.ball.pos, field.ball.vel.unity()*1000000, field.b_team[gk_wall_idx_list[0]].pos)
+            gk_pos = aux.closest_point_on_line(field.ball.pos, field.ball.vel.unity()*1000000, field.allies[gk_wall_idx_list[0]].pos)
             # print("GK INTERCEPT", time.time())
 
         gk_angle = math.pi/2
         waypoints[gk_wall_idx_list[0]] = wp.Waypoint(gk_pos, gk_angle, wp.WType.ENDPOINT)
+
+        print(field.isBallInGoalSq())
+        if field.isBallInGoalSq() and field.ball.vel.mag() < 100:
+            waypoints[gk_wall_idx_list[0]] = wp.Waypoint(field.ball.pos, field.ally_goal.eye_forw.arg(), wp.WType.KICK_IMMEDIATE)
+
 
     def defence(self, field: field.Field):
         rivals = field.enemies

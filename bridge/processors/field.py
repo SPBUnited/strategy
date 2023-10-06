@@ -10,12 +10,13 @@ class Goal:
     """
     Структура, описывающая ключевые точки ворот
     """
-    def __init__(self, goal_dx, goal_dy) -> None:
+    def __init__(self, goal_dx, goal_dy, goal_pen) -> None:
         self.center = aux.Point(goal_dx, 0)
         self.up = aux.Point(goal_dx, goal_dy)
         self.down = aux.Point(goal_dx, -goal_dy)
         self.eye_forw = aux.Point(-aux.sign(goal_dx), 0)
         self.eye_up = aux.Point(0, aux.sign(goal_dy))
+        self.forw = aux.Point(goal_dx - goal_pen, 0)
 
 class Field:
     """
@@ -30,8 +31,8 @@ class Field:
         self.b_team = [ robot.Robot(const.GRAVEYARD_POS, 0, const.ROBOT_R, 'b', i, ctrl_mapping[i]) for i in range(const.TEAM_ROBOTS_MAX_COUNT)]
         self.y_team = [ robot.Robot(const.GRAVEYARD_POS, 0, const.ROBOT_R, 'y', i, ctrl_mapping[i]) for i in range(const.TEAM_ROBOTS_MAX_COUNT)]
         self.all_bots = [*self.b_team, *self.y_team]
-        self.y_goal = Goal(const.GOAL_DX, const.GOAL_DY)
-        self.b_goal = Goal(-const.GOAL_DX, const.GOAL_DY)
+        self.y_goal = Goal(const.GOAL_DX, const.GOAL_DY, const.GOAL_PEN)
+        self.b_goal = Goal(-const.GOAL_DX, -const.GOAL_DY, -const.GOAL_PEN)
 
         if ally_color == 'b':
             self.allies = [*self.b_team]
@@ -88,3 +89,7 @@ class Field:
     """
     def getYelTeam(self):
         return self.y_team
+
+    def isBallInGoalSq(self):
+        return aux.sign(self.ally_goal.center.x - self.ball.pos.x) == aux.sign(self.ball.pos.x - self.ally_goal.forw.x) and \
+            aux.sign(self.ally_goal.up.y - self.ball.pos.y) == aux.sign(self.ball.pos.y - self.ally_goal.down.y)
