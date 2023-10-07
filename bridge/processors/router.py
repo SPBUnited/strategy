@@ -35,12 +35,11 @@ class Router:
             if not self.routes[i].isUsed():
                 continue
 
-            if self.routes[i].getNextType() == wp.WType.S_BALL_KICK:
+            if self.routes[i].getNextType() == wp.WType.S_BALL_KICK or \
+                self.routes[i].getNextType() == wp.WType.S_BALL_GRAB:
                 if not field.allies[i].is_kick_aligned(self.routes[i].getDestWP()):
                     align_wp = self.calcKickWP(i, field)
                     self.routes[i].insertWP(align_wp)
-
-
             
             pth_wp = self.calcVectorField(i, field)
             if pth_wp is not None:
@@ -69,7 +68,8 @@ class Router:
         if dist < vector_field_threshold:
             return None
 
-        if self.routes[idx].getDestWP().type == wp.WType.S_IGNOREOBSTACLES:
+        if self.routes[idx].getDestWP().type == wp.WType.S_IGNOREOBSTACLES or \
+              self.routes[idx].getDestWP().type == wp.WType.S_BALL_GO:
             return None
 
         sep_dist = 500
