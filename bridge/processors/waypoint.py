@@ -18,6 +18,7 @@ class WType(Enum):
     KICK_HALT = 4 # Захватить мяч не пиная
     KICK_ALIGN = 5 # Выровнятся напротив мяча, приготовившись его захватить
     STOP = 6 # Kostil for stopping 
+    KEEP_BALL_DISTANCE = 7
 
 class Waypoint:
     def __init__(self, pos: aux.Point, angle: float, type: WType) -> None:

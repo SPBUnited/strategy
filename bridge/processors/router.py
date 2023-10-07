@@ -56,6 +56,9 @@ class Router:
         sep_dist = 500
         ball_sep_dist = 150
 
+        if self.routes[idx][-1].type == wp.WType.KEEP_BALL_DISTANCE:
+            ball_sep_dist = 700
+
         closest_robot = None
         closest_dist = dist
         closest_separation = 0
