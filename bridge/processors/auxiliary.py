@@ -1,6 +1,12 @@
 import math
 import bridge.processors.const as const
 
+class bobLine:
+    def __init__(self, A, B, C):
+        self.A = A
+        self.B = B
+        self.C = C
+
 class Point:
     def __init__(self, x, y):
         self.x = x
@@ -260,3 +266,108 @@ def sign(num):
     if num == 0:
         return 0
     return num / abs(num)
+
+def peresek(mainLine, obj):
+    res = []
+    for point in obj:
+        tmpLine = Line(point.getPos().x, point.getPos().y, point.getPos().x + (mainLine.endY - mainLine.startY), point.getPos().y - (mainLine.endX - mainLine.startX))
+        print(mainLine.startX, mainLine.startY, mainLine.endX, mainLine.endY)
+        print(tmpLine.startX, tmpLine.startY, tmpLine.endX, tmpLine.endY)
+        res.append(get_line_intersection(Point(mainLine.startX, mainLine.startY), Point(mainLine.endX, mainLine.endY), Point(tmpLine.startX, tmpLine.startY), Point(tmpLine.endX, tmpLine.endY), "LL"))
+    return res
+
+def det (a,b,c,d):
+	return a * d - b * c
+
+def intersect (m, bots):
+	result = []
+	for n in bots:
+		zn = det (m.A, m.B, n.A, n.B)
+		res = Point(0, 0)
+		if (abs (zn) < 1e-9):
+			return None	
+		res.x = - det (m.C, m.B, n.C, n.B) / zn
+		res.y = - det (m.A, m.C, n.A, n.C) / zn
+		result.append(res)
+	return result
+
+def probability(inter, bots):
+    res = 1
+    # print(len(inter), end = ' ')
+    for i in range(len(inter)):
+        koef = 1
+        # print([inter[i].x, inter[i].y, bots[i].getPos().x, bots[i].getPos().y])
+        tmpRes = ((inter[i].x - bots[i].getPos().x)**2 + (inter[i].y - bots[i].getPos().y)**2) ** (0.5) - const.ROBOT_R * 100 * 2
+        # print(tmpRes)
+        if tmpRes < 0: 
+            koef = 0
+        elif tmpRes > const.ROBOT_R * 100 * 15:
+            koef = 1
+        else:
+            koef = tmpRes / (const.ROBOT_R * 100 * 15)
+        res *= koef
+    return res
+
+# def probability(mainLine, obj):
+#     inter = peresek(mainLine, obj)
+#     # print(inter)
+#     res = 1
+#     for i in range(len(inter)):
+#         koef = 1
+#         tmpRes = (inter[i].x - obj[i].getPos().x)**2 + (inter[i].y - obj[i].getPos().y)**2 - const.ROBOT_R * 2
+#         if tmpRes < 0: 
+#             koef = 0
+#         elif tmpRes > const.ROBOT_R * 4:
+#             koef = 1
+#         else:
+#             koef = tmpRes / const.ROBOT_R * 4
+#         res *= koef
+#     return res
+
+def botPosition(st, vecx, vecy):
+    modul = (vecx**2 + vecy**2)**(0.5)
+    vecx = (vecx / modul) * const.ROBOT_R * 1000 * 2
+    vecy = (vecy / modul) * const.ROBOT_R * 1000 * 2
+    return Point(st.x - vecx, st.y - vecy)
+
+def shotDecision(st, end, obj):
+    mx_shot_prob = 0
+    shot_point = st
+    mx = 0
+    # print(st)
+    # for bot in obj:
+    #     # print([bot.getPos().x, bot.getPos().y], end = " ")
+    #     plt.plot(bot.getPos().x, bot.getPos().y, 'bo')
+    # t = np.arange(-4500*1.0, 1000*1.0, 10)
+    for point in end:        
+        A = -(point.y - st.y)
+        B = (point.x - st.x)
+        C = st.x * (point.y - st.y) - st.y * (point.x - st.x)
+        tmpLine = bobLine(A, B, C)
+        # plt.plot(t, (tmpLine.A*t + tmpLine.C)/tmpLine.B, 'g--')
+        Lines = []
+        for bot in obj:
+            tmpC = -(B*bot.getPos().x - A*bot.getPos().y)
+            L2 = bobLine(B, -A, tmpC)
+            Lines.append(L2)
+        inter = intersect(tmpLine, Lines)
+        # plt.plot(inter[0].x, inter[0].y, 'bx')
+        # plt.plot(inter[1].x, inter[1].y, 'gx')
+        tmp_prob = probability(inter, obj)
+        # print(tmp_prob, end = " ")
+        if tmp_prob > mx:
+            mx = tmp_prob
+            shot_point = botPosition(st, point.x - st.x, point.y - st.y)
+            Lres = point
+    # plt.plot(t, -(Lres.A*t + Lres.C)/Lres.B, 'r-')
+    # plt.plot(shot_point.x, shot_point.y, 'r^')
+    # plt.axis('equal')
+    # plt.grid(True)
+    # plt.show()
+    return shot_point, mx_shot_prob
+    
+def in_place(st, end, epsilon):
+    if ((st - end).mag() < epsilon):
+        return True
+    else:
+        return False

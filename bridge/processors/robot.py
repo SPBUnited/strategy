@@ -132,8 +132,6 @@ class Robot(entity.Entity):
 
         angle0 = aux.LERP(lerp_angles[0], lerp_angles[1], aux.minmax((dist-100)/1000, 0, 1))
 
-        MAX_SPEED = 1500
-        MAX_ANG_SPEED = 4
         k = 0.2
         gain = 6
         k_a = 0.04
@@ -156,14 +154,15 @@ class Robot(entity.Entity):
             self.autoKick = 0
 
         err = dist - cur_speed * k
-        u = aux.minmax(err * gain, -MAX_SPEED, MAX_SPEED)
+        u = aux.minmax(err * gain, -const.MAX_SPEED, const.MAX_SPEED)
+        # print('%d'%dist, '%d'%cur_speed, err, u)
         transl_vel = vel0 * u
 
         aerr = aux.wind_down_angle(angle0 - self.getAngle())
 
         
         aerr -= self.anglevel * k_a
-        u_a = min(max(aerr * gain_a, -MAX_ANG_SPEED), MAX_ANG_SPEED)
+        u_a = min(max(aerr * gain_a, -const.MAX_SPEED_R), const.MAX_SPEED_R)
         ang_vel = u_a
 
         # if self.rId == 0 and self.color == 'b':

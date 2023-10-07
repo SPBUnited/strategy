@@ -39,6 +39,7 @@ class MatlabController(BaseProcessor):
     dt = 0
 
     ctrl_mapping = [i for i in range(const.TEAM_ROBOTS_MAX_COUNT)]
+    count_halt_cmd = 0
 
     def initialize(self, data_bus: DataBus) -> None:
         super(MatlabController, self).initialize(data_bus)
