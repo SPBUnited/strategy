@@ -17,6 +17,8 @@ SINGLE_ROBOT_PACKET_SIZE = 5
 ROBOT_TEAM_PACKET_SIZE: int = SINGLE_ROBOT_PACKET_SIZE * TEAM_ROBOTS_MAX_COUNT
 
 GEOMETRY_PACKET_SIZE: int = 2
+
+TOPIC_SINK = "control-sink"
 ##################################################
 
 ##################################################

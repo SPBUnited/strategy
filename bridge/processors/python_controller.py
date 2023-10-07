@@ -48,7 +48,7 @@ class MatlabController(BaseProcessor):
         super(MatlabController, self).initialize(data_bus)
         self.vision_reader = DataReader(data_bus, config.VISION_DETECTIONS_TOPIC)
         self.referee_reader = DataReader(data_bus, config.REFEREE_COMMANDS_TOPIC)
-        self.commands_sink_writer = DataWriter(data_bus, "SINK_TOPIC", 20)
+        self.commands_sink_writer = DataWriter(data_bus, const.TOPIC_SINK, 20)
         self._ssl_converter = SSL_WrapperPacket()
 
         self.field = field.Field(self.ctrl_mapping, self.our_color)
@@ -134,7 +134,7 @@ class MatlabController(BaseProcessor):
             for robot in detection.robots_blue:
                 if time.time() - self.field.b_team[robot.robot_id].last_update() > 0.3:
                     self.field.b_team[robot.robot_id].used(0)
-                else: 
+                else:
                     self.field.b_team[robot.robot_id].used(1)
                 self.field.updateBluRobot(robot.robot_id, auxiliary.Point(robot.x, robot.y), robot.orientation, time.time())
 
