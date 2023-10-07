@@ -508,23 +508,23 @@ class Strategy:
             for i in range(const.TEAM_ROBOTS_MAX_COUNT):
                 if field.allies[i].is_used() and field.allies[i].rId != const.GK:
                     if rC < 3:
-                        waypoint = wp.Waypoint(aux.Point(700 * field.side, 2000 - 2000 * rC), field.allies[i].getAngle(), wp.WType.ENDPOINT)
+                        waypoint = wp.Waypoint(aux.Point(700 * field.side, 2000 - 2000 * rC), field.allies[i].getAngle(), wp.WType.S_ENDPOINT)
                         waypoints[i] = waypoint
                     else:
-                        waypoint = wp.Waypoint(aux.Point(200 * field.side, 1000 - 2000 * (rC - 3)), field.allies[i].getAngle(), wp.WType.ENDPOINT)
+                        waypoint = wp.Waypoint(aux.Point(200 * field.side, 1000 - 2000 * (rC - 3)), field.allies[i].getAngle(), wp.WType.S_ENDPOINT)
                         waypoints[i] = waypoint
                     rC+=1
         else:
             for i in range(const.TEAM_ROBOTS_MAX_COUNT):
                 if field.allies[i].is_used() and field.allies[i].rId != const.GK:
                     if rC < 3:
-                        waypoint = wp.Waypoint(aux.Point(700 * field.side, 2000 - 2000 * rC), field.allies[i].getAngle(), wp.WType.ENDPOINT)
+                        waypoint = wp.Waypoint(aux.Point(700 * field.side, 2000 - 2000 * rC), field.allies[i].getAngle(), wp.WType.S_ENDPOINT)
                         waypoints[i] = waypoint
                     else:
-                        waypoint = wp.Waypoint(aux.Point(650 * field.side, 200 - 400 * (rC - 3)), field.allies[i].getAngle(), wp.WType.ENDPOINT)
+                        waypoint = wp.Waypoint(aux.Point(650 * field.side, 200 - 400 * (rC - 3)), field.allies[i].getAngle(), wp.WType.S_ENDPOINT)
                         waypoints[i] = waypoint
                     rC+=1
-        waypoint = wp.Waypoint(field.ally_goal.center, aux.angle_to_point(field.ally_goal.center, field.ball.getPos()), wp.WType.ENDPOINT)
+        waypoint = wp.Waypoint(field.ally_goal.center, aux.angle_to_point(field.ally_goal.center, field.ball.getPos()), wp.WType.S_ENDPOINT)
         waypoints[field.allies[const.GK].rId] = waypoint
 
     def kickoff(self, field, waypoints):
