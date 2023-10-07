@@ -155,7 +155,12 @@ class Strategy:
         
         waypoints[1].pos = field.ally_goal.eye_forw*1000 + field.ally_goal.eye_up * (self.square.get() - 1000)
 
-        waypoints[2] = wp.Waypoint(field.ball.getPos(), (field.enemy_goal.center - field.ball.getPos()).arg(), wp.WType.S_BALL_KICK)
+        if not field.allies[2].is_ball_in(field):
+            waypoints[2] = wp.Waypoint(field.ball.getPos(), (field.enemy_goal.center - field.ball.getPos()).arg(), wp.WType.S_BALL_GRAB)
+        elif (field.enemy_goal.forw - field.allies[2].pos).mag() > 300:
+            waypoints[2] = wp.Waypoint(field.enemy_goal.forw, math.pi/3, wp.WType.S_BALL_GO)
+        else:
+            waypoints[2] = wp.Waypoint(field.enemy_goal.forw, math.pi/3, wp.WType.S_BALL_KICK)
 
         return waypoints
 
