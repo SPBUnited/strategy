@@ -11,28 +11,28 @@ import bridge.processors.robot as robot
 class Route:
 
     def __init__(self, robot: robot.Robot):
-        self.__robot = [wp.Waypoint(robot.pos, robot.angle, wp.WType.__ROBOT)]
-        self.__destination = [wp.Waypoint(const.GRAVEYARD_POS, 0, wp.WType.__GRAVEYARD)]
-        self.__routewp = []
-        # self.__route = [*self.__robot, *self.__routewp, *self.__destination]
+        self._robot = [wp.Waypoint(robot.pos, robot.angle, wp.WType._ROBOT)]
+        self._destination = [wp.Waypoint(const.GRAVEYARD_POS, 0, wp.WType._GRAVEYARD)]
+        self._routewp = []
+        # self.__route = [*self.robot, *self.__routewp, *self.__destination]
 
     def update(self, robot: robot.Robot):
-        self.__robot = [wp.Waypoint(robot.pos, robot.angle, wp.WType.__ROBOT)]
+        self._robot = [wp.Waypoint(robot.pos, robot.angle, wp.WType._ROBOT)]
         if self.getNextVec().mag() < const.VANISH_DIST and \
-            len(self.__routewp) >= 1:
-            del self.__routewp[0]
+            len(self._routewp) >= 1:
+            del self._routewp[0]
 
     def clear(self):
-        self.__routewp = []
+        self._routewp = []
 
     def __getRoute(self):
-        return [*self.__robot, *self.__routewp, *self.__destination]
+        return [*self._robot, *self._routewp, *self._destination]
 
     def setDestWP(self, dest: wp.Waypoint):
-        self.__destination = [dest]
+        self._destination = [dest]
    
     def getDestWP(self):
-        return self.__destination[0]
+        return self._destination[0]
 
     def getNextWP(self) -> wp.Waypoint:
         return self.__getRoute()[1]
@@ -50,14 +50,14 @@ class Route:
         return self.__getRoute()[1].type
     
     def insertWP(self, wp: wp.Waypoint):
-        self.__routewp.insert(0, wp)
+        self._routewp.insert(0, wp)
 
     def isUsed(self):
-        return self.__destination[0].type != wp.WType.__GRAVEYARD
+        return self._destination[0].type != wp.WType._GRAVEYARD
 
     def getLenght(self):
         dist = 0
-        last_wp_pos = self.__robot[0].pos
+        last_wp_pos = self._robot[0].pos
         for wpt in self.__getRoute():
             dist += (wpt.pos - last_wp_pos).mag()
             last_wp_pos = wpt.pos
@@ -67,7 +67,7 @@ class Route:
         strin = "ROUTE: "
         for wp in self.__getRoute():
             strin += " -> " + str(wp)
-        # for wp in [*self.__robot, *self.__routewp, *self.__destination]:
+        # for wp in [*self.robot, *self.__routewp, *self.__destination]:
         #     strin += " -> " + str(wp)
         return strin
 
