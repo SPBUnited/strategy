@@ -15,7 +15,7 @@ if __name__ == '__main__':
     # TODO: Move list of processors to config
     processors = [
         VisionDetectionsCollector(processing_pause=0.001, should_debug=True),
-        RefereeCommandsCollector(processing_pause=0.1, should_debug=True),
+        RefereeCommandsCollector(processing_pause=0.001, should_debug=True),
         MatlabController(
             our_color='b',
             should_debug=True,
@@ -23,13 +23,13 @@ if __name__ == '__main__':
             reduce_pause_on_process_time=True,
             dbg_game_status = strategy.GameStates.RUN,
             dbg_state = strategy.States.DEBUG),
-        MatlabController(
-            our_color='y',
-            should_debug=True,
-            processing_pause=const.Ts,
-            reduce_pause_on_process_time=True,
-            dbg_game_status = strategy.GameStates.RUN,
-            dbg_state = strategy.States.DEFENCE),
+        # MatlabController(
+        #     our_color='y',
+        #     should_debug=True,
+        #     processing_pause=const.Ts,
+        #     reduce_pause_on_process_time=True,
+        #     dbg_game_status = strategy.GameStates.RUN,
+        #     dbg_state = strategy.States.DEFENCE),
         CommandSink(processing_pause = const.Ts/2, should_debug=True),
         RobotCommandsSender(processing_pause = const.Ts/2, should_debug=True)
     ]
