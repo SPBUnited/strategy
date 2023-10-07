@@ -35,7 +35,7 @@ class Router:
             if not self.routes[i].isUsed():
                 continue
 
-            if self.routes[i].getNextType() == wp.WType.BALL_KICK:
+            if self.routes[i].getNextType() == wp.WType.S_BALL_KICK:
                 if not field.allies[i].is_kick_aligned(self.routes[i].getDestWP()):
                     align_wp = self.calcKickWP(i, field)
                     self.routes[i].insertWP(align_wp)
@@ -69,7 +69,7 @@ class Router:
         if dist < vector_field_threshold:
             return None
 
-        if self.routes[idx].getDestWP().type == wp.WType.IGNOREOBSTACLES:
+        if self.routes[idx].getDestWP().type == wp.WType.S_IGNOREOBSTACLES:
             return None
 
         sep_dist = 500
@@ -115,7 +115,7 @@ class Router:
             passthrough_wp = wp.Waypoint(
                 passthrough_wp_pos,
                 0,
-                wp.WType.PASSTHROUGH
+                wp.WType.R_PASSTHROUGH
             )
         else:
             passthrough_wp = None
@@ -129,7 +129,7 @@ class Router:
 
         align_pos = target_pos - aux.rotate(aux.i, target_angle)*const.KICK_ALIGN_DIST
         align_angle = target_angle
-        align_type = wp.WType.BALL_ALIGN
+        align_type = wp.WType.R_BALL_ALIGN
         align_wp = wp.Waypoint(
             align_pos,
             align_angle,
