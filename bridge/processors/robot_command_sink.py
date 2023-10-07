@@ -31,7 +31,7 @@ class CommandSink(BaseProcessor):
 
     def initialize(self, data_bus: DataBus) -> None:
         super(CommandSink, self).initialize(data_bus)
-        self.commands_sink_reader = DataReader(data_bus, "SINK_TOPIC", 20)
+        self.commands_sink_reader = DataReader(data_bus, const.TOPIC_SINK, 20)
         self.commands_writer = DataWriter(data_bus, config.ROBOT_COMMANDS_TOPIC, self.max_commands_to_persist)
 
     def process(self) -> None:

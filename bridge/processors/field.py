@@ -11,12 +11,23 @@ class Goal:
     Структура, описывающая ключевые точки ворот
     """
     def __init__(self, goal_dx, goal_dy, goal_pen) -> None:
+
+        # Абсолютный центр
         self.center = aux.Point(goal_dx, 0)
-        self.up = aux.Point(goal_dx, goal_dy)
-        self.down = aux.Point(goal_dx, -goal_dy)
+
+        # Относительные вектора
         self.eye_forw = aux.Point(-aux.sign(goal_dx), 0)
         self.eye_up = aux.Point(0, aux.sign(goal_dy))
-        self.forw = aux.Point(goal_dx - goal_pen, 0)
+        self.vup = aux.Point(0, goal_dy)
+        self.vdown = aux.Point(0, -goal_dy)
+        self.vpen = aux.Point(-goal_pen, 0)
+
+        # Абсолютные вектора
+        self.up = self.center + self.vup
+        self.down = self.center + self.vdown
+        self.forw = self.center + self.vpen
+        self.forwup = self.forw + self.vup
+        self.forwdown = self.forw + self.vdown
 
 class Field:
     """
