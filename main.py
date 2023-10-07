@@ -6,6 +6,7 @@ from strategy_bridge.runner import Runner
 from bridge.processors.python_controller import MatlabController
 from bridge.processors.robot_command_sink import CommandSink
 import bridge.processors.const as const
+import bridge.processors.strategy as strategy
 
 if __name__ == '__main__':
 
@@ -15,8 +16,20 @@ if __name__ == '__main__':
     processors = [
         VisionDetectionsCollector(processing_pause=0.001, should_debug=True),
         RefereeCommandsCollector(processing_pause=0.1, should_debug=True),
-        MatlabController(our_color='b', should_debug=True, processing_pause=const.Ts, reduce_pause_on_process_time=True),
-        # MatlabController(our_color='y', should_debug=True, processing_pause=const.Ts, reduce_pause_on_process_time=True),
+        MatlabController(
+            our_color='b',
+            should_debug=True,
+            processing_pause=const.Ts,
+            reduce_pause_on_process_time=True,
+            dbg_game_status = strategy.GameStates.RUN,
+            dbg_state = strategy.States.DEBUG),
+        MatlabController(
+            our_color='y',
+            should_debug=True,
+            processing_pause=const.Ts,
+            reduce_pause_on_process_time=True,
+            dbg_game_status = strategy.GameStates.RUN,
+            dbg_state = strategy.States.DEFENCE),
         CommandSink(processing_pause = const.Ts/2, should_debug=True),
         RobotCommandsSender(processing_pause = const.Ts/2, should_debug=True)
     ]
