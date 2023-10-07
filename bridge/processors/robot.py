@@ -7,6 +7,8 @@ import bridge.processors.waypoint as wp
 from typing import List
 
 class Robot(entity.Entity):
+
+
     def __init__(self, pos, angle, R, color, r_id, ctrl_id):
         super().__init__(pos, angle, R)
 
@@ -105,18 +107,16 @@ class Robot(entity.Entity):
             abs(aux.wind_down_angle(self.angle - target.angle)) < const.KICK_ALIGN_ANGLE and \
             abs(aux.wind_down_angle((target.pos - self.pos).arg() - target.angle)) < const.KICK_ALIGN_OFFSET
 
-    def go_route(self, route: List[wp.Waypoint], field: field.Field):
+    def go_route(self, route, field: field.Field):
         cur_speed = self.vel.mag()
-        dist = 0
 
-        last_wp_pos = self.pos
-        for wpt in route:
-            dist += (wpt.pos - last_wp_pos).mag()
-            last_wp_pos = wpt.pos
+        # print(route)
 
-        target_point = route[0]
-        end_point = route[-1]
+        dist = route.getLenght()
 
+        target_point = route.getNextWP()
+        end_point = route.getDestWP()
+        
         vel0 = (self.pos - target_point.pos).unity()
 
         dangle = (target_point.pos - self.pos).arg()
@@ -137,7 +137,7 @@ class Robot(entity.Entity):
         k_a = 0.04
         gain_a = 1
 
-        if end_point.type == wp.WType.KICK_IMMEDIATE:
+        if end_point.type == wp.WType.BALL_KICK:
 
             # print("IS KICK ALIGNED: ", self.is_kick_aligned(end_point))
 
@@ -145,7 +145,7 @@ class Robot(entity.Entity):
             gain = 2
             gain_a = 1
             angle0 = aux.LERP(lerp_angles[0], lerp_angles[1], aux.minmax((dist-400)/1000, 0, 1))
-        if end_point.type == wp.WType.KICK_IMMEDIATE and self.is_kick_aligned(end_point):
+        if end_point.type == wp.WType.BALL_KICK and self.is_kick_aligned(end_point):
             vel0 = (self.pos - end_point.pos).unity()
             angle0 = end_point.angle
             dist = 400

@@ -8,19 +8,23 @@ import bridge.processors.const as const
 import bridge.processors.waypoint as wp
 import bridge.processors.field as field
 import bridge.processors.auxiliary as aux
+import bridge.processors.route as route
 
 import math
 
 class Router:
-    def __init__(self) -> None:
-        self.routes = [[] for _ in range(const.TEAM_ROBOTS_MAX_COUNT)]
+    def __init__(self, field: field.Field) -> None:
+        self.routes = [route.Route(field.allies[i]) for i in range(const.TEAM_ROBOTS_MAX_COUNT)]
 
+    def update(self, field: field.Field):
+        for i in range(const.TEAM_ROBOTS_MAX_COUNT):
+            self.routes[i].update(field.allies[i])
+    
     """
     Установить единственную путевую точку для робота с индексом idx
     """
-    def setWaypoint(self, idx, target: wp.Waypoint):
-        self.routes[idx].clear()
-        self.routes[idx].append(target)
+    def setDest(self, idx, target: wp.Waypoint):
+        self.routes[idx].setDestWP(target)
 
     """
     Рассчитать маршруты по актуальным путевым точкам
@@ -28,29 +32,44 @@ class Router:
     def reRoute(self, field: field.Field):
         for i in range(const.TEAM_ROBOTS_MAX_COUNT):
             
-            if len(self.routes[i]) == 0:
+            if not self.routes[i].isUsed():
                 continue
 
-            if self.routes[i][-1].type == wp.WType.KICK_IMMEDIATE:
-                if not field.allies[i].is_kick_aligned(self.routes[i][-1]):
+            if self.routes[i].getNextType() == wp.WType.BALL_KICK:
+                if not field.allies[i].is_kick_aligned(self.routes[i].getDestWP()):
                     align_wp = self.calcKickWP(i, field)
-                    self.routes[i].insert(-1, align_wp)
+                    self.routes[i].insertWP(align_wp)
+
+
+            
             pth_wp = self.calcVectorField(i, field)
             if pth_wp is not None:
-                self.routes[i].insert(0, pth_wp)
+                self.routes[i].insertWP(pth_wp)
+            
+    def calcPenDetour(self, idx, field: field.Field):
+        self_pos = field.allies[idx].getPos()
+        detwp = None
+        for goal in [*field.ally_goal, *field.enemy_goal]:
+            vec1 = aux.vect_mult(self.routes[idx].getNextVec().unity(), (goal.forwup - self_pos).unity())
+            vec2 = aux.vect_mult(self.routes[idx].getNextVec().unity(), (goal.forwdown - self_pos).unity())
+            vecc = aux.vect_mult(self.routes[idx].getNextVec().unity(), (goal.center - self_pos).unity())
+            if(aux.sign(vec1) != aux.sign(vecc)):
+                if(aux.sign(vec2) != aux.sign(vecc)):
+                    detwp = 
+
 
     def calcVectorField(self, idx, field: field.Field):
         allies = field.allies
         enemy = field.enemies
         self_pos = allies[idx].getPos()
-        target_point = self.routes[idx][0]
+        target_point = self.routes[idx].getNextWP()
         dist = (self_pos - target_point.pos).mag()
 
         vector_field_threshold = 200
         if dist < vector_field_threshold:
             return None
 
-        if self.routes[idx][-1].type == wp.WType.IGNOREOBSTACLES:
+        if self.routes[idx].getDestWP().type == wp.WType.IGNOREOBSTACLES:
             return None
 
         sep_dist = 500
@@ -104,13 +123,13 @@ class Router:
         return passthrough_wp
 
     def calcKickWP(self, idx, field: field.Field):
-        target_point = self.routes[idx][-1]
+        target_point = self.routes[idx].getDestWP()
         target_pos = target_point.pos
         target_angle = target_point.angle
 
         align_pos = target_pos - aux.rotate(aux.i, target_angle)*const.KICK_ALIGN_DIST
         align_angle = target_angle
-        align_type = wp.WType.KICK_ALIGN
+        align_type = wp.WType.BALL_ALIGN
         align_wp = wp.Waypoint(
             align_pos,
             align_angle,

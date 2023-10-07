@@ -162,7 +162,7 @@ class Strategy:
         
         waypoints[1].pos = field.ally_goal.eye_forw*1000 + field.ally_goal.eye_up * (self.square.get() - 1000)
 
-        waypoints[2] = wp.Waypoint(field.ball.getPos(), (field.enemy_goal.center - field.ball.getPos()).arg(), wp.WType.KICK_IMMEDIATE)
+        waypoints[2] = wp.Waypoint(field.ball.getPos(), (field.enemy_goal.center - field.ball.getPos()).arg(), wp.WType.BALL_KICK)
 
         return waypoints
 
@@ -201,7 +201,7 @@ class Strategy:
 
         # print(field.isBallInGoalSq())
         if field.isBallInGoalSq() and field.ball.vel.mag() < 200:
-            waypoints[gk_wall_idx_list[0]] = wp.Waypoint(field.ball.pos, field.ally_goal.eye_forw.arg(), wp.WType.KICK_IMMEDIATE)
+            waypoints[gk_wall_idx_list[0]] = wp.Waypoint(field.ball.pos, field.ally_goal.eye_forw.arg(), wp.WType.BALL_KICK)
 
     def defence(self, field: field.Field, waypoints):
         dist_between = 200
