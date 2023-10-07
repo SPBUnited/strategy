@@ -52,7 +52,7 @@ class MatlabController(BaseProcessor):
         self._ssl_converter = SSL_WrapperPacket()
 
         self.field = field.Field(self.ctrl_mapping, self.our_color)
-        self.router = router.Router()
+        self.router = router.Router(self.field)
         self.strategy = strategy.Strategy(self.dbg_game_status, self.dbg_state)
 
     def get_last_referee_command(self) -> RefereeCommand:
@@ -150,9 +150,11 @@ class MatlabController(BaseProcessor):
         """
         Рассчитать стратегию, тактику и физику для роботов на поле
         """
+        self.router.update(self.field)
         waypoints = self.strategy.process(self.field)
         for i in range(6):
-            self.router.setWaypoint(i, waypoints[i])
+            self.router.getRoute(i).clear()
+            self.router.setDest(i, waypoints[i])
         self.router.reRoute(self.field)
 
         # TODO алгоритм следования по траектории
