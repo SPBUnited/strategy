@@ -46,16 +46,16 @@ class Router:
             if pth_wp is not None:
                 self.routes[i].insertWP(pth_wp)
             
-    def calcPenDetour(self, idx, field: field.Field):
-        self_pos = field.allies[idx].getPos()
-        detwp = None
-        for goal in [*field.ally_goal, *field.enemy_goal]:
-            vec1 = aux.vect_mult(self.routes[idx].getNextVec().unity(), (goal.forwup - self_pos).unity())
-            vec2 = aux.vect_mult(self.routes[idx].getNextVec().unity(), (goal.forwdown - self_pos).unity())
-            vecc = aux.vect_mult(self.routes[idx].getNextVec().unity(), (goal.center - self_pos).unity())
-            if(aux.sign(vec1) != aux.sign(vecc)):
-                if(aux.sign(vec2) != aux.sign(vecc)):
-                    detwp = 
+    # def calcPenDetour(self, idx, field: field.Field):
+    #     self_pos = field.allies[idx].getPos()
+    #     detwp = None
+    #     for goal in [*field.ally_goal, *field.enemy_goal]:
+    #         vec1 = aux.vect_mult(self.routes[idx].getNextVec().unity(), (goal.forwup - self_pos).unity())
+    #         vec2 = aux.vect_mult(self.routes[idx].getNextVec().unity(), (goal.forwdown - self_pos).unity())
+    #         vecc = aux.vect_mult(self.routes[idx].getNextVec().unity(), (goal.center - self_pos).unity())
+    #         if(aux.sign(vec1) != aux.sign(vecc)):
+    #             if(aux.sign(vec2) != aux.sign(vecc)):
+    #                 detwp = 
 
 
     def calcVectorField(self, idx, field: field.Field):
