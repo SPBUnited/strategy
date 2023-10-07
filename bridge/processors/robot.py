@@ -137,7 +137,7 @@ class Robot(entity.Entity):
         k_a = 0.04
         gain_a = 1
 
-        if end_point.type == wp.WType.BALL_KICK:
+        if end_point.type == wp.WType.S_BALL_KICK:
 
             # print("IS KICK ALIGNED: ", self.is_kick_aligned(end_point))
 
@@ -145,7 +145,7 @@ class Robot(entity.Entity):
             gain = 2
             gain_a = 1
             angle0 = aux.LERP(lerp_angles[0], lerp_angles[1], aux.minmax((dist-400)/1000, 0, 1))
-        if end_point.type == wp.WType.BALL_KICK and self.is_kick_aligned(end_point):
+        if end_point.type == wp.WType.S_BALL_KICK and self.is_kick_aligned(end_point):
             vel0 = (self.pos - end_point.pos).unity()
             angle0 = end_point.angle
             dist = 400

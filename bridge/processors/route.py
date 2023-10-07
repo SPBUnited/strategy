@@ -11,13 +11,13 @@ import bridge.processors.robot as robot
 class Route:
 
     def __init__(self, robot: robot.Robot):
-        self.__robot = [wp.Waypoint(robot.pos, robot.angle, wp.WType.ROBOT)]
-        self.__destination = [wp.Waypoint(const.GRAVEYARD_POS, 0, wp.WType.GRAVEYARD)]
+        self.__robot = [wp.Waypoint(robot.pos, robot.angle, wp.WType.__ROBOT)]
+        self.__destination = [wp.Waypoint(const.GRAVEYARD_POS, 0, wp.WType.__GRAVEYARD)]
         self.__routewp = []
         # self.__route = [*self.__robot, *self.__routewp, *self.__destination]
 
     def update(self, robot: robot.Robot):
-        self.__robot = [wp.Waypoint(robot.pos, robot.angle, wp.WType.ROBOT)]
+        self.__robot = [wp.Waypoint(robot.pos, robot.angle, wp.WType.__ROBOT)]
         if self.getNextVec().mag() < const.VANISH_DIST and \
             len(self.__routewp) >= 1:
             del self.__routewp[0]
@@ -53,7 +53,7 @@ class Route:
         self.__routewp.insert(0, wp)
 
     def isUsed(self):
-        return self.__destination[0].type != wp.WType.GRAVEYARD
+        return self.__destination[0].type != wp.WType.__GRAVEYARD
 
     def getLenght(self):
         dist = 0
