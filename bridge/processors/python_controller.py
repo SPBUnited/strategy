@@ -35,6 +35,9 @@ class MatlabController(BaseProcessor):
     referee_reader: DataReader = attr.ib(init=False)
     commands_sink_writer: DataWriter = attr.ib(init=False)
 
+    dbg_game_status: strategy.GameStates = strategy.GameStates.TIMEOUT
+    dbg_state: strategy.States = strategy.States.DEBUG
+
     cur_time = time.time()
     dt = 0
 
@@ -50,7 +53,7 @@ class MatlabController(BaseProcessor):
 
         self.field = field.Field(self.ctrl_mapping, self.our_color)
         self.router = router.Router()
-        self.strategy = strategy.Strategy()
+        self.strategy = strategy.Strategy(self.dbg_game_status, self.dbg_state)
 
     def get_last_referee_command(self) -> RefereeCommand:
         referee_commands = self.referee_reader.read_new()

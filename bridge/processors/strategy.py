@@ -39,10 +39,10 @@ class ActiveTeam(Enum):
     BLUE = 2
 
 class Strategy:
-    def __init__(self) -> None:
-        self.game_status = GameStates.TIMEOUT
+    def __init__(self, dbg_game_status = GameStates.RUN, dbg_state = States.DEBUG) -> None:
+        self.game_status = dbg_game_status
         self.active_team = 0
-        self.state = States.ATTACK
+        self.state = dbg_state
         self.weActive = 1
 
         #DEFENCE
@@ -113,14 +113,14 @@ class Strategy:
                 self.old_def = -1
                 self.steal_flag = 0
 
-            robot_with_ball = aux.find_nearest_robot(field.ball.getPos(), field.y_team)
+            robot_with_ball = aux.find_nearest_robot(field.ball.getPos(), field.enemies)
             self.gk_go(field, waypoints, [const.GK], robot_with_ball)
         else:
             if self.game_status == GameStates.TIMEOUT:
                 rC = 0
                 for i in range(const.TEAM_ROBOTS_MAX_COUNT):
                     if field.allies[i].is_used():
-                        waypoint = wp.Waypoint(aux.Point(2000 * const.SIDE, 1250 - 500 * rC), field.allies[i].getAngle(), wp.WType.ENDPOINT)
+                        waypoint = wp.Waypoint(aux.Point(2000 * field.side, 1250 - 500 * rC), field.allies[i].getAngle(), wp.WType.ENDPOINT)
                         waypoints[i] = waypoint
                         rC+=1
             elif self.game_status == GameStates.HALT:
@@ -133,8 +133,6 @@ class Strategy:
                     if field.allies[i].is_used():
                         waypoint = wp.Waypoint(field.allies[i].getPos(), field.allies[i].getAngle(), wp.WType.STOP)
                         waypoints[i] = waypoint
-
-
 
         return waypoints
 
@@ -159,8 +157,6 @@ class Strategy:
 
         waypoints[2] = wp.Waypoint(field.ball.getPos(), (field.enemy_goal.center - field.ball.getPos()).arg(), wp.WType.KICK_IMMEDIATE)
 
-        robot_with_ball = aux.find_nearest_robot(field.ball.getPos(), field.enemies)
-        self.gk_go(field, waypoints, [const.GK], robot_with_ball)
         return waypoints
 
     def gk_go(self, field: field.Field, waypoints, gk_wall_idx_list, robot_with_ball):
@@ -223,7 +219,7 @@ class Strategy:
         '''if def1.rId == self.old_def_helper:
             def1 = allies[self.old_def]'''
 
-        targetPoint = aux.point_on_line(robot_with_ball.getPos(), aux.Point(const.SIDE * const.GOAL_DX, 0), dist_between)
+        targetPoint = aux.point_on_line(robot_with_ball.getPos(), aux.Point(field.side * const.GOAL_DX, 0), dist_between)
         waypoint = wp.Waypoint(targetPoint, aux.angle_to_point(targetPoint, robot_with_ball.getPos()), wp.WType.ENDPOINT)
         waypoints[def1.rId] = waypoint
         self.old_def = def1.rId
@@ -235,7 +231,7 @@ class Strategy:
         xAttack = 3500
 
         for r in rbs:
-            if ((const.SIDE * r.getPos().x > (const.SIDE * robot_with_ball.getPos().x - 150)) or (const.SIDE * r.getPos().x > 0)) and r.rId != robot_with_ball.rId and r.is_used() and r.rId != const.ENEMY_GK:  
+            if ((field.side * r.getPos().x > (field.side * robot_with_ball.getPos().x - 150)) or (field.side * r.getPos().x > 0)) and r.rId != robot_with_ball.rId and r.is_used() and r.rId != const.ENEMY_GK:  
                 rbs_rIds.append(r.rId)
 
         for i in range(len(rbs_rIds)):
@@ -266,7 +262,7 @@ class Strategy:
                     waypoint = wp.Waypoint(field.ball.getPos(), aux.angle_to_point(def1Helper.getPos(), field.ball.getPos()), wp.WType.IGNOREOBSTACLES)   
             waypoints[def1Helper.rId] = waypoint
             if aux.dist(def1Helper.getPos(), targetPoint) < 1500:
-                targetPoint = aux.point_on_line(robot_with_ball.getPos(), aux.Point(const.SIDE * const.GOAL_X, 0), dist_between + 500)
+                targetPoint = aux.point_on_line(robot_with_ball.getPos(), aux.Point(field.side * const.GOAL_X, 0), dist_between + 500)
                 waypoint = wp.Waypoint(targetPoint, aux.angle_to_point(targetPoint, robot_with_ball.getPos()), wp.WType.ENDPOINT)
                 waypoints[def1.rId] = waypoint'''
 
@@ -276,14 +272,14 @@ class Strategy:
              for r in worksRobots:
                 i = r.rId
                 if i not in used_robots_id:
-                    targetPoint = aux.Point(const.SIDE * -xAttack, 1500)
+                    targetPoint = aux.Point(field.side * -xAttack, 1500)
                     waypoint = wp.Waypoint(targetPoint, aux.angle_to_point(targetPoint, field.ball.getPos()), wp.WType.ENDPOINT)
                     waypoints[i] = waypoint
                     used_robots_id.append(i)
         elif totalRobots - len(used_robots_id) == 2:
-            def2 = aux.find_nearest_robot(aux.Point(const.SIDE * -xAttack, 1500), field.allies, used_robots_id)
+            def2 = aux.find_nearest_robot(aux.Point(field.side * -xAttack, 1500), field.allies, used_robots_id)
             used_robots_id.append(def2.rId)
-            targetPoint = aux.Point(const.SIDE * -xAttack, 1500)
+            targetPoint = aux.Point(field.side * -xAttack, 1500)
             waypoint = wp.Waypoint(targetPoint, aux.angle_to_point(targetPoint, field.ball.getPos()), wp.WType.ENDPOINT)
             waypoints[def2.rId] = waypoint
 
@@ -292,20 +288,20 @@ class Strategy:
                 i = r.rId
                 if field.allies[i].rId not in used_robots_id:
                     used_robots_id.append(field.allies[i].rId)
-                    targetPoint = aux.Point(const.SIDE * -xAttack, -1500)
+                    targetPoint = aux.Point(field.side * -xAttack, -1500)
                     waypoint = wp.Waypoint(targetPoint, aux.angle_to_point(targetPoint, field.ball.getPos()), wp.WType.ENDPOINT)
                     waypoints[field.allies[i].rId] = waypoint
 
         else:
-            def2 = aux.find_nearest_robot(aux.Point(const.SIDE * -xAttack, 1500), field.allies, used_robots_id)
+            def2 = aux.find_nearest_robot(aux.Point(field.side * -xAttack, 1500), field.allies, used_robots_id)
             used_robots_id.append(def2.rId)
-            targetPoint = aux.Point(const.SIDE * -xAttack, 1500)
+            targetPoint = aux.Point(field.side * -xAttack, 1500)
             waypoint = wp.Waypoint(targetPoint, aux.angle_to_point(targetPoint, field.ball.getPos()), wp.WType.ENDPOINT)
             waypoints[def2.rId] = waypoint
             
-            def2 = aux.find_nearest_robot(aux.Point(const.SIDE * -xAttack, -1500), field.allies, used_robots_id)
+            def2 = aux.find_nearest_robot(aux.Point(field.side * -xAttack, -1500), field.allies, used_robots_id)
             used_robots_id.append(def2.rId)
-            targetPoint = aux.Point(const.SIDE * -xAttack, -1500)
+            targetPoint = aux.Point(field.side * -xAttack, -1500)
             waypoint = wp.Waypoint(targetPoint, aux.angle_to_point(targetPoint, field.ball.getPos()), wp.WType.ENDPOINT)
             waypoints[def2.rId] = waypoint
 
@@ -327,29 +323,29 @@ class Strategy:
                     if k % 2 == 0:
                         if bX == field.ball.getPos().x:
                             used_robots_id.append(field.allies[i].rId)
-                            targetPoint = aux.Point(const.SIDE * bX - 200 * k / 2 + 200 * c, 1200 * aux.sign(field.ball.getPos().y))
+                            targetPoint = aux.Point(field.side * bX - 200 * k / 2 + 200 * c, 1200 * aux.sign(field.ball.getPos().y))
                             waypoint = wp.Waypoint(targetPoint, aux.angle_to_point(field.allies[i].getPos(), aux.Point(field.allies[i].getPos().x, 5000 * aux.sign(field.ball.getPos().y))), wp.WType.ENDPOINT)
                             waypoints[field.allies[i].rId] = waypoint                       
                         else:
                             used_robots_id.append(field.allies[i].rId)
-                            targetPoint = aux.Point(const.SIDE * bX, (bY - 200 * k / 2 + 200 * c) * const.SIDE)
+                            targetPoint = aux.Point(field.side * bX, (bY - 200 * k / 2 + 200 * c) * field.side)
                             waypoint = wp.Waypoint(targetPoint, aux.angle_to_point(field.allies[i].getPos(), aux.Point(0, field.allies[i].getPos().y)), wp.WType.ENDPOINT)
                             waypoints[field.allies[i].rId] = waypoint                          
                     else:
                         if bX == field.ball.getPos().x:
                             used_robots_id.append(field.allies[i].rId)
-                            targetPoint = aux.Point(const.SIDE * bX - 200 * (k - 1) + 200 * c, 1200 * aux.sign(field.ball.getPos().y))
+                            targetPoint = aux.Point(field.side * bX - 200 * (k - 1) + 200 * c, 1200 * aux.sign(field.ball.getPos().y))
                             waypoint = wp.Waypoint(targetPoint, aux.angle_to_point(field.allies[i].getPos(), aux.Point(field.allies[i].getPos().x, 5000 * aux.sign(field.ball.getPos().y))), wp.WType.ENDPOINT)
                             waypoints[field.allies[i].rId] = waypoint          
                         else:
                             used_robots_id.append(field.allies[i].rId)
-                            targetPoint = aux.Point(const.SIDE * bX, (bY - 200 * (k - 1) + 200 * c) * const.SIDE)
+                            targetPoint = aux.Point(field.side * bX, (bY - 200 * (k - 1) + 200 * c) * field.side)
                             waypoint = wp.Waypoint(targetPoint, aux.angle_to_point(field.allies[i].getPos(), aux.Point(0, field.allies[i].getPos().y)), wp.WType.ENDPOINT)
                             waypoints[field.allies[i].rId] = waypoint  
                     c += 1
 
     def preAttack(self, field: field.Field):
-            allies = field.b_team
+            allies = field.allies
             used_robots_id = []
             mn = 1e10
             role_with_ball = 0
@@ -388,7 +384,7 @@ class Strategy:
             waypoint = wp.Waypoint(field.allies[i].getPos(), field.allies[i].getAngle(), wp.WType.ENDPOINT)
             waypoints[i] = waypoint
 
-        goal_points = [aux.Point(const.GOAL_DX * -const.SIDE, i) for i in range(-500, 501)]
+        goal_points = [aux.Point(const.GOAL_DX * -field.side, i) for i in range(-500, 501)]
         bro_points = [field.allies[i].getPos() for i in range(len(field.allies))]
         # print(bro_points)
         if self.robot_with_ball != None:

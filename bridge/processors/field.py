@@ -40,11 +40,13 @@ class Field:
             self.ally_goal = self.b_goal
             self.enemies = [*self.y_team]
             self.enemy_goal = self.y_goal
+            self.side = -1 # TODO УДАЛИТЬ АААААААААААААААААААААА
         elif ally_color == 'y':
             self.allies = [*self.y_team]
             self.ally_goal = self.y_goal
             self.enemies = [*self.b_team]
             self.enemy_goal = self.b_goal
+            self.side = 1 # TODO УДАЛИИИИТЬ
 
     """
     Обновить положение мяча
