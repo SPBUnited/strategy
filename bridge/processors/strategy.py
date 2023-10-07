@@ -83,7 +83,7 @@ class Strategy:
         if self.active_team == ActiveTeam.ALL:
             self.weActive = 1
 
-        print(self.weActive)
+        # print(self.weActive)
         waypoints = [None]*const.TEAM_ROBOTS_MAX_COUNT
         for i in range(const.TEAM_ROBOTS_MAX_COUNT):
             waypoint = wp.Waypoint(field.allies[i].getPos(), field.allies[i].getAngle(), wp.WType.ENDPOINT)
