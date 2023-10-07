@@ -28,6 +28,7 @@ class Robot(entity.Entity):
         self.speedDribbler = 0
         self.kickerChargeEnable = 1
         self.beep = 0   
+        self.role = None
 
         #v! SIM
         self.Kxx = -833/20
