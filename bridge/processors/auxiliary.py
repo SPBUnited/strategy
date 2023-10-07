@@ -371,3 +371,10 @@ def in_place(st, end, epsilon):
         return True
     else:
         return False
+
+
+def search_in_list(arr, x):
+    for i in arr:
+        if i == x:
+            return True
+    return False

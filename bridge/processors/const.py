@@ -3,6 +3,7 @@ import bridge.processors.auxiliary as aux
 ##################################################
 # GAME SETTING CONSTS
 GK = 5
+PENALTY_KICKER = 2
 ENEMY_GK = 5
 IS_SIMULATOR_USED = 1
 CAMERAS_COUNT: int = 4
@@ -29,7 +30,7 @@ Ts = 0.020 # s
 # MAX_SPEED_R = 50
 # ACCELERATION = 3
 # BASE_KICKER_VOLTAGE = 7.0
-MAX_SPEED = 1500
+MAX_SPEED = 1000
 MAX_SPEED_R = 4
 ACCELERATION = 3
 BASE_KICKER_VOLTAGE = 7.0
