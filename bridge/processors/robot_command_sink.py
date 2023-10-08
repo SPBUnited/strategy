@@ -13,7 +13,6 @@ from strategy_bridge.bus import DataBus
 from strategy_bridge.utils.debugger import debugger
 from strategy_bridge.pb.messages_robocup_ssl_wrapper_pb2 import SSL_WrapperPacket
 
-from bridge.processors.singleton import Singleton
 import bridge.processors.robot as robot
 import bridge.processors.const as const
 

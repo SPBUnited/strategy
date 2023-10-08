@@ -122,6 +122,7 @@ class Robot(entity.Entity):
         target_point = route.getNextWP()
         end_point = route.getDestWP()
         
+        print(self.getPos(), target_point)
         vel0 = (self.getPos() - target_point.pos).unity()
 
         dangle = (target_point.pos - self.getPos()).arg()
