@@ -66,6 +66,42 @@ class Circle:
         self.y = y
         self.radius = radius
 
+def dist2line(p1, p2, p):
+    """
+    Рассчитать расстояние от точки p до прямой, образованной точками p1 и p2
+    """
+    return abs(vect_mult((p2 - p1).unity(), p - p1))
+
+def line_poly_intersect(p1, p2, points):
+    """
+    Определить, пересекает ли линия p1-p2 полигон points
+    """
+    vec = p2-p1
+    old_sign = sign(vect_mult(vec, points[0]-p1))
+    for p in points:
+        if old_sign != sign(vect_mult(vec, p - p1)):
+            return True
+    return False
+
+def segment_poly_intersect(p1, p2, points):
+    """
+    Определить, пересекает ли отрезок p1-p2 полигон points
+    Если да - возвращает одну из двух точек пересечения
+    Если нет - возвращает None
+    """
+    for i in range(-1, len(points)-1):
+        p = get_line_intersection(p1, p2, points[i], points[i+1], 'SS')
+        if p is not None:
+            return p
+    return None
+
+def is_point_inside_poly(p, points):
+    old_sign = sign(vect_mult(p - points[-1], points[0]-points[-1]))
+    for i in range(len(points)-1):
+        if old_sign != sign(vect_mult(p - points[i], points[i+1]-points[i])):
+            return False
+    return True
+
 
 def dist(a, b):
     return math.hypot(a.x - b.x, a.y - b.y)
@@ -231,12 +267,12 @@ def closest_point_on_line(point1, point2, point):
     return closest_point
 
 def point_on_line(robot, point, distance):
-        angle_to_point = math.atan2(point.y - robot.y, point.x - robot.x)
+    angle_to_point = math.atan2(point.y - robot.y, point.x - robot.x)
 
-        # Calculate the new point on the line at the specified distance from the robot
-        new_x = robot.x + distance * math.cos(angle_to_point)
-        new_y = robot.y + distance * math.sin(angle_to_point)
-        return Point(new_x, new_y)
+    # Calculate the new point on the line at the specified distance from the robot
+    new_x = robot.x + distance * math.cos(angle_to_point)
+    new_y = robot.y + distance * math.sin(angle_to_point)
+    return Point(new_x, new_y)
     
 def LERP(p1, p2, t):
     return p1*(1-t) + p2*t
@@ -279,7 +315,7 @@ def peresek(mainLine, obj):
 def det (a,b,c,d):
 	return a * d - b * c
 
-def intersect (m, bots):
+def line_intersect (m, bots):
 	result = []
 	for n in bots:
 		zn = det (m.A, m.B, n.A, n.B)
@@ -350,7 +386,7 @@ def shotDecision(st, end, obj):
             tmpC = -(B*bot.getPos().x - A*bot.getPos().y)
             L2 = bobLine(B, -A, tmpC)
             Lines.append(L2)
-        inter = intersect(tmpLine, Lines)
+        inter = line_intersect(tmpLine, Lines)
         # plt.plot(inter[0].x, inter[0].y, 'bx')
         # plt.plot(inter[1].x, inter[1].y, 'gx')
         tmp_prob = probability(inter, obj)
