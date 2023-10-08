@@ -112,5 +112,5 @@ class Field:
         return self.y_team
 
     def isBallInGoalSq(self):
-        return aux.sign(self.ally_goal.center.x - self.ball.pos.x) == aux.sign(self.ball.pos.x - self.ally_goal.forw.x) and \
-            aux.sign(self.ally_goal.up.y - self.ball.pos.y) == aux.sign(self.ball.pos.y - self.ally_goal.down.y)
+        return aux.sign(self.ally_goal.center.x - self.ball.getPos().x) == aux.sign(self.ball.getPos().x - self.ally_goal.forw.x) and \
+            aux.sign(self.ally_goal.up.y - self.ball.getPos().y) == aux.sign(self.ball.getPos().y - self.ally_goal.down.y)
