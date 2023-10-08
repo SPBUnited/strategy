@@ -102,6 +102,42 @@ class Circle:
         self.y = y
         self.radius = radius
 
+def dist2line(p1, p2, p):
+    """
+    Рассчитать расстояние от точки p до прямой, образованной точками p1 и p2
+    """
+    return abs(vect_mult((p2 - p1).unity(), p - p1))
+
+def line_poly_intersect(p1, p2, points):
+    """
+    Определить, пересекает ли линия p1-p2 полигон points
+    """
+    vec = p2-p1
+    old_sign = sign(vect_mult(vec, points[0]-p1))
+    for p in points:
+        if old_sign != sign(vect_mult(vec, p - p1)):
+            return True
+    return False
+
+def segment_poly_intersect(p1, p2, points):
+    """
+    Определить, пересекает ли отрезок p1-p2 полигон points
+    Если да - возвращает одну из двух точек пересечения
+    Если нет - возвращает None
+    """
+    for i in range(-1, len(points)-1):
+        p = get_line_intersection(p1, p2, points[i], points[i+1], 'SS')
+        if p is not None:
+            return p
+    return None
+
+def is_point_inside_poly(p, points):
+    old_sign = sign(vect_mult(p - points[-1], points[0]-points[-1]))
+    for i in range(len(points)-1):
+        if old_sign != sign(vect_mult(p - points[i], points[i+1]-points[i])):
+            return False
+    return True
+
 
 def dist(a, b):
     return math.hypot(a.x - b.x, a.y - b.y)
@@ -226,7 +262,7 @@ def rotate(p: Point, angle: float):
 def find_nearest_robot(robot, team, avoid = []):
     id = -1
     minDist = 10e10
-    for i in range(0, const.TEAM_ROBOTS_MAX_COUNT):
+    for i in range(0, len(team)):
         if i in avoid or not team[i].isUsed:
             continue
         if dist(robot, team[i].getPos()) < minDist:
@@ -267,12 +303,12 @@ def closest_point_on_line(point1, point2, point):
     return closest_point
 
 def point_on_line(robot, point, distance):
-        angle_to_point = math.atan2(point.y - robot.y, point.x - robot.x)
+    angle_to_point = math.atan2(point.y - robot.y, point.x - robot.x)
 
-        # Calculate the new point on the line at the specified distance from the robot
-        new_x = robot.x + distance * math.cos(angle_to_point)
-        new_y = robot.y + distance * math.sin(angle_to_point)
-        return Point(new_x, new_y)
+    # Calculate the new point on the line at the specified distance from the robot
+    new_x = robot.x + distance * math.cos(angle_to_point)
+    new_y = robot.y + distance * math.sin(angle_to_point)
+    return Point(new_x, new_y)
     
 def LERP(p1, p2, t):
     return p1*(1-t) + p2*t
@@ -315,7 +351,7 @@ def peresek(mainLine, obj):
 def det (a,b,c,d):
 	return a * d - b * c
 
-def intersect (m, bots):
+def line_intersect (m, bots):
 	result = []
 	for n in bots:
 		zn = det (m.A, m.B, n.A, n.B)
@@ -327,20 +363,23 @@ def intersect (m, bots):
 		result.append(res)
 	return result
 
-def probability(inter, bots):
+def probability(inter, bots, st):
     res = 1
     # print(len(inter), end = ' ')
     for i in range(len(inter)):
         koef = 1
         # print([inter[i].x, inter[i].y, bots[i].getPos().x, bots[i].getPos().y])
-        tmpRes = ((inter[i].x - bots[i].getPos().x)**2 + (inter[i].y - bots[i].getPos().y)**2) ** (0.5) - const.ROBOT_R * 100 * 2
+        tmpResX = dist(inter[i], bots[i].getPos())
+        tmpResY = math.sqrt(dist(st, bots[i].getPos()) ** 2 - tmpResX ** 2)
+        ang = math.atan2(tmpResY, tmpResX)
+        # abs(ang) < math.pi / 4
         # print(tmpRes)
-        if tmpRes < 0: 
+        if tmpResX < 0: 
             koef = 0
-        elif tmpRes > const.ROBOT_R * 100 * 15:
-            koef = 1
+        elif tmpResX > const.ROBOT_R * 100 * 15:
+            koef = 1 
         else:
-            koef = tmpRes / (const.ROBOT_R * 100 * 15)
+            koef = tmpResX / (const.ROBOT_R * 100 * 15)
         res *= koef
     return res
 
@@ -366,12 +405,14 @@ def botPosition(st, vecx, vecy):
     vecy = (vecy / modul) * const.ROBOT_R * 1000 * 2
     return Point(st.x - vecx, st.y - vecy)
 
-def shotDecision(st, end, obj):
-    for iter in range(obj):
-        if not obj[iter].used():
-            obj.pop(iter)
-            iter -= 1
-    mx_shot_prob = 0
+def shotDecision(st, end, tobj):
+    obj = tobj.copy()
+    tmpCounter = 0
+    for iter in range(len(obj)):
+        if not obj[iter - tmpCounter].is_used():
+            obj.pop(iter - tmpCounter)
+            tmpCounter += 1
+    # mx_shot_prob = 0
     shot_point = st
     mx = 0
     # print(st)
@@ -390,10 +431,10 @@ def shotDecision(st, end, obj):
             tmpC = -(B*bot.getPos().x - A*bot.getPos().y)
             L2 = bobLine(B, -A, tmpC)
             Lines.append(L2)
-        inter = intersect(tmpLine, Lines)
+        inter = line_intersect(tmpLine, Lines)
         # plt.plot(inter[0].x, inter[0].y, 'bx')
         # plt.plot(inter[1].x, inter[1].y, 'gx')
-        tmp_prob = probability(inter, obj)
+        tmp_prob = probability(inter, obj, st)
         # print(tmp_prob, end = " ")
         if tmp_prob > mx:
             mx = tmp_prob
@@ -404,7 +445,7 @@ def shotDecision(st, end, obj):
     # plt.axis('equal')
     # plt.grid(True)
     # plt.show()
-    return shot_point, mx_shot_prob
+    return shot_point, mx
     
 def in_place(st, end, epsilon):
     if ((st - end).mag() < epsilon):

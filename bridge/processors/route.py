@@ -66,7 +66,7 @@ class Route:
     def __str__(self):
         strin = "ROUTE: "
         for wp in self.__getRoute():
-            strin += " -> " + str(wp)
+            strin += " ->\n" + str(wp)
         # for wp in [*self.robot, *self.__routewp, *self.__destination]:
         #     strin += " -> " + str(wp)
         return strin

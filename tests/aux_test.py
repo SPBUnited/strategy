@@ -23,11 +23,11 @@ import bridge.processors.drawer as drw
 class Testing(unittest.TestCase):
     def test_line_intersect(self):
         p1 = aux.Point(0, 0)
-        v1 = aux.Point(3, 1)
+        v1 = aux.Point(3, 0)
         p2 = aux.Point(2, -1)
-        v2 = aux.Point(-1, 2)/3
+        v2 = aux.Point(-1, 2)
 
-        pi1 = aux.Point(2, 0)
+        pi1 = aux.Point(1.5, 0)
         po1 = aux.get_line_intersection(p1, p1+v1, p2, p2+v2, 'LL')
 
         fig, ax = plt.subplots()  # Create a figure containing a single axes.
@@ -41,6 +41,41 @@ class Testing(unittest.TestCase):
         # print(po1)
         self.assertEqual(pi1.x, po1.x)
         self.assertEqual(pi1.y, po1.y)
+
+    def test_poly_line_intersect(self):
+        p1 = aux.Point(-100, 0)
+        p2 = aux.Point(100, 0)
+        points = [aux.Point(-50, -50), aux.Point(-50, 50), aux.Point(50, 50), aux.Point(50, -50)]
+
+        print(aux.line_poly_intersect(p1, p2, points))
+
+    def test_poly_line_intersect(self):
+        p = aux.Point(0, 0)
+        points = [aux.Point(-50, -50), aux.Point(-50, 50), aux.Point(50, 50), aux.Point(50, -50)]
+
+        self.assertTrue(aux.is_point_inside_poly(p, points))
+
+        p = aux.Point(-100, 0)
+        self.assertFalse(aux.is_point_inside_poly(p, points))
+
+        p = aux.Point(4000.00, -500.00)
+
+        points = [
+            aux.Point(4500.00, 1200.00),
+            aux.Point(3300.00, 1200.00),
+            aux.Point(3300.00, -1200.00),
+            aux.Point(4500.00, -1200.00),
+            aux.Point(10000.00, -0.00)
+        ]
+
+        fig, ax = plt.subplots()  # Create a figure containing a single axes.
+        for i in range(-1, len(points)-1):
+            ax.plot([points[i].x, points[i+1].x], [points[i].y, points[i+1].y])  # Plot some data on the axes.
+        ax.plot(p.x, p.y, 'x')
+        plt.show()
+
+        self.assertTrue(aux.is_point_inside_poly(p, points))
+
 
 
 if __name__ == '__main__':

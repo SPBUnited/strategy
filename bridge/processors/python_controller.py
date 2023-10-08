@@ -136,7 +136,7 @@ class MatlabController(BaseProcessor):
                 if time.time() - self.field.b_team[robot.robot_id].last_update() > 0.3:
                     self.field.b_team[robot.robot_id].used(0)
                 else:
-                    self.field.b_team[robot.robot_id].used(1)
+                    self.field.b_team[robot.robot_id].used(1) 
                 self.field.updateBluRobot(robot.robot_id, auxiliary.Point(robot.x, robot.y), robot.orientation, time.time())
 
             for robot in detection.robots_yellow:
@@ -153,7 +153,7 @@ class MatlabController(BaseProcessor):
         """
         self.router.update(self.field)
         waypoints = self.strategy.process(self.field)
-        for i in range(6):
+        for i in range(0, 6):
             self.router.getRoute(i).clear()
             self.router.setDest(i, waypoints[i])
         self.router.reRoute(self.field)

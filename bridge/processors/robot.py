@@ -107,6 +107,17 @@ class Robot(entity.Entity):
         return (self.pos - target.pos).mag() < const.KICK_ALIGN_DIST*const.KICK_ALIGN_DIST_MULT and \
             abs(aux.wind_down_angle(self.angle - target.angle)) < const.KICK_ALIGN_ANGLE and \
             abs(aux.wind_down_angle((target.pos - self.pos).arg() - target.angle)) < const.KICK_ALIGN_OFFSET
+    
+    def is_ball_in(self, field: field.Field): #kostil for robot.I
+        angle_to_goal=math.atan2(0 - self.getPos().y, const.GOAL_DX - self.getPos().x)
+        angle_to_ball=math.atan2(field.ball.getPos().y - self.getPos().y, field.ball.getPos().x - self.getPos().x) - angle_to_goal
+        if angle_to_ball > math.pi: angle_to_ball-=2*math.pi
+        if angle_to_ball < -math.pi: angle_to_ball+=2*math.pi
+        #print(angle_to_ball)
+        angle_ball_to_goal=math.atan2(0 - field.ball.getPos().y, const.GOAL_DX - field.ball.getPos().x)
+        delta = (self.getPos().x-field.ball.getPos().x)*math.sin(angle_ball_to_goal) - (self.getPos().y-field.ball.getPos().y)*math.cos(angle_ball_to_goal)
+        #print("delta:   ", delta)
+        return abs(delta) < 50 and abs(angle_to_ball) < math.pi/4  #make the global const
 
     def go_route(self, route, field: field.Field):
         cur_speed = self.vel.mag()
@@ -138,19 +149,32 @@ class Robot(entity.Entity):
         k_a = 0.04
         gain_a = 1
 
-        if end_point.type == wp.WType.S_BALL_KICK:
+        if end_point.type == wp.WType.S_BALL_KICK or \
+            end_point.type == wp.WType.S_BALL_GRAB or \
+            end_point.type == wp.WType.S_BALL_GO:
 
             # print("IS KICK ALIGNED: ", self.is_kick_aligned(end_point))
 
             k = 0.6
             gain = 2
-            gain_a = 1
+            gain_a = 2
             angle0 = aux.LERP(lerp_angles[0], lerp_angles[1], aux.minmax((dist-400)/1000, 0, 1))
-        if end_point.type == wp.WType.S_BALL_KICK and self.is_kick_aligned(end_point):
+
+            if end_point.type == wp.WType.S_BALL_GO:
+                angle0 = end_point.angle
+
+        if end_point.type == wp.WType.S_BALL_KICK or end_point.type == wp.WType.S_BALL_GRAB and \
+            self.is_kick_aligned(end_point):
             vel0 = (self.pos - end_point.pos).unity()
             angle0 = end_point.angle
             dist = 400
-            self.autoKick = 1
+
+            self.dribblerEnable = True
+            self.speedDribbler = 5
+            if end_point.type == wp.WType.S_BALL_KICK:
+                self.autoKick = 1
+            else:
+                self.autoKick = 0
         else:
             self.autoKick = 0
 
