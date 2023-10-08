@@ -223,6 +223,17 @@ def rotate(p: Point, angle: float):
     return Point(p.x * math.cos(angle) - p.y * math.sin(angle),
                  p.y * math.cos(angle) + p.x * math.sin(angle))
 
+def find_nearest_point(p, points, exclude = []):
+    pc = None
+    minDist = 10e10
+    for i in range(0, len(points)):
+        if points[i] in exclude:
+            continue
+        if dist(p, points[i]) < minDist:
+            minDist = dist(p, points[i])
+            pc = points[i]
+    return pc
+
 def find_nearest_robot(robot, team, avoid = []):
     id = -1
     minDist = 10e10
