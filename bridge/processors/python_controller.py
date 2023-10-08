@@ -136,6 +136,7 @@ class MatlabController(BaseProcessor):
                     self.field.b_team[robot.robot_id].used(0)
                 else:
                     self.field.b_team[robot.robot_id].used(1)
+                robot   
                 self.field.updateBluRobot(robot.robot_id, auxiliary.Point(robot.x, robot.y), robot.orientation, time.time())
 
             for robot in detection.robots_yellow:
