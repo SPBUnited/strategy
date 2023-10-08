@@ -262,7 +262,7 @@ def rotate(p: Point, angle: float):
 def find_nearest_robot(robot, team, avoid = []):
     id = -1
     minDist = 10e10
-    for i in range(0, const.TEAM_ROBOTS_MAX_COUNT):
+    for i in range(0, len(team)):
         if i in avoid or not team[i].isUsed:
             continue
         if dist(robot, team[i].getPos()) < minDist:
@@ -363,20 +363,23 @@ def line_intersect (m, bots):
 		result.append(res)
 	return result
 
-def probability(inter, bots):
+def probability(inter, bots, st):
     res = 1
     # print(len(inter), end = ' ')
     for i in range(len(inter)):
         koef = 1
         # print([inter[i].x, inter[i].y, bots[i].getPos().x, bots[i].getPos().y])
-        tmpRes = ((inter[i].x - bots[i].getPos().x)**2 + (inter[i].y - bots[i].getPos().y)**2) ** (0.5) - const.ROBOT_R * 100 * 2
+        tmpResX = dist(inter[i], bots[i].getPos())
+        tmpResY = math.sqrt(dist(st, bots[i].getPos()) ** 2 - tmpResX ** 2)
+        ang = math.atan2(tmpResY, tmpResX)
+        # abs(ang) < math.pi / 4
         # print(tmpRes)
-        if tmpRes < 0: 
+        if tmpResX < 0: 
             koef = 0
-        elif tmpRes > const.ROBOT_R * 100 * 15:
-            koef = 1
+        elif tmpResX > const.ROBOT_R * 100 * 15:
+            koef = 1 
         else:
-            koef = tmpRes / (const.ROBOT_R * 100 * 15)
+            koef = tmpResX / (const.ROBOT_R * 100 * 15)
         res *= koef
     return res
 
@@ -402,12 +405,14 @@ def botPosition(st, vecx, vecy):
     vecy = (vecy / modul) * const.ROBOT_R * 1000 * 2
     return Point(st.x - vecx, st.y - vecy)
 
-def shotDecision(st, end, obj):
-    for iter in range(obj):
-        if not obj[iter].used():
-            obj.pop(iter)
-            iter -= 1
-    mx_shot_prob = 0
+def shotDecision(st, end, tobj):
+    obj = tobj.copy()
+    tmpCounter = 0
+    for iter in range(len(obj)):
+        if not obj[iter - tmpCounter].is_used():
+            obj.pop(iter - tmpCounter)
+            tmpCounter += 1
+    # mx_shot_prob = 0
     shot_point = st
     mx = 0
     # print(st)
@@ -429,7 +434,7 @@ def shotDecision(st, end, obj):
         inter = line_intersect(tmpLine, Lines)
         # plt.plot(inter[0].x, inter[0].y, 'bx')
         # plt.plot(inter[1].x, inter[1].y, 'gx')
-        tmp_prob = probability(inter, obj)
+        tmp_prob = probability(inter, obj, st)
         # print(tmp_prob, end = " ")
         if tmp_prob > mx:
             mx = tmp_prob
@@ -440,7 +445,7 @@ def shotDecision(st, end, obj):
     # plt.axis('equal')
     # plt.grid(True)
     # plt.show()
-    return shot_point, mx_shot_prob
+    return shot_point, mx
     
 def in_place(st, end, epsilon):
     if ((st - end).mag() < epsilon):
