@@ -107,6 +107,17 @@ class Robot(entity.Entity):
         return (self.pos - target.pos).mag() < const.KICK_ALIGN_DIST*const.KICK_ALIGN_DIST_MULT and \
             abs(aux.wind_down_angle(self.angle - target.angle)) < const.KICK_ALIGN_ANGLE and \
             abs(aux.wind_down_angle((target.pos - self.pos).arg() - target.angle)) < const.KICK_ALIGN_OFFSET
+    
+    def is_ball_in(self, field: field.Field): #kostil for robot.I
+        angle_to_goal=math.atan2(0 - self.getPos().y, const.GOAL_DX - self.getPos().x)
+        angle_to_ball=math.atan2(field.ball.getPos().y - self.getPos().y, field.ball.getPos().x - self.getPos().x) - angle_to_goal
+        if angle_to_ball > math.pi: angle_to_ball-=2*math.pi
+        if angle_to_ball < -math.pi: angle_to_ball+=2*math.pi
+        #print(angle_to_ball)
+        angle_ball_to_goal=math.atan2(0 - field.ball.getPos().y, const.GOAL_DX - field.ball.getPos().x)
+        delta = (self.getPos().x-field.ball.getPos().x)*math.sin(angle_ball_to_goal) - (self.getPos().y-field.ball.getPos().y)*math.cos(angle_ball_to_goal)
+        #print("delta:   ", delta)
+        return abs(delta) < 20 and abs(angle_to_ball)<math.pi/8  #make the global const
 
     def go_route(self, route, field: field.Field):
         cur_speed = self.vel.mag()
