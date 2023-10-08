@@ -152,7 +152,7 @@ class MatlabController(BaseProcessor):
         """
         self.router.update(self.field)
         waypoints = self.strategy.process(self.field)
-        for i in range(6):
+        for i in range(0, 6):
             self.router.getRoute(i).clear()
             self.router.setDest(i, waypoints[i])
         self.router.reRoute(self.field)
@@ -183,7 +183,7 @@ class MatlabController(BaseProcessor):
         self.dt = time.time() - self.cur_time
         self.cur_time = time.time()
 
-        # print(self.dt)
+        print(self.dt)
         # print(self.our_color)
 
         self.read_vision()

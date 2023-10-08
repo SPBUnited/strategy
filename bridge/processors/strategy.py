@@ -133,7 +133,7 @@ class Strategy:
         return waypoints
 
 
-    square = signal.Signal(8, 'SQUARE', lohi=(-1000, 1000))
+    square = signal.Signal(8, 'SQUARE', lohi=(-1000, 4000))
     square_ang = signal.Signal(8, 'SQUARE', lohi=(0, 3.14))
     def run(self, field: field.Field, waypoints):
         if field.ball.vel.mag() < 100:
@@ -167,7 +167,7 @@ class Strategy:
             self.steal_flag = 0
 
         robot_with_ball = aux.find_nearest_robot(field.ball.getPos(), field.enemies)
-        self.gk_go(field, waypoints, [const.GK], robot_with_ball)
+        self.gk_go(field, waypoints, [const.GK, 2], robot_with_ball)
 
     def debug(self, field: field.Field, waypoints):
         for i in range(0, 6):
@@ -183,14 +183,15 @@ class Strategy:
             waypoint = wp.Waypoint(pos, angle, wp.WType.S_ENDPOINT)
             waypoints[i] = waypoint
         
-        waypoints[1].pos = field.ally_goal.eye_forw*1000 + field.ally_goal.eye_up * (self.square.get() - 1000)
+        waypoints[1].pos = field.ally_goal.eye_forw*4000 + field.ally_goal.eye_up * (self.square.get() - 2000)
 
+        egf = field.enemy_goal.forwdown + field.enemy_goal.eye_forw*300
         if not field.allies[2].is_ball_in(field):
             waypoints[2] = wp.Waypoint(field.ball.getPos(), (field.enemy_goal.center - field.ball.getPos()).arg(), wp.WType.S_BALL_GRAB)
-        elif (field.enemy_goal.forw - field.allies[2].pos).mag() > 300:
-            waypoints[2] = wp.Waypoint(field.enemy_goal.forw, math.pi/3, wp.WType.S_BALL_GO)
+        elif (egf - field.allies[2].pos).mag() > 300:
+            waypoints[2] = wp.Waypoint(egf, math.pi/3, wp.WType.S_BALL_GO)
         else:
-            waypoints[2] = wp.Waypoint(field.enemy_goal.forw, math.pi/3, wp.WType.S_BALL_KICK)
+            waypoints[2] = wp.Waypoint(egf, math.pi/3, wp.WType.S_BALL_KICK)
 
         return waypoints
 
@@ -230,6 +231,19 @@ class Strategy:
         # print(field.isBallInGoalSq())
         if field.isBallInGoalSq() and field.ball.vel.mag() < 200:
             waypoints[gk_wall_idx_list[0]] = wp.Waypoint(field.ball.pos, field.ally_goal.eye_forw.arg(), wp.WType.S_BALL_KICK)
+
+        # wallline = [field.ally_goal.forw + field.ally_goal.eye_forw * const.GOAL_WALLLINE_OFFSET]
+        # wallline.append(wallline[0] + field.ally_goal.eye_up)
+
+        walline = aux.point_on_line(field.ally_goal.center, field.ball.getPos(), const.GOAL_WALLLINE_OFFSET)
+        walldir = aux.rotate((field.ally_goal.center - field.ball.getPos()).unity(), math.pi/2)
+        dirsign = -aux.sign(aux.vect_mult(field.ally_goal.center, field.ball.getPos()))
+
+        wall = []
+        for i in range(len(gk_wall_idx_list)-1):
+            wall.append(walline - walldir * (i + 1) * dirsign * (1 + (i % 2)*-2) * const.GOAL_WALL_ROBOT_SEPARATION)
+            waypoints[gk_wall_idx_list[i + 1]] = wp.Waypoint(wall[i], walldir.arg(), wp.WType.S_ENDPOINT)
+            print(waypoints[gk_wall_idx_list[i + 1]])
 
     def defence(self, field: field.Field, waypoints):
         dist_between = 200
