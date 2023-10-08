@@ -45,7 +45,7 @@ class Router:
             if i == const.GK:
                 continue
 
-            self_pos = field.allies[i].pos
+            self_pos = field.allies[i].getPos()
             for goal in [field.ally_goal, field.enemy_goal]:
                 pint = aux.segment_poly_intersect(self_pos, self_pos + self.routes[i].getNextVec(), goal.hull)
                 if pint is not None:
