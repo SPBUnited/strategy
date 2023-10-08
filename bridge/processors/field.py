@@ -32,6 +32,7 @@ class Goal:
         # Оболочка штрафной зоны
         self.hull = [self.up + self.eye_up * const.GOAL_BOUND_OFFSET,
                      self.forwup + (self.eye_forw + self.eye_up) * const.GOAL_BOUND_OFFSET,
+                     self.forw + (self.eye_forw) * const.GOAL_BOUND_OFFSET,
                      self.forwdown + (self.eye_forw - self.eye_up) * const.GOAL_BOUND_OFFSET,
                      self.down - self.eye_up * const.GOAL_BOUND_OFFSET,
                      const.GRAVEYARD_POS*self.eye_forw.x]
