@@ -101,7 +101,7 @@ class Router:
         ball_sep_dist = 150
 
         if self.routes[idx].getDestWP().type == wp.WType.S_KEEP_BALL_DISTANCE:
-            ball_sep_dist = 700
+            ball_sep_dist = const.KEEP_BALL_DIST
 
         closest_robot = None
         closest_dist = dist
