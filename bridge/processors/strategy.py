@@ -122,7 +122,11 @@ class Strategy:
             elif self.game_status == GameStates.KICKOFF:
                 self.kickoff(field, waypoints) #Not made. Make kikoff. Probably pass to right/left robot.
             elif self.game_status == GameStates.FREE_KICK:
-                self.keep_distance(field, waypoints) #Not made.
+                if self.we_kick:
+                    self.defence(field, waypoints)
+                    self.keep_distance(field, waypoints) 
+                else:
+                    self.attack(field, waypoints) 
             elif self.game_status == GameStates.STOP:
                 self.keep_distance(field, waypoints) #Not made. Add smt before keep_distance
 
