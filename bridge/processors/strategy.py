@@ -41,9 +41,9 @@ class ActiveTeam(Enum):
 
 class Strategy:
     def __init__(self, dbg_game_status = GameStates.RUN, dbg_state = States.DEBUG) -> None:
-        self.game_status = dbg_game_status
+        self.game_status = GameStates.RUN
         self.active_team = 0
-        self.state = dbg_state
+        self.state = States.ATTACK
         self.weActive = 1
         self.timer = 0
 
@@ -153,7 +153,7 @@ class Strategy:
         elif self.state == States.ATTACK:
             self.decide_popusk_position(field)
                 # if not self.calc:
-                #     self.preAttack(field)
+            self.preAttack(field)
                 #     if len(self.popusk) != 0:
                 #         self.calc = True
             self.attack(field, waypoints)
@@ -368,27 +368,42 @@ class Strategy:
                         used_pop_pos[robot.role] = False
                         field.allies[robot.rId].role = None
                         self.popusk.pop(self.popusk.index(robot.rId))
+                    # print([robot.rId, field.allies[robot.rId].role])
             if save_robot != -1:
                 field.allies[save_robot].role = pointIndex
                 self.popusk.append(save_robot)
                 used_pop_pos[pointIndex] = True
                 
+        # print(used_pop_pos)
+        # print(self.popusk)
+
     def preAttack(self, field: field.Field):
-            used_pop_pos = [False, False, False, False, False]
-            self.popusk = []
+            # used_pop_pos = [False, False, False, False, False]
+            # self.popusk = []
+        if self.robot_with_ball == None and field.ball.vel.mag() < 10:
             mn = 1e10
             for robot in field.allies:
-                ball_dist = aux.dist(field.ball.pos, robot.getPos())
-                if mn > ball_dist:
-                    mn = ball_dist
-                    self.robot_with_ball = robot.rId
-            mn = 1e10
-            for pointIndex in range(len(popusk_positions)):
-                pop_pos_dist = aux.dist(field.allies[self.robot_with_ball].getPos(), popusk_positions[pointIndex])
-                if mn > pop_pos_dist:
-                    mn = pop_pos_dist
-                    field.allies[self.robot_with_ball].role = pointIndex
-            used_pop_pos[field.allies[self.robot_with_ball].role] = True
+                if robot.is_used():
+                    print(robot.rId)
+                    ball_dist = aux.dist(field.ball.pos, robot.getPos())
+                    if mn > ball_dist:
+                        mn = ball_dist
+                        self.robot_with_ball = robot.rId
+            if aux.search_in_list(self.popusk, self.robot_with_ball):
+                self.popusk.pop(self.popusk.index(self.robot_with_ball))
+            # mn = 1e10
+            # for pointIndex in range(len(popusk_positions)):
+            #     pop_pos_dist = aux.dist(field.allies[self.robot_with_ball].getPos(), popusk_positions[pointIndex])
+            #     if mn > pop_pos_dist:
+            #         mn = pop_pos_dist
+            #         field.allies[self.robot_with_ball].role = pointIndex
+            # used_pop_pos[field.allies[self.robot_with_ball].role] = True
+            # print(len(field.allies))
+            # print(used_pop_pos)
+            
+                    
+        
+            # print(self.popusk)
             
             # for role in AttackRoles:
             #     point = AttackPoints[role]
@@ -431,33 +446,34 @@ class Strategy:
                     self.attack_state = "SHOOT"
             elif self.attack_state == "SHOOT":
                 self.attack_pos = field.ball.pos
-                field.allies[self.robot_with_ball].kickerChargeEnable = 1
-                field.allies[self.robot_with_ball].kickerVoltage = 15
-                field.allies[self.robot_with_ball].kick_up()
+                # field.allies[self.robot_with_ball].kickerChargeEnable = 1
+                # field.allies[self.robot_with_ball].kickerVoltage = 15
+                # field.allies[self.robot_with_ball].kick_up()
                 if not(aux.in_place(self.attack_pos, field.allies[self.robot_with_ball].getPos(), 500)):
                     # for index in range(len(used_pop_pos)):
                         # if used_pop_pos[index] == False:
                         #     waypoints[self.robot_with_ball] = wp.Waypoint(popusk_positions[index], 0, wp.WType.S_ENDPOINT)
+                        #     waypoints[self.robot_with_ball] = wp.Waypoint(popusk_positions[index], 0, wp.WType.S_ENDPOINT)
                             # used_pop_pos[index] = True
                     self.popusk.append(self.robot_with_ball)
+                    self.attack_state = "TO_BALL"
                     # field.allies[self.robot_with_ball].role = index
                     self.robot_with_ball = None
                             # break
 
                 #ехать к нужной точке
-            if self.robot_with_ball:
+            if self.robot_with_ball != None:
                 if self.attack_state == "SHOOT":
-                    waypoints[self.robot_with_ball] = wp.Waypoint(self.attack_pos, aux.angle_to_point(field.allies[self.robot_with_ball].getPos(), field.ball.getPos()), wp.WType.IGNOREOBSTACLES)
+                    waypoints[self.robot_with_ball] = wp.Waypoint(self.attack_pos, aux.angle_to_point(field.allies[self.robot_with_ball].getPos(), field.ball.getPos()), wp.WType.S_BALL_KICK)
                 else:
                     waypoints[self.robot_with_ball] = wp.Waypoint(self.attack_pos, aux.angle_to_point(field.allies[self.robot_with_ball].getPos(), field.ball.getPos()), wp.WType.S_ENDPOINT)
-
+                # print(self.attack_state)
         # # if connector != None:
         # #     ball_line = aux.getBallLine()
         # #     pos = aux.find_nearest_point_on_the_line(ball_line, connector.pos)
         # #     if not aux.in_place(pos, connector.pos, 10):
 
         # #     else:
-                
             
         # #     connector =
         for robot in self.popusk:
