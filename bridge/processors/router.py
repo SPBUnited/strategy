@@ -9,6 +9,7 @@ import bridge.processors.waypoint as wp
 import bridge.processors.field as field
 import bridge.processors.auxiliary as aux
 import bridge.processors.route as route
+import bridge.processors.quickhull as qh
 
 import math
 
@@ -40,10 +41,34 @@ class Router:
                 if not field.allies[i].is_kick_aligned(self.routes[i].getDestWP()):
                     align_wp = self.calcKickWP(i, field)
                     self.routes[i].insertWP(align_wp)
+
+            if i == const.GK:
+                continue
+
+            self_pos = field.allies[i].pos
+            for goal in [field.ally_goal, field.enemy_goal]:
+                pint = aux.segment_poly_intersect(self_pos, self_pos + self.routes[i].getNextVec(), goal.hull)
+                if pint is not None:
+                    if aux.is_point_inside_poly(self.routes[i].getDestWP().pos, goal.hull):
+                        self.routes[i].setDestWP(wp.Waypoint(pint, field.ally_goal.eye_forw.arg(), wp.WType.S_ENDPOINT))
+                        break
+                    convex_hull = qh.shortesthull(self_pos, self_pos + self.routes[i].getNextVec(), goal.hull)
+                    for j in range(len(convex_hull) - 2, 0, -1):
+                        self.routes[i].insertWP(wp.Waypoint(
+                            convex_hull[j],
+                            0,
+                            wp.WType.R_PASSTHROUGH
+                        ))
             
             pth_wp = self.calcVectorField(i, field)
             if pth_wp is not None:
-                self.routes[i].insertWP(pth_wp)
+                is_inside = False
+                for goal in [field.ally_goal, field.enemy_goal]:
+                    if aux.is_point_inside_poly(pth_wp.pos, goal.hull):
+                        is_inside = True
+                        break
+                if not is_inside:
+                    self.routes[i].insertWP(pth_wp)
             
     # def calcPenDetour(self, idx, field: field.Field):
     #     self_pos = field.allies[idx].getPos()
