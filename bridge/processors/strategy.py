@@ -380,7 +380,7 @@ class Strategy:
     def preAttack(self, field: field.Field):
             # used_pop_pos = [False, False, False, False, False]
             # self.popusk = []
-        if self.robot_with_ball == None and field.ball.vel.mag() < 10:
+        if self.robot_with_ball == None and field.ball.vel.mag() < 800:
             mn = 1e10
             for robot in field.allies:
                 if robot.is_used():
@@ -416,7 +416,7 @@ class Strategy:
             waypoint = wp.Waypoint(field.allies[i].getPos(), field.allies[i].getAngle(), wp.WType.S_ENDPOINT)
             waypoints[i] = waypoint
 
-        goal_points = [aux.Point(field.enemy_goal.center.x, i) for i in range(-500, 501)]
+        goal_points = [aux.Point(field.enemy_goal.center.x, i) for i in range(-400, 401)]
         bro_points = [field.allies[i].getPos() for i in range(len(field.allies))]
         # print(bro_points)
         if self.robot_with_ball != None:
@@ -428,6 +428,16 @@ class Strategy:
                 shot_pos, shot_prob = aux.shotDecision(field.ball.pos, goal_points, field.enemies[:2])
                 # shot_pos = aux.Point(field.ball.getPos().x - 1000 * const.ROBOT_R, field.ball.getPos().y)
                 # if shot_prob > const.KOEFF_NAGLO:
+                #     used_bots = []
+                #     for bot in field.allies:
+                #         if bot.used():
+                #             used_bots.append(bot)
+
+                #     attack_graph = aux.Graph(len(used_bots))
+                #     for bot in used_bots:
+                #         attack_graph.add_edge(self.robot_with_ball, bot.rId, aux.dist(field.allies[self.robot_with_ball].getPos(), field.allies[bot.rId].getPos()))
+                #         bot_pass_pos, bot_pass_prob = aux.shotDecision(bot.getPos(), goal_points, field.enemies[:2])
+                #         attack_graph.add_edge(bot.rId, const.GOAL_ID, bot_pass_prob)
                 # print(shot_pos)
                 self.attack_pos = shot_pos
                 # print(shot_pos)
@@ -468,14 +478,15 @@ class Strategy:
                 else:
                     waypoints[self.robot_with_ball] = wp.Waypoint(self.attack_pos, aux.angle_to_point(field.allies[self.robot_with_ball].getPos(), field.ball.getPos()), wp.WType.S_ENDPOINT)
                 # print(self.attack_state)
-        # # if connector != None:
-        # #     ball_line = aux.getBallLine()
-        # #     pos = aux.find_nearest_point_on_the_line(ball_line, connector.pos)
-        # #     if not aux.in_place(pos, connector.pos, 10):
+        if self.connector != None:
+            ball_line = aux.getBallLine()
+            connect_pos = aux.find_nearest_point_on_the_line(ball_line, self.connector.pos)
+            # if not aux.in_place(pos, connector.pos, 10):
 
-        # #     else:
+            # else:
             
-        # #     connector =
+            # connector =
+            waypoints[robot] = wp.Waypoint(connect_pos, field.ball.getPos().arg(), wp.WType.S_BALL_GRAB)
         for robot in self.popusk:
             pop_pos = field.allies[robot].role
             waypoints[robot] = wp.Waypoint(popusk_positions[pop_pos], 0, wp.WType.S_ENDPOINT)

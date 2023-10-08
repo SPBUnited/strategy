@@ -1,6 +1,42 @@
 import math
 import bridge.processors.const as const
 
+class Graph:
+    def __init__(self, num_vertices):
+        self.num_vertices = num_vertices
+        self.graph = [[0] * num_vertices for _ in range(num_vertices)]
+
+    def add_edge(self, from_vertex, to_vertex, weight):
+        self.graph[from_vertex][to_vertex] = weight
+        self.graph[to_vertex][from_vertex] = weight
+
+    def dijkstra(self, start_vertex):
+        distances = [float('inf')] * self.num_vertices
+        distances[start_vertex] = 0
+        visited = [False] * self.num_vertices
+
+        for _ in range(self.num_vertices):
+            min_distance = float('inf')
+            min_vertex = -1
+
+            for v in range(self.num_vertices):
+                if not visited[v] and distances[v] < min_distance:
+                    min_distance = distances[v]
+                    min_vertex = v
+
+            visited[min_vertex] = True
+
+            for v in range(self.num_vertices):
+                if (
+                    not visited[v] 
+                    and self.graph[min_vertex][v] 
+                    and distances[min_vertex] != float('inf')
+                    and distances[min_vertex] + self.graph[min_vertex][v] < distances[v]
+                ):
+                    distances[v] = distances[min_vertex] + self.graph[min_vertex][v]
+
+        return distances
+
 class bobLine:
     def __init__(self, A, B, C):
         self.A = A
@@ -367,6 +403,10 @@ def botPosition(st, vecx, vecy):
     return Point(st.x - vecx, st.y - vecy)
 
 def shotDecision(st, end, obj):
+    for iter in range(obj):
+        if not obj[iter].used():
+            obj.pop(iter)
+            iter -= 1
     mx_shot_prob = 0
     shot_point = st
     mx = 0
