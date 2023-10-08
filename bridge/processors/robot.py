@@ -117,7 +117,7 @@ class Robot(entity.Entity):
         angle_ball_to_goal=math.atan2(0 - field.ball.getPos().y, const.GOAL_DX - field.ball.getPos().x)
         delta = (self.getPos().x-field.ball.getPos().x)*math.sin(angle_ball_to_goal) - (self.getPos().y-field.ball.getPos().y)*math.cos(angle_ball_to_goal)
         #print("delta:   ", delta)
-        return abs(delta) < 20 and abs(angle_to_ball)<math.pi/8  #make the global const
+        return abs(delta) < 50 and abs(angle_to_ball) < math.pi/4  #make the global const
 
     def go_route(self, route, field: field.Field):
         cur_speed = self.vel.mag()
