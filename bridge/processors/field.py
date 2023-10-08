@@ -38,13 +38,16 @@ class Goal:
 
 class Field:
     """
-    Конструктор
-    Инициализирует все нулями
-    
-    TODO Сделать инициализацию реальными параметрами для корректного
-    определения скоростей и ускорений в первые секунды
+    Класс, хранящий информацию о всех объектах на поле и ключевых точках
     """
     def __init__(self, ctrl_mapping, ally_color = 'b') -> None:
+        """
+        Конструктор
+        Инициализирует все нулями
+        
+        TODO Сделать инициализацию реальными параметрами для корректного
+        определения скоростей и ускорений в первые секунды
+        """
         self.ally_color = ally_color
         self.ball = entity.Entity(const.GRAVEYARD_POS, 0, const.BALL_R)
         self.b_team = [ robot.Robot(const.GRAVEYARD_POS, 0, const.ROBOT_R, 'b', i, ctrl_mapping[i]) for i in range(const.TEAM_ROBOTS_MAX_COUNT)]
@@ -66,51 +69,54 @@ class Field:
             self.enemy_goal = self.b_goal
             self.side = 1 # TODO УДАЛИИИИТЬ
 
-    """
-    Обновить положение мяча
-    !!! Вызывать один раз за итерацию с постоянной частотой !!!
-    """
     def updateBall(self, pos):
+        """
+        Обновить положение мяча
+        !!! Вызывать один раз за итерацию с постоянной частотой !!!
+        """
         self.ball.update(pos, 0)
 
-    """
-    Обновить положение робота синей команды
-    !!! Вызывать один раз за итерацию с постоянной частотой !!!
-    """
     def updateBluRobot(self, idx, pos, angle, t):
+        """
+        Обновить положение робота синей команды
+        !!! Вызывать один раз за итерацию с постоянной частотой !!!
+        """
         self.b_team[idx].update(pos, angle, t)
 
-    """
-    Обновить положение робота желтой команды
-    !!! Вызывать один раз за итерацию с постоянной частотой !!!
-    """
     def updateYelRobot(self, idx, pos, angle, t):
+        """
+        Обновить положение робота желтой команды
+        !!! Вызывать один раз за итерацию с постоянной частотой !!!
+        """
         self.y_team[idx].update(pos, angle, t)
 
-    """
-    Получить объект мяча
-
-    @return Объект entity.Entity
-    """
     def getBall(self):
+        """
+        Получить объект мяча
+
+        @return Объект entity.Entity
+        """
         return self.ball
 
-    """
-    Получить массив роботов синей команды
-
-    @return Массив entity.Entity[]
-    """
     def getBluTeam(self):
+        """
+        Получить массив роботов синей команды
+
+        @return Массив entity.Entity[]
+        """
         return self.b_team
 
-    """
-    Получить массив роботов желтой команды
-
-    @return Массив entity.Entity[]
-    """
     def getYelTeam(self):
+        """
+        Получить массив роботов желтой команды
+
+        @return Массив entity.Entity[]
+        """
         return self.y_team
 
     def isBallInGoalSq(self):
+        """
+        Определить, находится ли мяч в штрафной зоне
+        """
         return aux.sign(self.ally_goal.center.x - self.ball.getPos().x) == aux.sign(self.ball.getPos().x - self.ally_goal.forw.x) and \
             aux.sign(self.ally_goal.up.y - self.ball.getPos().y) == aux.sign(self.ball.getPos().y - self.ally_goal.down.y)

@@ -191,7 +191,7 @@ class Strategy:
         """
         try:
             gk_pos = aux.LERP(aux.point_on_line(field.ally_goal.center, field.ball.getPos(), const.GK_FORW),
-                          aux.get_line_intersection(robot_with_ball.pos, robot_with_ball.pos + aux.rotate(aux.Point(1, 0), robot_with_ball.angle),
+                          aux.get_line_intersection(robot_with_ball.getPos(), robot_with_ball.getPos() + aux.rotate(aux.Point(1, 0), robot_with_ball.getAngle()),
                                                     field.ally_goal.down, field.ally_goal.up, 'RS') + const.GK_FORW*field.ally_goal.eye_forw,
                           0.5)
             # print(robot_with_ball.angle)
@@ -206,7 +206,7 @@ class Strategy:
                                       field.ball.getPos() + field.ball.getVel(),
                                       'SR'
                                       ) is not None:
-            gk_pos = aux.closest_point_on_line(field.ball.getPos(), field.ball._vel.unity()*1000000, field.allies[gk_wall_idx_list[0]].pos)
+            gk_pos = aux.closest_point_on_line(field.ball.getPos(), field.ball._vel.unity()*1000000, field.allies[gk_wall_idx_list[0]].getPos())
             # print("GK INTERCEPT", time.time())
 
         gk_angle = math.pi/2
@@ -383,7 +383,7 @@ class Strategy:
             if used_pop_pos[pointIndex] == False:
                 mn = 1e10
                 for robot in field.allies:
-                    if robot.is_used() and robot.rId != const.GK and robot.rId != self.robot_with_ball and not aux.search_in_list(self.popusk, robot.rId):
+                    if robot.is_used() and robot.rId != const.GK and robot.rId != self.robot_with_ball and not aux.is_in_list(self.popusk, robot.rId):
                         pop_pos_dist = aux.dist(robot.getPos(), popusk_positions[pointIndex])
                         if mn > pop_pos_dist:
                             mn = pop_pos_dist
