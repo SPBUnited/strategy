@@ -23,7 +23,7 @@ TOPIC_SINK = "control-sink"
 
 ##################################################
 # CONTROL CONSTS
-Ts = 0.020 # s
+Ts = 0.02 # s
 
 # ROBOT SETTING CONSTS
 # MAX_SPEED = 100
@@ -47,6 +47,9 @@ GRAVEYARD_POS = aux.Point(-10000, 0)
 GOAL_DX = 4500
 GOAL_DY = 1000
 GOAL_PEN = 1000
+GOAL_BOUND_OFFSET = 100
+GOAL_WALLLINE_OFFSET = 1800
+GOAL_WALL_ROBOT_SEPARATION = 150
 
 GK_FORW = 800
 KICK_ALIGN_DIST = 200
