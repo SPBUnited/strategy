@@ -144,7 +144,7 @@ class Robot(entity.Entity):
 
             k = 0.6
             gain = 2
-            gain_a = 1
+            gain_a = 2
             angle0 = aux.LERP(lerp_angles[0], lerp_angles[1], aux.minmax((dist-400)/1000, 0, 1))
         if end_point.type == wp.WType.S_BALL_KICK and self.is_kick_aligned(end_point):
             vel0 = (self.pos - end_point.pos).unity()
