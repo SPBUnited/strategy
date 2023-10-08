@@ -22,7 +22,7 @@ if __name__ == '__main__':
             processing_pause=const.Ts,
             reduce_pause_on_process_time=True,
             dbg_game_status = strategy.GameStates.RUN,
-            dbg_state = strategy.States.DEFENCE),
+            dbg_state = strategy.States.ATTACK),
         CommandSink(processing_pause = const.Ts/2, should_debug=True),
         RobotCommandsSender(processing_pause = const.Ts/2, should_debug=True)
     ]

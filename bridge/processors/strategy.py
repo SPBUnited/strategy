@@ -61,7 +61,7 @@ class Strategy:
         self.calc = False
 
         #PENALTY
-        we_kick = 0
+        self.we_kick = 0
         self.is_started = 0
         self.ball_inside = 0
         self.last_seen = 0
@@ -136,14 +136,14 @@ class Strategy:
             rivals_robot_with_ball = aux.find_nearest_robot(field.ball.getPos(), field.enemies, [const.ENEMY_GK])
             allies_robot_with_ball = aux.find_nearest_robot(field.ball.getPos(), field.allies, [const.GK])
 
-            if time.time() - self.timer > 1:
+            '''if time.time() - self.timer > 1:
                 self.timer = time.time()
                 if aux.dist(rivals_robot_with_ball.getPos(), field.ball.getPos()) < aux.dist(allies_robot_with_ball.getPos(), field.ball.getPos()):
                     self.state = States.DEFENCE
                     print("defence")
                 else:
                     self.state = States.ATTACK
-                    print("attack") 
+                    print("attack") '''
         wall = []
 
         if self.state == States.DEBUG:
@@ -412,10 +412,6 @@ class Strategy:
             #     role.id = robot
         
     def attack(self, field: field.Field, waypoints):
-        for i in range(6):
-            waypoint = wp.Waypoint(field.allies[i].getPos(), field.allies[i].getAngle(), wp.WType.S_ENDPOINT)
-            waypoints[i] = waypoint
-
         goal_points = [aux.Point(field.enemy_goal.center.x, i) for i in range(-400, 401)]
         bro_points = [field.allies[i].getPos() for i in range(len(field.allies))]
         # print(bro_points)
@@ -425,7 +421,7 @@ class Strategy:
                 if aux.in_place(self.attack_pos, field.allies[self.robot_with_ball].getPos(), 500):
                     self.attack_state = "CALCULATING"
             elif self.attack_state == "CALCULATING":
-                shot_pos, shot_prob = aux.shotDecision(field.ball.pos, goal_points, field.enemies[:2])
+                shot_pos, shot_prob = aux.shotDecision(field.ball.pos, goal_points, field.enemies)
                 # shot_pos = aux.Point(field.ball.getPos().x - 1000 * const.ROBOT_R, field.ball.getPos().y)
                 # if shot_prob > const.KOEFF_NAGLO:
                 #     used_bots = []
@@ -478,7 +474,7 @@ class Strategy:
                 else:
                     waypoints[self.robot_with_ball] = wp.Waypoint(self.attack_pos, aux.angle_to_point(field.allies[self.robot_with_ball].getPos(), field.ball.getPos()), wp.WType.S_ENDPOINT)
                 # print(self.attack_state)
-        if self.connector != None:
+        '''if self.connector != None:
             ball_line = aux.getBallLine()
             connect_pos = aux.find_nearest_point_on_the_line(ball_line, self.connector.pos)
             # if not aux.in_place(pos, connector.pos, 10):
@@ -486,7 +482,7 @@ class Strategy:
             # else:
             
             # connector =
-            waypoints[robot] = wp.Waypoint(connect_pos, field.ball.getPos().arg(), wp.WType.S_BALL_GRAB)
+            waypoints[robot] = wp.Waypoint(connect_pos, field.ball.getPos().arg(), wp.WType.S_BALL_GRAB)'''
         for robot in self.popusk:
             pop_pos = field.allies[robot].role
             waypoints[robot] = wp.Waypoint(popusk_positions[pop_pos], 0, wp.WType.S_ENDPOINT)
