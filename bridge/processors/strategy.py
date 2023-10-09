@@ -393,8 +393,7 @@ class Strategy:
         if self.robot_with_ball == None and field.ball.getVel().mag() < 800:
             mn = 1e10
             for robot in field.allies:
-                if robot.is_used():
-                    print(robot.rId)
+                if robot.is_used() and robot.rId != const.GK:
                     ball_dist = aux.dist(field.ball.getPos(), robot.getPos())
                     if mn > ball_dist:
                         mn = ball_dist
