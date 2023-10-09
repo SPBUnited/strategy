@@ -26,7 +26,7 @@ from bridge.processors.robot_command_sink import CommandSink
 
 # TODO: Refactor this class and corresponding matlab scripts
 @attr.s(auto_attribs=True)
-class MatlabController(BaseProcessor):
+class SSLController(BaseProcessor):
 
     max_commands_to_persist: int = 20
     our_color: str = 'b'
@@ -45,7 +45,10 @@ class MatlabController(BaseProcessor):
     count_halt_cmd = 0
 
     def initialize(self, data_bus: DataBus) -> None:
-        super(MatlabController, self).initialize(data_bus)
+        """
+        Инициализировать контроллер
+        """
+        super(SSLController, self).initialize(data_bus)
         self.vision_reader = DataReader(data_bus, config.VISION_DETECTIONS_TOPIC)
         self.referee_reader = DataReader(data_bus, config.REFEREE_COMMANDS_TOPIC)
         self.commands_sink_writer = DataWriter(data_bus, const.TOPIC_SINK, 20)
@@ -56,12 +59,18 @@ class MatlabController(BaseProcessor):
         self.strategy = strategy.Strategy(self.dbg_game_status, self.dbg_state)
 
     def get_last_referee_command(self) -> RefereeCommand:
+        """
+        Получить последнюю команду рефери
+        """
         referee_commands = self.referee_reader.read_new()
         if referee_commands:
             return referee_commands[-1].content
         return RefereeCommand(0, 0, False)
 
     def read_vision(self) -> bool:
+        """
+        Прочитать новые пакеты из SSL-Vision
+        """
         status = False
 
         balls = np.zeros(const.BALL_PACKET_SIZE * const.MAX_BALLS_IN_FIELD)
@@ -157,8 +166,6 @@ class MatlabController(BaseProcessor):
             self.router.setDest(i, waypoints[i])
         self.router.reRoute(self.field)
 
-        # TODO алгоритм следования по траектории
-        # TODO Убрать артефакты
         for i in range(0, 6):
             self.field.allies[i].go_route(self.router.getRoute(i), self.field)
 
@@ -182,9 +189,6 @@ class MatlabController(BaseProcessor):
 
         self.dt = time.time() - self.cur_time
         self.cur_time = time.time()
-
-        print(self.dt)
-        # print(self.our_color)
 
         self.read_vision()
         self.control_loop()

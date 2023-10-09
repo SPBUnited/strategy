@@ -104,16 +104,16 @@ class Robot(entity.Entity):
         self.beep = 0
     
     def is_kick_aligned(self, target: wp.Waypoint):
-        return (self.pos - target.pos).mag() < const.KICK_ALIGN_DIST*const.KICK_ALIGN_DIST_MULT and \
-            abs(aux.wind_down_angle(self.angle - target.angle)) < const.KICK_ALIGN_ANGLE and \
-            abs(aux.wind_down_angle((target.pos - self.pos).arg() - target.angle)) < const.KICK_ALIGN_OFFSET
+        return (self.getPos() - target.pos).mag() < const.KICK_ALIGN_DIST*const.KICK_ALIGN_DIST_MULT and \
+            abs(aux.wind_down_angle(self._angle - target.angle)) < const.KICK_ALIGN_ANGLE and \
+            abs(aux.wind_down_angle((target.pos - self.getPos()).arg() - target.angle)) < const.KICK_ALIGN_OFFSET
     
     def is_ball_in(self, field: field.Field):
-        return (self.pos - field.ball.pos).mag() < const.BALL_GRABBED_DIST and \
-            abs(aux.wind_down_angle((field.ball.pos - self.pos).arg() - self.angle)) < const.BALL_GRABBED_ANGLE
+        return (self.getPos() - field.ball.getPos()).mag() < const.BALL_GRABBED_DIST and \
+            abs(aux.wind_down_angle((field.ball.getPos() - self.getPos()).arg() - self._angle)) < const.BALL_GRABBED_ANGLE
 
     def go_route(self, route, field: field.Field):
-        cur_speed = self.vel.mag()
+        cur_speed = self._vel.mag()
 
         # print(route)
 
@@ -122,10 +122,11 @@ class Robot(entity.Entity):
         target_point = route.getNextWP()
         end_point = route.getDestWP()
         
-        vel0 = (self.pos - target_point.pos).unity()
+        print(self.getPos(), target_point)
+        vel0 = (self.getPos() - target_point.pos).unity()
 
-        dangle = (target_point.pos - self.pos).arg()
-        rangle = aux.wind_down_angle(self.angle - dangle)
+        dangle = (target_point.pos - self.getPos()).arg()
+        rangle = aux.wind_down_angle(self._angle - dangle)
         twpangle = aux.wind_down_angle(target_point.angle - dangle)
 
         angle60_abs = math.pi/4 if abs(rangle) < math.pi/2 else 2*math.pi/3
@@ -158,7 +159,7 @@ class Robot(entity.Entity):
 
         if end_point.type == wp.WType.S_BALL_KICK or end_point.type == wp.WType.S_BALL_GRAB and \
             self.is_kick_aligned(end_point):
-            vel0 = (self.pos - end_point.pos).unity()
+            vel0 = (self.getPos() - end_point.pos).unity()
             angle0 = end_point.angle
             dist = 400
 
@@ -179,7 +180,7 @@ class Robot(entity.Entity):
         aerr = aux.wind_down_angle(angle0 - self.getAngle())
 
         
-        aerr -= self.anglevel * k_a
+        aerr -= self._anglevel * k_a
         u_a = min(max(aerr * gain_a, -const.MAX_SPEED_R), const.MAX_SPEED_R)
         ang_vel = u_a
 
@@ -194,8 +195,8 @@ class Robot(entity.Entity):
         vel - требуемый вектор скорости [мм/с] \\
         wvel - требуемая угловая скорость [рад/с]
         """
-        self.speedX = self.xxFlp.process(1/self.Kxx * aux.rotate(vel, -self.angle).x)
-        self.speedY = self.yyFlp.process(1/self.Kyy * aux.rotate(vel, -self.angle).y)
+        self.speedX = self.xxFlp.process(1/self.Kxx * aux.rotate(vel, -self._angle).x)
+        self.speedY = self.yyFlp.process(1/self.Kyy * aux.rotate(vel, -self._angle).y)
 
         # RcompY = self.Kwy * self.RcompFfy.process(self.RcompFdy.process(self.speedY))
         # RcompY = self.Kwy * self.RcompFdy.process(abs(float(self.speedY)**2))
@@ -207,5 +208,5 @@ class Robot(entity.Entity):
         Ограничить управляющее воздействие"""
 
     def __str__(self) -> str:
-        return str(str(self.color) + " " + str(self.rId) + " " + str(self.pos) + " " + str(self.speedX) + " " + str(self.speedY)) + " " + str(self.speedR)
+        return str(str(self.color) + " " + str(self.rId) + " " + str(self.getPos()) + " " + str(self.speedX) + " " + str(self.speedY)) + " " + str(self.speedR)
 

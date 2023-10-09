@@ -33,7 +33,7 @@ class Router:
     def reRoute(self, field: field.Field):
         for i in range(const.TEAM_ROBOTS_MAX_COUNT):
             
-            self_pos = field.allies[i].pos
+            self_pos = field.allies[i].getPos()
 
             if not self.routes[i].isUsed():
                 continue
