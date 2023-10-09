@@ -17,12 +17,19 @@ if __name__ == '__main__':
         VisionDetectionsCollector(processing_pause=0.001, should_debug=True),
         RefereeCommandsCollector(processing_pause=0.001, should_debug=True),
         SSLController(
-            our_color='b',
+            our_color='y',
             should_debug=True,
             processing_pause=const.Ts,
             reduce_pause_on_process_time=True,
             dbg_game_status = strategy.GameStates.RUN,
             dbg_state = strategy.States.DEFENCE),
+        SSLController(
+            our_color='b',
+            should_debug=True,
+            processing_pause=const.Ts,
+            reduce_pause_on_process_time=True,
+            dbg_game_status = strategy.GameStates.RUN,
+            dbg_state = strategy.States.ATTACK),
         CommandSink(processing_pause = const.Ts/2, should_debug=True),
         RobotCommandsSender(processing_pause = const.Ts/2, should_debug=True)
     ]
