@@ -45,21 +45,35 @@ class Robot(entity.Entity):
 
         #v! REAL
         else:
-            self.Kxx = 250/20
-            self.Kyy = -250/20
+            self.Kxx = -250/20
+            self.Kyy = 250/20
             self.Kww = 6/20
             self.Kwy = 0
             self.Twy = 0.15
             self.RcompFdy = tau.FOD(self.Twy, const.Ts)
             self.RcompFfy = tau.FOLP(self.Twy, const.Ts)
 
-        self.xxTF = 0.1
+        self.xxTF = 0.4
         self.xxFlp = tau.FOLP(self.xxTF, const.Ts)
-        self.yyTF = 0.1
+        self.yyTF = 0.4
         self.yyFlp = tau.FOLP(self.yyTF, const.Ts)
+        self.a0TF = 0.5
+        self.a0Flp = tau.FOLP(self.a0TF, const.Ts)
 
-        self.posReg = tau.PISD(const.Ts, [10, 0.3], [0.2, 0.1], [0, 0.5], [const.MAX_SPEED, const.MAX_SPEED/2])
-        self.angleReg = tau.PISD(const.Ts, [1, 0.5], [0, 0], [0, 8], [const.MAX_SPEED_R, const.MAX_SPEED_R])
+        #!v REAL
+        gains_full = [4, 0.3, 0, const.MAX_SPEED]
+        gains_soft = [0.5, 0.1, 0, const.SOFT_MAX_SPEED]
+        a_gains_full = [5, 0.1, 0.1, const.MAX_SPEED_R]
+        a_gains_soft = [2, 0.07, 0, const.SOFT_MAX_SPEED_R]
+
+        #!v SIM
+        # gains_full = [2, 0.3, 0, const.MAX_SPEED/3]
+        # gains_soft = [0.5, 0.1, 0, const.SOFT_MAX_SPEED/3]
+        # a_gains_full = [2, 0.1, 0.1, const.MAX_SPEED_R/3]
+        # a_gains_soft = [1, 0.07, 0, const.SOFT_MAX_SPEED_R/3]
+
+        self.posReg = tau.PISD(const.Ts, [gains_full[0], gains_soft[0]], [gains_full[1], gains_soft[1]], [gains_full[2], gains_soft[2]], [gains_full[3], gains_soft[3]])
+        self.angleReg = tau.PISD(const.Ts, [a_gains_full[0], a_gains_soft[0]], [a_gains_full[1], a_gains_soft[1]], [a_gains_full[2], a_gains_soft[2]], [a_gains_full[3], a_gains_soft[3]])
 
 
     def used(self, a):
@@ -110,12 +124,15 @@ class Robot(entity.Entity):
         self.beep = 0
     
     def is_kick_aligned(self, target: wp.Waypoint):
-        # print((self.getPos() - target.pos).mag() < const.KICK_ALIGN_DIST*const.KICK_ALIGN_DIST_MULT, \
-        #     abs(aux.wind_down_angle(self._angle - target.angle)) < const.KICK_ALIGN_ANGLE, \
-        #     abs(aux.vect_mult(aux.rotate(aux.i, target.angle), target.pos - self._pos)) < const.KICK_ALIGN_OFFSET)
+        # print(round((self.getPos() - target.pos).mag(), 2), const.KICK_ALIGN_DIST*const.KICK_ALIGN_DIST_MULT, \
+        #     round(abs(aux.wind_down_angle(self._angle - target.angle)), 2), const.KICK_ALIGN_ANGLE, \
+        #     # round(abs(aux.vect_mult(aux.rotate(aux.i, target.angle), target.pos - self._pos)), 2), const.KICK_ALIGN_OFFSET)
+        #     round(aux.dist(aux.closest_point_on_line(target.pos, target.pos - aux.rotate(aux.i, target.angle)*const.KICK_ALIGN_DIST, self._pos), self._pos)), const.KICK_ALIGN_OFFSET)
+        # print(aux.i, target.angle, aux.rotate(aux.i, target.angle), target.pos, self._pos, target.pos - self._pos)
         return (self.getPos() - target.pos).mag() < const.KICK_ALIGN_DIST*const.KICK_ALIGN_DIST_MULT and \
             abs(aux.wind_down_angle(self._angle - target.angle)) < const.KICK_ALIGN_ANGLE and \
-            abs(aux.vect_mult(aux.rotate(aux.i, target.angle), target.pos - self._pos)) < const.KICK_ALIGN_OFFSET
+            aux.dist(aux.closest_point_on_line(target.pos, target.pos - aux.rotate(aux.i, target.angle)*const.KICK_ALIGN_DIST, self._pos), self._pos) < const.KICK_ALIGN_OFFSET
+            # abs(aux.vect_mult(aux.rotate(aux.i, target.angle), target.pos - self._pos)) < const.KICK_ALIGN_OFFSET
     
     def is_ball_in(self, field: field.Field):
         return (self.getPos() - field.ball.getPos()).mag() < const.BALL_GRABBED_DIST and \
@@ -142,12 +159,12 @@ class Robot(entity.Entity):
         # angle60_abs = 0
         angle60_sign = aux.sign(twpangle + rangle)
 
-        angle60 = dangle + angle60_abs * angle60_sign
+        angle60 = (-vel0).arg() #dangle + angle60_abs * angle60_sign
 
         tpangle = target_point.angle if target_point.type != wp.WType.R_PASSTHROUGH else end_point.angle
         lerp_angles = [target_point.angle, angle60]
 
-        angle0 = aux.LERP(lerp_angles[0], lerp_angles[1], aux.minmax((dist-100)/1000, 0, 1))
+        angle0 = aux.LERP(lerp_angles[0], lerp_angles[1], aux.minmax((dist-100)/100, 0, 1))
 
         self.posReg.select_mode(tau.Mode.NORMAL)
 
@@ -159,38 +176,41 @@ class Robot(entity.Entity):
             
             self.posReg.select_mode(tau.Mode.SOFT)
 
-            angle0 = aux.LERP(lerp_angles[0], lerp_angles[1], aux.minmax((dist-400)/1000, 0, 1))
+            angle0 = aux.LERP(lerp_angles[0], lerp_angles[1], aux.minmax((dist-const.KICK_ALIGN_DIST*const.KICK_ALIGN_DIST_MULT)/300, 0, 1))
 
-            if end_point.type == wp.WType.S_BALL_GO:
-                angle0 = end_point.angle
+            # if end_point.type == wp.WType.S_BALL_GO:
+            # angle0 = end_point.angle
 
         if (end_point.type == wp.WType.S_BALL_KICK or end_point.type == wp.WType.S_BALL_GRAB) and \
             self.is_kick_aligned(end_point):
             vel0 = (self.getPos() - end_point.pos).unity()
             angle0 = end_point.angle
             dist = 400
+            print("BALL GO")
 
             self.dribblerEnable = True
             self.speedDribbler = 5
             if end_point.type == wp.WType.S_BALL_KICK:
-                self.autoKick = 1
+                self.autoKick = 1 if self.rId == const.GK else 2
             else:
                 self.autoKick = 0
         else:
             self.autoKick = 0
+            self.dribblerEnable = False
 
         err = dist
         u = self.posReg.process(err, -cur_speed)
         # if self.rId == 1:
         #     print('%d'%dist, '%d'%cur_speed, err, u)
-        transl_vel = vel0 * u
+        transl_vel = aux.LERP(vel0 * u, vel0.unity() * max(0, aux.scal_mult(vel0, -aux.rotate(aux.i * u, self._angle))), aux.minmax((dist-200)/300, 0, 1))
 
+        angle0 = self.a0Flp.process(angle0)
         aerr = aux.wind_down_angle(angle0 - self.getAngle())
 
         u_a = self.angleReg.process(aerr, -self._anglevel)
         ang_vel = u_a
 
-        # if self.rId == const.GK and self.color == 'b':
+        # if self.rId == const.DEBUG_ID and self.color == 'b':
         #     print("is aligned: ", self.is_kick_aligned(end_point), ", angle60: ", '%.2f'%angle60, ", end angle: ", '%.2f'%end_point.angle, \
         #           ", angle0: ", '%.2f'%angle0, ", aerr: ", '%.2f'%aerr, ", self angle: ", '%.2f'%self.getAngle())
         self.update_vel_xyw(transl_vel, ang_vel)
