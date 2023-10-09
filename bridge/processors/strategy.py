@@ -130,7 +130,7 @@ class Strategy:
 
 
     def run(self, field: field.Field, waypoints):
-        if field.ball.vel.mag() < 100:
+        if field.ball.getVel().mag() < 100:
             rivals_robot_with_ball = aux.find_nearest_robot(field.ball.getPos(), field.enemies, [const.ENEMY_GK])
             allies_robot_with_ball = aux.find_nearest_robot(field.ball.getPos(), field.allies, [const.GK])
 
@@ -390,16 +390,16 @@ class Strategy:
     def preAttack(self, field: field.Field):
             # used_pop_pos = [False, False, False, False, False]
             # self.popusk = []
-        if self.robot_with_ball == None and field.ball.vel.mag() < 800:
+        if self.robot_with_ball == None and field.ball.getVel().mag() < 800:
             mn = 1e10
             for robot in field.allies:
                 if robot.is_used():
                     print(robot.rId)
-                    ball_dist = aux.dist(field.ball.pos, robot.getPos())
+                    ball_dist = aux.dist(field.ball.getPos(), robot.getPos())
                     if mn > ball_dist:
                         mn = ball_dist
                         self.robot_with_ball = robot.rId
-            if aux.search_in_list(self.popusk, self.robot_with_ball):
+            if aux.is_in_list(self.popusk, self.robot_with_ball):
                 self.popusk.pop(self.popusk.index(self.robot_with_ball))
             # mn = 1e10
             # for pointIndex in range(len(popusk_positions)):
