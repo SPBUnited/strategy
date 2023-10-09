@@ -151,7 +151,13 @@ class Strategy:
         else:
             self.is_ball_moved = 1
         wall = []
+<<<<<<< HEAD
         
+=======
+
+        self.state = States.DEBUG
+
+>>>>>>> a543cef (pisd regulator)
         if self.state == States.DEBUG:
             self.debug(field, waypoints)
         elif self.state == States.DEFENCE:
