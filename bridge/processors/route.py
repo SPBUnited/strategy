@@ -11,13 +11,13 @@ import bridge.processors.robot as robot
 class Route:
 
     def __init__(self, robot: robot.Robot):
-        self._robot = [wp.Waypoint(robot.pos, robot.angle, wp.WType._ROBOT)]
+        self._robot = [wp.Waypoint(robot.getPos(), robot._angle, wp.WType._ROBOT)]
         self._destination = [wp.Waypoint(const.GRAVEYARD_POS, 0, wp.WType._GRAVEYARD)]
         self._routewp = []
         # self.__route = [*self.robot, *self.__routewp, *self.__destination]
 
     def update(self, robot: robot.Robot):
-        self._robot = [wp.Waypoint(robot.pos, robot.angle, wp.WType._ROBOT)]
+        self._robot = [wp.Waypoint(robot.getPos(), robot._angle, wp.WType._ROBOT)]
         if self.getNextVec().mag() < const.VANISH_DIST and \
             len(self._routewp) >= 1:
             del self._routewp[0]
