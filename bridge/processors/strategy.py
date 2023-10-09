@@ -121,11 +121,11 @@ class Strategy:
             elif self.game_status == GameStates.PREPARE_KICKOFF:
                 self.prepare_kickof(field, waypoints)
             elif self.game_status == GameStates.KICKOFF:
-                self.kickoff(field, waypoints) #Not made. Make kikoff. Probably pass to right/left robot.
+                self.kickoff(field, waypoints)
             elif self.game_status == GameStates.FREE_KICK:
                 self.free_kick(field, waypoints)
             elif self.game_status == GameStates.STOP:
-                self.keep_distance(field, waypoints) #Not made. Add smt before keep_distance
+                self.keep_distance(field, waypoints)
 
         return waypoints
 
@@ -684,7 +684,10 @@ class Strategy:
 
     def kickoff(self, field, waypoints):
         if self.we_kick:
-            pass #Make kikoff. Probably pass to right/left robot
+            go_kick = aux.find_nearest_robot(field.ball.getPos(), field.allies)
+            target = aux.Point(200 * field.side, 1000)
+            waypoint = wp.Waypoint(field.ball.getPos(), (target - field.allies[go_kick.rId].getPos()).arg(), wp.WType.S_BALL_KICK)
+            waypoints[go_kick.rId] = waypoint
         robot_with_ball = aux.find_nearest_robot(field.ball.getPos(), field.enemies)
         self.gk_go(field, waypoints, [const.GK], robot_with_ball)
 
