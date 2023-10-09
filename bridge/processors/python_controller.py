@@ -42,7 +42,6 @@ class SSLController(BaseProcessor):
     dt = 0
 
     ctrl_mapping = const.CONTROL_MAPPING
-    print(ctrl_mapping)
     count_halt_cmd = 0
 
     def initialize(self, data_bus: DataBus) -> None:
@@ -177,7 +176,6 @@ class SSLController(BaseProcessor):
         #     print(self.field.y_team[i])
         # for i in range(const.TEAM_ROBOTS_MAX_COUNT):
         #     print(self.field.b_team[i])
-        print(self.router.getRoute(const.DEBUG_ID))
 
     square = signal.Signal(2, 'SQUARE', lohi=(-20, 20))
     sine = signal.Signal(2, 'SINE', ampoffset=(1000, 0))
@@ -209,4 +207,7 @@ class SSLController(BaseProcessor):
 
         self.read_vision()
         self.control_loop()
+
+        print(self.router.getRoute(2))
+
         self.control_assign()
