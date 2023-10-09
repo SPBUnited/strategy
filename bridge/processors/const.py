@@ -44,14 +44,14 @@ TOPIC_SINK = "control-sink"
 
 ##################################################
 # CONTROL CONSTS
-Ts = 0.02 # s
+Ts = 0.03 # s
 
 # ROBOT SETTING CONSTS
 # MAX_SPEED = 100
 # MAX_SPEED_R = 50
 # ACCELERATION = 3
 # BASE_KICKER_VOLTAGE = 7.0
-MAX_SPEED = 1000
+MAX_SPEED = 700
 MAX_SPEED_R = 4
 ACCELERATION = 3
 BASE_KICKER_VOLTAGE = 7.0
