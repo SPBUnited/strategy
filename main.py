@@ -29,8 +29,8 @@ if __name__ == '__main__':
             processing_pause=const.Ts,
             reduce_pause_on_process_time=True,
             dbg_game_status = strategy.GameStates.RUN,
-            dbg_state = strategy.States.DEBUG),
-        # SSLController(
+            dbg_state = strategy.States.ATTACK),
+        # MatlabController(
         #     our_color='y',
         #     should_debug=True,
         #     processing_pause=const.Ts,
