@@ -145,6 +145,8 @@ class SSLController(BaseProcessor):
             if self.count_halt_cmd > 10:
                 self.strategy.changeGameState(strategy.GameStates.HALT, curCmd.commandForTeam)
 
+
+
             # TODO: Barrier states
             for robot in detection.robots_blue:
                 if time.time() - self.field.b_team[robot.robot_id].last_update() > 0.3:

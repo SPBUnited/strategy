@@ -151,9 +151,7 @@ class Strategy:
         else:
             self.is_ball_moved = 1
         wall = []
-
-        self.state = States.DEBUG
-
+        
         if self.state == States.DEBUG:
             self.debug(field, waypoints)
         elif self.state == States.DEFENCE:
@@ -659,37 +657,52 @@ class Strategy:
         if self.weActive:
             self.we_kick = 1
         else:
-            self.we_kick = 0 
+            self.we_kick = 0
+        self.put_kickoff_waypoints(field, waypoints) 
+
+    def put_kickoff_waypoints(self, field, waypoints):
         rC = 0
         if self.we_kick:
             for i in range(const.TEAM_ROBOTS_MAX_COUNT):
                 if field.allies[i].is_used() and field.allies[i].rId != const.GK:
                     if rC < 3:
-                        waypoint = wp.Waypoint(aux.Point(700 * field.side, 2000 - 2000 * rC), field.allies[i].getAngle(), wp.WType.S_ENDPOINT)
+                        if rC == 1:
+                            waypoint = wp.Waypoint(aux.Point(700 * field.side, 0), aux.angle_to_point(field.allies[i].getPos(), aux.Point(0, 0)), wp.WType.S_ENDPOINT)
+                        else:
+                            waypoint = wp.Waypoint(aux.Point(700 * field.side, 2000 - 2000 * rC), aux.angle_to_point(field.allies[i].getPos(), aux.Point(0, 0)), wp.WType.S_ENDPOINT)
                         waypoints[i] = waypoint
                     else:
-                        waypoint = wp.Waypoint(aux.Point(200 * field.side, 1000 - 2000 * (rC - 3)), field.allies[i].getAngle(), wp.WType.S_ENDPOINT)
+                        waypoint = wp.Waypoint(aux.Point(200 * field.side, 1500 - 3000 * (rC - 3)), aux.angle_to_point(field.allies[i].getPos(), aux.Point(0, 0)), wp.WType.S_ENDPOINT)
                         waypoints[i] = waypoint
                     rC+=1
         else:
             for i in range(const.TEAM_ROBOTS_MAX_COUNT):
                 if field.allies[i].is_used() and field.allies[i].rId != const.GK:
-                    if rC < 3:
-                        waypoint = wp.Waypoint(aux.Point(700 * field.side, 2000 - 2000 * rC), field.allies[i].getAngle(), wp.WType.S_ENDPOINT)
-                        waypoints[i] = waypoint
+                    if rC == 0:
+                        waypoint = wp.Waypoint(aux.Point(700 * field.side, 0), aux.angle_to_point(field.allies[i].getPos(), aux.Point(0, 0)), wp.WType.S_ENDPOINT)
+                    elif rC < 3:
+                        waypoint = wp.Waypoint(aux.Point(200 * field.side, 1000 - 2000 * (rC - 1)), aux.angle_to_point(field.allies[i].getPos(), aux.Point(0, 0)), wp.WType.S_ENDPOINT)
                     else:
-                        waypoint = wp.Waypoint(aux.Point(650 * field.side, 200 - 400 * (rC - 3)), field.allies[i].getAngle(), wp.WType.S_ENDPOINT)
-                        waypoints[i] = waypoint
+                        waypoint = wp.Waypoint(aux.Point(200 * field.side, 2000 + 4000 * (rC - 4)), aux.angle_to_point(field.allies[i].getPos(), aux.Point(0, 0)), wp.WType.S_ENDPOINT)
+                    waypoints[i] = waypoint
                     rC+=1
         waypoint = wp.Waypoint(field.ally_goal.center, aux.angle_to_point(field.ally_goal.center, field.ball.getPos()), wp.WType.S_ENDPOINT)
         waypoints[field.allies[const.GK].rId] = waypoint
 
     def kickoff(self, field, waypoints):
+        self.put_kickoff_waypoints(field, waypoints) 
         if self.we_kick:
             go_kick = aux.find_nearest_robot(field.ball.getPos(), field.allies)
-            target = aux.Point(200 * field.side, 1000)
+            target = aux.Point(700 * field.side, 2000)
+            field.allies[go_kick.rId].kickerVoltage = 10
             waypoint = wp.Waypoint(field.ball.getPos(), (target - field.allies[go_kick.rId].getPos()).arg(), wp.WType.S_BALL_KICK)
             waypoints[go_kick.rId] = waypoint
+        else:
+            go_kick = aux.find_nearest_robot(field.ball.getPos(), field.allies)
+            target = aux.point_on_line(field.ball.getPos(), aux.Point(field.side * const.GOAL_DX, 0), 200)
+            waypoint = wp.Waypoint(target, (field.ball.getPos() - field.allies[go_kick.rId].getPos()).arg(), wp.WType.S_IGNOREOBSTACLES)
+            waypoints[go_kick.rId] = waypoint
+
         robot_with_ball = aux.find_nearest_robot(field.ball.getPos(), field.enemies)
         self.gk_go(field, waypoints, [const.GK], robot_with_ball)
 
