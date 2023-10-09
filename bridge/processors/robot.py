@@ -157,7 +157,6 @@ class Robot(entity.Entity):
             gain = 6
             gain_a = 0.5
             angle0 = aux.LERP(lerp_angles[0], lerp_angles[1], aux.minmax((dist-400)/1000, 0, 1))
-            print(aux.minmax((dist-400)/1000, 0, 1))
 
             if end_point.type == wp.WType.S_BALL_GO:
                 angle0 = end_point.angle
