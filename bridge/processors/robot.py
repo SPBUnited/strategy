@@ -171,7 +171,7 @@ class Robot(entity.Entity):
             self.dribblerEnable = True
             self.speedDribbler = 5
             if end_point.type == wp.WType.S_BALL_KICK:
-                self.autoKick = 2
+                self.autoKick = 1
             else:
                 self.autoKick = 0
         else:
