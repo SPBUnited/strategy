@@ -119,5 +119,7 @@ class Field:
         """
         Определить, находится ли мяч в штрафной зоне
         """
+        # print(self.ally_goal.center.x - self.ball.getPos().x, self.ball.getPos().x - self.ally_goal.forw.x,
+        #     self.ally_goal.up.y - self.ball.getPos().y, self.ball.getPos().y - self.ally_goal.down.y)
         return aux.sign(self.ally_goal.center.x - self.ball.getPos().x) == aux.sign(self.ball.getPos().x - self.ally_goal.forw.x) and \
             aux.sign(self.ally_goal.up.y - self.ball.getPos().y) == aux.sign(self.ball.getPos().y - self.ally_goal.down.y)

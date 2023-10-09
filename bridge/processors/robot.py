@@ -33,22 +33,24 @@ class Robot(entity.Entity):
         self.role = None
 
         #v! SIM
-        self.Kxx = -833/20
-        self.Kyy = 833/20
-        self.Kww = 1.25/20
-        self.Kwy = -0.001
-        self.Twy = 0.15
-        self.RcompFdy = entity.FOD(self.Twy, const.Ts)
-        self.RcompFfy = entity.FOLP(self.Twy, const.Ts)
+        if const.IS_SIMULATOR_USED:
+            self.Kxx = -833/20
+            self.Kyy = 833/20
+            self.Kww = 1.25/20
+            self.Kwy = -0.001
+            self.Twy = 0.15
+            self.RcompFdy = entity.FOD(self.Twy, const.Ts)
+            self.RcompFfy = entity.FOLP(self.Twy, const.Ts)
 
         #v! REAL
-        # self.Kxx = 250/20
-        # self.Kyy = -250/20
-        # self.Kww = 6/20
-        # self.Kwy = 0
-        # self.Twy = 0.15
-        # self.RcompFdy = entity.FOD(self.Twy, const.Ts)
-        # self.RcompFfy = entity.FOLP(self.Twy, const.Ts)
+        else:
+            self.Kxx = 250/20
+            self.Kyy = -250/20
+            self.Kww = 6/20
+            self.Kwy = 0
+            self.Twy = 0.15
+            self.RcompFdy = entity.FOD(self.Twy, const.Ts)
+            self.RcompFfy = entity.FOLP(self.Twy, const.Ts)
 
         self.xxTF = 0.1
         self.xxFlp = entity.FOLP(self.xxTF, const.Ts)
@@ -106,7 +108,7 @@ class Robot(entity.Entity):
     def is_kick_aligned(self, target: wp.Waypoint):
         return (self.getPos() - target.pos).mag() < const.KICK_ALIGN_DIST*const.KICK_ALIGN_DIST_MULT and \
             abs(aux.wind_down_angle(self._angle - target.angle)) < const.KICK_ALIGN_ANGLE and \
-            abs(aux.wind_down_angle((target.pos - self.getPos()).arg() - target.angle)) < const.KICK_ALIGN_OFFSET
+            abs(aux.vect_mult(aux.rotate(aux.i, target.angle), target.pos - self._pos)) < const.KICK_ALIGN_OFFSET
     
     def is_ball_in(self, field: field.Field):
         return (self.getPos() - field.ball.getPos()).mag() < const.BALL_GRABBED_DIST and \
@@ -122,25 +124,27 @@ class Robot(entity.Entity):
         target_point = route.getNextWP()
         end_point = route.getDestWP()
         
-        print(self.getPos(), target_point)
+        # print(self.getPos(), target_point)
         vel0 = (self.getPos() - target_point.pos).unity()
 
         dangle = (target_point.pos - self.getPos()).arg()
         rangle = aux.wind_down_angle(self._angle - dangle)
         twpangle = aux.wind_down_angle(target_point.angle - dangle)
 
-        angle60_abs = math.pi/4 if abs(rangle) < math.pi/2 else 2*math.pi/3
+        angle60_abs = math.pi/6 if abs(rangle) < math.pi/2 else 2*math.pi/6
+        # angle60_abs = 0
         angle60_sign = aux.sign(twpangle + rangle)
 
         angle60 = dangle + angle60_abs * angle60_sign
 
+        tpangle = target_point.angle if target_point.type != wp.WType.R_PASSTHROUGH else end_point.angle
         lerp_angles = [target_point.angle, angle60]
 
         angle0 = aux.LERP(lerp_angles[0], lerp_angles[1], aux.minmax((dist-100)/1000, 0, 1))
 
         k = 0.2
-        gain = 6
-        k_a = 0.04
+        gain = 12
+        k_a = 0.04*0
         gain_a = 1
 
         if end_point.type == wp.WType.S_BALL_KICK or \
@@ -149,15 +153,16 @@ class Robot(entity.Entity):
 
             # print("IS KICK ALIGNED: ", self.is_kick_aligned(end_point))
 
-            k = 0.6
-            gain = 2
-            gain_a = 1
+            k = 0.2
+            gain = 6
+            gain_a = 0.5
             angle0 = aux.LERP(lerp_angles[0], lerp_angles[1], aux.minmax((dist-400)/1000, 0, 1))
+            print(aux.minmax((dist-400)/1000, 0, 1))
 
             if end_point.type == wp.WType.S_BALL_GO:
                 angle0 = end_point.angle
 
-        if end_point.type == wp.WType.S_BALL_KICK or end_point.type == wp.WType.S_BALL_GRAB and \
+        if (end_point.type == wp.WType.S_BALL_KICK or end_point.type == wp.WType.S_BALL_GRAB) and \
             self.is_kick_aligned(end_point):
             vel0 = (self.getPos() - end_point.pos).unity()
             angle0 = end_point.angle
@@ -166,7 +171,7 @@ class Robot(entity.Entity):
             self.dribblerEnable = True
             self.speedDribbler = 5
             if end_point.type == wp.WType.S_BALL_KICK:
-                self.autoKick = 1
+                self.autoKick = 2
             else:
                 self.autoKick = 0
         else:
@@ -184,8 +189,9 @@ class Robot(entity.Entity):
         u_a = min(max(aerr * gain_a, -const.MAX_SPEED_R), const.MAX_SPEED_R)
         ang_vel = u_a
 
-        # if self.rId == 0 and self.color == 'b':
-        #     print(self.is_kick_aligned(end_point), '%.2f'%angle60, '%.2f'%end_point.angle, '%.2f'%angle0, '%.2f'%aerr, '%.2f'%self.angle)
+        # if self.rId == const.DEBUG_ID and self.color == 'b':
+        #     print("is aligned: ", self.is_kick_aligned(end_point), ", angle60: ", '%.2f'%angle60, ", end angle: ", '%.2f'%end_point.angle, \
+        #           ", angle0: ", '%.2f'%angle0, ", aerr: ", '%.2f'%aerr, ", self angle: ", '%.2f'%self.getAngle())
         self.update_vel_xyw(transl_vel, ang_vel)
 
     def update_vel_xyw(self, vel: aux.Point, wvel: float):
