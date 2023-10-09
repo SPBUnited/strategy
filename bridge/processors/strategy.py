@@ -103,7 +103,6 @@ class Strategy:
 
         if self.game_status != GameStates.PENALTY:
             self.is_started = 0
-
         if self.game_status == GameStates.RUN:
             self.run(field, waypoints)
         else:
@@ -151,13 +150,7 @@ class Strategy:
         else:
             self.is_ball_moved = 1
         wall = []
-<<<<<<< HEAD
         
-=======
-
-        self.state = States.DEBUG
-
->>>>>>> a543cef (pisd regulator)
         if self.state == States.DEBUG:
             self.debug(field, waypoints)
         elif self.state == States.DEFENCE:
