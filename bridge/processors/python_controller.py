@@ -41,7 +41,8 @@ class SSLController(BaseProcessor):
     cur_time = time.time()
     dt = 0
 
-    ctrl_mapping = [i for i in range(const.TEAM_ROBOTS_MAX_COUNT)]
+    ctrl_mapping = const.CONTROL_MAPPING
+    print(ctrl_mapping)
     count_halt_cmd = 0
 
     def initialize(self, data_bus: DataBus) -> None:
@@ -108,36 +109,39 @@ class SSLController(BaseProcessor):
                 if time.time() - self.field.y_team[i].last_update() > 1:
                     self.field.y_team[i].used(0)
 
-            curCmd = self.get_last_referee_command()
-            if curCmd.state == 0:
-                self.count_halt_cmd += 1
-            else:
-                self.count_halt_cmd = 0
-                if curCmd.state == 1:
-                    self.strategy.changeGameState(strategy.GameStates.STOP, curCmd.commandForTeam)
-                elif curCmd.state == 2:
-                    self.strategy.changeGameState(strategy.GameStates.RUN, curCmd.commandForTeam)
-                elif curCmd.state == 3:
-                    self.strategy.changeGameState(strategy.GameStates.TIMEOUT, curCmd.commandForTeam)
-                elif curCmd.state == 4:
-                    print("Uknown command")
-                elif curCmd.state == 5:
-                    self.strategy.changeGameState(strategy.GameStates.PREPARE_KICKOFF, curCmd.commandForTeam)
-                elif curCmd.state == 6:
-                    self.strategy.changeGameState(strategy.GameStates.KICKOFF, curCmd.commandForTeam)
-                elif curCmd.state == 7:
-                    self.strategy.changeGameState(strategy.GameStates.PREPARE_PENALTY, curCmd.commandForTeam)
-                elif curCmd.state == 8:
-                    self.strategy.changeGameState(strategy.GameStates.PENALTY, curCmd.commandForTeam)
-                elif curCmd.state == 9:
-                    self.strategy.changeGameState(strategy.GameStates.FREE_KICK, curCmd.commandForTeam)
-                elif curCmd.state == 10:
-                    print("Uknown command")
-                elif curCmd.state == 11:
-                    self.strategy.changeGameState(strategy.GameStates.BALL_PLACMENT, curCmd.commandForTeam)
+            
+            self.strategy.changeGameState(strategy.GameStates.RUN, 0)
+
+            # curCmd = self.get_last_referee_command()
+            # if curCmd.state == 0:
+            #     self.count_halt_cmd += 1
+            # else:
+            #     self.count_halt_cmd = 0
+            #     if curCmd.state == 1:
+            #         self.strategy.changeGameState(strategy.GameStates.STOP, curCmd.commandForTeam)
+            #     elif curCmd.state == 2:
+            #         self.strategy.changeGameState(strategy.GameStates.RUN, curCmd.commandForTeam)
+            #     elif curCmd.state == 3:
+            #         self.strategy.changeGameState(strategy.GameStates.TIMEOUT, curCmd.commandForTeam)
+            #     elif curCmd.state == 4:
+            #         print("Uknown command")
+            #     elif curCmd.state == 5:
+            #         self.strategy.changeGameState(strategy.GameStates.PREPARE_KICKOFF, curCmd.commandForTeam)
+            #     elif curCmd.state == 6:
+            #         self.strategy.changeGameState(strategy.GameStates.KICKOFF, curCmd.commandForTeam)
+            #     elif curCmd.state == 7:
+            #         self.strategy.changeGameState(strategy.GameStates.PREPARE_PENALTY, curCmd.commandForTeam)
+            #     elif curCmd.state == 8:
+            #         self.strategy.changeGameState(strategy.GameStates.PENALTY, curCmd.commandForTeam)
+            #     elif curCmd.state == 9:
+            #         self.strategy.changeGameState(strategy.GameStates.FREE_KICK, curCmd.commandForTeam)
+            #     elif curCmd.state == 10:
+            #         print("Uknown command")
+            #     elif curCmd.state == 11:
+            #         self.strategy.changeGameState(strategy.GameStates.BALL_PLACMENT, curCmd.commandForTeam)
                 
-            if self.count_halt_cmd > 10:
-                self.strategy.changeGameState(strategy.GameStates.HALT, curCmd.commandForTeam)
+            # if self.count_halt_cmd > 10:
+            #     self.strategy.changeGameState(strategy.GameStates.HALT, curCmd.commandForTeam)
 
             # TODO: Barrier states
             for robot in detection.robots_blue:
@@ -161,21 +165,31 @@ class SSLController(BaseProcessor):
         """
         self.router.update(self.field)
         waypoints = self.strategy.process(self.field)
-        for i in range(0, 6):
+        for i in range(const.TEAM_ROBOTS_MAX_COUNT):
             self.router.getRoute(i).clear()
             self.router.setDest(i, waypoints[i])
         self.router.reRoute(self.field)
 
-        for i in range(0, 6):
+        for i in range(const.TEAM_ROBOTS_MAX_COUNT):
             self.field.allies[i].go_route(self.router.getRoute(i), self.field)
 
-    square = signal.Signal(2, 'SQUARE', lohi=(-1000, 1000))
+        # for i in range(const.TEAM_ROBOTS_MAX_COUNT):
+        #     print(self.field.y_team[i])
+        # for i in range(const.TEAM_ROBOTS_MAX_COUNT):
+        #     print(self.field.b_team[i])
+        print(self.router.getRoute(const.DEBUG_ID))
+
+    square = signal.Signal(2, 'SQUARE', lohi=(-20, 20))
     sine = signal.Signal(2, 'SINE', ampoffset=(1000, 0))
     cosine = signal.Signal(2, 'COSINE', ampoffset=(1000, 0))
     def control_assign(self):
         """
         Определить связь номеров роботов с каналами управления
         """
+        # self.field.allies[const.DEBUG_ID].speedR = self.square.get()
+        # self.field.allies[const.DEBUG_ID].speedX = 0
+        # self.field.allies[const.DEBUG_ID].speedY = 0
+        # print(self.square.get())
         for i in range(const.TEAM_ROBOTS_MAX_COUNT):
             self.commands_sink_writer.write(self.field.allies[i])
 
@@ -189,6 +203,8 @@ class SSLController(BaseProcessor):
 
         self.dt = time.time() - self.cur_time
         self.cur_time = time.time()
+
+        # print(self.field.ally_goal.center)
 
         self.read_vision()
         self.control_loop()

@@ -41,6 +41,10 @@ class CommandSink(BaseProcessor):
             r = cmd.content
             rId = r.rId
             ctrlId = r.ctrlId
+
+            if ctrlId == None:
+                continue
+
             if r.color == 'b':
                 self.b_control_team[ctrlId].copy_control_fields(r)
             elif r.color == 'y':

@@ -45,7 +45,11 @@ class Router:
                     self.routes[i].insertWP(align_wp)
 
             if i == const.GK:
+                pth_wp = self.calcVectorField(i, field)
+                if pth_wp is not None:
+                    self.routes[i].insertWP(pth_wp)
                 continue
+
 
             for goal in [field.ally_goal, field.enemy_goal]:
                 if aux.is_point_inside_poly(self_pos, goal.hull):
