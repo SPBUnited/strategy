@@ -44,22 +44,14 @@ TOPIC_SINK = "control-sink"
 
 ##################################################
 # CONTROL CONSTS
-<<<<<<< HEAD
-Ts = 0.03 # s
-=======
 Ts = 0.02 # s
->>>>>>> 9e1cc12 (.)
 
 # ROBOT SETTING CONSTS
 # MAX_SPEED = 100
 # MAX_SPEED_R = 50
 # ACCELERATION = 3
 # BASE_KICKER_VOLTAGE = 7.0
-<<<<<<< HEAD
-MAX_SPEED = 700
-=======
 MAX_SPEED = 1000
->>>>>>> a543cef (pisd regulator)
 MAX_SPEED_R = 4
 ACCELERATION = 3
 BASE_KICKER_VOLTAGE = 7.0
