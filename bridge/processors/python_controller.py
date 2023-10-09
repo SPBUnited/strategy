@@ -169,7 +169,7 @@ class SSLController(BaseProcessor):
         waypoints = self.strategy.process(self.field)
         for i in range(const.TEAM_ROBOTS_MAX_COUNT):
             self.router.getRoute(i).clear()
-            self.router.setDest(i, waypoints[i])
+            self.router.setDest(i, waypoints[i], self.field)
         self.router.reRoute(self.field)
 
         for i in range(const.TEAM_ROBOTS_MAX_COUNT):
@@ -187,7 +187,7 @@ class SSLController(BaseProcessor):
         """
         Определить связь номеров роботов с каналами управления
         """
-        # self.field.allies[const.DEBUG_ID].speedR = self.square.get()
+        # self.field.allies[0].speedR = self.square.get()
         # self.field.allies[const.DEBUG_ID].speedX = 0
         # self.field.allies[const.DEBUG_ID].speedY = 0
         # print(self.square.get())
@@ -209,5 +209,7 @@ class SSLController(BaseProcessor):
         # print(self.our_color)
         self.read_vision()
         self.control_loop()
+
+        # print(self.router.getRoute(const.GK))
 
         self.control_assign()

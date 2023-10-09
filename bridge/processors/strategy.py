@@ -144,6 +144,8 @@ class Strategy:
                     print("attack") '''
         wall = []
 
+        self.state = States.DEBUG
+
         if self.state == States.DEBUG:
             self.debug(field, waypoints)
         elif self.state == States.DEFENCE:
@@ -173,7 +175,7 @@ class Strategy:
         # waypoints[const.DEBUG_ID].type = wp.WType.S_ENDPOINT        
         
         # robot_with_ball = aux.find_nearest_robot(field.ball.getPos(), field.enemies)
-        self.gk_go(field, waypoints, [const.DEBUG_ID], None)
+        self.gk_go(field, waypoints, [const.GK], None)
 
 
         # for i in range(0, 6):
