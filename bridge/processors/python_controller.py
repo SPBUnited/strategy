@@ -29,7 +29,7 @@ from bridge.processors.robot_command_sink import CommandSink
 class MatlabController(BaseProcessor):
 
     max_commands_to_persist: int = 20
-    our_color: str = 'b'
+    our_color: str = 'y'
 
     vision_reader: DataReader = attr.ib(init=False)
     referee_reader: DataReader = attr.ib(init=False)
@@ -42,6 +42,8 @@ class MatlabController(BaseProcessor):
     dt = 0
 
     ctrl_mapping = [i for i in range(const.TEAM_ROBOTS_MAX_COUNT)]
+    ctrl_mapping[5] = 9
+    ctrl_mapping[6] = 10
     count_halt_cmd = 0
 
     def initialize(self, data_bus: DataBus) -> None:

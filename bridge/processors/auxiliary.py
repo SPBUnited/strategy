@@ -13,6 +13,7 @@ class Graph:
     def dijkstra(self, start_vertex):
         distances = [float('inf')] * self.num_vertices
         distances[start_vertex] = 0
+        ansestors = [-1] * self.num_vertices
         visited = [False] * self.num_vertices
 
         for _ in range(self.num_vertices):
@@ -34,8 +35,9 @@ class Graph:
                     and distances[min_vertex] + self.graph[min_vertex][v] < distances[v]
                 ):
                     distances[v] = distances[min_vertex] + self.graph[min_vertex][v]
+                    ansestors[v] = min_vertex
 
-        return distances
+        return distances, ansestors
 
 class bobLine:
     def __init__(self, A, B, C):

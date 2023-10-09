@@ -423,19 +423,23 @@ class Strategy:
             elif self.attack_state == "CALCULATING":
                 shot_pos, shot_prob = aux.shotDecision(field.ball.pos, goal_points, field.enemies)
                 # shot_pos = aux.Point(field.ball.getPos().x - 1000 * const.ROBOT_R, field.ball.getPos().y)
-                # if shot_prob > const.KOEFF_NAGLO:
-                #     used_bots = []
-                #     for bot in field.allies:
-                #         if bot.used():
-                #             used_bots.append(bot)
+                if shot_prob < const.KOEFF_NAGLO:
+                    used_bots = []
+                    for bot in field.allies:
+                        if bot.used():
+                            used_bots.append(bot)
 
-                #     attack_graph = aux.Graph(len(used_bots))
-                #     for bot in used_bots:
-                #         attack_graph.add_edge(self.robot_with_ball, bot.rId, aux.dist(field.allies[self.robot_with_ball].getPos(), field.allies[bot.rId].getPos()))
-                #         bot_pass_pos, bot_pass_prob = aux.shotDecision(bot.getPos(), goal_points, field.enemies[:2])
-                #         attack_graph.add_edge(bot.rId, const.GOAL_ID, bot_pass_prob)
+                    attack_graph = aux.Graph(len(used_bots))
+                    for bot in used_bots:
+                        attack_graph.add_edge(self.robot_with_ball, bot.rId, aux.dist(field.allies[self.robot_with_ball].getPos(), field.allies[bot.rId].getPos()))
+                        bot_pass_pos, bot_pass_prob = aux.shotDecision(bot.getPos(), goal_points, field.enemies)
+                        attack_graph.add_edge(bot.rId, const.GOAL_ID, bot_pass_prob)
+                    dist, ans = attack_graph.dijkstra(self.robot_with_ball)
+                    bot_pass_pos, bot_pass_prob = aux.shotDecision(used_bots[ans[const.GOAL_ID]].getPos(), goal_points, field.enemies)
+                    self.attack_pos = bot_pass_pos
+                else:
                 # print(shot_pos)
-                self.attack_pos = shot_pos
+                    self.attack_pos = shot_pos
                 # print(shot_pos)
                 # if aux.in_place(self.attack_pos, field.allies[self.robot_with_ball].getPos(), 50):
                 self.attack_state = "GO_TO_SHOOTING_POSITION"
