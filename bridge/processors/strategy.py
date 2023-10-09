@@ -13,7 +13,6 @@ from enum import Enum
 #!v DEBUG ONLY
 import time
 
-popusk_positions = [aux.Point(0, 0), aux.Point(0, 2000), aux.Point(0, -2000), aux.Point(2000, 2000), aux.Point(2000, -2000)]
 used_pop_pos = [False, False, False, False, False]
 calc = False
 
@@ -46,6 +45,7 @@ class Strategy:
         self.state = States.ATTACK
         self.weActive = 1
         self.timer = 0
+        self.is_ball_moved = 0
 
         #DEFENCE
         self.old_def_helper = -1
@@ -120,31 +120,38 @@ class Strategy:
             elif self.game_status == GameStates.PREPARE_KICKOFF:
                 self.prepare_kickof(field, waypoints)
             elif self.game_status == GameStates.KICKOFF:
-                self.kickoff(field, waypoints) #Not made. Make kikoff. Probably pass to right/left robot.
+                self.kickoff(field, waypoints)
             elif self.game_status == GameStates.FREE_KICK:
                 self.free_kick(field, waypoints)
             elif self.game_status == GameStates.STOP:
-                self.keep_distance(field, waypoints) #Not made. Add smt before keep_distance
+                self.keep_distance(field, waypoints)
 
         return waypoints
 
 
     def run(self, field: field.Field, waypoints):
         if field.ball.getVel().mag() < 100:
-            rivals_robot_with_ball = aux.find_nearest_robot(field.ball.getPos(), field.enemies, [const.ENEMY_GK])
-            allies_robot_with_ball = aux.find_nearest_robot(field.ball.getPos(), field.allies, [const.GK])
-
-            '''if time.time() - self.timer > 1:
+            if self.is_ball_moved or time.time() - self.timer > 7:
+                rivals_robot_with_ball = aux.find_nearest_robot(field.ball.getPos(), field.enemies, [const.ENEMY_GK])
+                allies_robot_with_ball = aux.find_nearest_robot(field.ball.getPos(), field.allies, [const.GK])
                 self.timer = time.time()
                 if aux.dist(rivals_robot_with_ball.getPos(), field.ball.getPos()) < aux.dist(allies_robot_with_ball.getPos(), field.ball.getPos()):
                     self.state = States.DEFENCE
                     print("defence")
                 else:
                     self.state = States.ATTACK
-                    print("attack") '''
+                    print("attack")
+            self.is_ball_moved = 0
+            if abs(const.GOAL_DX - abs(field.ball.getPos().x)) < const.GOAL_DY and abs(field.ball.getPos().y) < const.GOAL_DY:
+                if abs(field.ball.getPos().x - field.enemy_goal.center.x) < abs(field.ball.getPos().x - field.ally_goal.center.x): 
+                    self.state = States.DEFENCE
+                else:
+                    self.state = States.ATTACK
+        else:
+            self.is_ball_moved = 1
         wall = []
 
-        self.state = States.DEBUG
+        # self.state = States.ATTACK
 
         if self.state == States.DEBUG:
             self.debug(field, waypoints)
@@ -166,8 +173,8 @@ class Strategy:
         robot_with_ball = aux.find_nearest_robot(field.ball.getPos(), field.enemies)
         self.gk_go(field, waypoints, [const.GK] + wall, robot_with_ball)
 
-    square = signal.Signal(8, 'SQUARE', ampoffset=(400, 0))
-    square_ang = signal.Signal(8, 'SQUARE', lohi=(0, 3.14))
+    square = signal.Signal(12, 'SQUARE', ampoffset=(400, 0))
+    square_ang = signal.Signal(12, 'SQUARE', lohi=(0, 3.14))
     def debug(self, field: field.Field, waypoints):
 
         # waypoints[const.DEBUG_ID].pos = aux.Point(0, 0)        
@@ -175,32 +182,46 @@ class Strategy:
         # waypoints[const.DEBUG_ID].type = wp.WType.S_ENDPOINT        
         
         # robot_with_ball = aux.find_nearest_robot(field.ball.getPos(), field.enemies)
-        self.gk_go(field, waypoints, [const.GK], None)
-
+        # self.gk_go(field, waypoints, [const.GK], None)
 
         # for i in range(0, 6):
         #     # pos = aux.point_on_line(bbotpos, -aux.Point(const.GOAL_DX, 0), 300)
-        #     pos = -field.ally_goal.eye_forw*500*i -field.ally_goal.eye_up*3000
+        #     pos = -field.ally_goal.eye_forw*500*(i-0) -field.ally_goal.eye_up*1000*self.square.get()*0
         #     # pos = aux.Point(1000 + self.square.get(), -1000)
             
         #     # dpos = bbotpos - ybotpos
         #     # angle = math.atan2(dpos.y, dpos.x)
         #     # angle = self.square_ang.get()
-        #     angle = math.pi/3 * 0
+        #     angle = math.pi/2 * 1
 
         #     waypoint = wp.Waypoint(pos, angle, wp.WType.S_ENDPOINT)
         #     waypoints[i] = waypoint
+
+        # robot_with_ball = aux.find_nearest_robot(field.ball.getPos(), field.enemies)
+        # self.gk_go(field, waypoints, [const.GK], None)
+        # waypoints[const.DEBUG_ID].pos = aux.Point(self.square.get(), 0)
+        # waypoints[const.DEBUG_ID].angle = self.square_ang.get()
+        # waypoints[const.DEBUG_ID].angle = math.pi/2
+
+        waypoints[const.DEBUG_ID].pos = field.ball.getPos()
+        waypoints[const.DEBUG_ID].angle = -1
+        waypoints[const.DEBUG_ID].type = wp.WType.S_BALL_KICK
+
+        # print(field.ball.getPos(), waypoints[const.DEBUG_ID])
+
         
-        # waypoints[1].pos = field.ally_goal.eye_forw*4000 + field.ally_goal.eye_up * (self.square.get() - 2000)
+        # waypoints[const.GK].pos = -field.ally_goal.eye_forw*2000 + field.ally_goal.eye_up * (self.square.get() - 000)
+        # waypoints[const.GK].angle = self.square_ang.get()
 
 
-        # egf = field.enemy_goal.forwdown + field.enemy_goal.eye_forw*300
-        # if not field.allies[2].is_ball_in(field):
-        #     waypoints[2] = wp.Waypoint(field.ball.getPos(), (field.enemy_goal.center - field.ball.getPos()).arg(), wp.WType.S_BALL_GRAB)
-        # elif (egf - field.allies[2].getPos()).mag() > 300:
-        #     waypoints[2] = wp.Waypoint(egf, math.pi/3, wp.WType.S_BALL_GO)
+        RID = 9
+        # egf = field.ally_goal.forwdown + field.ally_goal.eye_forw*300
+        # if not field.allies[RID].is_ball_in(field):
+        #     waypoints[RID] = wp.Waypoint(field.ball.getPos(), (field.ally_goal.center - field.ball.getPos()).arg(), wp.WType.S_BALL_GRAB)
+        # elif (egf - field.allies[RID].getPos()).mag() > 300:
+        #     waypoints[RID] = wp.Waypoint(egf, math.pi/3, wp.WType.S_BALL_GO)
         # else:
-        #     waypoints[2] = wp.Waypoint(egf, math.pi/3, wp.WType.S_BALL_KICK)
+        # waypoints[RID] = wp.Waypoint(field.ball.getPos(), 0, wp.WType.S_BALL_KICK)
 
         return waypoints
 
@@ -279,7 +300,7 @@ class Strategy:
         if ENDPOINT_TYPE == wp.WType.S_KEEP_BALL_DISTANCE:
             if aux.dist(targetPoint, field.ball.getPos()) < const.KEEP_BALL_DIST:
                 targetPoint = aux.point_on_line(aux.point_on_line(targetPoint, field.ball.getPos(), -const.KEEP_BALL_DIST), aux.Point(field.side * const.GOAL_DX, 0), dist_between)
-        waypoint = wp.Waypoint(targetPoint, aux.angle_to_point(targetPoint, robot_with_ball.getPos()), ENDPOINT_TYPE)
+        waypoint = wp.Waypoint(targetPoint, aux.angle_to_point(targetPoint, field.ball.getPos()), ENDPOINT_TYPE)
         waypoints[def1.rId] = waypoint
         self.old_def = def1.rId
 
@@ -366,13 +387,13 @@ class Strategy:
         return sorted(wall_bots)
 
     def decide_popusk_position(self, field: field.Field):
-        for pointIndex in range(len(popusk_positions)):
+        for pointIndex in range(len(field.enemy_goal.popusk_positions)):
             save_robot = -1
             if used_pop_pos[pointIndex] == False:
                 mn = 1e10
                 for robot in field.allies:
                     if robot.is_used() and robot.rId != const.GK and robot.rId != self.robot_with_ball and not aux.is_in_list(self.popusk, robot.rId):
-                        pop_pos_dist = aux.dist(robot.getPos(), popusk_positions[pointIndex])
+                        pop_pos_dist = aux.dist(robot.getPos(), field.enemy_goal.popusk_positions[pointIndex])
                         if mn > pop_pos_dist:
                             mn = pop_pos_dist
                             save_robot = robot.rId
@@ -496,7 +517,7 @@ class Strategy:
             waypoints[robot] = wp.Waypoint(connect_pos, field.ball.getPos().arg(), wp.WType.S_BALL_GRAB)'''
         for robot in self.popusk:
             pop_pos = field.allies[robot].role
-            waypoints[robot] = wp.Waypoint(popusk_positions[pop_pos], 0, wp.WType.S_ENDPOINT)
+            waypoints[robot] = wp.Waypoint(field.enemy_goal.popusk_positions[pop_pos], 0, wp.WType.S_ENDPOINT)
         
     def prepare_penalty(self, field: field.Field, waypoints):
         if self.weActive:
@@ -678,7 +699,10 @@ class Strategy:
 
     def kickoff(self, field, waypoints):
         if self.we_kick:
-            pass #Make kikoff. Probably pass to right/left robot
+            go_kick = aux.find_nearest_robot(field.ball.getPos(), field.allies)
+            target = aux.Point(200 * field.side, 1000)
+            waypoint = wp.Waypoint(field.ball.getPos(), (target - field.allies[go_kick.rId].getPos()).arg(), wp.WType.S_BALL_KICK)
+            waypoints[go_kick.rId] = waypoint
         robot_with_ball = aux.find_nearest_robot(field.ball.getPos(), field.enemies)
         self.gk_go(field, waypoints, [const.GK], robot_with_ball)
 

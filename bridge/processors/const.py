@@ -2,10 +2,10 @@ import bridge.processors.auxiliary as aux
 
 ##################################################
 # GAME SETTING CONSTS
-GK = 1
+GK = 5
 PENALTY_KICKER = 2
 ENEMY_GK = 5
-IS_SIMULATOR_USED = True
+IS_SIMULATOR_USED = False
 CAMERAS_COUNT: int = 4
 MAX_BALLS_IN_CAMERA: int = 64
 MAX_BALLS_IN_FIELD: int = CAMERAS_COUNT * MAX_BALLS_IN_CAMERA
@@ -20,8 +20,8 @@ ROBOT_TEAM_PACKET_SIZE: int = SINGLE_ROBOT_PACKET_SIZE * TEAM_ROBOTS_MAX_COUNT
 
 GEOMETRY_PACKET_SIZE: int = 2
 
-DEBUG_ID = 1
-DEBUG_CTRL = 9
+DEBUG_ID = 2
+DEBUG_CTRL = 2
 CONTROL_MAPPING = \
 {
     # DEBUG_ID: DEBUG_CTRL
@@ -30,7 +30,17 @@ CONTROL_MAPPING = \
     2: 2,
     3: 3,
     4: 4,
-    5: 5
+    5: 5,
+    # 6: 6,
+    # 7: 7,
+    # 8: 8,
+    # 9: 9,
+    # 10: 10,
+    # 11: 11,
+    # 12: 12,
+    # 13: 13,
+    # 14: 14,
+    # 15: 15
 }
 
 for i in range(TEAM_ROBOTS_MAX_COUNT):
@@ -44,15 +54,17 @@ TOPIC_SINK = "control-sink"
 
 ##################################################
 # CONTROL CONSTS
-Ts = 0.02 # s
+Ts = 0.04 # s
 
 # ROBOT SETTING CONSTS
 # MAX_SPEED = 100
 # MAX_SPEED_R = 50
 # ACCELERATION = 3
 # BASE_KICKER_VOLTAGE = 7.0
-MAX_SPEED = 1000
-MAX_SPEED_R = 4
+MAX_SPEED = 700
+MAX_SPEED_R = 16
+SOFT_MAX_SPEED = 200
+SOFT_MAX_SPEED_R = 6
 ACCELERATION = 3
 BASE_KICKER_VOLTAGE = 7.0
 
@@ -68,9 +80,11 @@ GK_PEN_KICKOUT_SPEED = 500
 BALL_R = 0.05
 ROBOT_R = 0.2
 GRAVEYARD_POS = aux.Point(-10000, 0)
-GOAL_DX = 4500
+
+POLARITY = 1
+GOAL_DX = POLARITY * 4500
 GOAL_DY = 1000
-GOAL_PEN = 1000
+GOAL_PEN = POLARITY * 1000
 GOAL_BOUND_OFFSET = 100
 GOAL_WALLLINE_OFFSET = 1800
 GOAL_WALL_ROBOT_SEPARATION = 150
