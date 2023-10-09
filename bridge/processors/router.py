@@ -33,6 +33,8 @@ class Router:
     def reRoute(self, field: field.Field):
         for i in range(const.TEAM_ROBOTS_MAX_COUNT):
             
+            self_pos = field.allies[i].getPos()
+
             if not self.routes[i].isUsed():
                 continue
 
@@ -43,14 +45,23 @@ class Router:
                     self.routes[i].insertWP(align_wp)
 
             if i == const.GK:
+                pth_wp = self.calcVectorField(i, field)
+                if pth_wp is not None:
+                    self.routes[i].insertWP(pth_wp)
                 continue
 
-            self_pos = field.allies[i].pos
+
             for goal in [field.ally_goal, field.enemy_goal]:
+                if aux.is_point_inside_poly(self_pos, goal.hull):
+                    closest_out = aux.find_nearest_point(self_pos, goal.hull, [goal.up, const.GRAVEYARD_POS, goal.down])
+                    angle0 = self.routes[i].getDestWP().angle
+                    self.routes[i].setDestWP(wp.Waypoint(closest_out + (closest_out - goal.center) * 1.2, angle0, wp.WType.S_ENDPOINT))
+                    continue
                 pint = aux.segment_poly_intersect(self_pos, self_pos + self.routes[i].getNextVec(), goal.hull)
                 if pint is not None:
                     if aux.is_point_inside_poly(self.routes[i].getDestWP().pos, goal.hull):
-                        self.routes[i].setDestWP(wp.Waypoint(pint, field.ally_goal.eye_forw.arg(), wp.WType.S_ENDPOINT))
+                        angle0 = self.routes[i].getDestWP().angle
+                        self.routes[i].setDestWP(wp.Waypoint(pint, angle0, wp.WType.S_ENDPOINT))
                         break
                     convex_hull = qh.shortesthull(self_pos, self_pos + self.routes[i].getNextVec(), goal.hull)
                     for j in range(len(convex_hull) - 2, 0, -1):

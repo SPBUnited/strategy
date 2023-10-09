@@ -129,8 +129,6 @@ class Strategy:
         return waypoints
 
 
-    square = signal.Signal(8, 'SQUARE', lohi=(-1000, 4000))
-    square_ang = signal.Signal(8, 'SQUARE', lohi=(0, 3.14))
     def run(self, field: field.Field, waypoints):
         if field.ball.vel.mag() < 100:
             rivals_robot_with_ball = aux.find_nearest_robot(field.ball.getPos(), field.enemies, [const.ENEMY_GK])
@@ -166,29 +164,41 @@ class Strategy:
         robot_with_ball = aux.find_nearest_robot(field.ball.getPos(), field.enemies)
         self.gk_go(field, waypoints, [const.GK] + wall, robot_with_ball)
 
+    square = signal.Signal(8, 'SQUARE', ampoffset=(400, 0))
+    square_ang = signal.Signal(8, 'SQUARE', lohi=(0, 3.14))
     def debug(self, field: field.Field, waypoints):
-        for i in range(0, 6):
-            # pos = aux.point_on_line(bbotpos, -aux.Point(const.GOAL_DX, 0), 300)
-            pos = -field.ally_goal.eye_forw*500*i -field.ally_goal.eye_up*3000
-            # pos = aux.Point(1000 + self.square.get(), -1000)
-            
-            # dpos = bbotpos - ybotpos
-            # angle = math.atan2(dpos.y, dpos.x)
-            # angle = self.square_ang.get()
-            angle = math.pi/3 * 0
 
-            waypoint = wp.Waypoint(pos, angle, wp.WType.S_ENDPOINT)
-            waypoints[i] = waypoint
+        # waypoints[const.DEBUG_ID].pos = aux.Point(0, 0)        
+        # waypoints[const.DEBUG_ID].angle = 3.14
+        # waypoints[const.DEBUG_ID].type = wp.WType.S_ENDPOINT        
         
-        waypoints[1].pos = field.ally_goal.eye_forw*4000 + field.ally_goal.eye_up * (self.square.get() - 2000)
+        # robot_with_ball = aux.find_nearest_robot(field.ball.getPos(), field.enemies)
+        self.gk_go(field, waypoints, [const.DEBUG_ID], None)
 
-        egf = field.enemy_goal.forwdown + field.enemy_goal.eye_forw*300
-        if not field.allies[2].is_ball_in(field):
-            waypoints[2] = wp.Waypoint(field.ball.getPos(), (field.enemy_goal.center - field.ball.getPos()).arg(), wp.WType.S_BALL_GRAB)
-        elif (egf - field.allies[2].pos).mag() > 300:
-            waypoints[2] = wp.Waypoint(egf, math.pi/3, wp.WType.S_BALL_GO)
-        else:
-            waypoints[2] = wp.Waypoint(egf, math.pi/3, wp.WType.S_BALL_KICK)
+
+        # for i in range(0, 6):
+        #     # pos = aux.point_on_line(bbotpos, -aux.Point(const.GOAL_DX, 0), 300)
+        #     pos = -field.ally_goal.eye_forw*500*i -field.ally_goal.eye_up*3000
+        #     # pos = aux.Point(1000 + self.square.get(), -1000)
+            
+        #     # dpos = bbotpos - ybotpos
+        #     # angle = math.atan2(dpos.y, dpos.x)
+        #     # angle = self.square_ang.get()
+        #     angle = math.pi/3 * 0
+
+        #     waypoint = wp.Waypoint(pos, angle, wp.WType.S_ENDPOINT)
+        #     waypoints[i] = waypoint
+        
+        # waypoints[1].pos = field.ally_goal.eye_forw*4000 + field.ally_goal.eye_up * (self.square.get() - 2000)
+
+
+        # egf = field.enemy_goal.forwdown + field.enemy_goal.eye_forw*300
+        # if not field.allies[2].is_ball_in(field):
+        #     waypoints[2] = wp.Waypoint(field.ball.getPos(), (field.enemy_goal.center - field.ball.getPos()).arg(), wp.WType.S_BALL_GRAB)
+        # elif (egf - field.allies[2].getPos()).mag() > 300:
+        #     waypoints[2] = wp.Waypoint(egf, math.pi/3, wp.WType.S_BALL_GO)
+        # else:
+        #     waypoints[2] = wp.Waypoint(egf, math.pi/3, wp.WType.S_BALL_KICK)
 
         return waypoints
 
@@ -203,31 +213,31 @@ class Strategy:
         [in] robot_with_ball - текущий робот с мячом
         """
         try:
-            gk_pos = aux.LERP(aux.point_on_line(field.ally_goal.center, field.ball.pos, const.GK_FORW),
-                          aux.get_line_intersection(robot_with_ball.pos, robot_with_ball.pos + aux.rotate(aux.Point(1, 0), robot_with_ball.angle),
+            gk_pos = aux.LERP(aux.point_on_line(field.ally_goal.center, field.ball.getPos(), const.GK_FORW),
+                          aux.get_line_intersection(robot_with_ball.getPos(), robot_with_ball.getPos() + aux.rotate(aux.Point(1, 0), robot_with_ball.getAngle()),
                                                     field.ally_goal.down, field.ally_goal.up, 'RS') + const.GK_FORW*field.ally_goal.eye_forw,
                           0.5)
             # print(robot_with_ball.angle)
         except:
-            gk_pos = aux.point_on_line(field.ally_goal.center, field.ball.pos, const.GK_FORW)
+            gk_pos = aux.point_on_line(field.ally_goal.center, field.ball.getPos(), const.GK_FORW)
 
         # print(field.ball.vel.mag())
-        if field.ball.vel.mag() > 100 and \
+        if field.ball._vel.mag() > const.GK_INTERCEPT_SPEED and \
             aux.get_line_intersection(field.ally_goal.down,
                                       field.ally_goal.up,
                                       field.ball.getPos(),
                                       field.ball.getPos() + field.ball.getVel(),
                                       'SR'
                                       ) is not None:
-            gk_pos = aux.closest_point_on_line(field.ball.pos, field.ball.vel.unity()*1000000, field.allies[gk_wall_idx_list[0]].pos)
+            gk_pos = aux.closest_point_on_line(field.ball.getPos(), field.ball._vel.unity()*1000000, field.allies[gk_wall_idx_list[0]].getPos())
             # print("GK INTERCEPT", time.time())
 
         gk_angle = math.pi/2
         waypoints[gk_wall_idx_list[0]] = wp.Waypoint(gk_pos, gk_angle, wp.WType.S_ENDPOINT)
 
-        # print(field.isBallInGoalSq())
-        if field.isBallInGoalSq() and field.ball.vel.mag() < 200:
-            waypoints[gk_wall_idx_list[0]] = wp.Waypoint(field.ball.pos, field.ally_goal.eye_forw.arg(), wp.WType.S_BALL_KICK)
+        # print(field.isBallInGoalSq(), field.ball.getPos())
+        if field.isBallInGoalSq() and field.ball._vel.mag() < const.GK_PEN_KICKOUT_SPEED:
+            waypoints[gk_wall_idx_list[0]] = wp.Waypoint(field.ball.getPos(), field.ally_goal.eye_forw.arg(), wp.WType.S_BALL_KICK)
 
         # wallline = [field.ally_goal.forw + field.ally_goal.eye_forw * const.GOAL_WALLLINE_OFFSET]
         # wallline.append(wallline[0] + field.ally_goal.eye_up)
@@ -359,7 +369,7 @@ class Strategy:
             if used_pop_pos[pointIndex] == False:
                 mn = 1e10
                 for robot in field.allies:
-                    if robot.is_used() and robot.rId != const.GK and robot.rId != self.robot_with_ball and not aux.search_in_list(self.popusk, robot.rId):
+                    if robot.is_used() and robot.rId != const.GK and robot.rId != self.robot_with_ball and not aux.is_in_list(self.popusk, robot.rId):
                         pop_pos_dist = aux.dist(robot.getPos(), popusk_positions[pointIndex])
                         if mn > pop_pos_dist:
                             mn = pop_pos_dist
@@ -417,11 +427,11 @@ class Strategy:
         # print(bro_points)
         if self.robot_with_ball != None:
             if self.attack_state == "TO_BALL":
-                self.attack_pos = field.ball.pos
+                self.attack_pos = field.ball.getPos()
                 if aux.in_place(self.attack_pos, field.allies[self.robot_with_ball].getPos(), 500):
                     self.attack_state = "CALCULATING"
             elif self.attack_state == "CALCULATING":
-                shot_pos, shot_prob = aux.shotDecision(field.ball.pos, goal_points, field.enemies)
+                shot_pos, shot_prob = aux.shotDecision(field.ball.getPos(), goal_points, field.enemies)
                 # shot_pos = aux.Point(field.ball.getPos().x - 1000 * const.ROBOT_R, field.ball.getPos().y)
                 # if shot_prob > const.KOEFF_NAGLO:
                 #     used_bots = []
@@ -451,10 +461,10 @@ class Strategy:
                 if aux.in_place(self.attack_pos, field.allies[self.robot_with_ball].getPos(), 50):
                     self.attack_state = "SHOOT"
             elif self.attack_state == "SHOOT":
-                self.attack_pos = field.ball.pos
-                # field.allies[self.robot_with_ball].kickerChargeEnable = 1
-                # field.allies[self.robot_with_ball].kickerVoltage = 15
-                # field.allies[self.robot_with_ball].kick_up()
+                self.attack_pos = field.ball.getPos()
+                field.allies[self.robot_with_ball].kickerChargeEnable = 1
+                field.allies[self.robot_with_ball].kickerVoltage = 15
+                field.allies[self.robot_with_ball].kick_up()
                 if not(aux.in_place(self.attack_pos, field.allies[self.robot_with_ball].getPos(), 500)):
                     # for index in range(len(used_pop_pos)):
                         # if used_pop_pos[index] == False:

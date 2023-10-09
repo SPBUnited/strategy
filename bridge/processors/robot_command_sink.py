@@ -13,7 +13,6 @@ from strategy_bridge.bus import DataBus
 from strategy_bridge.utils.debugger import debugger
 from strategy_bridge.pb.messages_robocup_ssl_wrapper_pb2 import SSL_WrapperPacket
 
-from bridge.processors.singleton import Singleton
 import bridge.processors.robot as robot
 import bridge.processors.const as const
 
@@ -42,6 +41,10 @@ class CommandSink(BaseProcessor):
             r = cmd.content
             rId = r.rId
             ctrlId = r.ctrlId
+
+            if ctrlId == None:
+                continue
+
             if r.color == 'b':
                 self.b_control_team[ctrlId].copy_control_fields(r)
             elif r.color == 'y':

@@ -6,6 +6,9 @@ import bridge.processors.auxiliary as aux
 import math
 
 def shortesthull(p1: aux.Point, p2: aux.Point, points):
+    """
+    Получить кратчайший путь от точки p1 до точки p2, огибающий точки points
+    """
     hull = []
     mindist = math.inf
     minidx = None
@@ -27,6 +30,12 @@ def shortesthull(p1: aux.Point, p2: aux.Point, points):
 
 
 def quickhull(p1: aux.Point, p2: aux.Point, points, polarity = 1):
+    """
+    Найти половину выпуклой оболочки вокруг points с началом в p1, концом в p2
+
+    При polarity == 1: оболочка сверху
+    При polarity == -1: оболочка снизу
+    """
     if polarity == 1:
         return [p1] + quickhullupper(p1, p2, points) + [p2]
     elif polarity == -1:
@@ -35,7 +44,9 @@ def quickhull(p1: aux.Point, p2: aux.Point, points, polarity = 1):
         return None
 
 def quickhullupper(p1: aux.Point, p2: aux.Point, points):
-    
+    """
+    Найти верхнюю половину выпуклой оболочки вокруг points с началом в p1, концом в p2
+    """
     if len(points) == 0:
         return []
 

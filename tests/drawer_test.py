@@ -25,11 +25,11 @@ if __name__ == '__main__':
 
         field.updateYelRobot(0, field.y_goal - aux.Point(500, 200), 0, 0)        
         field.updateBall(field.y_goal - aux.Point(1500, 1500))
-        field.ball.vel = aux.rotate(aux.Point(1200, 0), (time.time()/10)%(math.pi/2))
+        field.ball._vel = aux.rotate(aux.Point(1200, 0), (time.time()/10)%(math.pi/2))
         field.draw()
 
         waypoints = strategy.process(field)
-        drw.Drawer().drawAbsVec(field.y_team[0].pos, waypoints[0].pos)
+        drw.Drawer().drawAbsVec(field.y_team[0].getPos(), waypoints[0].pos)
 
         drw.Drawer().flip()
 

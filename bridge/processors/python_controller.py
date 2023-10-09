@@ -26,7 +26,7 @@ from bridge.processors.robot_command_sink import CommandSink
 
 # TODO: Refactor this class and corresponding matlab scripts
 @attr.s(auto_attribs=True)
-class MatlabController(BaseProcessor):
+class SSLController(BaseProcessor):
 
     max_commands_to_persist: int = 20
     our_color: str = 'b'
@@ -41,11 +41,15 @@ class MatlabController(BaseProcessor):
     cur_time = time.time()
     dt = 0
 
-    ctrl_mapping = [i for i in range(const.TEAM_ROBOTS_MAX_COUNT)]
+    ctrl_mapping = const.CONTROL_MAPPING
+    print(ctrl_mapping)
     count_halt_cmd = 0
 
     def initialize(self, data_bus: DataBus) -> None:
-        super(MatlabController, self).initialize(data_bus)
+        """
+        Инициализировать контроллер
+        """
+        super(SSLController, self).initialize(data_bus)
         self.vision_reader = DataReader(data_bus, config.VISION_DETECTIONS_TOPIC)
         self.referee_reader = DataReader(data_bus, config.REFEREE_COMMANDS_TOPIC)
         self.commands_sink_writer = DataWriter(data_bus, const.TOPIC_SINK, 20)
@@ -56,12 +60,18 @@ class MatlabController(BaseProcessor):
         self.strategy = strategy.Strategy(self.dbg_game_status, self.dbg_state)
 
     def get_last_referee_command(self) -> RefereeCommand:
+        """
+        Получить последнюю команду рефери
+        """
         referee_commands = self.referee_reader.read_new()
         if referee_commands:
             return referee_commands[-1].content
         return RefereeCommand(0, 0, False)
 
     def read_vision(self) -> bool:
+        """
+        Прочитать новые пакеты из SSL-Vision
+        """
         status = False
 
         balls = np.zeros(const.BALL_PACKET_SIZE * const.MAX_BALLS_IN_FIELD)
@@ -99,7 +109,9 @@ class MatlabController(BaseProcessor):
                 if time.time() - self.field.y_team[i].last_update() > 1:
                     self.field.y_team[i].used(0)
 
+            
             self.strategy.changeGameState(strategy.GameStates.RUN, 0)
+
             # curCmd = self.get_last_referee_command()
             # if curCmd.state == 0:
             #     self.count_halt_cmd += 1
@@ -153,23 +165,31 @@ class MatlabController(BaseProcessor):
         """
         self.router.update(self.field)
         waypoints = self.strategy.process(self.field)
-        for i in range(0, 6):
+        for i in range(const.TEAM_ROBOTS_MAX_COUNT):
             self.router.getRoute(i).clear()
             self.router.setDest(i, waypoints[i])
         self.router.reRoute(self.field)
 
-        # TODO алгоритм следования по траектории
-        # TODO Убрать артефакты
-        for i in range(0, 6):
+        for i in range(const.TEAM_ROBOTS_MAX_COUNT):
             self.field.allies[i].go_route(self.router.getRoute(i), self.field)
 
-    square = signal.Signal(2, 'SQUARE', lohi=(-1000, 1000))
+        # for i in range(const.TEAM_ROBOTS_MAX_COUNT):
+        #     print(self.field.y_team[i])
+        # for i in range(const.TEAM_ROBOTS_MAX_COUNT):
+        #     print(self.field.b_team[i])
+        print(self.router.getRoute(const.DEBUG_ID))
+
+    square = signal.Signal(2, 'SQUARE', lohi=(-20, 20))
     sine = signal.Signal(2, 'SINE', ampoffset=(1000, 0))
     cosine = signal.Signal(2, 'COSINE', ampoffset=(1000, 0))
     def control_assign(self):
         """
         Определить связь номеров роботов с каналами управления
         """
+        # self.field.allies[const.DEBUG_ID].speedR = self.square.get()
+        # self.field.allies[const.DEBUG_ID].speedX = 0
+        # self.field.allies[const.DEBUG_ID].speedY = 0
+        # print(self.square.get())
         for i in range(const.TEAM_ROBOTS_MAX_COUNT):
             self.commands_sink_writer.write(self.field.allies[i])
 

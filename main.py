@@ -3,7 +3,7 @@ from strategy_bridge.processors import VisionDetectionsCollector, RobotCommandsS
 from strategy_bridge.processors.referee_commands_collector import RefereeCommandsCollector
 from strategy_bridge.runner import Runner
 
-from bridge.processors.python_controller import MatlabController
+from bridge.processors.python_controller import SSLController
 from bridge.processors.robot_command_sink import CommandSink
 import bridge.processors.const as const
 import bridge.processors.strategy as strategy
@@ -16,7 +16,7 @@ if __name__ == '__main__':
     processors = [
         VisionDetectionsCollector(processing_pause=0.001, should_debug=True),
         RefereeCommandsCollector(processing_pause=0.001, should_debug=True),
-        MatlabController(
+        SSLController(
             our_color='b',
             should_debug=True,
             processing_pause=const.Ts,

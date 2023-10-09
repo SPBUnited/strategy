@@ -30,11 +30,11 @@ class Testing(unittest.TestCase):
         pi1 = aux.Point(1.5, 0)
         po1 = aux.get_line_intersection(p1, p1+v1, p2, p2+v2, 'LL')
 
-        fig, ax = plt.subplots()  # Create a figure containing a single axes.
-        ax.plot([p1.x, (p1+v1).x], [p1.y, (p1+v1).y])  # Plot some data on the axes.
-        ax.plot([p2.x, (p2+v2).x], [p2.y, (p2+v2).y])  # Plot some data on the axes.
-        ax.plot(po1.x, po1.y, 'x')
-        plt.show()
+        # fig, ax = plt.subplots()  # Create a figure containing a single axes.
+        # ax.plot([p1.x, (p1+v1).x], [p1.y, (p1+v1).y])  # Plot some data on the axes.
+        # ax.plot([p2.x, (p2+v2).x], [p2.y, (p2+v2).y])  # Plot some data on the axes.
+        # ax.plot(po1.x, po1.y, 'x')
+        # plt.show()
         # while(True):
         #     pass
         
@@ -68,14 +68,22 @@ class Testing(unittest.TestCase):
             aux.Point(10000.00, -0.00)
         ]
 
-        fig, ax = plt.subplots()  # Create a figure containing a single axes.
-        for i in range(-1, len(points)-1):
-            ax.plot([points[i].x, points[i+1].x], [points[i].y, points[i+1].y])  # Plot some data on the axes.
-        ax.plot(p.x, p.y, 'x')
-        plt.show()
+        # fig, ax = plt.subplots()  # Create a figure containing a single axes.
+        # for i in range(-1, len(points)-1):
+        #     ax.plot([points[i].x, points[i+1].x], [points[i].y, points[i+1].y])  # Plot some data on the axes.
+        # ax.plot(p.x, p.y, 'x')
+        # plt.show()
 
         self.assertTrue(aux.is_point_inside_poly(p, points))
 
+    def test_is_in_list(self):
+
+        list = [1,2,3,4,5,6]
+        x = 4
+        self.assertTrue(aux.is_in_list(list, x))
+
+        x = 40
+        self.assertFalse(aux.is_in_list(list, x))
 
 
 if __name__ == '__main__':
