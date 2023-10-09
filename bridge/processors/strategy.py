@@ -46,6 +46,7 @@ class Strategy:
         self.state = States.ATTACK
         self.weActive = 1
         self.timer = 0
+        self.is_ball_moved = 0
 
         #DEFENCE
         self.old_def_helper = -1
@@ -131,17 +132,24 @@ class Strategy:
 
     def run(self, field: field.Field, waypoints):
         if field.ball.getVel().mag() < 100:
-            rivals_robot_with_ball = aux.find_nearest_robot(field.ball.getPos(), field.enemies, [const.ENEMY_GK])
-            allies_robot_with_ball = aux.find_nearest_robot(field.ball.getPos(), field.allies, [const.GK])
-
-            '''if time.time() - self.timer > 1:
+            if self.is_ball_moved or time.time() - self.timer > 7:
+                rivals_robot_with_ball = aux.find_nearest_robot(field.ball.getPos(), field.enemies, [const.ENEMY_GK])
+                allies_robot_with_ball = aux.find_nearest_robot(field.ball.getPos(), field.allies, [const.GK])
                 self.timer = time.time()
                 if aux.dist(rivals_robot_with_ball.getPos(), field.ball.getPos()) < aux.dist(allies_robot_with_ball.getPos(), field.ball.getPos()):
                     self.state = States.DEFENCE
                     print("defence")
                 else:
                     self.state = States.ATTACK
-                    print("attack") '''
+                    print("attack")
+            self.is_ball_moved = 0
+            if abs(const.GOAL_DX - abs(field.ball.getPos().x)) < const.GOAL_DY and abs(field.ball.getPos().y) < const.GOAL_DY:
+                if abs(field.ball.getPos().x - field.enemy_goal.center.x) < abs(field.ball.getPos().x - field.ally_goal.center.x): 
+                    self.state = States.DEFENCE
+                else:
+                    self.state = States.ATTACK
+        else:
+            self.is_ball_moved = 1
         wall = []
 
         if self.state == States.DEBUG:
@@ -277,7 +285,7 @@ class Strategy:
         if ENDPOINT_TYPE == wp.WType.S_KEEP_BALL_DISTANCE:
             if aux.dist(targetPoint, field.ball.getPos()) < const.KEEP_BALL_DIST:
                 targetPoint = aux.point_on_line(aux.point_on_line(targetPoint, field.ball.getPos(), -const.KEEP_BALL_DIST), aux.Point(field.side * const.GOAL_DX, 0), dist_between)
-        waypoint = wp.Waypoint(targetPoint, aux.angle_to_point(targetPoint, robot_with_ball.getPos()), ENDPOINT_TYPE)
+        waypoint = wp.Waypoint(targetPoint, aux.angle_to_point(targetPoint, field.ball.getPos()), ENDPOINT_TYPE)
         waypoints[def1.rId] = waypoint
         self.old_def = def1.rId
 
