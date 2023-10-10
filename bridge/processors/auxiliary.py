@@ -375,7 +375,7 @@ def shotDecision(st, end, tobj):
     #     # print([bot.getPos().x, bot.getPos().y], end = " ")
     #     plt.plot(bot.getPos().x, bot.getPos().y, 'bo')
     # t = np.arange(-4500*1.0, 1000*1.0, 10)
-    for point in end:        
+    for point in end:    #checkai    
         A = -(point.y - st.y)
         B = (point.x - st.x)
         C = st.x * (point.y - st.y) - st.y * (point.x - st.x)

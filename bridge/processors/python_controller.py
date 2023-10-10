@@ -114,7 +114,7 @@ class SSLController(BaseProcessor):
             
            # self.strategy.changeGameState(strategy.GameStates.RUN, 0)
 
-            '''curCmd = self.get_last_referee_command()
+            curCmd = self.get_last_referee_command()
             if curCmd.state == 0:
                 self.count_halt_cmd += 1
             else:
@@ -145,10 +145,9 @@ class SSLController(BaseProcessor):
                     self.strategy.changeGameState(strategy.GameStates.BALL_PLACMENT, curCmd.commandForTeam)
                 
             if self.count_halt_cmd > 10:
-                self.strategy.changeGameState(strategy.GameStates.HALT, curCmd.commandForTeam)'''
+                self.strategy.changeGameState(strategy.GameStates.HALT, curCmd.commandForTeam)
 
-            self.strategy.changeGameState(strategy.GameStates.RUN, 0)
-
+            # self.strategy.changeGameState(strategy.GameStates.PREPARE_KICKOFF, 1)
 
 
             # TODO: Barrier states
@@ -195,9 +194,11 @@ class SSLController(BaseProcessor):
         """
         # self.field.allies[const.DEBUG_ID].speedX = 0
         # self.field.allies[const.DEBUG_ID].speedY = 0
-        #print(self.square.get())
+        # print(self.square.get())
         for i in range(const.TEAM_ROBOTS_MAX_COUNT):
-            #self.field.allies[i].speedR = self.square.get()
+            if self.field.allies[i].is_used():
+                self.field.allies[i].color = 'b'
+            # self.field.allies[i].speedR = self.square.get()
             self.commands_sink_writer.write(self.field.allies[i])
 
     @debugger
@@ -216,6 +217,6 @@ class SSLController(BaseProcessor):
         self.read_vision()
         self.control_loop()
 
-        # print(self.router.getRoute(const.GK))
+        # print(self.router.getRoute(const.DEBUG_ID))
 
         self.control_assign()
