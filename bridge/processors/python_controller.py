@@ -183,6 +183,8 @@ class SSLController(BaseProcessor):
     square = signal.Signal(2, 'SQUARE', lohi=(-20, 20))
     sine = signal.Signal(2, 'SINE', ampoffset=(1000, 0))
     cosine = signal.Signal(2, 'COSINE', ampoffset=(1000, 0))
+
+    active_robot = 0
     def control_assign(self):
         """
         Определить связь номеров роботов с каналами управления
@@ -191,8 +193,27 @@ class SSLController(BaseProcessor):
         # self.field.allies[const.DEBUG_ID].speedX = 0
         # self.field.allies[const.DEBUG_ID].speedY = 0
         # print(self.square.get())
-        for i in range(const.TEAM_ROBOTS_MAX_COUNT):
-            self.commands_sink_writer.write(self.field.allies[i])
+        # for i in range(const.TEAM_ROBOTS_MAX_COUNT):
+        #     self.commands_sink_writer.write(self.field.allies[i])
+
+        print(self.router.getRoute(self.active_robot).getLenght(),
+              self.active_robot,
+              self.field.allies[self.active_robot].getVel().mag(),
+              )
+        
+        if self.field.isBallInGoalSq():
+            self.active_robot = const.GK_ID
+        elif self.router.getRoute(self.active_robot).getLenght() < 150 and \
+            self.active_robot != const.ATTACKER_ID:
+            self.field.allies[self.active_robot].speedX = 0
+            self.field.allies[self.active_robot].speedY = 0
+            self.field.allies[self.active_robot].speedR = 0
+            self.commands_sink_writer.write(self.field.allies[self.active_robot])
+            if self.field.allies[self.active_robot].getVel().mag() < 10 or True:
+                self.active_robot += 1
+                self.active_robot %= 6
+
+        self.commands_sink_writer.write(self.field.allies[self.active_robot])
 
     @debugger
     def process(self) -> None:

@@ -25,7 +25,7 @@ class Router:
     Установить единственную путевую точку для робота с индексом idx
     """
     def setDest(self, idx, target: wp.Waypoint, field: field.Field):
-        if idx != const.GK:
+        if idx != const.GK_ID:
             self_pos = field.allies[idx].getPos()
             dest_pos = target.pos
             for goal in [field.ally_goal, field.enemy_goal]:
@@ -53,7 +53,7 @@ class Router:
                     align_wp = self.calcKickWP(idx, field)
                     self.routes[idx].insertWP(align_wp)
 
-            if idx == const.GK:
+            if idx == const.GK_ID:
                 pth_wp = self.calcVectorField(idx, field)
                 if pth_wp is not None:
                     self.routes[idx].insertWP(pth_wp)

@@ -2,7 +2,6 @@ import bridge.processors.auxiliary as aux
 
 ##################################################
 # GAME SETTING CONSTS
-GK = 5
 PENALTY_KICKER = 2
 ENEMY_GK = 5
 IS_SIMULATOR_USED = False
@@ -22,6 +21,11 @@ GEOMETRY_PACKET_SIZE: int = 2
 
 DEBUG_ID = 2
 DEBUG_CTRL = 2
+
+GK_ID = 0
+WALL_ID = [1,2,3,4]
+ATTACKER_ID = 5
+
 CONTROL_MAPPING = \
 {
     # DEBUG_ID: DEBUG_CTRL
@@ -30,7 +34,7 @@ CONTROL_MAPPING = \
     2: 2,
     3: 3,
     4: 4,
-    5: 5,
+    5: 5, # <- Attacker
     # 6: 6,
     # 7: 7,
     # 8: 8,

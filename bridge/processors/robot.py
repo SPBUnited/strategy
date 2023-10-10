@@ -170,7 +170,7 @@ class Robot(entity.Entity):
         tpangle = target_point.angle if target_point.type != wp.WType.R_PASSTHROUGH else end_point.angle
         lerp_angles = [target_point.angle, angle60]
 
-        if self.rId != const.GK:
+        if self.rId != const.GK_ID:
             angle0 = aux.LERP(lerp_angles[0], lerp_angles[1], aux.minmax((dist-100)/100, 0, 1))
         else:
             angle0 = target_point.angle
@@ -203,7 +203,7 @@ class Robot(entity.Entity):
             self.dribblerEnable = True
             self.speedDribbler = 5
             if end_point.type == wp.WType.S_BALL_KICK:
-                self.autoKick = 2 if self.rId == const.GK else 1
+                self.autoKick = 2 if self.rId == const.GK_ID else 1
             else:
                 self.autoKick = 0
         else:
@@ -214,7 +214,7 @@ class Robot(entity.Entity):
         u = self.posReg.process(err, -cur_speed)
         # if self.rId == 1:
         #     print('%d'%dist, '%d'%cur_speed, err, u)
-        if self.rId == const.GK or \
+        if self.rId == const.GK_ID or \
             (end_point.type == wp.WType.S_BALL_KICK or \
             end_point.type == wp.WType.S_BALL_GRAB or \
             end_point.type == wp.WType.S_BALL_GO) and\
