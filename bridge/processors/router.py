@@ -172,7 +172,7 @@ class Router:
         target_pos = target_point.pos
         target_angle = target_point.angle
 
-        align_pos = target_pos - aux.rotate(aux.i, target_angle)*const.KICK_ALIGN_DIST
+        align_pos = target_pos - aux.rotate(aux.i, target_angle) * const.KICK_ALIGN_DIST
         align_angle = target_angle
         align_type = wp.WType.R_BALL_ALIGN
         align_wp = wp.Waypoint(

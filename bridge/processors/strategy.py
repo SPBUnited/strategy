@@ -692,7 +692,7 @@ class Strategy:
         self.put_kickoff_waypoints(field, waypoints) 
         if self.we_kick:
             go_kick = aux.find_nearest_robot(field.ball.getPos(), field.allies)
-            target = aux.Point(700 * field.side, 2000)
+            target = aux.Point(700 * field.side, 2000) 
             field.allies[go_kick.rId].kickerVoltage = 10
             waypoint = wp.Waypoint(field.ball.getPos(), (target - field.allies[go_kick.rId].getPos()).arg(), wp.WType.S_BALL_KICK)
             waypoints[go_kick.rId] = waypoint
