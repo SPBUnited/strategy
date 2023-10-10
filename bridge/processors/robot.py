@@ -58,7 +58,7 @@ class Robot(entity.Entity):
         self.yyTF = 0.1
         self.yyFlp = tau.FOLP(self.yyTF, const.Ts)
 
-        self.posReg = tau.PISD(const.Ts, [3.7, 0.5], [0.2, 0.13], [0, 0.5], [const.MAX_SPEED, const.MAX_SPEED/2])
+        self.posReg = tau.PISD(const.Ts, [4, 0.5], [0.2, 0.13], [0, 0.1], [const.MAX_SPEED, const.MAX_SPEED/2])
         self.angleReg = tau.PISD(const.Ts, [1, 0.5], [0, 0], [0, 8], [const.MAX_SPEED_R, const.MAX_SPEED_R])
 
 
@@ -155,7 +155,7 @@ class Robot(entity.Entity):
             end_point.type == wp.WType.S_BALL_GRAB or \
             end_point.type == wp.WType.S_BALL_GO:
 
-            # print("IS KICK ALIGNED: ", self.is_kick_aligned(end_point))
+            print("IS KICK ALIGNED: ", self.is_kick_aligned(end_point))
             
             self.posReg.select_mode(tau.Mode.SOFT)
 
@@ -175,9 +175,9 @@ class Robot(entity.Entity):
             if end_point.type == wp.WType.S_BALL_KICK:
                 self.autoKick = 1
             else:
-                self.autoKick = 0
+                self.autoKick = 1
         else:
-            self.autoKick = 0
+            self.autoKick = 1
 
         angle0 = end_point.angle
 
@@ -217,7 +217,7 @@ class Robot(entity.Entity):
         vecSpeed = math.sqrt(self.speedX ** 2 + self.speedY ** 2)
         rSpeed = abs(self.speedR)
 
-        vecSpeed *= ((const.MAX_SPEED_R - rSpeed) / const.MAX_SPEED_R) ** 4
+        vecSpeed *= ((const.MAX_SPEED_R - rSpeed) / const.MAX_SPEED_R) ** 8
         ang = math.atan2(self.speedY, self.speedX)
         self.speedX = vecSpeed * math.cos(ang)
         self.speedY = vecSpeed * math.sin(ang)

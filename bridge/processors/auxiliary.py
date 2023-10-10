@@ -396,7 +396,7 @@ def shotDecision(st, end, tobj):
     # plt.axis('equal')
     # plt.grid(True)
     # plt.show()
-    return shot_point, mx
+    return shot_point, mx, Lres
     
 def in_place(st, end, epsilon):
     """

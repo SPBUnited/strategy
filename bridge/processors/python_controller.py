@@ -126,7 +126,8 @@ class SSLController(BaseProcessor):
                 elif curCmd.state == 3:
                     self.strategy.changeGameState(strategy.GameStates.TIMEOUT, curCmd.commandForTeam)
                 elif curCmd.state == 4:
-                    print("Uknown command")
+                    self.strategy.changeGameState(strategy.GameStates.HALT, curCmd.commandForTeam)
+                    print("End game")
                 elif curCmd.state == 5:
                     self.strategy.changeGameState(strategy.GameStates.PREPARE_KICKOFF, curCmd.commandForTeam)
                 elif curCmd.state == 6:
@@ -138,14 +139,15 @@ class SSLController(BaseProcessor):
                 elif curCmd.state == 9:
                     self.strategy.changeGameState(strategy.GameStates.FREE_KICK, curCmd.commandForTeam)
                 elif curCmd.state == 10:
-                    print("Uknown command")
+                    self.strategy.changeGameState(strategy.GameStates.HALT, curCmd.commandForTeam)
+                    print("Uknown command 10")
                 elif curCmd.state == 11:
                     self.strategy.changeGameState(strategy.GameStates.BALL_PLACMENT, curCmd.commandForTeam)
                 
             if self.count_halt_cmd > 10:
                 self.strategy.changeGameState(strategy.GameStates.HALT, curCmd.commandForTeam)
 
-            self.strategy.changeGameState(strategy.GameStates.PENALTY, 0)
+            self.strategy.changeGameState(strategy.GameStates.RUN, 1)
 
 
 
@@ -191,11 +193,11 @@ class SSLController(BaseProcessor):
         """
         Определить связь номеров роботов с каналами управления
         """
-        # self.field.allies[0].speedR = self.square.get()
         # self.field.allies[const.DEBUG_ID].speedX = 0
         # self.field.allies[const.DEBUG_ID].speedY = 0
-        # print(self.square.get())
+        #print(self.square.get())
         for i in range(const.TEAM_ROBOTS_MAX_COUNT):
+            #self.field.allies[i].speedR = self.square.get()
             self.commands_sink_writer.write(self.field.allies[i])
 
     @debugger

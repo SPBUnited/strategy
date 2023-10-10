@@ -2,7 +2,7 @@ import bridge.processors.auxiliary as aux
 
 ##################################################
 # GAME SETTING CONSTS
-GK = 1
+GK = 9
 PENALTY_KICKER = 10
 ENEMY_GK = 5
 IS_SIMULATOR_USED = False
@@ -44,7 +44,7 @@ TOPIC_SINK = "control-sink"
 
 ##################################################
 # CONTROL CONSTS
-Ts = 0.02 # s
+Ts = 0.05 # s
 
 # ROBOT SETTING CONSTS
 # MAX_SPEED = 100

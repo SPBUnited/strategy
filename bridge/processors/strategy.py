@@ -60,7 +60,7 @@ class Strategy:
         self.attack_state = "TO_BALL"
         self.attack_pos = aux.Point(0,0)
         self.calc = False
-
+        self.PointRes = (0,0)
         #PENALTY
         self.we_kick = 0
         self.is_started = 0
@@ -183,19 +183,19 @@ class Strategy:
         #self.gk_go(field, waypoints, [const.GK], None)
 
 
-        # for i in range(9, 16):
-        #     # pos = aux.point_on_line(bbotpos, -aux.Point(const.GOAL_DX, 0), 300)
-        #     # pos = aux.Point(-1100 + 300 * i, 0)
-        #     # pos = aux.Point(1000 + 300 * i + self.square.get(), -1000)
+        for i in range(9, 16):
+            # pos = aux.point_on_line(bbotpos, -aux.Point(const.GOAL_DX, 0), 300)
+            # pos = aux.Point(-1100 + 300 * i, 0)
+            # pos = aux.Point(1000 + 300 * i + self.square.get(), -1000)
             
-        #     # dpos = bbotpos - ybotpos
-        #     # angle = math.atan2(dpos.y, dpos.x)
-        #     # angle = self.square_ang.get()
-        #     target = aux.Point(0 + 200 * (i - 9), 0)
-        #     angle = (aux.Point(0, 0) - target).arg() #(aux.Point(0, 0) - target).arg()
+            # dpos = bbotpos - ybotpos
+            # angle = math.atan2(dpos.y, dpos.x)
+            # angle = self.square_ang.get()
+            target = aux.Point(-(+500 - 300 * (i - 9)), 0)
+            angle = (aux.Point(0, 0) - target).arg() #(aux.Point(0, 0) - target).arg()
 
-        #     waypoint = wp.Waypoint(target, angle, wp.WType.S_ENDPOINT)
-        #     waypoints[i] = waypoint
+            waypoint = wp.Waypoint(target, angle, wp.WType.S_ENDPOINT)
+            waypoints[i] = waypoint
         
         # waypoints[1].pos = field.ally_goal.eye_forw*4000 + field.ally_goal.eye_up * (self.square.get() - 2000)
 
@@ -436,7 +436,7 @@ class Strategy:
                 if aux.in_place(self.attack_pos, field.allies[self.robot_with_ball].getPos(), 500):
                     self.attack_state = "CALCULATING"
             elif self.attack_state == "CALCULATING":
-                shot_pos, shot_prob = aux.shotDecision(field.ball.getPos(), goal_points, field.enemies)
+                shot_pos, shot_prob, self.PointRes = aux.shotDecision(field.ball.getPos(), goal_points, field.enemies)
                 # shot_pos = aux.Point(field.ball.getPos().x - 1000 * const.ROBOT_R, field.ball.getPos().y)
                 # if shot_prob > const.KOEFF_NAGLO:
                 #     used_bots = []
@@ -461,15 +461,15 @@ class Strategy:
                 # shot_pos = aux.Point(field.ball.getPos().x - 1000 * const.ROBOT_R, field.ball.getPos().y)
                 # if shot_prob > const.KOEFF_NAGLO:
                 # self.attack_pos = shot_pos
-                field.allies[self.robot_with_ball].kickerChargeEnable = 1
-                field.allies[self.robot_with_ball].kickerVoltage = 15
+                # field.allies[self.robot_with_ball].kickerChargeEnable = 1
+                # field.allies[self.robot_with_ball].kickerVoltage = 15
                 if aux.in_place(self.attack_pos, field.allies[self.robot_with_ball].getPos(), 50):
                     self.attack_state = "SHOOT"
             elif self.attack_state == "SHOOT":
                 self.attack_pos = field.ball.getPos()
-                field.allies[self.robot_with_ball].kickerChargeEnable = 1
-                field.allies[self.robot_with_ball].kickerVoltage = 15
-                field.allies[self.robot_with_ball].kick_up()
+                # field.allies[self.robot_with_ball].kickerChargeEnable = 1
+                # field.allies[self.robot_with_ball].kickerVoltage = 15
+                # field.allies[self.robot_with_ball].kick_up()
                 if not(aux.in_place(self.attack_pos, field.allies[self.robot_with_ball].getPos(), 500)):
                     # for index in range(len(used_pop_pos)):
                         # if used_pop_pos[index] == False:
@@ -485,7 +485,7 @@ class Strategy:
                 #ехать к нужной точке
             if self.robot_with_ball != None:
                 if self.attack_state == "SHOOT":
-                    waypoints[self.robot_with_ball] = wp.Waypoint(self.attack_pos, aux.angle_to_point(field.allies[self.robot_with_ball].getPos(), field.ball.getPos()), wp.WType.S_BALL_KICK)
+                    waypoints[self.robot_with_ball] = wp.Waypoint(self.attack_pos, aux.angle_to_point(field.ball.getPos(), self.PointRes), wp.WType.S_BALL_KICK)
                 else:
                     waypoints[self.robot_with_ball] = wp.Waypoint(self.attack_pos, aux.angle_to_point(field.allies[self.robot_with_ball].getPos(), field.ball.getPos()), wp.WType.S_ENDPOINT)
                 # print(self.attack_state)

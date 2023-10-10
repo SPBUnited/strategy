@@ -37,8 +37,8 @@ if __name__ == '__main__':
         #     reduce_pause_on_process_time=True,
         #     dbg_game_status = strategy.GameStates.RUN,
         #     dbg_state = strategy.States.DEFENCE),
-        CommandSink(processing_pause = 0.05, should_debug=True),
-        RobotCommandsSender(processing_pause = 0.05, should_debug=True)
+        CommandSink(processing_pause = const.Ts / 2, should_debug=True),
+        RobotCommandsSender(processing_pause = const.Ts / 2, should_debug=True)
     ]
 
     runner = Runner(processors=processors)
