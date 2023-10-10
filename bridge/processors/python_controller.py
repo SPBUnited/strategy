@@ -147,7 +147,7 @@ class SSLController(BaseProcessor):
             if self.count_halt_cmd > 10:
                 self.strategy.changeGameState(strategy.GameStates.HALT, curCmd.commandForTeam)
 
-            # self.strategy.changeGameState(strategy.GameStates.RUN, 1)
+            self.strategy.changeGameState(strategy.GameStates.RUN, 1)
 
 
 

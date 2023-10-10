@@ -140,12 +140,14 @@ class Strategy:
                     print("defence")
                 else:
                     self.state = States.ATTACK
+                    self.reset_all_attack_var()
                     print("attack")
             self.is_ball_moved = 0
             if abs(const.GOAL_DX - abs(field.ball.getPos().x)) < const.GOAL_DY and abs(field.ball.getPos().y) < const.GOAL_DY:
                 if abs(field.ball.getPos().x - field.enemy_goal.center.x) < abs(field.ball.getPos().x - field.ally_goal.center.x): 
                     self.state = States.DEFENCE
                 else:
+                    self.reset_all_attack_var()
                     self.state = States.ATTACK
         else:
             self.is_ball_moved = 1
@@ -369,6 +371,16 @@ class Strategy:
                 used_robots_id.append(field.allies[i].rId)
         return sorted(wall_bots)
 
+    def reset_all_attack_var(self):
+        used_pop_pos = [False, False, False, False, False]
+        self.robot_with_ball = None
+        self.connector = []
+        self.popusk = []
+        self.attack_state = "TO_BALL"
+        self.attack_pos = aux.Point(0,0)
+        self.calc = False
+        self.PointRes = (0,0)
+    
     def decide_popusk_position(self, field: field.Field):
         for pointIndex in range(len(popusk_positions)):
             save_robot = -1

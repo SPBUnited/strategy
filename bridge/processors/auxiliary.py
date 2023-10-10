@@ -366,6 +366,7 @@ def shotDecision(st, end, tobj):
     # mx_shot_prob = 0
     shot_point = st
     mx = 0
+    sum = Point(0, 0)
     # print(st)
     # for bot in obj:
     #     # print([bot.getPos().x, bot.getPos().y], end = " ")
@@ -391,11 +392,17 @@ def shotDecision(st, end, tobj):
             mx = tmp_prob
             shot_point = botPosition(st, point.x - st.x, point.y - st.y)
             Lres = point
+            n = 1
+            sum = point
+        elif tmp_prob == mx:
+            sum += point
+            n += 1
     # plt.plot(t, -(Lres.A*t + Lres.C)/Lres.B, 'r-')
     # plt.plot(shot_point.x, shot_point.y, 'r^')
     # plt.axis('equal')
     # plt.grid(True)
     # plt.show()
+    Lres = sum / n
     return shot_point, mx, Lres
     
 def in_place(st, end, epsilon):
