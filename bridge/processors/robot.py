@@ -58,9 +58,29 @@ class Robot(entity.Entity):
         self.yyTF = 0.1
         self.yyFlp = tau.FOLP(self.yyTF, const.Ts)
 
-        self.posReg = tau.PISD(const.Ts, [4, 0.5], [0.2, 0.13], [0, 0.1], [const.MAX_SPEED, const.MAX_SPEED/2])
-        self.angleReg = tau.PISD(const.Ts, [1, 0.5], [0, 0], [0, 8], [const.MAX_SPEED_R, const.MAX_SPEED_R])
+        # self.posReg = tau.PISD(const.Ts, [4, 0.5], [0.2, 0.13], [0, 0.1], [const.MAX_SPEED, 200])
+        # self.angleReg = tau.PISD(const.Ts, [1, 0.5], [0, 0], [0, 8], [const.MAX_SPEED_R, const.MAX_SPEED_R])
 
+        #!v REAL
+        if self.rId != const.GK:
+            gains_full = [6, 0.8, 0, const.MAX_SPEED]
+            gains_soft = [6, 1, 1, 250]
+            a_gains_full = [4, 0.1, 0.1, const.MAX_SPEED_R]
+            a_gains_soft = [2, 0.07, 1, const.MAX_SPEED_R]
+        else:
+            gains_full = [6, 0.8, 0, const.MAX_SPEED]
+            gains_soft = [6, 1, 0.1, 200]
+            a_gains_full = [6, 0.1, 0, const.MAX_SPEED_R]
+            a_gains_soft = [2, 0.07, 1, const.MAX_SPEED_R]
+
+        #!v SIM
+        # gains_full = [2, 0.3, 0, const.MAX_SPEED]
+        # gains_soft = [0.5, 0.1, 0, const.SOFT_MAX_SPEED]
+        # a_gains_full = [2, 0.1, 0.1, const.MAX_SPEED_R]
+        # a_gains_soft = [1, 0.07, 0, const.SOFT_MAX_SPEED_R]
+
+        self.posReg = tau.PISD(const.Ts, [gains_full[0], gains_soft[0]], [gains_full[1], gains_soft[1]], [gains_full[2], gains_soft[2]], [gains_full[3], gains_soft[3]])
+        self.angleReg = tau.PISD(const.Ts, [a_gains_full[0], a_gains_soft[0]], [a_gains_full[1], a_gains_soft[1]], [a_gains_full[2], a_gains_soft[2]], [a_gains_full[3], a_gains_soft[3]])
 
     def used(self, a):
         self.isUsed = a

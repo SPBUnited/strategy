@@ -352,8 +352,8 @@ def probability(inter, bots, st):
 
 def botPosition(st, vecx, vecy):
     modul = (vecx**2 + vecy**2)**(0.5)
-    vecx = (vecx / modul) * const.ROBOT_R * 1000 * 2
-    vecy = (vecy / modul) * const.ROBOT_R * 1000 * 2
+    vecx = (vecx / modul) * const.ROBOT_R * 1000 * 1
+    vecy = (vecy / modul) * const.ROBOT_R * 1000 * 1
     return Point(st.x - vecx, st.y - vecy)
 
 def shotDecision(st, end, tobj):

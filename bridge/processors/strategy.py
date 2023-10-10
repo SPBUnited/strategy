@@ -13,7 +13,7 @@ from enum import Enum
 #!v DEBUG ONLY
 import time
 
-popusk_positions = [aux.Point(0, 0), aux.Point(0, 2000), aux.Point(0, -2000), aux.Point(2000, 2000), aux.Point(2000, -2000)]
+popusk_positions = [aux.Point(0, 0), aux.Point(0, 2000), aux.Point(0, -2000), aux.Point(-2000, 2000), aux.Point(-2000, -2000)]
 used_pop_pos = [False, False, False, False, False]
 calc = False
 
