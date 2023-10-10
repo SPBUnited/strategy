@@ -179,3 +179,22 @@ class PISD():
         Получить последнее значение выхода звена без расчета
         """
         return self.__out
+
+class RateLimiter():
+    """
+    Ограничитель скорости роста
+    """
+    def __init__(self, Ts, max_der) -> None:
+        self.__out = 0
+        self.__I = Integrator(Ts)
+        self.__k = 1/Ts
+        self.__max_der = max_der
+    
+    def process(self, x):
+        u = aux.minmax(self.__k * (x - self.__out), -self.__max_der, self.__max_der)
+        self.__out = self.__I.process(u)
+        return self.__out
+
+    def getVal(self):
+        return self.__out
+

@@ -7,6 +7,7 @@ import bridge.processors.waypoint as wp
 import bridge.processors.const as const
 import bridge.processors.auxiliary as aux
 import bridge.processors.signal as signal
+import bridge.processors.robot as robot
 import math
 from enum import Enum
 
@@ -175,7 +176,7 @@ class Strategy:
         robot_with_ball = aux.find_nearest_robot(field.ball.getPos(), field.enemies)
         self.gk_go(field, waypoints, [const.GK] + wall, robot_with_ball)
 
-    square = signal.Signal(8, 'SQUARE', ampoffset=(400, 0))
+    square = signal.Signal(8, 'SQUARE', ampoffset=(300, 0))
     square_ang = signal.Signal(8, 'SQUARE', lohi=(0, 3.14))
     def debug(self, field: field.Field, waypoints):
 
@@ -183,8 +184,8 @@ class Strategy:
         # waypoints[const.DEBUG_ID].angle = 3.14
         # waypoints[const.DEBUG_ID].type = wp.WType.S_ENDPOINT        
         
-        # robot_with_ball = aux.find_nearest_robot(field.ball.getPos(), field.enemies)
-        # self.gk_go(field, waypoints, [const.GK], None)
+        robot_with_ball = aux.find_nearest_robot(field.ball.getPos(), field.allies)
+        self.gk_go(field, waypoints, [const.GK], robot_with_ball)
 
         # for i in range(0, 6):
         #     # pos = aux.point_on_line(bbotpos, -aux.Point(const.GOAL_DX, 0), 300)
@@ -201,12 +202,14 @@ class Strategy:
 
         # robot_with_ball = aux.find_nearest_robot(field.ball.getPos(), field.enemies)
         # self.gk_go(field, waypoints, [const.GK], None)
-        # waypoints[const.DEBUG_ID].pos = aux.Point(self.square.get(), 0)
-        # waypoints[const.DEBUG_ID].angle = self.square_ang.get()
-        # waypoints[const.DEBUG_ID].angle = math.pi/2
+        # waypoints[const.DEBUG_ID].pos = aux.Point(-1000, self.square.get())
+        # # waypoints[const.DEBUG_ID].angle = self.square_ang.get()
+        # waypoints[const.DEBUG_ID].angle = math.pi/4*0
+        # waypoints[const.DEBUG_ID].type = wp.WType.S_ENDPOINT
 
         waypoints[const.DEBUG_ID].pos = field.ball.getPos()
-        waypoints[const.DEBUG_ID].angle = -1
+        waypoints[const.DEBUG_ID].angle = (field.ally_goal.center - field.ball.getPos() + aux.j*self.square.get()).arg()
+        # waypoints[const.DEBUG_ID].angle = math.pi/2
         waypoints[const.DEBUG_ID].type = wp.WType.S_BALL_KICK
 
         # print(field.ball.getPos(), waypoints[const.DEBUG_ID])
@@ -227,7 +230,7 @@ class Strategy:
 
         return waypoints
 
-    def gk_go(self, field: field.Field, waypoints, gk_wall_idx_list, robot_with_ball):
+    def gk_go(self, field: field.Field, waypoints, gk_wall_idx_list, robot_with_ball: robot.Robot):
         """
         Расчет требуемых положений вратаря и стенки
         
@@ -237,13 +240,21 @@ class Strategy:
         Дальше индексы роботов в стенке, кол-во от 0 до 3
         [in] robot_with_ball - текущий робот с мячом
         """
-        try:
-            gk_pos = aux.LERP(aux.point_on_line(field.ally_goal.center, field.ball.getPos(), const.GK_FORW),
-                          aux.get_line_intersection(robot_with_ball.getPos(), robot_with_ball.getPos() + aux.rotate(aux.Point(1, 0), robot_with_ball.getAngle()),
-                                                    field.ally_goal.down, field.ally_goal.up, 'RS') + const.GK_FORW*field.ally_goal.eye_forw,
-                          0.5)
-            # print(robot_with_ball.angle)
-        except:
+        if robot_with_ball is not None:
+            predict = aux.get_line_intersection(robot_with_ball.getPos(), robot_with_ball.getPos() + aux.rotate(aux.i, robot_with_ball.getAngle()),
+                                                    field.ally_goal.down, field.ally_goal.up, 'RS')
+            if predict is not None:
+                p_ball = (field.ball.getPos() - predict).unity()
+                gk_pos = aux.LERP(aux.point_on_line(field.ally_goal.center, field.ball.getPos(), const.GK_FORW),
+                                aux.get_line_intersection(robot_with_ball.getPos(), robot_with_ball.getPos() + aux.rotate(aux.i, robot_with_ball.getAngle()),
+                                                        field.ally_goal.down, field.ally_goal.up, 'RS') + p_ball*const.GK_FORW,
+                                0.5)
+                # print("PREDICTION: ", robot_with_ball.getAngle())
+            else:
+                # print("NO PREDICTION1")
+                gk_pos = aux.point_on_line(field.ally_goal.center, field.ball.getPos(), const.GK_FORW)
+        else:
+            # print("NO PREDICTION2")
             gk_pos = aux.point_on_line(field.ally_goal.center, field.ball.getPos(), const.GK_FORW)
 
         # print(field.ball.vel.mag())

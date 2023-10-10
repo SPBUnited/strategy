@@ -53,26 +53,29 @@ class Robot(entity.Entity):
             self.RcompFdy = tau.FOD(self.Twy, const.Ts)
             self.RcompFfy = tau.FOLP(self.Twy, const.Ts)
 
-        self.xxTF = 0.4
+        # self.max_acc = 1000
+        # self.xxRL = tau.RateLimiter(const.Ts, self.max_acc)
+        # self.yyRL = tau.RateLimiter(const.Ts, self.max_acc)
+        self.xxTF = 0.2
         self.xxFlp = tau.FOLP(self.xxTF, const.Ts)
-        self.yyTF = 0.4
+        self.yyTF = 0.2
         self.yyFlp = tau.FOLP(self.yyTF, const.Ts)
         # self.a0TF = 0.5
         # self.a0Flp = tau.FOLP(self.a0TF, const.Ts)
 
         #!v REAL
-        if self.rId != const.GK:
-            gains_full = [6, 1.2, 0, const.MAX_SPEED]
-            gains_soft = [10, 1.5, 2, const.SOFT_MAX_SPEED]
-            # gains_soft = gains_full
-            a_gains_full = [4, 0.1, 0.1, const.MAX_SPEED_R]
-            a_gains_soft = [4, 0.07, 2, const.SOFT_MAX_SPEED_R]
-            # a_gains_soft = a_gains_full
-        else:
-            gains_full = [6, 0.8, 0, const.MAX_SPEED]
-            gains_soft = [6, 1, 0.1, const.SOFT_MAX_SPEED]
-            a_gains_full = [6, 0.1, 0, const.MAX_SPEED_R]
-            a_gains_soft = [2, 0.07, 1, const.SOFT_MAX_SPEED_R]
+        # if self.rId != const.GK:
+        gains_full = [6, 0.8, 0, const.MAX_SPEED]
+        gains_soft = [8, 0.5, 0, const.SOFT_MAX_SPEED]
+        # gains_soft = gains_full
+        a_gains_full = [4, 0.1, 0.1, const.MAX_SPEED_R]
+        a_gains_soft = [4, 0.07, 4, const.SOFT_MAX_SPEED_R]
+        # a_gains_soft = a_gains_full
+        # else:
+        #     gains_full = [6, 0.8, 0, const.MAX_SPEED]
+        #     gains_soft = [6, 1, 0.1, const.SOFT_MAX_SPEED]
+        #     a_gains_full = [6, 0.1, 0, const.MAX_SPEED_R]
+        #     a_gains_soft = [2, 0.07, 1, const.SOFT_MAX_SPEED_R]
 
         #!v SIM
         # gains_full = [2, 0.3, 0, const.MAX_SPEED]
@@ -206,6 +209,7 @@ class Robot(entity.Entity):
 
             self.dribblerEnable = True
             self.speedDribbler = 15
+            self.kickerVoltage = 15
         else:
             self.dribblerEnable = False
 
@@ -249,7 +253,7 @@ class Robot(entity.Entity):
         wvel - требуемая угловая скорость [рад/с]
         """
         self.speedX = self.xxFlp.process(1/self.Kxx * aux.rotate(vel, -self._angle).x)
-        self.speedY = self.yyFlp.process(1/self.Kyy * aux.rotate(vel, -self._angle).y)*1.2
+        self.speedY = self.yyFlp.process(1/self.Kyy * aux.rotate(vel, -self._angle).y)
 
         # RcompY = self.Kwy * self.RcompFfy.process(self.RcompFdy.process(self.speedY))
         # RcompY = self.Kwy * self.RcompFdy.process(abs(float(self.speedY)**2))
