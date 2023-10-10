@@ -45,8 +45,8 @@ class Robot(entity.Entity):
 
         #v! REAL
         else:
-            self.Kxx = 250/20
-            self.Kyy = -250/20
+            self.Kxx = -250/20
+            self.Kyy = 250/20
             self.Kww = 6/20
             self.Kwy = 0
             self.Twy = 0.15
@@ -58,7 +58,7 @@ class Robot(entity.Entity):
         self.yyTF = 0.1
         self.yyFlp = tau.FOLP(self.yyTF, const.Ts)
 
-        self.posReg = tau.PISD(const.Ts, [10, 0.3], [0.2, 0.1], [0, 0.5], [const.MAX_SPEED, const.MAX_SPEED/2])
+        self.posReg = tau.PISD(const.Ts, [3.7, 0.5], [0.2, 0.13], [0, 0.5], [const.MAX_SPEED, const.MAX_SPEED/2])
         self.angleReg = tau.PISD(const.Ts, [1, 0.5], [0, 0], [0, 8], [const.MAX_SPEED_R, const.MAX_SPEED_R])
 
 
@@ -211,6 +211,16 @@ class Robot(entity.Entity):
         # RcompY = self.Kwy * self.RcompFdy.process(abs(float(self.speedY)**2))
         RcompY = 0
         self.speedR = 1/self.Kww * (wvel - RcompY)
+        if abs(self.speedR) > const.MAX_SPEED_R:
+            self.speedR = const.MAX_SPEED_R * abs(self.speedR) / self.speedR
+
+        vecSpeed = math.sqrt(self.speedX ** 2 + self.speedY ** 2)
+        rSpeed = abs(self.speedR)
+
+        vecSpeed *= ((const.MAX_SPEED_R - rSpeed) / const.MAX_SPEED_R) ** 4
+        ang = math.atan2(self.speedY, self.speedX)
+        self.speedX = vecSpeed * math.cos(ang)
+        self.speedY = vecSpeed * math.sin(ang)
         
     def clamp_motors(self):
         """

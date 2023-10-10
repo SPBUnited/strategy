@@ -61,6 +61,12 @@ class CommandSink(BaseProcessor):
         rules = []
 
         for i in range(const.TEAM_ROBOTS_MAX_COUNT):
+            if abs(self.b_control_team[i].speedX) < 1.5:
+                self.b_control_team[i].speedX = 0
+            if abs(self.b_control_team[i].speedY) < 1.5:
+                self.b_control_team[i].speedY = 0
+            if abs(self.b_control_team[i].speedR) < 1.5:
+                self.b_control_team[i].speedR = 0
             rules.append(0)
             rules.append(self.b_control_team[i].speedX)
             rules.append(self.b_control_team[i].speedY)
@@ -75,6 +81,12 @@ class CommandSink(BaseProcessor):
             rules.append(self.b_control_team[i].beep)            
             rules.append(0)
         for i in range(const.TEAM_ROBOTS_MAX_COUNT):
+            if abs(self.y_control_team[i].speedX) < 1.5:
+                self.y_control_team[i].speedX = 0
+            if abs(self.y_control_team[i].speedY) < 1.5:
+                self.y_control_team[i].speedY = 0
+            if abs(self.y_control_team[i].speedR) < 1.5:
+                self.y_control_team[i].speedR = 0
             rules.append(0)
             rules.append(self.y_control_team[i].speedX)
             rules.append(self.y_control_team[i].speedY)
