@@ -2,7 +2,7 @@ import bridge.processors.auxiliary as aux
 
 ##################################################
 # GAME SETTING CONSTS
-GK = 9
+GK = 5
 PENALTY_KICKER = 10
 ENEMY_GK = 5
 IS_SIMULATOR_USED = True
@@ -25,12 +25,12 @@ DEBUG_CTRL = 9
 CONTROL_MAPPING = \
 {
     # DEBUG_ID: DEBUG_CTRL
-    0: 0,
-    1: 1,
+    0: 0, 
+    1: 1, 
     2: 2,
     3: 3,
     4: 4,
-    5: 5,
+    5: 5 
     # 9: 9,
     # 10: 10,
     # 11: 11,

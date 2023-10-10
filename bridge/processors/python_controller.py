@@ -114,7 +114,7 @@ class SSLController(BaseProcessor):
             
            # self.strategy.changeGameState(strategy.GameStates.RUN, 0)
 
-            curCmd = self.get_last_referee_command()
+            '''curCmd = self.get_last_referee_command()
             if curCmd.state == 0:
                 self.count_halt_cmd += 1
             else:
@@ -145,7 +145,7 @@ class SSLController(BaseProcessor):
                     self.strategy.changeGameState(strategy.GameStates.BALL_PLACMENT, curCmd.commandForTeam)
                 
             if self.count_halt_cmd > 10:
-                self.strategy.changeGameState(strategy.GameStates.HALT, curCmd.commandForTeam)
+                self.strategy.changeGameState(strategy.GameStates.HALT, curCmd.commandForTeam)'''
 
             self.strategy.changeGameState(strategy.GameStates.RUN, 0)
 
