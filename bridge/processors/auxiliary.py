@@ -349,7 +349,7 @@ def probability(inter, bots, st):
             koef = 1 
         else:
             koef = tmpResX / (const.ROBOT_R * 100 * 15)'''
-        res *= (2 * abs(ang) / math.pi) * (54e6 / tmpResX) 
+        res *= (2 * abs(ang) / math.pi) * (dist(st, bots[i].getPos()) / 54e6) 
     return res
 
 def botPosition(st, vecx, vecy):
@@ -369,6 +369,7 @@ def shotDecision(st, end, tobj):
     shot_point = st
     mx = 0
     sum = Point(0, 0)
+    n = 0
     # print(st)
     # for bot in obj:
     #     # print([bot.getPos().x, bot.getPos().y], end = " ")
@@ -393,22 +394,27 @@ def shotDecision(st, end, tobj):
         if tmp_prob > mx:
             mx = tmp_prob
             shot_point = botPosition(st, point.x - st.x, point.y - st.y)
-            Lres = point
+            point_res = point
+        '''if tmp_prob > mx:
+            mx = tmp_prob
+            shot_point = botPosition(st, point.x - st.x, point.y - st.y)
+            point_res = point
             n = 1
             sum = point
         elif tmp_prob == mx:
             sum += point
             n += 1
         else:
+            point_res = sum / n
+            shot_point = botPosition(st, point_res.x - st.x, point_res.y - st.y)
             sum = Point(0, 0)
-            n = 0
-    # plt.plot(t, -(Lres.A*t + Lres.C)/Lres.B, 'r-')
+            n = 0'''
+    # plt.plot(t, -(point_res.A*t + point_res.C)/point_res.B, 'r-')
     # plt.plot(shot_point.x, shot_point.y, 'r^')
     # plt.axis('equal')
     # plt.grid(True)
     # plt.show()
-    Lres = sum / n
-    return shot_point, mx, Lres
+    return shot_point, mx, point_res
     
 def in_place(st, end, epsilon):
     """

@@ -383,7 +383,6 @@ class Strategy:
         self.PointRes = (0,0)
     
     def decide_popusk_position(self, field: field.Field):
-        print(self.used_pop_pos)
         for pointIndex in range(len(popusk_positions)):
             save_robot = -1
             if self.used_pop_pos[pointIndex] == False:
@@ -398,7 +397,6 @@ class Strategy:
                         self.used_pop_pos[robot.role] = False
                         field.allies[robot.rId].role = None
                         self.popusk.pop(self.popusk.index(robot.rId))
-                    print([robot.rId, field.allies[robot.rId].role])
             if save_robot != -1:
                 field.allies[save_robot].role = pointIndex
                 self.popusk.append(save_robot)
@@ -441,10 +439,8 @@ class Strategy:
             #     role.id = robot
         
     def attack(self, field: field.Field, waypoints):
-        goal_points = [aux.Point(field.enemy_goal.center.x, i) for i in range(-400, 401)]
+        goal_points = [aux.Point(field.enemy_goal.center.x, i) for i in range(-370, 371)]
         bro_points = [field.allies[i].getPos() for i in range(len(field.allies))]
-        print("huy")
-        print(self.attack_state, end = ' ')
         if self.robot_with_ball != None:
             if self.attack_state == "TO_BALL":
                 self.attack_pos = field.ball.getPos()
@@ -452,7 +448,6 @@ class Strategy:
                     self.attack_state = "CALCULATING"
             elif self.attack_state == "CALCULATING":
                 shot_pos, shot_prob, self.PointRes = aux.shotDecision(field.ball.getPos(), goal_points, field.enemies)
-                print(self.PointRes)
                 # shot_pos = aux.Point(field.ball.getPos().x - 1000 * const.ROBOT_R, field.ball.getPos().y)
                 # if shot_prob > const.KOEFF_NAGLO:
                 #     used_bots = []
@@ -514,11 +509,8 @@ class Strategy:
             
             # connector =
             waypoints[robot] = wp.Waypoint(connect_pos, field.ball.getPos().arg(), wp.WType.S_BALL_GRAB)'''
-        print(self.popusk)
-        print(self.used_pop_pos)
         for robot in self.popusk:
             pop_pos = field.allies[robot].role
-            print(pop_pos)
             waypoints[robot] = wp.Waypoint(popusk_positions[pop_pos], 0, wp.WType.S_ENDPOINT)
         
     def prepare_penalty(self, field: field.Field, waypoints):
