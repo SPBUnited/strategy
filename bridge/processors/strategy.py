@@ -60,7 +60,7 @@ class Strategy:
         self.attack_state = "TO_BALL"
         self.attack_pos = aux.Point(0,0)
         self.calc = False
-
+        self.PointRes = (0,0)
         #PENALTY
         self.we_kick = 0
         self.is_started = 0
@@ -100,7 +100,7 @@ class Strategy:
         for i in range(const.TEAM_ROBOTS_MAX_COUNT):
             waypoint = wp.Waypoint(field.allies[i].getPos(), field.allies[i].getAngle(), wp.WType.S_ENDPOINT)
             waypoints[i] = waypoint
-
+        
         if self.game_status != GameStates.PENALTY:
             self.is_started = 0
         if self.game_status == GameStates.RUN:
@@ -150,8 +150,6 @@ class Strategy:
         else:
             self.is_ball_moved = 1
         wall = []
-
-        self.state = States.DEBUG
         
         if self.state == States.DEBUG:
             self.debug(field, waypoints)
@@ -185,18 +183,29 @@ class Strategy:
         #self.gk_go(field, waypoints, [const.GK], None)
 
 
-        for i in range(0, 6):
+        for i in range(9, 16):
             # pos = aux.point_on_line(bbotpos, -aux.Point(const.GOAL_DX, 0), 300)
-            #pos = -field.ally_goal.eye_forw *500*i -field.ally_goal.eye_up*3000
-            pos = aux.Point(1000 + 300 * i + self.square.get(), -1000)
+            # pos = aux.Point(-1100 + 300 * i, 0)
+            # pos = aux.Point(1000 + 300 * i + self.square.get(), -1000)
             
             # dpos = bbotpos - ybotpos
             # angle = math.atan2(dpos.y, dpos.x)
             # angle = self.square_ang.get()
-            angle = math.pi/3 * 0
+            target = aux.Point(-(+500 - 300 * (i - 9)), 0)
+            angle = (aux.Point(0, 0) - target).arg() #(aux.Point(0, 0) - target).arg()
 
-            waypoint = wp.Waypoint(pos, angle, wp.WType.S_ENDPOINT)
+            waypoint = wp.Waypoint(target, angle, wp.WType.S_ENDPOINT)
             waypoints[i] = waypoint
+        
+        # waypoints[1].pos = field.ally_goal.eye_forw*4000 + field.ally_goal.eye_up * (self.square.get() - 2000)
+
+        '''if not field.allies[10].is_ball_in(field):
+            waypoints[10] = wp.Waypoint(field.ball.getPos(), (field.enemy_goal.center - field.ball.getPos()).arg(), wp.WType.S_BALL_GRAB)
+        elif (egf - field.allies[10].getPos()).mag() > 300:
+            waypoints[10] = wp.Waypoint(egf, math.pi/3, wp.WType.S_BALL_GO)
+        else:
+            waypoints[10] = wp.Waypoint(egf, math.pi/3, wp.WType.S_BALL_KICK)'''
+
         return waypoints
 
     def gk_go(self, field: field.Field, waypoints, gk_wall_idx_list, robot_with_ball):
@@ -427,7 +436,7 @@ class Strategy:
                 if aux.in_place(self.attack_pos, field.allies[self.robot_with_ball].getPos(), 500):
                     self.attack_state = "CALCULATING"
             elif self.attack_state == "CALCULATING":
-                shot_pos, shot_prob = aux.shotDecision(field.ball.getPos(), goal_points, field.enemies)
+                shot_pos, shot_prob, self.PointRes = aux.shotDecision(field.ball.getPos(), goal_points, field.enemies)
                 # shot_pos = aux.Point(field.ball.getPos().x - 1000 * const.ROBOT_R, field.ball.getPos().y)
                 # if shot_prob > const.KOEFF_NAGLO:
                 #     used_bots = []
@@ -452,15 +461,15 @@ class Strategy:
                 # shot_pos = aux.Point(field.ball.getPos().x - 1000 * const.ROBOT_R, field.ball.getPos().y)
                 # if shot_prob > const.KOEFF_NAGLO:
                 # self.attack_pos = shot_pos
-                field.allies[self.robot_with_ball].kickerChargeEnable = 1
-                field.allies[self.robot_with_ball].kickerVoltage = 15
+                # field.allies[self.robot_with_ball].kickerChargeEnable = 1
+                # field.allies[self.robot_with_ball].kickerVoltage = 15
                 if aux.in_place(self.attack_pos, field.allies[self.robot_with_ball].getPos(), 50):
                     self.attack_state = "SHOOT"
             elif self.attack_state == "SHOOT":
                 self.attack_pos = field.ball.getPos()
-                field.allies[self.robot_with_ball].kickerChargeEnable = 1
-                field.allies[self.robot_with_ball].kickerVoltage = 15
-                field.allies[self.robot_with_ball].kick_up()
+                # field.allies[self.robot_with_ball].kickerChargeEnable = 1
+                # field.allies[self.robot_with_ball].kickerVoltage = 15
+                # field.allies[self.robot_with_ball].kick_up()
                 if not(aux.in_place(self.attack_pos, field.allies[self.robot_with_ball].getPos(), 500)):
                     # for index in range(len(used_pop_pos)):
                         # if used_pop_pos[index] == False:
@@ -476,7 +485,7 @@ class Strategy:
                 #ехать к нужной точке
             if self.robot_with_ball != None:
                 if self.attack_state == "SHOOT":
-                    waypoints[self.robot_with_ball] = wp.Waypoint(self.attack_pos, aux.angle_to_point(field.allies[self.robot_with_ball].getPos(), field.ball.getPos()), wp.WType.S_BALL_KICK)
+                    waypoints[self.robot_with_ball] = wp.Waypoint(self.attack_pos, aux.angle_to_point(field.ball.getPos(), self.PointRes), wp.WType.S_BALL_KICK)
                 else:
                     waypoints[self.robot_with_ball] = wp.Waypoint(self.attack_pos, aux.angle_to_point(field.allies[self.robot_with_ball].getPos(), field.ball.getPos()), wp.WType.S_ENDPOINT)
                 # print(self.attack_state)
@@ -537,11 +546,11 @@ class Strategy:
         for i in range(const.TEAM_ROBOTS_MAX_COUNT):
             if field.allies[i].is_used():
                 if aux.dist(field.allies[i].getPos(), field.ball.getPos()) < const.KEEP_BALL_DIST:
-                    waypoint = wp.Waypoint(aux.point_on_line(field.allies[i].getPos(), field.ball.getPos(), -const.KEEP_BALL_DIST), field.allies[i].getAngle(), wp.WType.S_ENDPOINT)
+                    waypoint = wp.Waypoint(aux.point_on_line(field.ball.getPos(), field.allies[i].getPos(), const.KEEP_BALL_DIST), field.allies[i].getAngle(), wp.WType.S_ENDPOINT)
                     waypoints[i] = waypoint
     
     def penalty(self, field: field.Field, waypoints):
-        if self.we_kick:
+        if self.we_kick or 1:
             self.penalty_kick(field, waypoints)
         else:
             robot_with_ball = aux.find_nearest_robot(field.ball.getPos(), field.enemies)
@@ -549,98 +558,32 @@ class Strategy:
 
     def penalty_kick(self, field: field.Field, waypoints):
         if not self.is_started:
-            self.is_started = 1
-            self.ball_inside = 0
-            self.last_seen = time.time() - 10
-            self.ball_history = 0
-            self.ticks_without_ball = 5
-            self.penalty_timer = time.time()
+            field.allies[const.PENALTY_KICKER].kick_forward = 1
+            flag = 0
         
-        if self.ball_history != field.ball.getPos().x:
-            self.ball_history = field.ball.getPos().x
-            ball_visible = 1
-            self.ticks_without_ball = 0
-        elif self.ticks_without_ball < 30:
-            self.ticks_without_ball+=1
-            ball_visible = 1
+        field.allies[const.PENALTY_KICKER].dribblerEnable = 1
+        field.allies[const.PENALTY_KICKER].speedDribbler = 10
+        field.allies[const.PENALTY_KICKER].kickerChargeEnable = 2
+        field.allies[const.PENALTY_KICKER].autoKick = 2 
+        kick_delta = 400
+
+        angle_to_keeper=math.atan2(field.enemies[const.ENEMY_GK].getPos().y - field.allies[const.PENALTY_KICKER].getPos().y, field.enemies[const.ENEMY_GK].getPos().x - field.allies[const.PENALTY_KICKER].getPos().x)
+        angle_to_right_corner=math.atan2(kick_delta - field.allies[const.PENALTY_KICKER].getPos().y, field.enemy_goal.center.x - field.allies[const.PENALTY_KICKER].getPos().x)
+        angle_to_left_corner=math.atan2(-kick_delta - field.allies[const.PENALTY_KICKER].getPos().y, field.enemy_goal.center.x - field.allies[const.PENALTY_KICKER].getPos().x)
+    
+        if abs(angle_to_keeper - angle_to_right_corner) > abs(angle_to_keeper - angle_to_left_corner):
+            target = aux.Point(field.enemy_goal.center.x, kick_delta)
         else:
-            ball_visible = 0
+            target = aux.Point(field.enemy_goal.center.x, -kick_delta)
 
-        if ball_visible == 0 : print("can't see a ball")
-        #print(self.ticks_without_ball)
-
-        ball_visible = 1 #!!!!!!!!!!!!!DEBUG!!!!!!!!!!!!!!!!!!!!
-        
-        player_ID = const.PENALTY_KICKER
-        enemy_keeper_ID = const.ENEMY_GK
-
-        #for i in range(16): if allies[i].getPos().y != 0: print(i)
-        
-        field.allies[player_ID].autoKick = 0
-        field.allies[player_ID].kickerChargeEnable = 1
-        field.allies[player_ID].kickerVoltage = 50
-        field.allies[player_ID].maxSpeed = 500
-        kick_speed = 300
-        kick_dist = 2000
-        kick_delta = const.GOAL_DY / 2 - 50 ###const
-        
-        field.allies[player_ID].dribblerEnable = 1
-        field.allies[player_ID].speedDribbler = 10
-
-        #goal = aux.Point(1250, 0)  #add const field_size (preferably import from LARCmaCS)
-        
-        angle_to_goal=math.atan2(0 - field.allies[player_ID].getPos().y, field.enemy_goal.center.x - field.allies[player_ID].getPos().x)
-        angle_to_ball=math.atan2(field.ball.getPos().y - field.allies[player_ID].getPos().y, field.ball.getPos().x - field.allies[player_ID].getPos().x) - angle_to_goal
-        if angle_to_ball > math.pi: angle_to_ball-=2*math.pi
-        if angle_to_ball < -math.pi: angle_to_ball+=2*math.pi
-        #print(angle_to_ball)
-        angle_ball_to_goal=math.atan2(0 - field.ball.getPos().y, field.enemy_goal.center.x - field.ball.getPos().x)
-        delta = (field.allies[player_ID].getPos().x-field.ball.getPos().x)*math.sin(angle_ball_to_goal) - (field.allies[player_ID].getPos().y-field.ball.getPos().y)*math.cos(angle_ball_to_goal)
-        #print("delta:   ", delta)
-        
-        if field.allies[player_ID].is_ball_in(field) or self.ball_inside == 1 and ball_visible == 0:
-            self.last_seen = time.time()
-        print("self.last_seen: ", self.ball_inside, - self.last_seen + time.time())
-
-        if  time.time() - self.last_seen > 0.2 and ball_visible == 1 or ball_visible == 0 and self.ball_inside == 0:  
-            waypoint = wp.Waypoint(field.ball.getPos(), (field.enemy_goal.center - field.allies[player_ID].getPos()).arg(), wp.WType.S_BALL_GRAB)
-            self.ball_inside = 0
-            print('going to ball')
-        elif abs(field.enemy_goal.center.x - field.allies[player_ID].getPos().x) > kick_dist and abs(field.enemies[enemy_keeper_ID].getPos().x - field.allies[player_ID].getPos().x) > kick_dist and (time.time() - self.penalty_timer) < 8.5:
-            field.allies[player_ID].maxSpeed -= max((field.allies[player_ID].maxSpeed - kick_speed) * kick_dist / abs(field.enemy_goal.center.x - field.allies[player_ID].getPos().x), 0)
-            waypoint = wp.Waypoint(field.enemy_goal.center, (field.enemy_goal.center - field.allies[player_ID].getPos()).arg(), wp.WType.S_BALL_GO)
-            self.ball_inside = 1
-            print('too far')
+        if abs(field.enemy_goal.center - field.ball.x) > 4000:
+            field.allies[const.PENALTY_KICKER].kickerVoltage = 5
+            waypoint = wp.Waypoint(field.ball.getPos, (target - field.allies[const.PENALTY_KICKER]).arg, wp.WType.S_BALL_KICK)
         else:
-            self.ball_inside = 1
-            if field.enemies[enemy_keeper_ID].is_used():
-                angle_to_keeper=math.atan2(field.enemies[enemy_keeper_ID].getPos().y - field.allies[player_ID].getPos().y, field.enemies[enemy_keeper_ID].getPos().x - field.allies[player_ID].getPos().x)
-                angle_to_right_corner=math.atan2(kick_delta - field.allies[player_ID].getPos().y, field.enemy_goal.center.x - field.allies[player_ID].getPos().x)
-                angle_to_left_corner=math.atan2(-kick_delta - field.allies[player_ID].getPos().y, field.enemy_goal.center.x - field.allies[player_ID].getPos().x)
-            
-                if abs(angle_to_keeper - angle_to_right_corner) > abs(angle_to_keeper - angle_to_left_corner):
-                    target = aux.Point(field.enemy_goal.center.x, kick_delta)
-                else:
-                    target = aux.Point(field.enemy_goal.center.x, -kick_delta) 
-            else:
-                target = aux.Point(field.enemy_goal.center.x, 0) 
-            angle_to_target=math.atan2(target.y - field.allies[player_ID].getPos().y, target.x - field.allies[player_ID].getPos().x)
-            field.allies[player_ID].maxSpeed = kick_speed
-            if abs(angle_to_target-field.allies[player_ID].angle)<math.pi/25:    #need to check speed of rotating(or increase angle's gate)
-                waypoint = wp.Waypoint(field.enemy_goal.center, (target-field.allies[player_ID].getPos()).arg(), wp.WType.S_BALL_KICK)
-                print('!!!KICK!!!')
-            else:    
-                waypoint = wp.Waypoint(field.enemy_goal.center, (target-field.allies[player_ID].getPos()).arg(), wp.WType.S_BALL_GO)
-                print('aiming')
-            
-        #waypoint = wp.Waypoint(aux.Point(0, 0), aux.angle_to_point(allies[player_ID].getPos(), aux.Point(0, 0)), wp.WType.S_ENDPOINT)
-        #allies[10].is_used = 1
-        waypoints[player_ID] = waypoint
-        #waypoints[player_ID] = wp.Waypoint(field.allies[player_ID].getPos(), (goal - field.allies[player_ID].getPos()).arg(), wp.WType.S_BALL_GO)
-
-        #print(self.b_team.robot(1).x)
-        
-        #print(allies[player_ID].maxSpeed)
+            field.allies[const.PENALTY_KICKER].kickerVoltage = 15
+            waypoint = wp.Waypoint(field.ball.getPos, (target - field.allies[const.PENALTY_KICKER]).arg, wp.WType.S_BALL_KICK)
+                
+        waypoints[const.PENALTY_KICKER] = waypoint
 
     def prepare_kickof(self, field, waypoints):
         if self.weActive:
