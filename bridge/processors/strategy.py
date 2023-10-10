@@ -447,6 +447,9 @@ class Strategy:
                         self.robot_with_ball = robot.rId
             if aux.is_in_list(self.popusk, self.robot_with_ball):
                 self.popusk.pop(self.popusk.index(self.robot_with_ball))
+        elif self.robot_with_ball != None and not field.allies[self.robot_with_ball].is_used():
+            field.allies[self.robot_with_ball].role = None
+            self.robot_with_ball = None
             # mn = 1e10
             # for pointIndex in range(len(popusk_positions)):
             #     pop_pos_dist = aux.dist(field.allies[self.robot_with_ball].getPos(), popusk_positions[pointIndex])
