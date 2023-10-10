@@ -425,7 +425,8 @@ class Strategy:
                     elif not robot.is_used() and field.allies[robot.rId].role != None:
                         self.used_pop_pos[robot.role] = False
                         field.allies[robot.rId].role = None
-                        self.popusk.pop(self.popusk.index(robot.rId))
+                        if aux.is_in_list(self.popusk, robot.rId):
+                            self.popusk.pop(self.popusk.index(robot.rId))
             if save_robot != -1:
                 field.allies[save_robot].role = pointIndex
                 self.popusk.append(save_robot)
