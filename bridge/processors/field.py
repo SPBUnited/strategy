@@ -37,6 +37,9 @@ class Goal:
                      self.down - self.eye_up * const.GOAL_BOUND_OFFSET,
                      const.GRAVEYARD_POS*self.eye_forw.x]
 
+        # Попуск
+        self.popusk_positions = [aux.Point(0, 0), aux.Point(0, 2000), aux.Point(0, -2000), aux.Point(aux.sign(goal_dx) * 2000, 2000), aux.Point(aux.sign(goal_dx) * 2000, -2000)]
+
 class Field:
     """
     Класс, хранящий информацию о всех объектах на поле и ключевых точках
@@ -62,13 +65,13 @@ class Field:
             self.ally_goal = self.b_goal
             self.enemies = [*self.y_team]
             self.enemy_goal = self.y_goal
-            self.side = 1 # TODO УДАЛИТЬ АААААААААААААААААААААА
+            self.side = -const.POLARITY # TODO УДАЛИТЬ АААААААААААААААААААААА
         elif ally_color == 'y':
             self.allies = [*self.y_team]
             self.ally_goal = self.y_goal
             self.enemies = [*self.b_team]
             self.enemy_goal = self.b_goal
-            self.side = -1 # TODO УДАЛИИИИТЬ
+            self.side = const.POLARITY # TODO УДАЛИИИИТЬ
 
     def updateBall(self, pos):
         """

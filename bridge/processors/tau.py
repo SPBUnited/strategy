@@ -165,7 +165,7 @@ class PISD():
         u_clipped = aux.minmax(u, -max_out, max_out)
 
         if u != u_clipped:
-            self.__I.process(xerr)
+            self.__I.process(xerr + kd*x_i)
 
         self.__out = u_clipped
         return self.__out
