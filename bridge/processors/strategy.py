@@ -440,7 +440,8 @@ class Strategy:
     def attack(self, field: field.Field, waypoints):
         goal_points = [aux.Point(field.enemy_goal.center.x, i) for i in range(-400, 401)]
         bro_points = [field.allies[i].getPos() for i in range(len(field.allies))]
-        # print(bro_points)
+        print("huy")
+        print(self.attack_state, end = ' ')
         if self.robot_with_ball != None:
             if self.attack_state == "TO_BALL":
                 self.attack_pos = field.ball.getPos()
@@ -448,6 +449,7 @@ class Strategy:
                     self.attack_state = "CALCULATING"
             elif self.attack_state == "CALCULATING":
                 shot_pos, shot_prob, self.PointRes = aux.shotDecision(field.ball.getPos(), goal_points, field.enemies)
+                print(self.PointRes)
                 # shot_pos = aux.Point(field.ball.getPos().x - 1000 * const.ROBOT_R, field.ball.getPos().y)
                 # if shot_prob > const.KOEFF_NAGLO:
                 #     used_bots = []
