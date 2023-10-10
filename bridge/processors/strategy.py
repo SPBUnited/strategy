@@ -14,8 +14,6 @@ from enum import Enum
 import time
 
 popusk_positions = [aux.Point(0, 0), aux.Point(0, 2000), aux.Point(0, -2000), aux.Point(-2000, 2000), aux.Point(-2000, -2000)]
-used_pop_pos = [False, False, False, False, False]
-calc = False
 
 class States(Enum):
     DEBUG = 0
@@ -61,6 +59,8 @@ class Strategy:
         self.attack_pos = aux.Point(0,0)
         self.calc = False
         self.PointRes = (0,0)
+        self.used_pop_pos = [False, False, False, False, False]
+
         #PENALTY
         self.we_kick = 0
         self.is_started = 0
@@ -152,7 +152,7 @@ class Strategy:
         else:
             self.is_ball_moved = 1
         wall = []
-        
+        print(self.state)
         if self.state == States.DEBUG:
             self.debug(field, waypoints)
         elif self.state == States.DEFENCE:
@@ -175,6 +175,7 @@ class Strategy:
 
     square = signal.Signal(8, 'SQUARE', ampoffset=(400, 0))
     square_ang = signal.Signal(8, 'SQUARE', lohi=(0, 3.14))
+
     def debug(self, field: field.Field, waypoints):
 
         # waypoints[const.DEBUG_ID].pos = aux.Point(0, 0)        
@@ -372,7 +373,8 @@ class Strategy:
         return sorted(wall_bots)
 
     def reset_all_attack_var(self):
-        used_pop_pos = [False, False, False, False, False]
+        #return
+        self.used_pop_pos = [False, False, False, False, False]
         self.robot_with_ball = None
         self.connector = []
         self.popusk = []
@@ -382,9 +384,10 @@ class Strategy:
         self.PointRes = (0,0)
     
     def decide_popusk_position(self, field: field.Field):
+        print(self.used_pop_pos)
         for pointIndex in range(len(popusk_positions)):
             save_robot = -1
-            if used_pop_pos[pointIndex] == False:
+            if self.used_pop_pos[pointIndex] == False:
                 mn = 1e10
                 for robot in field.allies:
                     if robot.is_used() and robot.rId != const.GK and robot.rId != self.robot_with_ball and not aux.is_in_list(self.popusk, robot.rId):
@@ -393,14 +396,14 @@ class Strategy:
                             mn = pop_pos_dist
                             save_robot = robot.rId
                     elif not robot.is_used() and field.allies[robot.rId].role != None:
-                        used_pop_pos[robot.role] = False
+                        self.used_pop_pos[robot.role] = False
                         field.allies[robot.rId].role = None
                         self.popusk.pop(self.popusk.index(robot.rId))
-                    # print([robot.rId, field.allies[robot.rId].role])
+                    print([robot.rId, field.allies[robot.rId].role])
             if save_robot != -1:
                 field.allies[save_robot].role = pointIndex
                 self.popusk.append(save_robot)
-                used_pop_pos[pointIndex] = True
+                self.used_pop_pos[pointIndex] = True
                 
         # print(used_pop_pos)
         # print(self.popusk)
@@ -510,8 +513,11 @@ class Strategy:
             
             # connector =
             waypoints[robot] = wp.Waypoint(connect_pos, field.ball.getPos().arg(), wp.WType.S_BALL_GRAB)'''
+        print(self.popusk)
+        print(self.used_pop_pos)
         for robot in self.popusk:
             pop_pos = field.allies[robot].role
+            print(pop_pos)
             waypoints[robot] = wp.Waypoint(popusk_positions[pop_pos], 0, wp.WType.S_ENDPOINT)
         
     def prepare_penalty(self, field: field.Field, waypoints):
