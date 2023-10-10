@@ -150,6 +150,8 @@ class Strategy:
         else:
             self.is_ball_moved = 1
         wall = []
+
+        self.state = States.DEBUG
         
         if self.state == States.DEBUG:
             self.debug(field, waypoints)
@@ -180,21 +182,21 @@ class Strategy:
         # waypoints[const.DEBUG_ID].type = wp.WType.S_ENDPOINT        
         
         # robot_with_ball = aux.find_nearest_robot(field.ball.getPos(), field.enemies)
-        self.gk_go(field, waypoints, [const.GK], None)
+        #self.gk_go(field, waypoints, [const.GK], None)
 
 
-        # for i in range(0, 6):
-        #     # pos = aux.point_on_line(bbotpos, -aux.Point(const.GOAL_DX, 0), 300)
-        #     pos = -field.ally_goal.eye_forw*500*i -field.ally_goal.eye_up*3000
-        #     # pos = aux.Point(1000 + self.square.get(), -1000)
+        for i in range(0, 6):
+            # pos = aux.point_on_line(bbotpos, -aux.Point(const.GOAL_DX, 0), 300)
+            #pos = -field.ally_goal.eye_forw *500*i -field.ally_goal.eye_up*3000
+            pos = aux.Point(1000 + 300 * i + self.square.get(), -1000)
             
-        #     # dpos = bbotpos - ybotpos
-        #     # angle = math.atan2(dpos.y, dpos.x)
-        #     # angle = self.square_ang.get()
-        #     angle = math.pi/3 * 0
+            # dpos = bbotpos - ybotpos
+            # angle = math.atan2(dpos.y, dpos.x)
+            # angle = self.square_ang.get()
+            angle = math.pi/3 * 0
 
-        #     waypoint = wp.Waypoint(pos, angle, wp.WType.S_ENDPOINT)
-        #     waypoints[i] = waypoint
+            waypoint = wp.Waypoint(pos, angle, wp.WType.S_ENDPOINT)
+            waypoints[i] = waypoint
         
         # waypoints[1].pos = field.ally_goal.eye_forw*4000 + field.ally_goal.eye_up * (self.square.get() - 2000)
 
