@@ -2,10 +2,10 @@ import bridge.processors.auxiliary as aux
 
 ##################################################
 # GAME SETTING CONSTS
-GK = 9
+GK = 5
 PENALTY_KICKER = 10
 ENEMY_GK = 5
-IS_SIMULATOR_USED = False
+IS_SIMULATOR_USED = True
 CAMERAS_COUNT: int = 4
 MAX_BALLS_IN_CAMERA: int = 64
 MAX_BALLS_IN_FIELD: int = CAMERAS_COUNT * MAX_BALLS_IN_CAMERA
