@@ -25,12 +25,12 @@ DEBUG_CTRL = 9
 CONTROL_MAPPING = \
 {
     # DEBUG_ID: DEBUG_CTRL
-    0: 0,
-    1: 1,
-    2: 2,
-    3: 3,
-    4: 4,
-    5: 5
+    9: 9,
+    10: 10,
+    11: 11,
+    12: 12,
+    13: 13,
+    14: 14
 }
 
 for i in range(TEAM_ROBOTS_MAX_COUNT):
@@ -51,7 +51,7 @@ Ts = 0.02 # s
 # MAX_SPEED_R = 50
 # ACCELERATION = 3
 # BASE_KICKER_VOLTAGE = 7.0
-MAX_SPEED = 700
+MAX_SPEED = 1500
 MAX_SPEED_R = 4
 ACCELERATION = 3
 BASE_KICKER_VOLTAGE = 7.0

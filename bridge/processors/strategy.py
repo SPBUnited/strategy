@@ -185,17 +185,18 @@ class Strategy:
         #self.gk_go(field, waypoints, [const.GK], None)
 
 
-        for i in range(0, 6):
+        for i in range(9, 16):
             # pos = aux.point_on_line(bbotpos, -aux.Point(const.GOAL_DX, 0), 300)
-            #pos = -field.ally_goal.eye_forw *500*i -field.ally_goal.eye_up*3000
-            pos = aux.Point(1000 + 300 * i + self.square.get(), -1000)
+            # pos = aux.Point(-1100 + 300 * i, 0)
+            # pos = aux.Point(1000 + 300 * i + self.square.get(), -1000)
             
             # dpos = bbotpos - ybotpos
             # angle = math.atan2(dpos.y, dpos.x)
             # angle = self.square_ang.get()
-            angle = math.pi/3 * 0
+            target = aux.Point(0 - 200 * (i - 9), 0)
+            angle = (aux.Point(0, 0) - target).arg()
 
-            waypoint = wp.Waypoint(pos, angle, wp.WType.S_ENDPOINT)
+            waypoint = wp.Waypoint(target, angle, wp.WType.S_ENDPOINT)
             waypoints[i] = waypoint
         
         # waypoints[1].pos = field.ally_goal.eye_forw*4000 + field.ally_goal.eye_up * (self.square.get() - 2000)

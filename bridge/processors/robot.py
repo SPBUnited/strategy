@@ -26,7 +26,7 @@ class Robot(entity.Entity):
         self.kickUp = 0
         self.kickForward = 0
         self.autoKick = 0
-        self.kickerVoltage = 15
+        self.kickerVoltage = 0
         self.dribblerEnable = 0
         self.speedDribbler = 0
         self.kickerChargeEnable = 1
@@ -178,6 +178,8 @@ class Robot(entity.Entity):
                 self.autoKick = 0
         else:
             self.autoKick = 0
+
+        angle0 = end_point.angle
 
         err = dist
         u = self.posReg.process(err, -cur_speed)
