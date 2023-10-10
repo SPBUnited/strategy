@@ -18,9 +18,9 @@ class Route:
 
     def update(self, robot: robot.Robot):
         self._robot = [wp.Waypoint(robot.getPos(), robot._angle, wp.WType._ROBOT)]
-        if self.getNextVec().mag() < const.VANISH_DIST and \
-            len(self._routewp) >= 1:
-            del self._routewp[0]
+        # if self.getNextVec().mag() < const.VANISH_DIST and \
+        #     len(self._routewp) >= 1:
+        #     del self._routewp[0]
 
     def clear(self):
         self._routewp = []
@@ -59,6 +59,10 @@ class Route:
         dist = 0
         last_wp_pos = self._robot[0].pos
         for wpt in self.__getRoute():
+            if wpt.type == wp.WType.S_BALL_GO or \
+                wpt.type == wp.WType.S_BALL_KICK or \
+                wpt.type == wp.WType.S_BALL_GRAB:
+                    break
             dist += (wpt.pos - last_wp_pos).mag()
             last_wp_pos = wpt.pos
         return dist

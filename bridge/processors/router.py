@@ -49,9 +49,9 @@ class Router:
 
             if self.routes[idx].getNextType() == wp.WType.S_BALL_KICK or \
                 self.routes[idx].getNextType() == wp.WType.S_BALL_GRAB:
-                if not field.allies[idx].is_kick_aligned(self.routes[idx].getDestWP()):
-                    align_wp = self.calcKickWP(idx, field)
-                    self.routes[idx].insertWP(align_wp)
+                # if not field.allies[idx].is_kick_aligned(self.routes[idx].getDestWP()):
+                align_wp = self.calcKickWP(idx, field)
+                self.routes[idx].insertWP(align_wp)
 
             if idx == const.GK:
                 pth_wp = self.calcVectorField(idx, field)

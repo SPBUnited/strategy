@@ -98,6 +98,9 @@ class Integrator():
         self._dT = dT
         self._I = 0
         self._out = 0
+    
+    def reset(self):
+        self._I = 0
 
     def process(self, x):
         """
@@ -148,6 +151,7 @@ class PISD():
     
     def select_mode(self, mode: Mode):
         self.__mode = mode
+        self.__I.reset()
     
     def __get_gains(self):
         return (self.__gain[self.__mode.value], self.__kd[self.__mode.value], self.__ki[self.__mode.value], self.__max_out[self.__mode.value])
