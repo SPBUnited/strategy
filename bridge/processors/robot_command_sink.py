@@ -101,7 +101,7 @@ class CommandSink(BaseProcessor):
             rules.append(self.y_control_team[i].beep)            
             rules.append(0)
 
-        
+        #rules = [15] * 15 * 32
         b = bytes()
         rules = b.join((struct.pack('d', rule) for rule in rules))
         return rules

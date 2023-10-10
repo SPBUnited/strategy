@@ -152,7 +152,6 @@ class Strategy:
         else:
             self.is_ball_moved = 1
         wall = []
-        
         if self.state == States.DEBUG:
             self.debug(field, waypoints)
         elif self.state == States.DEFENCE:
