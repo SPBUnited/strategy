@@ -112,7 +112,7 @@ class SSLController(BaseProcessor):
                     self.field.y_team[i].used(0)
 
             
-           # self.strategy.changeGameState(strategy.GameStates.RUN, 0)
+            # self.strategy.changeGameState(strategy.GameStates.RUN, 0)
 
             curCmd = self.get_last_referee_command()
             if curCmd.state == 0:
@@ -147,7 +147,7 @@ class SSLController(BaseProcessor):
             if self.count_halt_cmd > 10:
                 self.strategy.changeGameState(strategy.GameStates.HALT, curCmd.commandForTeam)
 
-            # self.strategy.changeGameState(strategy.GameStates.PREPARE_KICKOFF, 1)
+            # self.strategy.changeGameState(strategy.GameStates.RUN, 1)
 
 
             # TODO: Barrier states
