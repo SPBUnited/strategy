@@ -48,7 +48,8 @@ class Router:
                 continue
 
             if self.routes[idx].getNextType() == wp.WType.S_BALL_KICK or \
-                self.routes[idx].getNextType() == wp.WType.S_BALL_GRAB:
+                self.routes[idx].getNextType() == wp.WType.S_BALL_GRAB or \
+                self.routes[idx].getNextType() == wp.WType.S_BALL_KICK_UP:
                 # if not field.allies[idx].is_kick_aligned(self.routes[idx].getDestWP()):
                 align_wp = self.calcKickWP(idx, field)
                 self.routes[idx].insertWP(align_wp)

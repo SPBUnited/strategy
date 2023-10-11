@@ -197,7 +197,8 @@ class Robot(entity.Entity):
 
         if (end_point.type == wp.WType.S_BALL_KICK or \
             end_point.type == wp.WType.S_BALL_GRAB or \
-            end_point.type == wp.WType.S_BALL_GO) and \
+            end_point.type == wp.WType.S_BALL_GO or \
+            end_point.type == wp.WType.S_BALL_KICK_UP) and \
                 dist < 1500:
 
             print("IS KICK ALIGNED: ", self.is_kick_aligned(end_point), ",\tIS BALL GRABBED: ", self.is_ball_in(field))
@@ -213,7 +214,8 @@ class Robot(entity.Entity):
         else:
             self.dribblerEnable = False
 
-        if (end_point.type == wp.WType.S_BALL_KICK or end_point.type == wp.WType.S_BALL_GRAB) and \
+        if (end_point.type == wp.WType.S_BALL_KICK or end_point.type == wp.WType.S_BALL_GRAB or \
+            end_point.type == wp.WType.S_BALL_KICK_UP) and \
             (self.is_kick_aligned(end_point) or self.is_ball_in(field)):
             # vel0 = (self.getPos() - end_point.pos).unity()
             vel0 = -aux.rotate(aux.i, self._angle)
@@ -221,11 +223,9 @@ class Robot(entity.Entity):
             angle0 = self._angle
 
             if end_point.type == wp.WType.S_BALL_KICK:
-                # self.autoKick = 2 if self.rId == const.GK else 1
-                if self._pos.x * field.side > 0:
-                    self.autoKick = 2
-                else:
-                    self.autoKick = 1
+                self.autoKick = 2 if self.rId == const.GK else 1
+            elif end_point.type == wp.WType.S_BALL_KICK_UP: 
+                self.autoKick = 2
             else:
                 self.autoKick = 0
 

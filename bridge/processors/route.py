@@ -61,7 +61,8 @@ class Route:
         for wpt in self.__getRoute():
             if wpt.type == wp.WType.S_BALL_GO or \
                 wpt.type == wp.WType.S_BALL_KICK or \
-                wpt.type == wp.WType.S_BALL_GRAB:
+                wpt.type == wp.WType.S_BALL_GRAB or \
+                wpt.type == wp.WType.S_BALL_KICK_UP:
                     break
             dist += (wpt.pos - last_wp_pos).mag()
             last_wp_pos = wpt.pos
