@@ -101,6 +101,8 @@ class Strategy:
             waypoint = wp.Waypoint(field.allies[i].getPos(), field.allies[i].getAngle(), wp.WType.S_ENDPOINT)
             waypoints[i] = waypoint
         
+        self.game_status = GameStates.PENALTY
+
         if self.game_status != GameStates.PENALTY:
             self.is_started = 0
         if self.game_status == GameStates.RUN:
@@ -557,9 +559,9 @@ class Strategy:
             self.gk_go(field, waypoints, [const.GK], robot_with_ball)
 
     def penalty_kick(self, field: field.Field, waypoints):
-        if not self.is_started:
-            field.allies[const.PENALTY_KICKER].kick_forward = 1
-            flag = 0
+        self.is_started+=1
+        if self.is_started < 5:
+            field.allies[const.PENALTY_KICKER].kickUp = 1
         
         field.allies[const.PENALTY_KICKER].dribblerEnable = 1
         field.allies[const.PENALTY_KICKER].speedDribbler = 10
@@ -576,12 +578,13 @@ class Strategy:
         else:
             target = aux.Point(field.enemy_goal.center.x, -kick_delta)
 
-        if abs(field.enemy_goal.center - field.ball.x) > 4000:
+        # print(field.ball.getPos().x)
+        if abs(field.enemy_goal.center.x - field.ball.getPos().x) > 1000:
             field.allies[const.PENALTY_KICKER].kickerVoltage = 5
-            waypoint = wp.Waypoint(field.ball.getPos, (target - field.allies[const.PENALTY_KICKER]).arg, wp.WType.S_BALL_KICK)
+            waypoint = wp.Waypoint(field.ball.getPos(), (target - field.allies[const.PENALTY_KICKER].getPos()).arg(), wp.WType.S_BALL_KICK)
         else:
             field.allies[const.PENALTY_KICKER].kickerVoltage = 15
-            waypoint = wp.Waypoint(field.ball.getPos, (target - field.allies[const.PENALTY_KICKER]).arg, wp.WType.S_BALL_KICK)
+            waypoint = wp.Waypoint(field.ball.getPos(), (target - field.allies[const.PENALTY_KICKER].getPos()).arg(), wp.WType.S_BALL_KICK)
                 
         waypoints[const.PENALTY_KICKER] = waypoint
 
