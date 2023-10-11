@@ -352,8 +352,8 @@ def probability(inter, bots, st):
 
 def botPosition(st, vecx, vecy):
     modul = (vecx**2 + vecy**2)**(0.5)
-    vecx = (vecx / modul) * const.ROBOT_R * 1000 * 2
-    vecy = (vecy / modul) * const.ROBOT_R * 1000 * 2
+    vecx = (vecx / modul) * const.ROBOT_R * 1000 * 1
+    vecy = (vecy / modul) * const.ROBOT_R * 1000 * 1
     return Point(st.x - vecx, st.y - vecy)
 
 def shotDecision(st, end, tobj):
@@ -366,6 +366,7 @@ def shotDecision(st, end, tobj):
     # mx_shot_prob = 0
     shot_point = st
     mx = 0
+    sum = Point(0, 0)
     # print(st)
     # for bot in obj:
     #     # print([bot.getPos().x, bot.getPos().y], end = " ")
@@ -391,11 +392,17 @@ def shotDecision(st, end, tobj):
             mx = tmp_prob
             shot_point = botPosition(st, point.x - st.x, point.y - st.y)
             Lres = point
+            n = 1
+            sum = point
+        elif tmp_prob == mx:
+            sum += point
+            n += 1
     # plt.plot(t, -(Lres.A*t + Lres.C)/Lres.B, 'r-')
     # plt.plot(shot_point.x, shot_point.y, 'r^')
     # plt.axis('equal')
     # plt.grid(True)
     # plt.show()
+    Lres = sum / n
     return shot_point, mx, Lres
     
 def in_place(st, end, epsilon):
