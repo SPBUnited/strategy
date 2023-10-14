@@ -5,6 +5,7 @@
 import pygame
 
 import bridge.processors.auxiliary as aux
+from bridge.processors.singleton import Singleton
 
 WIDTH = 600
 HEIGHT = 400
@@ -29,17 +30,6 @@ FIELD_GREEN = (8, 132, 20)
 BALL_RED = (255, 80, 0)
 BOT_YELLOW = (255, 255, 0)
 BOT_BLUE = (0, 0, 255)
-
-"""
-Метакласс для реализации паттерна singleton
-https://stackoverflow.com/questions/6760685/creating-a-singleton-in-python
-"""
-class Singleton(type):
-    _instances = {}
-    def __call__(cls, *args, **kwargs):
-        if cls not in cls._instances:
-            cls._instances[cls] = super(Singleton, cls).__call__(*args, **kwargs)
-        return cls._instances[cls]
 
 class Drawer(metaclass=Singleton):
     def __init__(self):

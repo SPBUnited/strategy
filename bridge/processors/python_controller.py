@@ -1,7 +1,6 @@
 import attr
 import numpy as np
 import typing
-import struct
 import time
 import bridge.processors.const as const
 import bridge.processors.robot as robot
@@ -21,42 +20,57 @@ import bridge.processors.field as field
 import bridge.processors.router as router
 import bridge.processors.strategy as strategy
 import bridge.processors.waypoint as wp
+import bridge.processors.signal as signal
+
+from bridge.processors.robot_command_sink import CommandSink
 
 # TODO: Refactor this class and corresponding matlab scripts
 @attr.s(auto_attribs=True)
-class MatlabController(BaseProcessor):
+class SSLController(BaseProcessor):
 
-    processing_pause: typing.Optional[float] = 0.001
     max_commands_to_persist: int = 20
+    our_color: str = 'b'
 
     vision_reader: DataReader = attr.ib(init=False)
     referee_reader: DataReader = attr.ib(init=False)
-    commands_writer: DataWriter = attr.ib(init=False)
+    commands_sink_writer: DataWriter = attr.ib(init=False)
+
+    dbg_game_status: strategy.GameStates = strategy.GameStates.TIMEOUT
+    dbg_state: strategy.States = strategy.States.DEBUG
 
     cur_time = time.time()
     dt = 0
-    ball = auxiliary.Point(0, 0)
 
-    controll_team = [robot.Robot(const.GRAVEYARD_POS, 0, const.ROBOT_R, 'b', i) for i in range(const.TEAM_ROBOTS_MAX_COUNT)]
-
-    field = field.Field()
-    router = router.Router()
-    strategy = strategy.Strategy()
+    ctrl_mapping = const.CONTROL_MAPPING
+    count_halt_cmd = 0
 
     def initialize(self, data_bus: DataBus) -> None:
-        super(MatlabController, self).initialize(data_bus)
+        """
+        Инициализировать контроллер
+        """
+        super(SSLController, self).initialize(data_bus)
         self.vision_reader = DataReader(data_bus, config.VISION_DETECTIONS_TOPIC)
         self.referee_reader = DataReader(data_bus, config.REFEREE_COMMANDS_TOPIC)
-        self.commands_writer = DataWriter(data_bus, config.ROBOT_COMMANDS_TOPIC, self.max_commands_to_persist)
+        self.commands_sink_writer = DataWriter(data_bus, const.TOPIC_SINK, 20)
         self._ssl_converter = SSL_WrapperPacket()
 
+        self.field = field.Field(self.ctrl_mapping, self.our_color)
+        self.router = router.Router(self.field)
+        self.strategy = strategy.Strategy(self.dbg_game_status, self.dbg_state)
+
     def get_last_referee_command(self) -> RefereeCommand:
+        """
+        Получить последнюю команду рефери
+        """
         referee_commands = self.referee_reader.read_new()
         if referee_commands:
             return referee_commands[-1].content
         return RefereeCommand(0, 0, False)
 
     def read_vision(self) -> bool:
+        """
+        Прочитать новые пакеты из SSL-Vision
+        """
         status = False
 
         balls = np.zeros(const.BALL_PACKET_SIZE * const.MAX_BALLS_IN_FIELD)
@@ -79,6 +93,9 @@ class MatlabController(BaseProcessor):
             if geometry:
                 field_info[0] = geometry.field.field_length
                 field_info[1] = geometry.field.field_width
+                if geometry.field.field_length != 0 and geometry.field.goal_width != 0:
+                    const.GOAL_DX = geometry.field.field_length / 2
+                    const.GOAL_DY = geometry.field.goal_width
 
             detection = ssl_package_content.detection
             camera_id = detection.camera_id
@@ -86,8 +103,7 @@ class MatlabController(BaseProcessor):
                 balls[ball_ind + (camera_id - 1) * const.MAX_BALLS_IN_CAMERA] = camera_id
                 balls[ball_ind + const.MAX_BALLS_IN_FIELD + (camera_id - 1) * const.MAX_BALLS_IN_CAMERA] = ball.x
                 balls[ball_ind + 2 * const.MAX_BALLS_IN_FIELD + (camera_id - 1) * const.MAX_BALLS_IN_CAMERA] = ball.y
-                self.ball = auxiliary.Point(ball.x, ball.y)
-                self.field.updateBall(self.ball)
+                self.field.updateBall(auxiliary.Point(ball.x, ball.y))
 
             for i in range(const.TEAM_ROBOTS_MAX_COUNT):
                 if time.time() - self.field.b_team[i].last_update() > 1:
@@ -95,115 +111,112 @@ class MatlabController(BaseProcessor):
                 if time.time() - self.field.y_team[i].last_update() > 1:
                     self.field.y_team[i].used(0)
 
+            
+            # self.strategy.changeGameState(strategy.GameStates.RUN, 0)
+
+            curCmd = self.get_last_referee_command()
+            if curCmd.state == 0:
+                self.count_halt_cmd += 1
+            else:
+                self.count_halt_cmd = 0
+                if curCmd.state == 1:
+                    self.strategy.changeGameState(strategy.GameStates.STOP, curCmd.commandForTeam)
+                elif curCmd.state == 2:
+                    self.strategy.changeGameState(strategy.GameStates.RUN, curCmd.commandForTeam)
+                elif curCmd.state == 3:
+                    self.strategy.changeGameState(strategy.GameStates.TIMEOUT, curCmd.commandForTeam)
+                elif curCmd.state == 4:
+                    self.strategy.changeGameState(strategy.GameStates.HALT, curCmd.commandForTeam)
+                    print("End game")
+                elif curCmd.state == 5:
+                    self.strategy.changeGameState(strategy.GameStates.PREPARE_KICKOFF, curCmd.commandForTeam)
+                elif curCmd.state == 6:
+                    self.strategy.changeGameState(strategy.GameStates.KICKOFF, curCmd.commandForTeam)
+                elif curCmd.state == 7:
+                    self.strategy.changeGameState(strategy.GameStates.PREPARE_PENALTY, curCmd.commandForTeam)
+                elif curCmd.state == 8:
+                    self.strategy.changeGameState(strategy.GameStates.PENALTY, curCmd.commandForTeam)
+                elif curCmd.state == 9:
+                    self.strategy.changeGameState(strategy.GameStates.FREE_KICK, curCmd.commandForTeam)
+                elif curCmd.state == 10:
+                    self.strategy.changeGameState(strategy.GameStates.HALT, curCmd.commandForTeam)
+                    print("Uknown command 10")
+                elif curCmd.state == 11:
+                    self.strategy.changeGameState(strategy.GameStates.BALL_PLACMENT, curCmd.commandForTeam)
+                
+            if self.count_halt_cmd > 10:
+                self.strategy.changeGameState(strategy.GameStates.HALT, curCmd.commandForTeam)
+
+            # self.strategy.changeGameState(strategy.GameStates.PREPARE_KICKOFF, 0)
+
+
             # TODO: Barrier states
             for robot in detection.robots_blue:
-                # self.b_team.robot(robot.robot_id).update(robot.x, robot.y, robot.orientation)
                 if time.time() - self.field.b_team[robot.robot_id].last_update() > 0.3:
                     self.field.b_team[robot.robot_id].used(0)
-                else: 
-                    self.field.b_team[robot.robot_id].used(1)
+                else:
+                    self.field.b_team[robot.robot_id].used(1) 
                 self.field.updateBluRobot(robot.robot_id, auxiliary.Point(robot.x, robot.y), robot.orientation, time.time())
 
             for robot in detection.robots_yellow:
-                # self.y_team.robot(robot.robot_id).update(robot.x, robot.y, robot.orientation)
                 if time.time() - self.field.y_team[robot.robot_id].last_update() > 0.3:
                     self.field.y_team[robot.robot_id].used(0)
                 else: 
                     self.field.y_team[robot.robot_id].used(1)
                 self.field.updateYelRobot(robot.robot_id, auxiliary.Point(robot.x, robot.y), robot.orientation, time.time())
-                #self.y_team.robot(robot.robot_id).isUsed = 1
         return status
     
-    """
-    Рассчитать стратегию, тактику и физику для роботов на поле
-    """
     def control_loop(self):
+        """
+        Рассчитать стратегию, тактику и физику для роботов на поле
+        """
+        self.router.update(self.field)
         waypoints = self.strategy.process(self.field)
-        for i in range(6):
-            self.router.setWaypoint(i, waypoints[i])
-        self.router.calcRoutes(self.field)
+        for i in range(const.TEAM_ROBOTS_MAX_COUNT):
+            self.router.getRoute(i).clear()
+            self.router.setDest(i, waypoints[i], self.field)
+        self.router.reRoute(self.field)
 
-        # TODO алгоритм следования по траектории
-        # TODO Убрать артефакты
-        for i in range(1):
-            # self.y_team.robot(i).go_to_point_with_detour(self.router.getRoute(i)[-1].pos, self.b_team, self.y_team)
-            if self.router.getRoute(i)[-1].type == wp.WType.IGNOREOBSTACLES:
-                self.field.b_team[i].go_to_point(self.router.getRoute(i)[-1].pos)
-            else:
-                self.field.b_team[i].go_to_point_vector_field(self.router.getRoute(i)[-1].pos, self.field)
+        for i in range(const.TEAM_ROBOTS_MAX_COUNT):
+            self.field.allies[i].go_route(self.router.getRoute(i), self.field)
 
-            self.field.b_team[i].rotate_to_angle(self.router.getRoute(i)[-1].angle)
-            #self.field.b_team[i].rotate_to_angle(0)
-            #self.field.b_team[i].rotate_to_angle(math.pi)
+        # for i in range(const.TEAM_ROBOTS_MAX_COUNT):
+        #     print(self.field.y_team[i])
+        # for i in range(const.TEAM_ROBOTS_MAX_COUNT):
+        #     print(self.field.b_team[i])
 
-        dbg = 0
-
-        if dbg:
-            self.field.b_team[5].go_to_point_vector_field(auxiliary.Point(1000, 1000), self.field)
-            self.field.b_team[3].go_to_point_vector_field(auxiliary.Point(700, 1300), self.field)
-            self.field.b_team[5].rotate_to_angle(0)
-            self.field.b_team[3].rotate_to_angle(0)
-
-    """
-    Определить связь номеров роботов с каналами управления
-    """
+    square = signal.Signal(2, 'SQUARE', lohi=(-20, 20))
+    sine = signal.Signal(2, 'SINE', ampoffset=(1000, 0))
+    cosine = signal.Signal(2, 'COSINE', ampoffset=(1000, 0))
     def control_assign(self):
-        for r in self.controll_team:
-            r.clear_fields()
-
-        # TODO Задавать соответствие списком
-        for i in range(6):
-            self.controll_team[i].copy_control_fields(self.field.b_team[i])
-
-    """
-    Сформировать массив команд для отправки на роботов
-    """
-    def get_rules(self):
-        rules = []
-
+        """
+        Определить связь номеров роботов с каналами управления
+        """
+        # self.field.allies[const.DEBUG_ID].speedX = 0
+        # self.field.allies[const.DEBUG_ID].speedY = 0
+        # print(self.square.get())
         for i in range(const.TEAM_ROBOTS_MAX_COUNT):
-            # self.controll_team[i].remake_speed()
-            rules.append(0)
-            rules.append(self.controll_team[i].speedX)
-            rules.append(self.controll_team[i].speedY)
-            rules.append(self.controll_team[i].speedR)
-            rules.append(self.controll_team[i].kickForward)
-            rules.append(self.controll_team[i].kickUp)
-            rules.append(self.controll_team[i].autoKick)
-            rules.append(self.controll_team[i].kickerVoltage)
-            rules.append(self.controll_team[i].dribblerEnable)
-            rules.append(self.controll_team[i].speedDribbler)
-            rules.append(self.controll_team[i].kickerChargeEnable)
-            rules.append(self.controll_team[i].beep)            
-            rules.append(0)
-        for i in range(const.TEAM_ROBOTS_MAX_COUNT):
-            for _ in range(0, 13):
-                rules.append(0.0)
-            
-        b = bytes()
-        rules = b.join((struct.pack('d', rule) for rule in rules))
-        return rules
+            if self.field.allies[i].is_used():
+                self.field.allies[i].color = 'b'
+            # self.field.allies[i].speedR = self.square.get()
+            self.commands_sink_writer.write(self.field.allies[i])
 
-    """
-    Выполнить цикл процессора
-    
-    \offtop Что означает @debugger?
-    """
     @debugger
     def process(self) -> None:
-
-        ts_check = False
-        while(time.time() - self.cur_time < const.Ts):
-            ts_check = True
-        if not ts_check:
-            print("ПРЕВЫШЕН ПЕРИОД КВАНТОВАНИЯ НА: ", '%.3f' % (time.time() - self.cur_time - const.Ts))
+        """
+        Выполнить цикл процессора
+        
+        \offtop Что означает @debugger?
+        """
 
         self.dt = time.time() - self.cur_time
         self.cur_time = time.time()
 
+        # print(self.dt)
+        # print(self.our_color)
         self.read_vision()
         self.control_loop()
-        self.control_assign()
-        rules = self.get_rules()
-        self.commands_writer.write(rules)
 
+        # print(self.router.getRoute(const.DEBUG_ID))
+
+        self.control_assign()
