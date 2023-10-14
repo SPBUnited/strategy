@@ -349,7 +349,8 @@ def probability(inter, bots, st):
             koef = 1 
         else:
             koef = tmpResX / (const.ROBOT_R * 100 * 15)'''
-        res *= (2 * abs(ang) / math.pi) * (dist(st, bots[i].getPos()) / 54e6) 
+        # res *= (2 * abs(ang) / math.pi) * (dist(st, bots[i].getPos()) / 54e6) 
+        res *= 1/(2 * abs(ang) / math.pi) 
     return res
 
 def botPosition(st, vecx, vecy):
