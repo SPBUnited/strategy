@@ -4,22 +4,12 @@ import numpy as np
 
 import matplotlib as mpl
 
-import sys
-
-sys.path.insert(0, '/home/arxi/SSL23/strategy/')
-
 import time
 import math
-import bridge.processors.const as const
-import bridge.processors.robot as robot
-import bridge.processors.auxiliary as aux
-import bridge.processors.field as field
-import bridge.processors.router as router
-import bridge.processors.strategy as strategy
-import bridge.processors.waypoint as wp
-import bridge.processors.quickhull as qh
 
 import random
+
+from context import aux, qh
 
 
 class Testing(unittest.TestCase):

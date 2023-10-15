@@ -251,7 +251,7 @@ class Robot(entity.Entity):
 
     def update_vel_xyw(self, vel: aux.Point, wvel: float):
         """
-        Выполнить тик регуляторов скорости робота
+        Выполнить тик низкоуровневых регуляторов скорости робота
 
         vel - требуемый вектор скорости [мм/с] \\
         wvel - требуемая угловая скорость [рад/с]
@@ -276,7 +276,9 @@ class Robot(entity.Entity):
         
     def clamp_motors(self):
         """
-        Ограничить управляющее воздействие"""
+        Ограничить управляющее воздействие
+        """
+        # TODO
 
     def __str__(self) -> str:
         return str(str(self.color) + " " + str(self.rId) + " " + str(self.getPos()) + " " + str(self.speedX) + " " + str(self.speedY)) + " " + str(self.speedR)

@@ -4,8 +4,7 @@ sys.path.insert(0, '/home/arxi/SSL23/strategy/')
 
 import time
 import math
-import bridge.processors.const as const
-import bridge.processors.tau as tau
+from context import tau
 
 import unittest
 import matplotlib.pyplot as plt
