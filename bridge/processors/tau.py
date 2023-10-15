@@ -26,7 +26,7 @@ class FOD:
     def process(self, x):
         """
         Рассчитать и получить следующее значение выхода звена
-        
+
         ВЫЗЫВАТЬ РАЗ В ПЕРИОД КВАНТВАНИЯ
 
         x - новое значение входа
@@ -69,7 +69,7 @@ class FOLP:
     def process(self, x):
         """
         Рассчитать и получить следующее значение выхода звена
-        
+
         ВЫЗЫВАТЬ РАЗ В ПЕРИОД КВАНТВАНИЯ
 
         x - новое значение входа
@@ -98,14 +98,14 @@ class Integrator():
         self._dT = dT
         self._I = 0
         self._out = 0
-    
+
     def reset(self):
         self._I = 0
 
     def process(self, x):
         """
         Рассчитать и получить следующее значение выхода звена
-        
+
         ВЫЗЫВАТЬ РАЗ В ПЕРИОД КВАНТВАНИЯ
 
         x - новое значение входа
@@ -148,11 +148,11 @@ class PISD():
         self.__I = Integrator(dT)
         self.__out = 0
         self.__mode = Mode.NORMAL
-    
+
     def select_mode(self, mode: Mode):
         self.__mode = mode
         self.__I.reset()
-    
+
     def __get_gains(self):
         return (self.__gain[self.__mode.value], self.__kd[self.__mode.value], self.__ki[self.__mode.value], self.__max_out[self.__mode.value])
 
@@ -189,7 +189,7 @@ class RateLimiter():
         self.__I = Integrator(Ts)
         self.__k = 1/Ts
         self.__max_der = max_der
-    
+
     def process(self, x):
         u = aux.minmax(self.__k * (x - self.__out), -self.__max_der, self.__max_der)
         self.__out = self.__I.process(u)

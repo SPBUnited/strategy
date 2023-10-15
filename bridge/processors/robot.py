@@ -30,7 +30,7 @@ class Robot(entity.Entity):
         self.dribblerEnable = 0
         self.speedDribbler = 0
         self.kickerChargeEnable = 1
-        self.beep = 0   
+        self.beep = 0
         self.role = None
 
         #v! SIM
@@ -83,8 +83,16 @@ class Robot(entity.Entity):
         # a_gains_full = [2, 0.1, 0.1, const.MAX_SPEED_R]
         # a_gains_soft = [1, 0.07, 0, const.SOFT_MAX_SPEED_R]
 
-        self.posReg = tau.PISD(const.Ts, [gains_full[0], gains_soft[0]], [gains_full[1], gains_soft[1]], [gains_full[2], gains_soft[2]], [gains_full[3], gains_soft[3]])
-        self.angleReg = tau.PISD(const.Ts, [a_gains_full[0], a_gains_soft[0]], [a_gains_full[1], a_gains_soft[1]], [a_gains_full[2], a_gains_soft[2]], [a_gains_full[3], a_gains_soft[3]])
+        self.posReg = tau.PISD(const.Ts,
+                               [gains_full[0], gains_soft[0]],
+                               [gains_full[1], gains_soft[1]],
+                               [gains_full[2], gains_soft[2]],
+                               [gains_full[3], gains_soft[3]])
+        self.angleReg = tau.PISD(const.Ts,
+                                 [a_gains_full[0], a_gains_soft[0]],
+                                 [a_gains_full[1], a_gains_soft[1]],
+                                 [a_gains_full[2], a_gains_soft[2]],
+                                 [a_gains_full[3], a_gains_soft[3]])
 
         self.is_kick_commited = False
 
@@ -93,7 +101,7 @@ class Robot(entity.Entity):
 
     def is_used(self):
         return self.isUsed
-    
+
     def last_update(self):
         return self.lastUpdate
 
@@ -134,36 +142,48 @@ class Robot(entity.Entity):
         self.speedDribbler = 0
         self.kickerChargeEnable = 0
         self.beep = 0
-    
-    def is_kick_aligned(self, target: wp.Waypoint):
-        # print(round((self.getPos() - target.pos).mag(), 2), const.KICK_ALIGN_DIST*const.KICK_ALIGN_DIST_MULT, \
-        #     round(abs(aux.wind_down_angle(self._angle - target.angle)), 2), const.KICK_ALIGN_ANGLE, \
-        #     # round(abs(aux.vect_mult(aux.rotate(aux.i, target.angle), target.pos - self._pos)), 2), const.KICK_ALIGN_OFFSET)
-        #     round(aux.dist(aux.closest_point_on_line(target.pos, target.pos - aux.rotate(aux.i, target.angle)*const.KICK_ALIGN_DIST, self._pos), self._pos)), const.KICK_ALIGN_OFFSET)
-        # print(aux.i, target.angle, aux.rotate(aux.i, target.angle), target.pos, self._pos, target.pos - self._pos)
 
-        if self.is_kick_commited:
-            commit_scale = 1.2
-            is_dist = (self.getPos() - target.pos).mag() < const.KICK_ALIGN_DIST*const.KICK_ALIGN_DIST_MULT * commit_scale
-            is_angle = abs(aux.wind_down_angle(self._angle - target.angle)) < const.KICK_ALIGN_ANGLE * commit_scale
-            is_offset = aux.dist(aux.closest_point_on_line(target.pos, target.pos - aux.rotate(aux.i, target.angle)*const.KICK_ALIGN_DIST, self._pos), self._pos) < const.KICK_ALIGN_OFFSET * commit_scale
-            is_aligned = is_dist and is_angle and is_offset
-        else:
-            commit_scale = 1
-            is_dist = (self.getPos() - target.pos).mag() < const.KICK_ALIGN_DIST*const.KICK_ALIGN_DIST_MULT * commit_scale
-            is_angle = abs(aux.wind_down_angle(self._angle - target.angle)) < const.KICK_ALIGN_ANGLE * commit_scale
-            is_offset = aux.dist(aux.closest_point_on_line(target.pos, target.pos - aux.rotate(aux.i, target.angle)*const.KICK_ALIGN_DIST, self._pos), self._pos) < const.KICK_ALIGN_OFFSET * commit_scale
-            is_aligned = is_dist and is_angle and is_offset
+    def is_kick_aligned(self, target: wp.Waypoint):
+        # print(round((self.getPos() - target.pos).mag(), 2),
+        #       const.KICK_ALIGN_DIST*const.KICK_ALIGN_DIST_MULT, \
+        #       round(abs(aux.wind_down_angle(self._angle - target.angle)), 2),
+        #       const.KICK_ALIGN_ANGLE, \
+        #     # round(abs(aux.vect_mult(
+        #           aux.rotate(aux.i, target.angle), target.pos - self._pos)), 2),
+        #           const.KICK_ALIGN_OFFSET)
+        #       round(aux.dist(aux.closest_point_on_line(
+        #           target.pos,
+        #           target.pos - aux.rotate(aux.i, target.angle)*const.KICK_ALIGN_DIST, self._pos),
+        #           self._pos)),
+        #           const.KICK_ALIGN_OFFSET)
+        # print(aux.i, target.angle, aux.rotate(aux.i, target.angle), target.pos,
+        #                                       self._pos, target.pos - self._pos)
+
+        commit_scale = 1.2 if self.is_kick_commited else 1
+        is_dist = (self.get_pos() - target.pos).mag() < \
+            const.KICK_ALIGN_DIST*const.KICK_ALIGN_DIST_MULT * commit_scale
+        is_angle = abs(aux.wind_down_angle(self._angle - target.angle)) < \
+            const.KICK_ALIGN_ANGLE * commit_scale
+        is_offset = aux.dist(
+            aux.closest_point_on_line(
+                target.pos,
+                target.pos - aux.rotate(aux.RIGHT, target.angle)*const.KICK_ALIGN_DIST,
+                self._pos),
+                self._pos) < \
+            const.KICK_ALIGN_OFFSET * commit_scale
+        is_aligned = is_dist and is_angle and is_offset
+
         if is_aligned:
             self.is_kick_commited = True
         else:
             self.is_kick_commited = False
         print(is_dist, is_angle, is_offset)
         return is_aligned
-        
+
     def is_ball_in(self, field: field.Field):
-        return (self.getPos() - field.ball.getPos()).mag() < const.BALL_GRABBED_DIST and \
-            abs(aux.wind_down_angle((field.ball.getPos() - self.getPos()).arg() - self._angle)) < const.BALL_GRABBED_ANGLE
+        return (self.get_pos() - field.ball.get_pos()).mag() < const.BALL_GRABBED_DIST and \
+            abs(aux.wind_down_angle((field.ball.get_pos() - self.get_pos()).arg() - self._angle)) <\
+                const.BALL_GRABBED_ANGLE
 
     def go_route(self, route, field: field.Field):
         cur_speed = self._vel.mag()
@@ -174,11 +194,11 @@ class Robot(entity.Entity):
 
         target_point = route.getNextWP()
         end_point = route.getDestWP()
-        
-        # print(self.getPos(), target_point, end_point)
-        vel0 = (self.getPos() - target_point.pos).unity()
 
-        dangle = (target_point.pos - self.getPos()).arg()
+        # print(self.getPos(), target_point, end_point)
+        vel0 = (self.get_pos() - target_point.pos).unity()
+
+        dangle = (target_point.pos - self.get_pos()).arg()
         rangle = aux.wind_down_angle(self._angle - dangle)
         twpangle = aux.wind_down_angle(target_point.angle - dangle)
 
@@ -188,10 +208,11 @@ class Robot(entity.Entity):
 
         angle60 = dangle + angle60_abs * angle60_sign
 
-        tpangle = target_point.angle if target_point.type != wp.WType.R_PASSTHROUGH else end_point.angle
+        tpangle = target_point.angle if target_point.type != \
+            wp.WType.R_PASSTHROUGH else end_point.angle
         lerp_angles = [target_point.angle, angle60]
 
-        angle0 = aux.LERP(lerp_angles[0], lerp_angles[1], aux.minmax((dist-100)/1000, 0, 1))
+        angle0 = aux.lerp(lerp_angles[0], lerp_angles[1], aux.minmax((dist-100)/1000, 0, 1))
 
         self.posReg.select_mode(tau.Mode.NORMAL)
 
@@ -200,8 +221,9 @@ class Robot(entity.Entity):
             end_point.type == wp.WType.S_BALL_GO) and \
                 dist < 1500:
 
-            print("IS KICK ALIGNED: ", self.is_kick_aligned(end_point), ",\tIS BALL GRABBED: ", self.is_ball_in(field))
-            
+            print("IS KICK ALIGNED: ", self.is_kick_aligned(end_point),
+                  ",\tIS BALL GRABBED: ", self.is_ball_in(field))
+
             self.posReg.select_mode(tau.Mode.SOFT)
 
             if end_point.type == wp.WType.S_BALL_GO:
@@ -216,7 +238,7 @@ class Robot(entity.Entity):
         if (end_point.type == wp.WType.S_BALL_KICK or end_point.type == wp.WType.S_BALL_GRAB) and \
             (self.is_kick_aligned(end_point) or self.is_ball_in(field)):
             # vel0 = (self.getPos() - end_point.pos).unity()
-            vel0 = -aux.rotate(aux.i, self._angle)
+            vel0 = -aux.rotate(aux.RIGHT, self._angle)
             # angle0 = end_point.angle
             angle0 = self._angle
 
@@ -239,14 +261,16 @@ class Robot(entity.Entity):
             transl_vel = vel0 * u
 
         angle0 = end_point.angle
-        aerr = aux.wind_down_angle(angle0 - self.getAngle())
+        aerr = aux.wind_down_angle(angle0 - self.get_angle())
 
         u_a = self.angleReg.process(aerr, -self._anglevel)
         ang_vel = u_a
 
         # if self.rId == const.GK and self.color == 'b':
-        #     print("is aligned: ", self.is_kick_aligned(end_point), ", angle60: ", '%.2f'%angle60, ", end angle: ", '%.2f'%end_point.angle, \
-        #           ", angle0: ", '%.2f'%angle0, ", aerr: ", '%.2f'%aerr, ", self angle: ", '%.2f'%self.getAngle())
+        #     print("is aligned: ", self.is_kick_aligned(end_point), ",
+        #               angle60: ", '%.2f'%angle60, ", end angle: ", '%.2f'%end_point.angle, \
+        #               ", angle0: ", '%.2f'%angle0, ", aerr: ", '%.2f'%aerr, ",
+        #               self angle: ", '%.2f'%self.getAngle())
         self.update_vel_xyw(transl_vel, ang_vel)
 
     def update_vel_xyw(self, vel: aux.Point, wvel: float):
@@ -273,7 +297,7 @@ class Robot(entity.Entity):
         ang = math.atan2(self.speedY, self.speedX)
         self.speedX = vecSpeed * math.cos(ang)
         self.speedY = vecSpeed * math.sin(ang)
-        
+
     def clamp_motors(self):
         """
         Ограничить управляющее воздействие
@@ -281,5 +305,6 @@ class Robot(entity.Entity):
         # TODO
 
     def __str__(self) -> str:
-        return str(str(self.color) + " " + str(self.rId) + " " + str(self.getPos()) + " " + str(self.speedX) + " " + str(self.speedY)) + " " + str(self.speedR)
+        return str(str(self.color) + " " + str(self.rId) + " " + str(self.get_pos()) + " " + \
+                   str(self.speedX) + " " + str(self.speedY)) + " " + str(self.speedR)
 

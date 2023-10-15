@@ -11,13 +11,13 @@ import bridge.processors.robot as robot
 class Route:
 
     def __init__(self, robot: robot.Robot):
-        self._robot = [wp.Waypoint(robot.getPos(), robot._angle, wp.WType._ROBOT)]
-        self._destination = [wp.Waypoint(const.GRAVEYARD_POS, 0, wp.WType._GRAVEYARD)]
+        self._robot = [wp.Waypoint(robot.get_pos(), robot._angle, wp.WType._ROBOT)]
+        self._destination = [wp.Waypoint(aux.GRAVEYARD_POS, 0, wp.WType._GRAVEYARD)]
         self._routewp = []
         # self.__route = [*self.robot, *self.__routewp, *self.__destination]
 
     def update(self, robot: robot.Robot):
-        self._robot = [wp.Waypoint(robot.getPos(), robot._angle, wp.WType._ROBOT)]
+        self._robot = [wp.Waypoint(robot.get_pos(), robot._angle, wp.WType._ROBOT)]
         # if self.getNextVec().mag() < const.VANISH_DIST and \
         #     len(self._routewp) >= 1:
         #     del self._routewp[0]
@@ -30,7 +30,7 @@ class Route:
 
     def setDestWP(self, dest: wp.Waypoint):
         self._destination = [dest]
-   
+
     def getDestWP(self):
         return self._destination[0]
 
@@ -48,7 +48,7 @@ class Route:
 
     def getNextType(self) -> wp.WType:
         return self.__getRoute()[1].type
-    
+
     def insertWP(self, wp: wp.Waypoint):
         self._routewp.insert(0, wp)
 
@@ -66,7 +66,7 @@ class Route:
             dist += (wpt.pos - last_wp_pos).mag()
             last_wp_pos = wpt.pos
         return dist
-        
+
     def __str__(self):
         strin = "ROUTE: "
         for wp in self.__getRoute():

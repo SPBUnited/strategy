@@ -35,27 +35,53 @@ class Goal:
                      self.forw + (self.eye_forw) * const.GOAL_BOUND_OFFSET,
                      self.forwdown + (self.eye_forw - self.eye_up) * const.GOAL_BOUND_OFFSET,
                      self.down - self.eye_up * const.GOAL_BOUND_OFFSET,
-                     const.GRAVEYARD_POS*self.eye_forw.x]
+                     aux.GRAVEYARD_POS*self.eye_forw.x]
 
         # Попуск
-        self.popusk_positions = [aux.Point(0, 0), aux.Point(0, 2000), aux.Point(0, -2000), aux.Point(aux.sign(goal_dx) * 2000, 2000), aux.Point(aux.sign(goal_dx) * 2000, -2000)]
+        self.popusk_positions = [
+            aux.Point(0, 0),
+            aux.Point(0, 2000),
+            aux.Point(0, -2000),
+            aux.Point(aux.sign(goal_dx) * 2000, 2000),
+            aux.Point(aux.sign(goal_dx) * 2000, -2000)
+        ]
 
 class Field:
     """
     Класс, хранящий информацию о всех объектах на поле и ключевых точках
     """
-    def __init__(self, ctrl_mapping, ally_color = 'b') -> None:
+    def __init__(self, ctrl_mapping, ally_color='b') -> None:
         """
         Конструктор
         Инициализирует все нулями
-        
+
         TODO Сделать инициализацию реальными параметрами для корректного
         определения скоростей и ускорений в первые секунды
         """
         self.ally_color = ally_color
-        self.ball = entity.Entity(const.GRAVEYARD_POS, 0, const.BALL_R)
-        self.b_team = [ robot.Robot(const.GRAVEYARD_POS, 0, const.ROBOT_R, 'b', i, ctrl_mapping[i]) for i in range(const.TEAM_ROBOTS_MAX_COUNT)]
-        self.y_team = [ robot.Robot(const.GRAVEYARD_POS, 0, const.ROBOT_R, 'y', i, ctrl_mapping[i]) for i in range(const.TEAM_ROBOTS_MAX_COUNT)]
+        self.ball = entity.Entity(aux.GRAVEYARD_POS, 0, const.BALL_R)
+        self.b_team = [
+            robot.Robot(
+                aux.GRAVEYARD_POS,
+                0,
+                const.ROBOT_R,
+                'b',
+                i,
+                ctrl_mapping[i]
+            )
+            for i in range(const.TEAM_ROBOTS_MAX_COUNT)
+        ]
+        self.y_team = [
+            robot.Robot(
+                aux.GRAVEYARD_POS,
+                0,
+                const.ROBOT_R,
+                'y',
+                i,
+                ctrl_mapping[i]
+            )
+            for i in range(const.TEAM_ROBOTS_MAX_COUNT)
+        ]
         self.all_bots = [*self.b_team, *self.y_team]
         self.y_goal = Goal(const.GOAL_DX, const.GOAL_DY, const.GOAL_PEN)
         self.b_goal = Goal(-const.GOAL_DX, -const.GOAL_DY, -const.GOAL_PEN)
@@ -73,28 +99,28 @@ class Field:
             self.enemy_goal = self.b_goal
             self.side = const.POLARITY # TODO УДАЛИИИИТЬ
 
-    def updateBall(self, pos):
+    def update_ball(self, pos):
         """
         Обновить положение мяча
         !!! Вызывать один раз за итерацию с постоянной частотой !!!
         """
         self.ball.update(pos, 0)
 
-    def updateBluRobot(self, idx, pos, angle, t):
+    def upbate_blu_robot(self, idx, pos, angle, t):
         """
         Обновить положение робота синей команды
         !!! Вызывать один раз за итерацию с постоянной частотой !!!
         """
         self.b_team[idx].update(pos, angle, t)
 
-    def updateYelRobot(self, idx, pos, angle, t):
+    def update_yel_robot(self, idx, pos, angle, t):
         """
         Обновить положение робота желтой команды
         !!! Вызывать один раз за итерацию с постоянной частотой !!!
         """
         self.y_team[idx].update(pos, angle, t)
 
-    def getBall(self):
+    def get_ball(self):
         """
         Получить объект мяча
 
@@ -102,7 +128,7 @@ class Field:
         """
         return self.ball
 
-    def getBluTeam(self):
+    def get_blu_team(self):
         """
         Получить массив роботов синей команды
 
@@ -110,7 +136,7 @@ class Field:
         """
         return self.b_team
 
-    def getYelTeam(self):
+    def get_yel_team(self):
         """
         Получить массив роботов желтой команды
 
@@ -118,11 +144,15 @@ class Field:
         """
         return self.y_team
 
-    def isBallInGoalSq(self):
+    def is_ball_near_goal(self):
         """
         Определить, находится ли мяч в штрафной зоне
         """
-        # print(self.ally_goal.center.x - self.ball.getPos().x, self.ball.getPos().x - self.ally_goal.forw.x,
-        #     self.ally_goal.up.y - self.ball.getPos().y, self.ball.getPos().y - self.ally_goal.down.y)
-        return aux.sign(self.ally_goal.center.x - self.ball.getPos().x) == aux.sign(self.ball.getPos().x - self.ally_goal.forw.x) and \
-            aux.sign(self.ally_goal.up.y - self.ball.getPos().y) == aux.sign(self.ball.getPos().y - self.ally_goal.down.y)
+        # print(self.ally_goal.center.x - self.ball.get_pos().x,
+        #       self.ball.get_pos().x - self.ally_goal.forw.x,
+        #       self.ally_goal.up.y - self.ball.get_pos().y,
+        #       self.ball.get_pos().y - self.ally_goal.down.y)
+        return aux.sign(self.ally_goal.center.x - self.ball.get_pos().x) == \
+                aux.sign(self.ball.get_pos().x - self.ally_goal.forw.x) and \
+                aux.sign(self.ally_goal.up.y - self.ball.get_pos().y) == \
+                aux.sign(self.ball.get_pos().y - self.ally_goal.down.y)

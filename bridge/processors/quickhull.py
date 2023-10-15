@@ -2,8 +2,8 @@
 Реализация алгоритма quickhull для построения наименьшей выпуклой оболочки
 """
 
-import bridge.processors.auxiliary as aux
 import math
+import bridge.processors.auxiliary as aux
 
 def shortesthull(p1: aux.Point, p2: aux.Point, points):
     """
@@ -24,12 +24,11 @@ def shortesthull(p1: aux.Point, p2: aux.Point, points):
             minidx = i
     if minidx == 1:
         return hull[1]
-    else:
-        return hull[0]
-        
+    return hull[0]
 
 
-def quickhull(p1: aux.Point, p2: aux.Point, points, polarity = 1):
+
+def quickhull(p1: aux.Point, p2: aux.Point, points, polarity=1):
     """
     Найти половину выпуклой оболочки вокруг points с началом в p1, концом в p2
 
@@ -38,10 +37,9 @@ def quickhull(p1: aux.Point, p2: aux.Point, points, polarity = 1):
     """
     if polarity == 1:
         return [p1] + quickhullupper(p1, p2, points) + [p2]
-    elif polarity == -1:
+    if polarity == -1:
         return list(reversed(([p2] + quickhullupper(p2, p1, points) + [p1])))
-    else:
-        return None
+    return None
 
 def quickhullupper(p1: aux.Point, p2: aux.Point, points):
     """
@@ -63,8 +61,7 @@ def quickhullupper(p1: aux.Point, p2: aux.Point, points):
         if aux.dist2line(p2, p1, p) > max_dist:
             max_dist = aux.dist2line(p2, p1, p)
             max_p = p
-        
+
     if max_p is None:
         return []
-    else:
-        return quickhullupper(p1, max_p, uppoints) + [max_p] + quickhullupper(max_p, p2, uppoints)
+    return quickhullupper(p1, max_p, uppoints) + [max_p] + quickhullupper(max_p, p2, uppoints)

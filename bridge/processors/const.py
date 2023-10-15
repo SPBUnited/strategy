@@ -1,4 +1,6 @@
-import bridge.processors.auxiliary as aux
+"""
+Определение необходимых констант
+"""
 
 ##################################################
 # GAME SETTING CONSTS
@@ -46,7 +48,7 @@ CONTROL_MAPPING = \
 for i in range(TEAM_ROBOTS_MAX_COUNT):
     try:
         CONTROL_MAPPING[i]
-    except:
+    except KeyError:
         CONTROL_MAPPING[i] = None
 
 TOPIC_SINK = "control-sink"
@@ -79,7 +81,7 @@ GK_PEN_KICKOUT_SPEED = 500
 
 BALL_R = 0.05
 ROBOT_R = 0.2
-GRAVEYARD_POS = aux.Point(-10000, 0)
+GRAVEYARD_POS_X = -10000
 
 POLARITY = -1
 GOAL_DX = POLARITY * 4500

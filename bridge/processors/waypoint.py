@@ -18,7 +18,7 @@ class WType(Enum):
     S_BALL_KICK = 3 # Захватить мяч и мгновенно его пнуть
     S_BALL_GRAB = 4 # Захватить мяч не пиная
     S_KEEP_BALL_DISTANCE = 5
-    S_STOP = 6 # Kostil for stopping 
+    S_STOP = 6 # Kostil for stopping
 
     R_PASSTHROUGH = 10 # Двигаться в точку не останавливаясь (промежуточная точка пути)
     R_BALL_ALIGN = 11 # Выровнятся напротив мяча, приготовившись его захватить

@@ -1,9 +1,9 @@
-import attr
-import numpy as np
-import typing
+"""
+Модуль стратегии игры
+"""
 import time
-import bridge.processors.const as const
-import bridge.processors.robot as robot
+import numpy as np
+import attr
 
 from strategy_bridge.bus import DataReader, DataWriter
 from strategy_bridge.common import config
@@ -13,20 +13,20 @@ from strategy_bridge.bus import DataBus
 from strategy_bridge.utils.debugger import debugger
 from strategy_bridge.pb.messages_robocup_ssl_wrapper_pb2 import SSL_WrapperPacket
 
-import math
-import bridge.processors.auxiliary as auxiliary
-
+import bridge.processors.robot
+import bridge.processors.const as const
+import bridge.processors.auxiliary as aux
 import bridge.processors.field as field
 import bridge.processors.router as router
 import bridge.processors.strategy as strategy
-import bridge.processors.waypoint as wp
 import bridge.processors.signal as signal
-
-from bridge.processors.robot_command_sink import CommandSink
 
 # TODO: Refactor this class and corresponding matlab scripts
 @attr.s(auto_attribs=True)
 class SSLController(BaseProcessor):
+    """
+    Процессор стратегии SSL
+    """
 
     max_commands_to_persist: int = 20
     our_color: str = 'b'
@@ -34,12 +34,13 @@ class SSLController(BaseProcessor):
     vision_reader: DataReader = attr.ib(init=False)
     referee_reader: DataReader = attr.ib(init=False)
     commands_sink_writer: DataWriter = attr.ib(init=False)
+    _ssl_converter: SSL_WrapperPacket = attr.ib(init=False)
 
     dbg_game_status: strategy.GameStates = strategy.GameStates.TIMEOUT
     dbg_state: strategy.States = strategy.States.DEBUG
 
     cur_time = time.time()
-    dt = 0
+    delta_t = 0
 
     ctrl_mapping = const.CONTROL_MAPPING
     count_halt_cmd = 0
@@ -81,8 +82,9 @@ class SSLController(BaseProcessor):
         for ssl_package in queue:
             try:
                 ssl_package_content = ssl_package.content
-            except:
-                None
+            except AttributeError:
+                pass
+                # None
             if not ssl_package_content:
                 continue
 
@@ -101,9 +103,13 @@ class SSLController(BaseProcessor):
             camera_id = detection.camera_id
             for ball_ind, ball in enumerate(detection.balls):
                 balls[ball_ind + (camera_id - 1) * const.MAX_BALLS_IN_CAMERA] = camera_id
-                balls[ball_ind + const.MAX_BALLS_IN_FIELD + (camera_id - 1) * const.MAX_BALLS_IN_CAMERA] = ball.x
-                balls[ball_ind + 2 * const.MAX_BALLS_IN_FIELD + (camera_id - 1) * const.MAX_BALLS_IN_CAMERA] = ball.y
-                self.field.updateBall(auxiliary.Point(ball.x, ball.y))
+                balls[ball_ind + \
+                      const.MAX_BALLS_IN_FIELD + \
+                        (camera_id - 1) * const.MAX_BALLS_IN_CAMERA] = ball.x
+                balls[ball_ind + \
+                      2 * const.MAX_BALLS_IN_FIELD + \
+                        (camera_id - 1) * const.MAX_BALLS_IN_CAMERA] = ball.y
+                self.field.update_ball(aux.Point(ball.x, ball.y))
 
             for i in range(const.TEAM_ROBOTS_MAX_COUNT):
                 if time.time() - self.field.b_team[i].last_update() > 1:
@@ -111,61 +117,68 @@ class SSLController(BaseProcessor):
                 if time.time() - self.field.y_team[i].last_update() > 1:
                     self.field.y_team[i].used(0)
 
-            
+
             # self.strategy.changeGameState(strategy.GameStates.RUN, 0)
 
-            curCmd = self.get_last_referee_command()
-            if curCmd.state == 0:
+            # TODO Вынести в константы
+            game_controller_mapping = \
+            {
+                1 : strategy.GameStates.STOP,
+                2 : strategy.GameStates.RUN,
+                3 : strategy.GameStates.TIMEOUT,
+                4 : strategy.GameStates.HALT,
+                5 : strategy.GameStates.PREPARE_KICKOFF,
+                6 : strategy.GameStates.KICKOFF,
+                7 : strategy.GameStates.PREPARE_PENALTY,
+                8 : strategy.GameStates.PENALTY,
+                9 : strategy.GameStates.FREE_KICK,
+                10: strategy.GameStates.HALT,
+                11: strategy.GameStates.BALL_PLACMENT,
+            }
+
+            cur_cmd = self.get_last_referee_command()
+            if cur_cmd.state == 0:
                 self.count_halt_cmd += 1
             else:
                 self.count_halt_cmd = 0
-                if curCmd.state == 1:
-                    self.strategy.changeGameState(strategy.GameStates.STOP, curCmd.commandForTeam)
-                elif curCmd.state == 2:
-                    self.strategy.changeGameState(strategy.GameStates.RUN, curCmd.commandForTeam)
-                elif curCmd.state == 3:
-                    self.strategy.changeGameState(strategy.GameStates.TIMEOUT, curCmd.commandForTeam)
-                elif curCmd.state == 4:
-                    self.strategy.changeGameState(strategy.GameStates.HALT, curCmd.commandForTeam)
+                self.strategy.changeGameState(
+                    game_controller_mapping[cur_cmd.state],
+                    cur_cmd.commandForTeam)
+                if cur_cmd.state == 4:
                     print("End game")
-                elif curCmd.state == 5:
-                    self.strategy.changeGameState(strategy.GameStates.PREPARE_KICKOFF, curCmd.commandForTeam)
-                elif curCmd.state == 6:
-                    self.strategy.changeGameState(strategy.GameStates.KICKOFF, curCmd.commandForTeam)
-                elif curCmd.state == 7:
-                    self.strategy.changeGameState(strategy.GameStates.PREPARE_PENALTY, curCmd.commandForTeam)
-                elif curCmd.state == 8:
-                    self.strategy.changeGameState(strategy.GameStates.PENALTY, curCmd.commandForTeam)
-                elif curCmd.state == 9:
-                    self.strategy.changeGameState(strategy.GameStates.FREE_KICK, curCmd.commandForTeam)
-                elif curCmd.state == 10:
-                    self.strategy.changeGameState(strategy.GameStates.HALT, curCmd.commandForTeam)
+                elif cur_cmd.state == 10:
                     print("Uknown command 10")
-                elif curCmd.state == 11:
-                    self.strategy.changeGameState(strategy.GameStates.BALL_PLACMENT, curCmd.commandForTeam)
-                
+
             if self.count_halt_cmd > 10:
-                self.strategy.changeGameState(strategy.GameStates.HALT, curCmd.commandForTeam)
+                self.strategy.changeGameState(strategy.GameStates.HALT, cur_cmd.commandForTeam)
 
             # self.strategy.changeGameState(strategy.GameStates.PREPARE_KICKOFF, 0)
 
 
             # TODO: Barrier states
-            for robot in detection.robots_blue:
-                if time.time() - self.field.b_team[robot.robot_id].last_update() > 0.3:
-                    self.field.b_team[robot.robot_id].used(0)
+            for robot_det in detection.robots_blue:
+                if time.time() - self.field.b_team[robot_det.robot_id].last_update() > 0.3:
+                    self.field.b_team[robot_det.robot_id].used(0)
                 else:
-                    self.field.b_team[robot.robot_id].used(1) 
-                self.field.updateBluRobot(robot.robot_id, auxiliary.Point(robot.x, robot.y), robot.orientation, time.time())
+                    self.field.b_team[robot_det.robot_id].used(1)
+                self.field.upbate_blu_robot(
+                    robot_det.robot_id,
+                    aux.Point(robot_det.x, robot_det.y),
+                    robot_det.orientation,
+                    time.time())
 
-            for robot in detection.robots_yellow:
-                if time.time() - self.field.y_team[robot.robot_id].last_update() > 0.3:
-                    self.field.y_team[robot.robot_id].used(0)
-                else: 
-                    self.field.y_team[robot.robot_id].used(1)
-                self.field.updateYelRobot(robot.robot_id, auxiliary.Point(robot.x, robot.y), robot.orientation, time.time())
+            for robot_det in detection.robots_yellow:
+                if time.time() - self.field.y_team[robot_det.robot_id].last_update() > 0.3:
+                    self.field.y_team[robot_det.robot_id].used(0)
+                else:
+                    self.field.y_team[robot_det.robot_id].used(1)
+                self.field.update_yel_robot(
+                    robot_det.robot_id,
+                    aux.Point(robot_det.x, robot_det.y),
+                    robot_det.orientation,
+                    time.time())
         return status
-    
+
     def control_loop(self):
         """
         Рассчитать стратегию, тактику и физику для роботов на поле
@@ -205,11 +218,11 @@ class SSLController(BaseProcessor):
     def process(self) -> None:
         """
         Выполнить цикл процессора
-        
-        \offtop Что означает @debugger?
+
+        OFFTOP Что означает @debugger?
         """
 
-        self.dt = time.time() - self.cur_time
+        self.delta_t = time.time() - self.cur_time
         self.cur_time = time.time()
 
         # print(self.dt)

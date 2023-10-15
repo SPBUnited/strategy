@@ -14,7 +14,7 @@ from context import aux, qh
 
 class Testing(unittest.TestCase):
     def test_quickhull(self):
-        
+
         p1 = aux.Point(-2000, 0)
         p2 = aux.Point(2000, 5000)
 
@@ -23,9 +23,9 @@ class Testing(unittest.TestCase):
         for _ in range(NUM_POINTS):
             x, y = random.randint(-1000, 1000), random.randint(-1000, 1000)
             points.append(aux.Point(x, y))
-        
+
         # print(points)
-        
+
         qho = qh.shortesthull(p1, p2, points)
 
         fig, ax = plt.subplots()  # Create a figure containing a single axes.
@@ -38,9 +38,9 @@ class Testing(unittest.TestCase):
             ax.plot([qho[i].x, qho[i+1].x], [qho[i].y, qho[i+1].y])
         plt.show()
         self.assertEqual(1, 1)
-        
+
     def test_quickhull_2(self):
-        
+
         p1 = aux.Point(-2500, 553)
         # p2 = aux.Point(4000, 2000)
         p2 = aux.Point(-4200,200)
@@ -56,9 +56,9 @@ class Testing(unittest.TestCase):
         # for _ in range(NUM_POINTS):
         #     x, y = random.randint(-1000, 1000), random.randint(-1000, 1000)
         #     points.append(aux.Point(x, y))
-        
+
         # print(points)
-        
+
         # qho = qh.shortesthull(p1, p2, points)
         qho = qh.quickhull(p1, p2, points, 1) + qh.quickhull(p2, p1, list(reversed(points)), 1)
 

@@ -37,7 +37,7 @@ class Testing(unittest.TestCase):
         # plt.show()
         # while(True):
         #     pass
-        
+
         # print(po1)
         self.assertEqual(pi1.x, po1.x)
         self.assertEqual(pi1.y, po1.y)

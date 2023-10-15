@@ -14,7 +14,7 @@ import matplotlib as mpl
 
 class Testing(unittest.TestCase):
     def test_rate_limiter(self):
-        
+
         ts = 0.01
         t = tau.Integrator(ts)
 
@@ -35,7 +35,7 @@ class Testing(unittest.TestCase):
             in_data.append(u)
             out_data.append(out)
 
-            t.process(1)            
+            t.process(1)
 
         fig, ax = plt.subplots()  # Create a figure containing a single axes.
         ax.plot(t_data, in_data)

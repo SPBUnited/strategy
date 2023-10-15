@@ -20,17 +20,17 @@ class Router:
     def update(self, field: field.Field):
         for i in range(const.TEAM_ROBOTS_MAX_COUNT):
             self.routes[i].update(field.allies[i])
-    
+
     """
     Установить единственную путевую точку для робота с индексом idx
     """
     def setDest(self, idx, target: wp.Waypoint, field: field.Field):
         if idx != const.GK:
-            self_pos = field.allies[idx].getPos()
+            self_pos = field.allies[idx].get_pos()
             dest_pos = target.pos
             for goal in [field.ally_goal, field.enemy_goal]:
                 if aux.is_point_inside_poly(dest_pos, goal.hull):
-                    closest_out = aux.find_nearest_point(dest_pos, goal.hull, [goal.up, const.GRAVEYARD_POS, goal.down])
+                    closest_out = aux.find_nearest_point(dest_pos, goal.hull, [goal.up, aux.GRAVEYARD_POS, goal.down])
                     angle0 = target.angle
                     self.routes[idx].setDestWP(wp.Waypoint(goal.center + (closest_out - goal.center) * 1.2, angle0, wp.WType.S_ENDPOINT))
                     return
@@ -41,8 +41,8 @@ class Router:
     """
     def reRoute(self, field: field.Field):
         for idx in range(const.TEAM_ROBOTS_MAX_COUNT):
-            
-            self_pos = field.allies[idx].getPos()
+
+            self_pos = field.allies[idx].get_pos()
 
             if not self.routes[idx].isUsed():
                 continue
@@ -62,7 +62,7 @@ class Router:
 
             for goal in [field.ally_goal, field.enemy_goal]:
                 if aux.is_point_inside_poly(self_pos, goal.hull):
-                    closest_out = aux.find_nearest_point(self_pos, goal.hull, [goal.up, const.GRAVEYARD_POS, goal.down])
+                    closest_out = aux.find_nearest_point(self_pos, goal.hull, [goal.up, aux.GRAVEYARD_POS, goal.down])
                     angle0 = self.routes[idx].getDestWP().angle
                     self.routes[idx].setDestWP(wp.Waypoint(goal.center + (closest_out - goal.center) * 1.2, angle0, wp.WType.S_ENDPOINT))
                     continue
@@ -79,7 +79,7 @@ class Router:
                             0,
                             wp.WType.R_PASSTHROUGH
                         ))
-            
+
             pth_wp = self.calcVectorField(idx, field)
             if pth_wp is not None:
                 is_inside = False
@@ -89,9 +89,9 @@ class Router:
                         break
                 if not is_inside:
                     self.routes[idx].insertWP(pth_wp)
-            
+
     # def calcPenDetour(self, idx, field: field.Field):
-    #     self_pos = field.allies[idx].getPos()
+    #     self_pos = field.allies[idx].get_pos()
     #     detwp = None
     #     for goal in [*field.ally_goal, *field.enemy_goal]:
     #         vec1 = aux.vect_mult(self.routes[idx].getNextVec().unity(), (goal.forwup - self_pos).unity())
@@ -99,13 +99,13 @@ class Router:
     #         vecc = aux.vect_mult(self.routes[idx].getNextVec().unity(), (goal.center - self_pos).unity())
     #         if(aux.sign(vec1) != aux.sign(vecc)):
     #             if(aux.sign(vec2) != aux.sign(vecc)):
-    #                 detwp = 
+    #                 detwp =
 
 
     def calcVectorField(self, idx, field: field.Field):
         allies = field.allies
         enemy = field.enemies
-        self_pos = allies[idx].getPos()
+        self_pos = allies[idx].get_pos()
         target_point = self.routes[idx].getNextWP()
         dist = (self_pos - target_point.pos).mag()
 
@@ -132,8 +132,8 @@ class Router:
         for r in field.all_bots:
             if r == self or r.is_used() == 0:
                 continue
-            robot_separation = aux.dist(aux.closest_point_on_line(self_pos, target_point.pos, r.getPos()), r.getPos())
-            robot_dist = aux.dist(self_pos, r.getPos())
+            robot_separation = aux.dist(aux.closest_point_on_line(self_pos, target_point.pos, r.get_pos()), r.get_pos())
+            robot_dist = aux.dist(self_pos, r.get_pos())
             if robot_dist == 0:
                 continue
             if robot_separation < sep_dist and robot_dist < closest_dist:
@@ -141,17 +141,17 @@ class Router:
                 closest_dist = robot_dist
                 closest_separation = robot_separation
 
-        ball_separation = aux.dist(aux.closest_point_on_line(self_pos, target_point.pos, field.ball.getPos()), field.ball.getPos())
-        ball_dist = aux.dist(self_pos, field.ball.getPos())
+        ball_separation = aux.dist(aux.closest_point_on_line(self_pos, target_point.pos, field.ball.get_pos()), field.ball.get_pos())
+        ball_dist = aux.dist(self_pos, field.ball.get_pos())
         if ball_separation < ball_sep_dist and ball_dist < closest_dist:
             closest_robot = field.ball
             closest_dist = ball_dist
             closest_separation = ball_separation
 
         passthrough_wp_pos = target_point.pos - self_pos
-        # angle_cos = aux.scal_mult((closest_robot.getPos() - self_pos).unity(), (target_point.pos - self_pos).unity())
+        # angle_cos = aux.scal_mult((closest_robot.get_pos() - self_pos).unity(), (target_point.pos - self_pos).unity())
         if closest_robot is not None and closest_dist != 0:
-            side = aux.vect_mult(closest_robot.getPos() - self_pos, target_point.pos - self_pos)
+            side = aux.vect_mult(closest_robot.get_pos() - self_pos, target_point.pos - self_pos)
             # offset_angle_val = 200*math.pi/6 * closest_dist**(-2)
             offset_angle_val = -2 * math.atan((sep_dist - closest_separation)/(2*(closest_dist)))
             offset_angle = offset_angle_val if side < 0 else -offset_angle_val
@@ -172,7 +172,7 @@ class Router:
         target_pos = target_point.pos
         target_angle = target_point.angle
 
-        align_pos = target_pos - aux.rotate(aux.i, target_angle) * const.KICK_ALIGN_DIST
+        align_pos = target_pos - aux.rotate(aux.RIGHT, target_angle) * const.KICK_ALIGN_DIST
         align_angle = target_angle
         align_type = wp.WType.R_BALL_ALIGN
         align_wp = wp.Waypoint(
