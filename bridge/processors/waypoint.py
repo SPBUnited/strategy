@@ -11,7 +11,7 @@ import bridge.processors.auxiliary as aux
 from enum import Enum
 
 class WType(Enum):
-    _ROBOT = -1 # хз, нужен в Route
+    T_ROBOT = -1 # хз, нужен в Route
     S_ENDPOINT = 0 # Двигаться в точку и остановиться (конечная точка пути)
     S_IGNOREOBSTACLES = 1 # Двигаться в точку игнорируя препятствия
     S_BALL_GO = 2 # Двигаться с мячом
@@ -23,7 +23,7 @@ class WType(Enum):
     R_PASSTHROUGH = 10 # Двигаться в точку не останавливаясь (промежуточная точка пути)
     R_BALL_ALIGN = 11 # Выровнятся напротив мяча, приготовившись его захватить
 
-    _GRAVEYARD = 100
+    T_GRAVEYARD = 100
 
 class Waypoint:
     def __init__(self, pos: aux.Point, angle: float, type: WType) -> None:

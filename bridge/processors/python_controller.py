@@ -186,12 +186,12 @@ class SSLController(BaseProcessor):
         self.router.update(self.field)
         waypoints = self.strategy.process(self.field)
         for i in range(const.TEAM_ROBOTS_MAX_COUNT):
-            self.router.getRoute(i).clear()
-            self.router.setDest(i, waypoints[i], self.field)
-        self.router.reRoute(self.field)
+            self.router.get_route(i).clear()
+            self.router.set_dest(i, waypoints[i], self.field)
+        self.router.reroute(self.field)
 
         for i in range(const.TEAM_ROBOTS_MAX_COUNT):
-            self.field.allies[i].go_route(self.router.getRoute(i), self.field)
+            self.field.allies[i].go_route(self.router.get_route(i), self.field)
 
         # for i in range(const.TEAM_ROBOTS_MAX_COUNT):
         #     print(self.field.y_team[i])
