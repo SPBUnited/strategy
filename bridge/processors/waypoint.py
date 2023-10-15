@@ -7,10 +7,13 @@
 - Тип путевой точки
 """
 
-import bridge.processors.auxiliary as aux
 from enum import Enum
+import bridge.processors.auxiliary as aux
 
 class WType(Enum):
+    """
+    Типы путевых точек
+    """
     T_ROBOT = -1 # хз, нужен в Route
     S_ENDPOINT = 0 # Двигаться в точку и остановиться (конечная точка пути)
     S_IGNOREOBSTACLES = 1 # Двигаться в точку игнорируя препятствия
@@ -26,10 +29,16 @@ class WType(Enum):
     T_GRAVEYARD = 100
 
 class Waypoint:
-    def __init__(self, pos: aux.Point, angle: float, type: WType) -> None:
+    """
+    Описание путевой точки
+    """
+    def __init__(self, pos: aux.Point, angle: float, wp_type: WType) -> None:
+        """
+        Конструктор
+        """
         self.pos = pos
         self.angle = angle
-        self.type = type
+        self.type = wp_type
 
     def __str__(self):
         return "WP: " + str(self.pos) + "; angle = %.2f"%self.angle + "; type = " + str(self.type)

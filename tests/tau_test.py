@@ -26,10 +26,10 @@ class Testing(unittest.TestCase):
         in_data = []
         out_data = []
 
-        while t.getVal() < t_end:
-            t_data.append(t.getVal())
+        while t.get_val() < t_end:
+            t_data.append(t.get_val())
 
-            u = -0.5 + 1/(t.getVal()+1)
+            u = -0.5 + 1/(t.get_val()+1)
             out = rl.process(u)
 
             in_data.append(u)

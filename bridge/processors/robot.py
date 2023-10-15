@@ -228,10 +228,10 @@ class Robot(entity.Entity):
 
         # print(route)
 
-        dist = route.getLenght()
+        dist = route.get_length()
 
-        target_point = route.getNextWP()
-        end_point = route.getDestWP()
+        target_point = route.get_next_wp()
+        end_point = route.get_dest_wp()
 
         # print(self.getPos(), target_point, end_point)
         vel0 = (self.get_pos() - target_point.pos).unity()

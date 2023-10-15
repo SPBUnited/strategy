@@ -5,10 +5,18 @@ import time
 import math
 
 class Signal:
+    """
+    Класс-генератор сигналов
+    """
 
+    def __init__(self, period, waveform, ampoffset=None, lohi=None):
+        """
+        Конструтор
 
-    def __init__(self, period, waveform, ampoffset = None, lohi = None):
-        self.T0 = time.time()
+        Сигнал можно задать либо через амлитуду и смещение нуля (ampoffset),
+        либо через минимальное и максимальное значения (lohi)
+        """
+        self.t_0 = time.time()
         self.period = period
         self.waveform = waveform
 
@@ -30,13 +38,26 @@ class Signal:
         }
 
     def get(self):
+        """
+        Получить значение сигнала
+        """
         return self.waveforms[self.waveform]()
 
     def square(self):
-        return math.copysign(self.amp, math.sin(2*math.pi*(time.time() - self.T0)/self.period)) + self.offset
+        """
+        Получить значение меандра
+        """
+        return math.copysign(self.amp,
+                             math.sin(2*math.pi*(time.time() - self.t_0)/self.period)) + self.offset
 
     def sine(self):
-        return self.amp * math.sin(2*math.pi*(time.time() - self.T0)/self.period) + self.offset
+        """
+        Получить значение синуса
+        """
+        return self.amp * math.sin(2*math.pi*(time.time() - self.t_0)/self.period) + self.offset
 
     def cosine(self):
-        return self.amp * math.cos(2*math.pi*(time.time() - self.T0)/self.period) + self.offset
+        """
+        Получить значение косинуса
+        """
+        return self.amp * math.cos(2*math.pi*(time.time() - self.t_0)/self.period) + self.offset

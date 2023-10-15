@@ -2,7 +2,7 @@
 Модуль для визуального дебага и графической отрисовки всяких векторов и точек
 """
 
-# import pygame
+import pygame
 
 import bridge.processors.auxiliary as aux
 from bridge.processors.singleton import Singleton

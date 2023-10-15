@@ -43,12 +43,12 @@ class Router:
                                                          goal.hull,
                                                          [goal.up, aux.GRAVEYARD_POS, goal.down])
                     angle0 = target.angle
-                    self.routes[idx].setDestWP(
+                    self.routes[idx].set_dest_wp(
                         wp.Waypoint(goal.center + (closest_out - goal.center) * 1.2,
                                     angle0,
                                     wp.WType.S_ENDPOINT))
                     return
-        self.routes[idx].setDestWP(target)
+        self.routes[idx].set_dest_wp(target)
 
     def reroute(self, fld: field.Field):
         """
@@ -63,7 +63,7 @@ class Router:
 
             if self.routes[idx].get_next_type() == wp.WType.S_BALL_KICK or \
                 self.routes[idx].get_next_type() == wp.WType.S_BALL_GRAB:
-                # if not field.allies[idx].is_kick_aligned(self.routes[idx].getDestWP()):
+                # if not field.allies[idx].is_kick_aligned(self.routes[idx].get_dest_wp()):
                 align_wp = self.calc_kick_wp(idx, fld)
                 self.routes[idx].insert_wp(align_wp)
 
@@ -134,21 +134,21 @@ class Router:
         согласно первому приближению векторного поля
         """
         self_pos = fld.allies[idx].get_pos()
-        target_point = self.routes[idx].getNextWP()
+        target_point = self.routes[idx].get_next_wp()
         dist = (self_pos - target_point.pos).mag()
 
         vector_field_threshold = 200
         if dist < vector_field_threshold:
             return None
 
-        if self.routes[idx].getDestWP().type == wp.WType.S_IGNOREOBSTACLES or \
-              self.routes[idx].getDestWP().type == wp.WType.S_BALL_GO:
+        if self.routes[idx].get_dest_wp().type == wp.WType.S_IGNOREOBSTACLES or \
+              self.routes[idx].get_dest_wp().type == wp.WType.S_BALL_GO:
             return None
 
         sep_dist = 500
         ball_sep_dist = 150
 
-        if self.routes[idx].getDestWP().type == wp.WType.S_KEEP_BALL_DISTANCE:
+        if self.routes[idx].get_dest_wp().type == wp.WType.S_KEEP_BALL_DISTANCE:
             ball_sep_dist = const.KEEP_BALL_DIST
 
         closest_robot = None
@@ -205,7 +205,7 @@ class Router:
         """
         Рассчитать точку для выравниявания по мячу
         """
-        target_point = self.routes[idx].getDestWP()
+        target_point = self.routes[idx].get_dest_wp()
         target_pos = target_point.pos
         target_angle = target_point.angle
 
