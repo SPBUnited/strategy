@@ -205,13 +205,13 @@ class SSLController(BaseProcessor):
         """
         Определить связь номеров роботов с каналами управления
         """
-        # self.field.allies[const.DEBUG_ID].speedX = 0
-        # self.field.allies[const.DEBUG_ID].speedY = 0
+        # self.field.allies[const.DEBUG_ID].speed_x = 0
+        # self.field.allies[const.DEBUG_ID].speed_y = 0
         # print(self.square.get())
         for i in range(const.TEAM_ROBOTS_MAX_COUNT):
             if self.field.allies[i].is_used():
                 self.field.allies[i].color = 'b'
-            # self.field.allies[i].speedR = self.square.get()
+            # self.field.allies[i].speed_r = self.square.get()
             self.commands_sink_writer.write(self.field.allies[i])
 
     @debugger

@@ -260,7 +260,7 @@ def find_nearest_robot(robot, team, avoid=[]):
     robot_id = -1
     min_dist = 10e10
     for i in range(0, len(team)):
-        if i in avoid or not team[i].isUsed:
+        if i in avoid or not team[i].is_used():
             continue
         if dist(robot, team[i].get_pos()) < min_dist:
             min_dist = dist(robot, team[i].get_pos())

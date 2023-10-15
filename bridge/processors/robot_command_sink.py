@@ -51,7 +51,7 @@ class CommandSink(BaseProcessor):
 
         for cmd in cmds:
             r = cmd.content
-            ctrl_id = r.ctrlId
+            ctrl_id = r.ctrl_id
 
             if ctrl_id is None:
                 continue
@@ -72,43 +72,43 @@ class CommandSink(BaseProcessor):
         rules = []
 
         for i in range(const.TEAM_ROBOTS_MAX_COUNT):
-            if abs(self.b_control_team[i].speedX) < 1.5:
-                self.b_control_team[i].speedX = 0
-            if abs(self.b_control_team[i].speedY) < 1.5:
-                self.b_control_team[i].speedY = 0
-            if abs(self.b_control_team[i].speedR) < 1.5:
-                self.b_control_team[i].speedR = 0
+            if abs(self.b_control_team[i].speed_x) < 1.5:
+                self.b_control_team[i].speed_x = 0
+            if abs(self.b_control_team[i].speed_y) < 1.5:
+                self.b_control_team[i].speed_y = 0
+            if abs(self.b_control_team[i].speed_r) < 1.5:
+                self.b_control_team[i].speed_r = 0
             rules.append(0)
-            rules.append(self.b_control_team[i].speedX)
-            rules.append(self.b_control_team[i].speedY)
-            rules.append(self.b_control_team[i].speedR)
-            rules.append(self.b_control_team[i].kickForward)
-            rules.append(self.b_control_team[i].kickUp)
-            rules.append(self.b_control_team[i].autoKick)
-            rules.append(self.b_control_team[i].kickerVoltage)
-            rules.append(self.b_control_team[i].dribblerEnable)
-            rules.append(self.b_control_team[i].speedDribbler)
-            rules.append(self.b_control_team[i].kickerChargeEnable)
+            rules.append(self.b_control_team[i].speed_x)
+            rules.append(self.b_control_team[i].speed_y)
+            rules.append(self.b_control_team[i].speed_r)
+            rules.append(self.b_control_team[i].kick_forward_)
+            rules.append(self.b_control_team[i].kick_up_)
+            rules.append(self.b_control_team[i].auto_kick_)
+            rules.append(self.b_control_team[i].kicker_voltage_)
+            rules.append(self.b_control_team[i].dribbler_enable_)
+            rules.append(self.b_control_team[i].dribbler_speed_)
+            rules.append(self.b_control_team[i].kicker_charge_enable_)
             rules.append(self.b_control_team[i].beep)
             rules.append(0)
         for i in range(const.TEAM_ROBOTS_MAX_COUNT):
-            if abs(self.y_control_team[i].speedX) < 1.5:
-                self.y_control_team[i].speedX = 0
-            if abs(self.y_control_team[i].speedY) < 1.5:
-                self.y_control_team[i].speedY = 0
-            if abs(self.y_control_team[i].speedR) < 1.5:
-                self.y_control_team[i].speedR = 0
+            if abs(self.y_control_team[i].speed_x) < 1.5:
+                self.y_control_team[i].speed_x = 0
+            if abs(self.y_control_team[i].speed_y) < 1.5:
+                self.y_control_team[i].speed_y = 0
+            if abs(self.y_control_team[i].speed_r) < 1.5:
+                self.y_control_team[i].speed_r = 0
             rules.append(0)
-            rules.append(self.y_control_team[i].speedX)
-            rules.append(self.y_control_team[i].speedY)
-            rules.append(self.y_control_team[i].speedR)
-            rules.append(self.y_control_team[i].kickForward)
-            rules.append(self.y_control_team[i].kickUp)
-            rules.append(self.y_control_team[i].autoKick)
-            rules.append(self.y_control_team[i].kickerVoltage)
-            rules.append(self.y_control_team[i].dribblerEnable)
-            rules.append(self.y_control_team[i].speedDribbler)
-            rules.append(self.y_control_team[i].kickerChargeEnable)
+            rules.append(self.y_control_team[i].speed_x)
+            rules.append(self.y_control_team[i].speed_y)
+            rules.append(self.y_control_team[i].speed_r)
+            rules.append(self.y_control_team[i].kick_forward_)
+            rules.append(self.y_control_team[i].kick_up_)
+            rules.append(self.y_control_team[i].auto_kick_)
+            rules.append(self.y_control_team[i].kicker_voltage_)
+            rules.append(self.y_control_team[i].dribbler_enable_)
+            rules.append(self.y_control_team[i].dribbler_speed_)
+            rules.append(self.y_control_team[i].kicker_charge_enable_)
             rules.append(self.y_control_team[i].beep)
             rules.append(0)
 
