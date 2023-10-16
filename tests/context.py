@@ -9,6 +9,5 @@ import bridge.processors.field as field
 import bridge.processors.router as router
 import bridge.processors.strategy as strategy
 import bridge.processors.waypoint as wp
-# import bridge.processors.drawer as drw
 import bridge.processors.quickhull as qh
 import bridge.processors.tau as tau
