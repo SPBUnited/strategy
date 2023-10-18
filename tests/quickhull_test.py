@@ -1,26 +1,28 @@
+"""
+Модуль теста quickhull.py
+"""
 import unittest
-import matplotlib.pyplot as plt
-import numpy as np
-
-import matplotlib as mpl
-
-import time
-import math
-
 import random
+import matplotlib.pyplot as plt
 
 from context import aux, qh
 
 
 class Testing(unittest.TestCase):
+    """
+    Класс-тест
+    """
     def test_quickhull(self):
+        """
+        Тест алгоритма quickhull
+        """
 
         p1 = aux.Point(-2000, 0)
         p2 = aux.Point(2000, 5000)
 
         points = []
-        NUM_POINTS = 100
-        for _ in range(NUM_POINTS):
+        num_points = 100
+        for _ in range(num_points):
             x, y = random.randint(-1000, 1000), random.randint(-1000, 1000)
             points.append(aux.Point(x, y))
 
@@ -28,7 +30,7 @@ class Testing(unittest.TestCase):
 
         qho = qh.shortesthull(p1, p2, points)
 
-        fig, ax = plt.subplots()  # Create a figure containing a single axes.
+        _, ax = plt.subplots()  # Create a figure containing a single axes.
         ax.plot(p1.x, p1.y, 'o')
         ax.plot(p2.x, p2.y, 'o')
         for p in points:
@@ -40,6 +42,9 @@ class Testing(unittest.TestCase):
         self.assertEqual(1, 1)
 
     def test_quickhull_2(self):
+        """
+        Тест краевого случая из симулятора (точки оболочки не между точками пути)
+        """
 
         p1 = aux.Point(-2500, 553)
         # p2 = aux.Point(4000, 2000)
@@ -62,7 +67,7 @@ class Testing(unittest.TestCase):
         # qho = qh.shortesthull(p1, p2, points)
         qho = qh.quickhull(p1, p2, points, 1) + qh.quickhull(p2, p1, list(reversed(points)), 1)
 
-        fig, ax = plt.subplots()  # Create a figure containing a single axes.
+        _, ax = plt.subplots()  # Create a figure containing a single axes.
         ax.plot(p1.x, p1.y, 'o')
         ax.plot(p2.x, p2.y, 'o')
         for p in points:
@@ -76,4 +81,3 @@ class Testing(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
-    # test_line_intersect()

@@ -1,27 +1,18 @@
+"""
+Тест математики из auxiliary.py
+"""
 import unittest
-import matplotlib.pyplot as plt
-import numpy as np
 
-import matplotlib as mpl
-
-import sys
-
-sys.path.insert(0, '/home/arxi/SSL23/strategy/')
-
-import time
-import math
-import bridge.processors.const as const
-import bridge.processors.robot as robot
-import bridge.processors.auxiliary as aux
-import bridge.processors.field as field
-import bridge.processors.router as router
-import bridge.processors.strategy as strategy
-import bridge.processors.waypoint as wp
-import bridge.processors.drawer as drw
-
+from context import aux
 
 class Testing(unittest.TestCase):
+    """
+    Класс-тестер
+    """
     def test_line_intersect(self):
+        """
+        Тест get_line_intersection
+        """
         p1 = aux.Point(0, 0)
         v1 = aux.Point(3, 0)
         p2 = aux.Point(2, -1)
@@ -43,13 +34,19 @@ class Testing(unittest.TestCase):
         self.assertEqual(pi1.y, po1.y)
 
     def test_poly_line_intersect(self):
+        """
+        Тест line_poly_intersect
+        """
         p1 = aux.Point(-100, 0)
         p2 = aux.Point(100, 0)
         points = [aux.Point(-50, -50), aux.Point(-50, 50), aux.Point(50, 50), aux.Point(50, -50)]
 
         print(aux.line_poly_intersect(p1, p2, points))
 
-    def test_poly_line_intersect(self):
+    def test_is_point_inside_poly(self):
+        """
+        Тест is_point_inside_poly
+        """
         p = aux.Point(0, 0)
         points = [aux.Point(-50, -50), aux.Point(-50, 50), aux.Point(50, 50), aux.Point(50, -50)]
 
@@ -70,22 +67,25 @@ class Testing(unittest.TestCase):
 
         # fig, ax = plt.subplots()  # Create a figure containing a single axes.
         # for i in range(-1, len(points)-1):
-        #     ax.plot([points[i].x, points[i+1].x], [points[i].y, points[i+1].y])  # Plot some data on the axes.
+        #     ax.plot([points[i].x, points[i+1].x], [points[i].y, points[i+1].y])
+        # # Plot some data on the axes.
         # ax.plot(p.x, p.y, 'x')
         # plt.show()
 
         self.assertTrue(aux.is_point_inside_poly(p, points))
 
     def test_is_in_list(self):
+        """
+        Тест is_in_list
+        """
 
-        list = [1,2,3,4,5,6]
+        lst = [1,2,3,4,5,6]
         x = 4
-        self.assertTrue(aux.is_in_list(list, x))
+        self.assertTrue(aux.is_in_list(lst, x))
 
         x = 40
-        self.assertFalse(aux.is_in_list(list, x))
+        self.assertFalse(aux.is_in_list(lst, x))
 
 
 if __name__ == '__main__':
     unittest.main()
-    # test_line_intersect()
