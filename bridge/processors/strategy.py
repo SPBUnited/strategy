@@ -2,8 +2,6 @@
 #
 # Расчет требуемых положений роботов исходя из ситуации на поле
 
-# pylint: skip-file
-
 import bridge.processors.field as field
 import bridge.processors.waypoint as wp
 import bridge.processors.const as const
