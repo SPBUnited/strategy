@@ -1,19 +1,19 @@
-import sys
-
-sys.path.insert(0, '/home/arxi/SSL23/strategy/')
-
-import time
-import math
-from context import tau
-
+"""
+Тест модуля динамических звеньев tau.py
+"""
 import unittest
 import matplotlib.pyplot as plt
-import numpy as np
 
-import matplotlib as mpl
+from context import tau
 
 class Testing(unittest.TestCase):
+    """
+    Класс-тест
+    """
     def test_rate_limiter(self):
+        """
+        Тест ограничителя скорости роста
+        """
 
         ts = 0.01
         t = tau.Integrator(ts)
@@ -37,7 +37,7 @@ class Testing(unittest.TestCase):
 
             t.process(1)
 
-        fig, ax = plt.subplots()  # Create a figure containing a single axes.
+        _, ax = plt.subplots()  # Create a figure containing a single axes.
         ax.plot(t_data, in_data)
         ax.plot(t_data, out_data)
         plt.show()
@@ -46,5 +46,3 @@ class Testing(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
-    # test_line_intersect()
-
