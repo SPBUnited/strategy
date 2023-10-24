@@ -144,7 +144,7 @@ class Field:
         """
         return self.y_team
 
-    def is_ball_near_goal(self):
+    def is_ball_stop_near_goal(self):
         """
         Определить, находится ли мяч в штрафной зоне
         """
@@ -156,3 +156,9 @@ class Field:
                 aux.sign(self.ball.get_pos().x - self.ally_goal.forw.x) and \
                 aux.sign(self.ally_goal.up.y - self.ball.get_pos().y) == \
                 aux.sign(self.ball.get_pos().y - self.ally_goal.down.y)
+    
+    def is_ball_moves_to_goal(self):
+        """
+        Определить, движется ли мяч в сторону ворот
+        """
+        return self.ball._vel.mag() > const.GK_INTERCEPT_SPEED # and self.ball._vel.x / self.ally_goal.center.x > 0 нужно протестить
