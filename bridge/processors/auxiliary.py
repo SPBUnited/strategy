@@ -3,12 +3,15 @@
 """
 
 import math
+
 import bridge.processors.const as const
+
 
 class Graph:
     """
     Класс для работы с графами
     """
+
     def __init__(self, num_vertices):
         """
         Конструктор
@@ -29,12 +32,12 @@ class Graph:
         """
         Найти кратчайший путь в графе используя алгоритм Дейкстры
         """
-        distances = [float('inf')] * self.num_vertices
+        distances = [float("inf")] * self.num_vertices
         distances[start_vertex] = 0
         visited = [False] * self.num_vertices
 
         for _ in range(self.num_vertices):
-            min_distance = float('inf')
+            min_distance = float("inf")
             min_vertex = -1
 
             for v in range(self.num_vertices):
@@ -46,29 +49,33 @@ class Graph:
 
             for v in range(self.num_vertices):
                 if (
-                        not visited[v]
-                        and self.graph[min_vertex][v]
-                        and distances[min_vertex] != float('inf')
-                        and distances[min_vertex] + self.graph[min_vertex][v] < distances[v]
+                    not visited[v]
+                    and self.graph[min_vertex][v]
+                    and distances[min_vertex] != float("inf")
+                    and distances[min_vertex] + self.graph[min_vertex][v] < distances[v]
                 ):
                     distances[v] = distances[min_vertex] + self.graph[min_vertex][v]
 
         return distances
+
 
 class BobLine:
     """
     Борина линия
     Надо ли?
     """
+
     def __init__(self, A, B, C):
         self.A = A
         self.B = B
         self.C = C
 
+
 class Point:
     """
     Класс, описывающий точку (вектор)
     """
+
     def __init__(self, x, y):
         self.x = x
         self.y = y
@@ -86,16 +93,16 @@ class Point:
         return Point(self.x * a, self.y * a)
 
     def __truediv__(self, a: float):
-        return self * (1/a)
+        return self * (1 / a)
 
     def __pow__(self, a: float):
-        return Point(self.x ** a, self.y ** a)
+        return Point(self.x**a, self.y**a)
 
     def __eq__(self, p):
         return self.x == p.x and self.y == p.y
 
     def __str__(self):
-        return f'x = {self.x:.2f}, y = {self.y:.2f}'
+        return f"x = {self.x:.2f}, y = {self.y:.2f}"
 
     def mag(self):
         """
@@ -116,11 +123,13 @@ class Point:
         if self.mag() == 0:
             # raise ValueError("БАГА, .unity от нулевого вектора")
             return self
-        return self/self.mag()
+        return self / self.mag()
+
 
 RIGHT = Point(1, 0)
 UP = Point(0, 1)
 GRAVEYARD_POS = Point(const.GRAVEYARD_POS_X, 0)
+
 
 def dist2line(p1, p2, p):
     """
@@ -128,16 +137,18 @@ def dist2line(p1, p2, p):
     """
     return abs(vect_mult((p2 - p1).unity(), p - p1))
 
+
 def line_poly_intersect(p1, p2, points):
     """
     Определить, пересекает ли линия p1-p2 полигон points
     """
-    vec = p2-p1
-    old_sign = sign(vect_mult(vec, points[0]-p1))
+    vec = p2 - p1
+    old_sign = sign(vect_mult(vec, points[0] - p1))
     for p in points:
         if old_sign != sign(vect_mult(vec, p - p1)):
             return True
     return False
+
 
 def segment_poly_intersect(p1, p2, points):
     """
@@ -145,21 +156,23 @@ def segment_poly_intersect(p1, p2, points):
     Если да - возвращает одну из двух точек пересечения
     Если нет - возвращает None
     """
-    for i in range(-1, len(points)-1):
-        p = get_line_intersection(p1, p2, points[i], points[i+1], 'SS')
+    for i in range(-1, len(points) - 1):
+        p = get_line_intersection(p1, p2, points[i], points[i + 1], "SS")
         if p is not None:
             return p
     return None
+
 
 def is_point_inside_poly(p, points):
     """
     Определить, лежит ли точка внутри полигона
     """
-    old_sign = sign(vect_mult(p - points[-1], points[0]-points[-1]))
-    for i in range(len(points)-1):
-        if old_sign != sign(vect_mult(p - points[i], points[i+1]-points[i])):
+    old_sign = sign(vect_mult(p - points[-1], points[0] - points[-1]))
+    for i in range(len(points) - 1):
+        if old_sign != sign(vect_mult(p - points[i], points[i + 1] - points[i])):
             return False
     return True
+
 
 def dist(a, b):
     """
@@ -167,7 +180,8 @@ def dist(a, b):
     """
     return math.hypot(a.x - b.x, a.y - b.y)
 
-def get_line_intersection(line1_start, line1_end, line2_start, line2_end, is_inf='SS'):
+
+def get_line_intersection(line1_start, line1_end, line2_start, line2_end, is_inf="SS"):
     """
     Получить точку пересечения отрезков или прямых
 
@@ -206,13 +220,9 @@ def get_line_intersection(line1_start, line1_end, line2_start, line2_end, is_inf
 
     first_valid = False
     second_valid = False
-    if is_inf[0] == 'S' and 0 <= t1 <= 1 or \
-        is_inf[0] == 'R' and t1 >= 0 or \
-        is_inf[0] == 'L':
+    if is_inf[0] == "S" and 0 <= t1 <= 1 or is_inf[0] == "R" and t1 >= 0 or is_inf[0] == "L":
         first_valid = True
-    if is_inf[1] == 'S' and 0 <= t2 <= 1 or \
-        is_inf[1] == 'R' and t2 >= 0 or \
-        is_inf[1] == 'L':
+    if is_inf[1] == "S" and 0 <= t2 <= 1 or is_inf[1] == "R" and t2 >= 0 or is_inf[1] == "L":
         second_valid = True
 
     if first_valid and second_valid:
@@ -220,11 +230,13 @@ def get_line_intersection(line1_start, line1_end, line2_start, line2_end, is_inf
 
     return None
 
+
 def vect_mult(v, u):
     """
     Посчитать модуль векторного произведения векторов v и u
     """
     return v.x * u.y - v.y * u.x
+
 
 def scal_mult(v, u):
     """
@@ -232,12 +244,13 @@ def scal_mult(v, u):
     """
     return v.x * u.x + v.y * u.y
 
+
 def rotate(p: Point, angle: float):
     """
     Повернуть вектор p на угол angle
     """
-    return Point(p.x * math.cos(angle) - p.y * math.sin(angle),
-                 p.y * math.cos(angle) + p.x * math.sin(angle))
+    return Point(p.x * math.cos(angle) - p.y * math.sin(angle), p.y * math.cos(angle) + p.x * math.sin(angle))
+
 
 def find_nearest_point(p, points, exclude=[]):
     """
@@ -253,6 +266,7 @@ def find_nearest_point(p, points, exclude=[]):
             closest = points[i]
     return closest
 
+
 def find_nearest_robot(robot, team, avoid=[]):
     """
     Найти ближайший робот из массива team к точке robot, игнорируя точки avoid
@@ -267,14 +281,16 @@ def find_nearest_robot(robot, team, avoid=[]):
             robot_id = i
     return team[robot_id]
 
+
 def wind_down_angle(angle: float):
     """
     Привести угол к диапазону [-pi, pi]
     """
-    angle = angle % (2*math.pi)
+    angle = angle % (2 * math.pi)
     if angle > math.pi:
-        angle -= 2*math.pi
+        angle -= 2 * math.pi
     return angle
+
 
 def closest_point_on_line(point1, point2, point):
     """
@@ -296,12 +312,10 @@ def closest_point_on_line(point1, point2, point):
     if dot_product >= line_length:
         return point2
 
-    closest_point = Point(
-        point1.x + line_direction[0] * dot_product,
-        point1.y + line_direction[1] * dot_product
-    )
+    closest_point = Point(point1.x + line_direction[0] * dot_product, point1.y + line_direction[1] * dot_product)
 
     return closest_point
+
 
 def point_on_line(robot, point, distance):
     """
@@ -315,11 +329,13 @@ def point_on_line(robot, point, distance):
     new_y = robot.y + distance * math.sin(vec_arg)
     return Point(new_x, new_y)
 
+
 def lerp(p1, p2, t):
     """
     Получить линейно интерполированное значение
     """
-    return p1*(1-t) + p2*t
+    return p1 * (1 - t) + p2 * t
+
 
 def minmax(x, a, b):
     """
@@ -327,11 +343,13 @@ def minmax(x, a, b):
     """
     return min(max(x, a), b)
 
+
 def angle_to_point(point1, point2):
     """
     Получить угол вектора p = point2 - point1
     """
-    return (point2-point1).arg()
+    return (point2 - point1).arg()
+
 
 def sign(num):
     """
@@ -341,6 +359,7 @@ def sign(num):
         return 0
     return num / abs(num)
 
+
 def det(a, b, c, d):
     """
     Получить определитель матрицы:
@@ -348,6 +367,7 @@ def det(a, b, c, d):
     |c d|
     """
     return a * d - b * c
+
 
 def line_intersect(m, bots):
     """
@@ -359,10 +379,11 @@ def line_intersect(m, bots):
         res = Point(0, 0)
         if abs(mat_inv) < 1e-9:
             return None
-        res.x = - det(m.C, m.B, n.C, n.B) / mat_inv
-        res.y = - det(m.A, m.C, n.A, n.C) / mat_inv
+        res.x = -det(m.C, m.B, n.C, n.B) / mat_inv
+        res.y = -det(m.A, m.C, n.A, n.C) / mat_inv
         result.append(res)
     return result
+
 
 def probability(inter, bots, pos):
     """
@@ -374,7 +395,7 @@ def probability(inter, bots, pos):
         # koef = 1
         # print([inter[i].x, inter[i].y, bots[i].get_pos().x, bots[i].get_pos().y])
         tmp_res_x = dist(inter[i], bots[i].get_pos())
-        tmp_res_y = math.sqrt(dist(pos, bots[i].get_pos()) ** 2 - tmp_res_x ** 2)
+        tmp_res_y = math.sqrt(dist(pos, bots[i].get_pos()) ** 2 - tmp_res_x**2)
         ang = math.atan2(tmp_res_y, tmp_res_x)
         # abs(ang) < math.pi / 4
         if abs(ang) > math.pi / 2:
@@ -387,17 +408,19 @@ def probability(inter, bots, pos):
         # else:
         #     koef = tmpResX / (const.ROBOT_R * 100 * 15)
         # res *= (2 * abs(ang) / math.pi) * (dist(st, bots[i].get_pos()) / 54e6)
-        res *= 1/(2 * abs(ang) / math.pi)
+        res *= 1 / (2 * abs(ang) / math.pi)
     return res
+
 
 def bot_position(pos, vecx, vecy):
     """
     TODO написать доку
     """
-    modul = (vecx**2 + vecy**2)**(0.5)
+    modul = (vecx**2 + vecy**2) ** (0.5)
     vecx = (vecx / modul) * const.ROBOT_R * 1000 * 2
     vecy = (vecy / modul) * const.ROBOT_R * 1000 * 2
     return Point(pos.x - vecx, pos.y - vecy)
+
 
 def shot_decision(pos, end, tobj):
     """
@@ -419,15 +442,15 @@ def shot_decision(pos, end, tobj):
     #     # print([bot.get_pos().x, bot.get_pos().y], end = " ")
     #     plt.plot(bot.get_pos().x, bot.get_pos().y, 'bo')
     # t = np.arange(-4500*1.0, 1000*1.0, 10)
-    for point in end:    #checkai
+    for point in end:  # checkai
         A = -(point.y - pos.y)
-        B = (point.x - pos.x)
+        B = point.x - pos.x
         C = pos.x * (point.y - pos.y) - pos.y * (point.x - pos.x)
         tmp_line = BobLine(A, B, C)
         # plt.plot(t, (tmpLine.A*t + tmpLine.C)/tmpLine.B, 'g--')
         lines = []
         for bot in objs:
-            tmp_c = -(B*bot.get_pos().x - A*bot.get_pos().y)
+            tmp_c = -(B * bot.get_pos().x - A * bot.get_pos().y)
             line2 = BobLine(B, -A, tmp_c)
             lines.append(line2)
         inter = line_intersect(tmp_line, lines)
@@ -460,11 +483,13 @@ def shot_decision(pos, end, tobj):
     # plt.show()
     return shot_point, mx, point_res
 
+
 def in_place(point, end, epsilon):
     """
     Проверить, находится ли точка st в радиусе epsilon около end
     """
     return (point - end).mag() < epsilon
+
 
 def is_in_list(arr, x):
     """

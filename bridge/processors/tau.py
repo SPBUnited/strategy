@@ -4,12 +4,15 @@
 
 import math
 from enum import Enum, auto
+
 import bridge.processors.auxiliary as aux
+
 
 class FOD:
     """
     Реальное дифференцирующее звено первого порядка
     """
+
     def __init__(self, T, Ts, is_angle=False):
         """
         Конструктор
@@ -35,12 +38,12 @@ class FOD:
         if self._is_angle:
             # print(err, x, self.I)
             if err > math.pi:
-                err -= 2*math.pi
-                self._int += 2*math.pi
+                err -= 2 * math.pi
+                self._int += 2 * math.pi
             elif err < -math.pi:
-                err += 2*math.pi
-                self._int -= 2*math.pi
-        self._out = err/self._t
+                err += 2 * math.pi
+                self._int -= 2 * math.pi
+        self._out = err / self._t
         self._int += self._out * self._ts
         return self._out
 
@@ -50,10 +53,12 @@ class FOD:
         """
         return self._out
 
+
 class FOLP:
     """
     Фильтр низких частот первого порядка
     """
+
     def __init__(self, T, Ts):
         """
         Конструктор
@@ -76,7 +81,7 @@ class FOLP:
         """
         err = x - self._out
         self._int += err * self._ts
-        self._out = self._int/self._t
+        self._out = self._int / self._t
         return self._out
 
     def get_val(self):
@@ -85,10 +90,12 @@ class FOLP:
         """
         return self._out
 
-class Integrator():
+
+class Integrator:
     """
     Интегратор
     """
+
     def __init__(self, Ts):
         """
         Конструктор
@@ -123,20 +130,24 @@ class Integrator():
         """
         return self._out
 
+
 class Mode(Enum):
     """
     Названия наборов коэффициентов регулятора
     """
+
     NORMAL = 0
     SOFT = auto()
 
-class PISD():
+
+class PISD:
     """
     Пропорционально-скользяще-интегральный регулятор
 
     (В отличие от ПИД беред производную от скорости изменения регулируемой
     величины, а не ошибки)
     """
+
     def __init__(self, dT, gain, kd, ki, max_out) -> None:
         """
         Конструктор
@@ -166,10 +177,12 @@ class PISD():
         """
         Получить коэффициенты регулятора
         """
-        return (self.__gain[self.__mode.value],
-                self.__kd[self.__mode.value],
-                self.__ki[self.__mode.value],
-                self.__max_out[self.__mode.value])
+        return (
+            self.__gain[self.__mode.value],
+            self.__kd[self.__mode.value],
+            self.__ki[self.__mode.value],
+            self.__max_out[self.__mode.value],
+        )
 
     def process(self, xerr, x_i):
         """
@@ -178,13 +191,13 @@ class PISD():
         gain, k_d, k_i, max_out = self.__get_gains()
         # print(gain, kd, ki, max_out)
 
-        s = xerr + k_d*x_i + k_i*self.__int.get_val()
+        s = xerr + k_d * x_i + k_i * self.__int.get_val()
         u = gain * s
 
         u_clipped = aux.minmax(u, -max_out, max_out)
 
         if u != u_clipped:
-            self.__int.process(xerr + k_d*x_i)
+            self.__int.process(xerr + k_d * x_i)
 
         self.__out = u_clipped
         return self.__out
@@ -195,17 +208,19 @@ class PISD():
         """
         return self.__out
 
-class RateLimiter():
+
+class RateLimiter:
     """
     Ограничитель скорости роста
     """
+
     def __init__(self, Ts, max_der) -> None:
         """
         Конструктор
         """
         self.__out = 0
         self.__int = Integrator(Ts)
-        self.__k = 1/Ts
+        self.__k = 1 / Ts
         self.__max_der = max_der
 
     def process(self, x):

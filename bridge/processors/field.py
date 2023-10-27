@@ -1,15 +1,17 @@
 """
 Модуль описания структуры Field для хранения информации об объектах на поле (роботы и мяч)
 """
-import bridge.processors.entity as entity
 import bridge.processors.auxiliary as aux
 import bridge.processors.const as const
+import bridge.processors.entity as entity
 import bridge.processors.robot as robot
+
 
 class Goal:
     """
     Структура, описывающая ключевые точки ворот
     """
+
     def __init__(self, goal_dx, goal_dy, goal_pen) -> None:
 
         # Абсолютный центр
@@ -30,12 +32,14 @@ class Goal:
         self.forwdown = self.forw + self.vdown
 
         # Оболочка штрафной зоны
-        self.hull = [self.up + self.eye_up * const.GOAL_BOUND_OFFSET,
-                     self.forwup + (self.eye_forw + self.eye_up) * const.GOAL_BOUND_OFFSET,
-                     self.forw + (self.eye_forw) * const.GOAL_BOUND_OFFSET,
-                     self.forwdown + (self.eye_forw - self.eye_up) * const.GOAL_BOUND_OFFSET,
-                     self.down - self.eye_up * const.GOAL_BOUND_OFFSET,
-                     aux.GRAVEYARD_POS*self.eye_forw.x]
+        self.hull = [
+            self.up + self.eye_up * const.GOAL_BOUND_OFFSET,
+            self.forwup + (self.eye_forw + self.eye_up) * const.GOAL_BOUND_OFFSET,
+            self.forw + (self.eye_forw) * const.GOAL_BOUND_OFFSET,
+            self.forwdown + (self.eye_forw - self.eye_up) * const.GOAL_BOUND_OFFSET,
+            self.down - self.eye_up * const.GOAL_BOUND_OFFSET,
+            aux.GRAVEYARD_POS * self.eye_forw.x,
+        ]
 
         # Попуск
         self.popusk_positions = [
@@ -43,14 +47,16 @@ class Goal:
             aux.Point(0, 2000),
             aux.Point(0, -2000),
             aux.Point(aux.sign(goal_dx) * 2000, 2000),
-            aux.Point(aux.sign(goal_dx) * 2000, -2000)
+            aux.Point(aux.sign(goal_dx) * 2000, -2000),
         ]
+
 
 class Field:
     """
     Класс, хранящий информацию о всех объектах на поле и ключевых точках
     """
-    def __init__(self, ctrl_mapping, ally_color='b') -> None:
+
+    def __init__(self, ctrl_mapping, ally_color="b") -> None:
         """
         Конструктор
         Инициализирует все нулями
@@ -61,43 +67,29 @@ class Field:
         self.ally_color = ally_color
         self.ball = entity.Entity(aux.GRAVEYARD_POS, 0, const.BALL_R)
         self.b_team = [
-            robot.Robot(
-                aux.GRAVEYARD_POS,
-                0,
-                const.ROBOT_R,
-                'b',
-                i,
-                ctrl_mapping[i]
-            )
+            robot.Robot(aux.GRAVEYARD_POS, 0, const.ROBOT_R, "b", i, ctrl_mapping[i])
             for i in range(const.TEAM_ROBOTS_MAX_COUNT)
         ]
         self.y_team = [
-            robot.Robot(
-                aux.GRAVEYARD_POS,
-                0,
-                const.ROBOT_R,
-                'y',
-                i,
-                ctrl_mapping[i]
-            )
+            robot.Robot(aux.GRAVEYARD_POS, 0, const.ROBOT_R, "y", i, ctrl_mapping[i])
             for i in range(const.TEAM_ROBOTS_MAX_COUNT)
         ]
         self.all_bots = [*self.b_team, *self.y_team]
         self.y_goal = Goal(const.GOAL_DX, const.GOAL_DY, const.GOAL_PEN)
         self.b_goal = Goal(-const.GOAL_DX, -const.GOAL_DY, -const.GOAL_PEN)
 
-        if ally_color == 'b':
+        if ally_color == "b":
             self.allies = [*self.b_team]
             self.ally_goal = self.b_goal
             self.enemies = [*self.y_team]
             self.enemy_goal = self.y_goal
-            self.side = -const.POLARITY # TODO УДАЛИТЬ АААААААААААААААААААААА
-        elif ally_color == 'y':
+            self.side = -const.POLARITY  # TODO УДАЛИТЬ АААААААААААААААААААААА
+        elif ally_color == "y":
             self.allies = [*self.y_team]
             self.ally_goal = self.y_goal
             self.enemies = [*self.b_team]
             self.enemy_goal = self.b_goal
-            self.side = const.POLARITY # TODO УДАЛИИИИТЬ
+            self.side = const.POLARITY  # TODO УДАЛИИИИТЬ
 
     def update_ball(self, pos):
         """
@@ -152,13 +144,16 @@ class Field:
         #       self.ball.get_pos().x - self.ally_goal.forw.x,
         #       self.ally_goal.up.y - self.ball.get_pos().y,
         #       self.ball.get_pos().y - self.ally_goal.down.y)
-        return aux.sign(self.ally_goal.center.x - self.ball.get_pos().x) == \
-                aux.sign(self.ball.get_pos().x - self.ally_goal.forw.x) and \
-                aux.sign(self.ally_goal.up.y - self.ball.get_pos().y) == \
-                aux.sign(self.ball.get_pos().y - self.ally_goal.down.y)
-    
+        return aux.sign(self.ally_goal.center.x - self.ball.get_pos().x) == aux.sign(
+            self.ball.get_pos().x - self.ally_goal.forw.x
+        ) and aux.sign(self.ally_goal.up.y - self.ball.get_pos().y) == aux.sign(
+            self.ball.get_pos().y - self.ally_goal.down.y
+        )
+
     def is_ball_moves_to_goal(self):
         """
         Определить, движется ли мяч в сторону ворот
         """
-        return self.ball._vel.mag() > const.GK_INTERCEPT_SPEED # and self.ball._vel.x / self.ally_goal.center.x > 0 нужно протестить
+        return (
+            self.ball._vel.mag() > const.GK_INTERCEPT_SPEED
+        )  # and self.ball._vel.x / self.ally_goal.center.x > 0 нужно протестить

@@ -2,12 +2,14 @@
 Описание полей и интерфейсов взаимодействия с роботом
 """
 import math
+
 import bridge.processors.auxiliary as aux
 import bridge.processors.const as const
-import bridge.processors.field as field
 import bridge.processors.entity as entity
-import bridge.processors.waypoint as wp
+import bridge.processors.field as field
 import bridge.processors.tau as tau
+import bridge.processors.waypoint as wp
+
 
 class Robot(entity.Entity):
     """
@@ -36,21 +38,21 @@ class Robot(entity.Entity):
         self.beep = 0
         self.role = None
 
-        #v! SIM
+        # v! SIM
         if const.IS_SIMULATOR_USED:
-            self.k_xx = -833/20
-            self.k_yy = 833/20
-            self.k_ww = 1.25/20
+            self.k_xx = -833 / 20
+            self.k_yy = 833 / 20
+            self.k_ww = 1.25 / 20
             self.k_wy = -0.001
             self.t_wy = 0.15
             self.r_comp_f_dy = tau.FOD(self.t_wy, const.Ts)
             self.r_comp_f_fy = tau.FOLP(self.t_wy, const.Ts)
 
-        #v! REAL
+        # v! REAL
         else:
-            self.k_xx = -250/20
-            self.k_yy = 250/20
-            self.k_ww = 6/20
+            self.k_xx = -250 / 20
+            self.k_yy = 250 / 20
+            self.k_ww = 6 / 20
             self.k_wy = 0
             self.t_wy = 0.15
             self.r_comp_f_dy = tau.FOD(self.t_wy, const.Ts)
@@ -66,7 +68,7 @@ class Robot(entity.Entity):
         # self.a0TF = 0.5
         # self.a0Flp = tau.FOLP(self.a0TF, const.Ts)
 
-        #!v REAL
+        # !v REAL
         # if self.r_id != const.GK:
         gains_full = [6, 0.8, 0, const.MAX_SPEED]
         gains_soft = [8, 0.5, 0, const.SOFT_MAX_SPEED]
@@ -80,22 +82,26 @@ class Robot(entity.Entity):
         #     a_gains_full = [6, 0.1, 0, const.MAX_SPEED_R]
         #     a_gains_soft = [2, 0.07, 1, const.SOFT_MAX_SPEED_R]
 
-        #!v SIM
+        # !v SIM
         # gains_full = [2, 0.3, 0, const.MAX_SPEED]
         # gains_soft = [0.5, 0.1, 0, const.SOFT_MAX_SPEED]
         # a_gains_full = [2, 0.1, 0.1, const.MAX_SPEED_R]
         # a_gains_soft = [1, 0.07, 0, const.SOFT_MAX_SPEED_R]
 
-        self.pos_reg = tau.PISD(const.Ts,
-                                [gains_full[0], gains_soft[0]],
-                                [gains_full[1], gains_soft[1]],
-                                [gains_full[2], gains_soft[2]],
-                                [gains_full[3], gains_soft[3]])
-        self.angle_reg = tau.PISD(const.Ts,
-                                  [a_gains_full[0], a_gains_soft[0]],
-                                  [a_gains_full[1], a_gains_soft[1]],
-                                  [a_gains_full[2], a_gains_soft[2]],
-                                  [a_gains_full[3], a_gains_soft[3]])
+        self.pos_reg = tau.PISD(
+            const.Ts,
+            [gains_full[0], gains_soft[0]],
+            [gains_full[1], gains_soft[1]],
+            [gains_full[2], gains_soft[2]],
+            [gains_full[3], gains_soft[3]],
+        )
+        self.angle_reg = tau.PISD(
+            const.Ts,
+            [a_gains_full[0], a_gains_soft[0]],
+            [a_gains_full[1], a_gains_soft[1]],
+            [a_gains_full[2], a_gains_soft[2]],
+            [a_gains_full[3], a_gains_soft[3]],
+        )
 
         self.is_kick_commited = False
 
@@ -192,17 +198,17 @@ class Robot(entity.Entity):
         #                                       self._pos, target.pos - self._pos)
 
         commit_scale = 1.2 if self.is_kick_commited else 1
-        is_dist = (self.get_pos() - target.pos).mag() < \
-            const.KICK_ALIGN_DIST*const.KICK_ALIGN_DIST_MULT * commit_scale
-        is_angle = abs(aux.wind_down_angle(self._angle - target.angle)) < \
-            const.KICK_ALIGN_ANGLE * commit_scale
-        is_offset = aux.dist(
-            aux.closest_point_on_line(
-                target.pos,
-                target.pos - aux.rotate(aux.RIGHT, target.angle)*const.KICK_ALIGN_DIST,
-                self._pos),
-            self._pos) < \
-            const.KICK_ALIGN_OFFSET * commit_scale
+        is_dist = (self.get_pos() - target.pos).mag() < const.KICK_ALIGN_DIST * const.KICK_ALIGN_DIST_MULT * commit_scale
+        is_angle = abs(aux.wind_down_angle(self._angle - target.angle)) < const.KICK_ALIGN_ANGLE * commit_scale
+        is_offset = (
+            aux.dist(
+                aux.closest_point_on_line(
+                    target.pos, target.pos - aux.rotate(aux.RIGHT, target.angle) * const.KICK_ALIGN_DIST, self._pos
+                ),
+                self._pos,
+            )
+            < const.KICK_ALIGN_OFFSET * commit_scale
+        )
         is_aligned = is_dist and is_angle and is_offset
 
         if is_aligned:
@@ -216,9 +222,9 @@ class Robot(entity.Entity):
         """
         Определить, находится ли мяч внутри дриблера
         """
-        return (self.get_pos() - fld.ball.get_pos()).mag() < const.BALL_GRABBED_DIST and \
-            abs(aux.wind_down_angle((fld.ball.get_pos() - self.get_pos()).arg() - self._angle)) <\
-                const.BALL_GRABBED_ANGLE
+        return (self.get_pos() - fld.ball.get_pos()).mag() < const.BALL_GRABBED_DIST and abs(
+            aux.wind_down_angle((fld.ball.get_pos() - self.get_pos()).arg() - self._angle)
+        ) < const.BALL_GRABBED_ANGLE
 
     def go_route(self, route, fld: field.Field):
         """
@@ -240,7 +246,7 @@ class Robot(entity.Entity):
         rangle = aux.wind_down_angle(self._angle - dangle)
         twpangle = aux.wind_down_angle(target_point.angle - dangle)
 
-        angle60_abs = math.pi/6 if abs(rangle) < math.pi/2 else 2*math.pi/6
+        angle60_abs = math.pi / 6 if abs(rangle) < math.pi / 2 else 2 * math.pi / 6
         # angle60_abs = 0
         angle60_sign = aux.sign(twpangle + rangle)
 
@@ -248,17 +254,17 @@ class Robot(entity.Entity):
 
         lerp_angles = [target_point.angle, angle60]
 
-        angle0 = aux.lerp(lerp_angles[0], lerp_angles[1], aux.minmax((dist-100)/1000, 0, 1))
+        angle0 = aux.lerp(lerp_angles[0], lerp_angles[1], aux.minmax((dist - 100) / 1000, 0, 1))
 
         self.pos_reg.select_mode(tau.Mode.NORMAL)
 
-        if (end_point.type == wp.WType.S_BALL_KICK or \
-            end_point.type == wp.WType.S_BALL_GRAB or \
-            end_point.type == wp.WType.S_BALL_GO) and \
-                dist < 1500:
+        if (
+            end_point.type == wp.WType.S_BALL_KICK
+            or end_point.type == wp.WType.S_BALL_GRAB
+            or end_point.type == wp.WType.S_BALL_GO
+        ) and dist < 1500:
 
-            print("IS KICK ALIGNED: ", self.is_kick_aligned(end_point),
-                  ",\tIS BALL GRABBED: ", self.is_ball_in(fld))
+            print("IS KICK ALIGNED: ", self.is_kick_aligned(end_point), ",\tIS BALL GRABBED: ", self.is_ball_in(fld))
 
             self.pos_reg.select_mode(tau.Mode.SOFT)
 
@@ -271,8 +277,9 @@ class Robot(entity.Entity):
         else:
             self.dribbler_enable_ = False
 
-        if (end_point.type == wp.WType.S_BALL_KICK or end_point.type == wp.WType.S_BALL_GRAB) and \
-            (self.is_kick_aligned(end_point) or self.is_ball_in(fld)):
+        if (end_point.type == wp.WType.S_BALL_KICK or end_point.type == wp.WType.S_BALL_GRAB) and (
+            self.is_kick_aligned(end_point) or self.is_ball_in(fld)
+        ):
             # vel0 = (self.getPos() - end_point.pos).unity()
             vel0 = -aux.rotate(aux.RIGHT, self._angle)
             # angle0 = end_point.angle
@@ -316,17 +323,17 @@ class Robot(entity.Entity):
         vel - требуемый вектор скорости [мм/с] \\
         wvel - требуемая угловая скорость [рад/с]
         """
-        self.speed_x = self.xx_flp.process(1/self.k_xx * aux.rotate(vel, -self._angle).x)
-        self.speed_y = self.yy_flp.process(1/self.k_yy * aux.rotate(vel, -self._angle).y)
+        self.speed_x = self.xx_flp.process(1 / self.k_xx * aux.rotate(vel, -self._angle).x)
+        self.speed_y = self.yy_flp.process(1 / self.k_yy * aux.rotate(vel, -self._angle).y)
 
         # RcompY = self.Kwy * self.RcompFfy.process(self.RcompFdy.process(self.speed_y))
         # RcompY = self.Kwy * self.RcompFdy.process(abs(float(self.speed_y)**2))
         r_comp_y = 0
-        self.speed_r = 1/self.k_ww * (wvel - r_comp_y)
+        self.speed_r = 1 / self.k_ww * (wvel - r_comp_y)
         if abs(self.speed_r) > const.MAX_SPEED_R:
             self.speed_r = const.MAX_SPEED_R * abs(self.speed_r) / self.speed_r
 
-        vec_speed = math.sqrt(self.speed_x ** 2 + self.speed_y ** 2)
+        vec_speed = math.sqrt(self.speed_x**2 + self.speed_y**2)
         r_speed = abs(self.speed_r)
 
         vec_speed *= ((const.MAX_SPEED_R - r_speed) / const.MAX_SPEED_R) ** 8
@@ -341,5 +348,18 @@ class Robot(entity.Entity):
         # TODO
 
     def __str__(self) -> str:
-        return str(str(self.color) + " " + str(self.r_id) + " " + str(self.get_pos()) + " " + \
-                   str(self.speed_x) + " " + str(self.speed_y)) + " " + str(self.speed_r)
+        return (
+            str(
+                str(self.color)
+                + " "
+                + str(self.r_id)
+                + " "
+                + str(self.get_pos())
+                + " "
+                + str(self.speed_x)
+                + " "
+                + str(self.speed_y)
+            )
+            + " "
+            + str(self.speed_r)
+        )

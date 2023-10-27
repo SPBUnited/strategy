@@ -3,7 +3,9 @@
 """
 
 import math
+
 import bridge.processors.auxiliary as aux
+
 
 def shortesthull(p1: aux.Point, p2: aux.Point, points):
     """
@@ -27,7 +29,6 @@ def shortesthull(p1: aux.Point, p2: aux.Point, points):
     return hull[0]
 
 
-
 def quickhull(p1: aux.Point, p2: aux.Point, points, polarity=1):
     """
     Найти половину выпуклой оболочки вокруг points с началом в p1, концом в p2
@@ -41,6 +42,7 @@ def quickhull(p1: aux.Point, p2: aux.Point, points, polarity=1):
         return list(reversed(([p2] + quickhullupper(p2, p1, points) + [p1])))
     return None
 
+
 def quickhullupper(p1: aux.Point, p2: aux.Point, points):
     """
     Найти верхнюю половину выпуклой оболочки вокруг points с началом в p1, концом в p2
@@ -48,7 +50,7 @@ def quickhullupper(p1: aux.Point, p2: aux.Point, points):
     if len(points) == 0:
         return []
 
-    vec = p2-p1
+    vec = p2 - p1
     uppoints = []
 
     for p in points:

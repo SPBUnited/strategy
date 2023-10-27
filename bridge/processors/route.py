@@ -2,9 +2,12 @@
 Класс, описывающий текущий маршрут робота
 """
 
-import bridge.processors.waypoint as wp
+from typing import List
+
 import bridge.processors.auxiliary as aux
 import bridge.processors.robot as robot
+import bridge.processors.waypoint as wp
+
 
 class Route:
     """
@@ -17,7 +20,7 @@ class Route:
         """
         self._robot = [wp.Waypoint(rbt.get_pos(), rbt._angle, wp.WType.T_ROBOT)]
         self._destination = [wp.Waypoint(aux.GRAVEYARD_POS, 0, wp.WType.T_GRAVEYARD)]
-        self._routewp = []
+        self._routewp: List[wp.Waypoint] = []
         # self.__route = [*self.robot, *self.__routewp, *self.__destination]
 
     def update(self, rbt: robot.Robot):
@@ -104,9 +107,7 @@ class Route:
         dist = 0
         last_wp_pos = self._robot[0].pos
         for wpt in self.__get_route():
-            if wpt.type == wp.WType.S_BALL_GO or \
-                wpt.type == wp.WType.S_BALL_KICK or \
-                wpt.type == wp.WType.S_BALL_GRAB:
+            if wpt.type == wp.WType.S_BALL_GO or wpt.type == wp.WType.S_BALL_KICK or wpt.type == wp.WType.S_BALL_GRAB:
                 break
             dist += (wpt.pos - last_wp_pos).mag()
             last_wp_pos = wpt.pos
@@ -119,4 +120,3 @@ class Route:
         # for wp in [*self.robot, *self.__routewp, *self.__destination]:
         #     strin += " -> " + str(wp)
         return strin
-    

@@ -13,12 +13,14 @@ import bridge.processors.auxiliary as aux
 import bridge.processors.const as const
 import bridge.processors.tau as tau
 
+
 class Entity:
     """
     Класс для описания геометрического объекта на поле
 
     Хранит положение, скорость, угол и тп.
     """
+
     def __init__(self, pos, angle, R) -> None:
         """
         Конструктор
@@ -58,25 +60,25 @@ class Entity:
         self._anglevel = self._vel_fr.process(self._angle)
 
     def get_pos(self) -> aux.Point:
-        """ Геттер положения """
+        """Геттер положения"""
         return self._pos
 
     def get_vel(self) -> aux.Point:
-        """ Геттер скорости """
+        """Геттер скорости"""
         return self._vel
 
     def get_acc(self) -> aux.Point:
-        """ Геттер ускорения """
+        """Геттер ускорения"""
         return self._acc
 
     def get_angle(self) -> float:
-        """ Геттер угла """
+        """Геттер угла"""
         return self._angle
 
     def get_radius(self) -> float:
-        """ Геттер радиуса """
+        """Геттер радиуса"""
         return self._radius
 
     def __str__(self) -> str:
-        """ Для print """
+        """Для print"""
         return str(self._pos)

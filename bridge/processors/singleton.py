@@ -2,11 +2,17 @@
 Метакласс для реализации паттерна singleton
 https://stackoverflow.com/questions/6760685/creating-a-singleton-in-python
 """
+
+from typing import Any, Dict
+
+
 class Singleton(type):
     """
     Метакласс для реализации паттерна singleton
     """
-    _instances = {}
+
+    _instances: Dict[Any, Any] = {}
+
     def __call__(cls, *args, **kwargs):
         if cls not in cls._instances:
             cls._instances[cls] = super(Singleton, cls).__call__(*args, **kwargs)

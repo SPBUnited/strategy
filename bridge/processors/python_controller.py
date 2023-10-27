@@ -2,24 +2,23 @@
 Модуль стратегии игры
 """
 import time
-import numpy as np
-import attr
 
-from strategy_bridge.bus import DataReader, DataWriter
+import attr
+import numpy as np
+from strategy_bridge.bus import DataBus, DataReader, DataWriter
 from strategy_bridge.common import config
 from strategy_bridge.model.referee import RefereeCommand
-from strategy_bridge.processors import BaseProcessor
-from strategy_bridge.bus import DataBus
-from strategy_bridge.utils.debugger import debugger
 from strategy_bridge.pb.messages_robocup_ssl_wrapper_pb2 import SSL_WrapperPacket
+from strategy_bridge.processors import BaseProcessor
+from strategy_bridge.utils.debugger import debugger
 
-import bridge.processors.robot
-import bridge.processors.const as const
 import bridge.processors.auxiliary as aux
+import bridge.processors.const as const
 import bridge.processors.field as field
 import bridge.processors.router as router
-import bridge.processors.strategy as strategy
 import bridge.processors.signal as signal
+import bridge.processors.strategy as strategy
+
 
 # TODO: Refactor this class and corresponding matlab scripts
 @attr.s(auto_attribs=True)
@@ -29,7 +28,7 @@ class SSLController(BaseProcessor):
     """
 
     max_commands_to_persist: int = 20
-    our_color: str = 'b'
+    our_color: str = "b"
 
     vision_reader: DataReader = attr.ib(init=False)
     referee_reader: DataReader = attr.ib(init=False)
@@ -40,7 +39,7 @@ class SSLController(BaseProcessor):
     dbg_state: strategy.States = strategy.States.DEBUG
 
     cur_time = time.time()
-    delta_t = 0
+    delta_t = 0.0
 
     ctrl_mapping = const.CONTROL_MAPPING
     count_halt_cmd = 0
@@ -103,12 +102,8 @@ class SSLController(BaseProcessor):
             camera_id = detection.camera_id
             for ball_ind, ball in enumerate(detection.balls):
                 balls[ball_ind + (camera_id - 1) * const.MAX_BALLS_IN_CAMERA] = camera_id
-                balls[ball_ind + \
-                      const.MAX_BALLS_IN_FIELD + \
-                        (camera_id - 1) * const.MAX_BALLS_IN_CAMERA] = ball.x
-                balls[ball_ind + \
-                      2 * const.MAX_BALLS_IN_FIELD + \
-                        (camera_id - 1) * const.MAX_BALLS_IN_CAMERA] = ball.y
+                balls[ball_ind + const.MAX_BALLS_IN_FIELD + (camera_id - 1) * const.MAX_BALLS_IN_CAMERA] = ball.x
+                balls[ball_ind + 2 * const.MAX_BALLS_IN_FIELD + (camera_id - 1) * const.MAX_BALLS_IN_CAMERA] = ball.y
                 self.field.update_ball(aux.Point(ball.x, ball.y))
 
             for i in range(const.TEAM_ROBOTS_MAX_COUNT):
@@ -117,21 +112,19 @@ class SSLController(BaseProcessor):
                 if time.time() - self.field.y_team[i].last_update() > 1:
                     self.field.y_team[i].used(0)
 
-
             # self.strategy.changeGameState(strategy.GameStates.RUN, 0)
 
             # TODO Вынести в константы
-            game_controller_mapping = \
-            {
-                1 : strategy.GameStates.STOP,
-                2 : strategy.GameStates.RUN,
-                3 : strategy.GameStates.TIMEOUT,
-                4 : strategy.GameStates.HALT,
-                5 : strategy.GameStates.PREPARE_KICKOFF,
-                6 : strategy.GameStates.KICKOFF,
-                7 : strategy.GameStates.PREPARE_PENALTY,
-                8 : strategy.GameStates.PENALTY,
-                9 : strategy.GameStates.FREE_KICK,
+            game_controller_mapping = {
+                1: strategy.GameStates.STOP,
+                2: strategy.GameStates.RUN,
+                3: strategy.GameStates.TIMEOUT,
+                4: strategy.GameStates.HALT,
+                5: strategy.GameStates.PREPARE_KICKOFF,
+                6: strategy.GameStates.KICKOFF,
+                7: strategy.GameStates.PREPARE_PENALTY,
+                8: strategy.GameStates.PENALTY,
+                9: strategy.GameStates.FREE_KICK,
                 10: strategy.GameStates.HALT,
                 11: strategy.GameStates.BALL_PLACMENT,
             }
@@ -141,9 +134,7 @@ class SSLController(BaseProcessor):
                 self.count_halt_cmd += 1
             else:
                 self.count_halt_cmd = 0
-                self.strategy.changeGameState(
-                    game_controller_mapping[cur_cmd.state],
-                    cur_cmd.commandForTeam)
+                self.strategy.changeGameState(game_controller_mapping[cur_cmd.state], cur_cmd.commandForTeam)
                 if cur_cmd.state == 4:
                     print("End game")
                 elif cur_cmd.state == 10:
@@ -154,7 +145,6 @@ class SSLController(BaseProcessor):
 
             # self.strategy.changeGameState(strategy.GameStates.PREPARE_KICKOFF, 0)
 
-
             # TODO: Barrier states
             for robot_det in detection.robots_blue:
                 if time.time() - self.field.b_team[robot_det.robot_id].last_update() > 0.3:
@@ -162,10 +152,8 @@ class SSLController(BaseProcessor):
                 else:
                     self.field.b_team[robot_det.robot_id].used(1)
                 self.field.upbate_blu_robot(
-                    robot_det.robot_id,
-                    aux.Point(robot_det.x, robot_det.y),
-                    robot_det.orientation,
-                    time.time())
+                    robot_det.robot_id, aux.Point(robot_det.x, robot_det.y), robot_det.orientation, time.time()
+                )
 
             for robot_det in detection.robots_yellow:
                 if time.time() - self.field.y_team[robot_det.robot_id].last_update() > 0.3:
@@ -173,10 +161,8 @@ class SSLController(BaseProcessor):
                 else:
                     self.field.y_team[robot_det.robot_id].used(1)
                 self.field.update_yel_robot(
-                    robot_det.robot_id,
-                    aux.Point(robot_det.x, robot_det.y),
-                    robot_det.orientation,
-                    time.time())
+                    robot_det.robot_id, aux.Point(robot_det.x, robot_det.y), robot_det.orientation, time.time()
+                )
         return status
 
     def control_loop(self):
@@ -198,9 +184,10 @@ class SSLController(BaseProcessor):
         # for i in range(const.TEAM_ROBOTS_MAX_COUNT):
         #     print(self.field.b_team[i])
 
-    square = signal.Signal(2, 'SQUARE', lohi=(-20, 20))
-    sine = signal.Signal(2, 'SINE', ampoffset=(1000, 0))
-    cosine = signal.Signal(2, 'COSINE', ampoffset=(1000, 0))
+    square = signal.Signal(2, "SQUARE", lohi=(-20, 20))
+    sine = signal.Signal(2, "SINE", ampoffset=(1000, 0))
+    cosine = signal.Signal(2, "COSINE", ampoffset=(1000, 0))
+
     def control_assign(self):
         """
         Определить связь номеров роботов с каналами управления
@@ -210,7 +197,7 @@ class SSLController(BaseProcessor):
         # print(self.square.get())
         for i in range(const.TEAM_ROBOTS_MAX_COUNT):
             if self.field.allies[i].is_used():
-                self.field.allies[i].color = 'b'
+                self.field.allies[i].color = "b"
             # self.field.allies[i].speed_r = self.square.get()
             self.commands_sink_writer.write(self.field.allies[i])
 

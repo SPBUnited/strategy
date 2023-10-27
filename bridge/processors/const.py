@@ -24,8 +24,7 @@ GEOMETRY_PACKET_SIZE: int = 2
 
 DEBUG_ID = 14
 DEBUG_CTRL = 14
-CONTROL_MAPPING = \
-{
+CONTROL_MAPPING = {
     # DEBUG_ID: DEBUG_CTRL
     # 0: 0,
     # 1: 1,
@@ -42,7 +41,7 @@ CONTROL_MAPPING = \
     12: 12,
     13: 13,
     14: 14,
-    None: None
+    None: None,
 }
 
 for i in range(TEAM_ROBOTS_MAX_COUNT):
@@ -56,7 +55,7 @@ TOPIC_SINK = "control-sink"
 
 ##################################################
 # CONTROL CONSTS
-Ts = 0.05 # s
+Ts = 0.05  # s
 
 # ROBOT SETTING CONSTS
 # MAX_SPEED = 100
