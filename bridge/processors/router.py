@@ -5,6 +5,7 @@
 """
 
 import math
+import typing
 
 import entity
 
@@ -27,14 +28,14 @@ class Router:
         """
         self.routes = [route.Route(fld.allies[i]) for i in range(const.TEAM_ROBOTS_MAX_COUNT)]
 
-    def update(self, fld: field.Field):
+    def update(self, fld: field.Field) -> None:
         """
         Обновить маршруты актуальным состоянием поля
         """
         for i in range(const.TEAM_ROBOTS_MAX_COUNT):
             self.routes[i].update(fld.allies[i])
 
-    def set_dest(self, idx, target: wp.Waypoint, fld: field.Field):
+    def set_dest(self, idx: int, target: wp.Waypoint, fld: field.Field) -> None:
         """
         Установить единственную путевую точку для робота с индексом idx
         """
@@ -51,7 +52,7 @@ class Router:
                     return
         self.routes[idx].set_dest_wp(target)
 
-    def reroute(self, fld: field.Field):
+    def reroute(self, fld: field.Field) -> None:
         """
         Рассчитать маршруты по актуальным путевым точкам
         """
@@ -118,7 +119,7 @@ class Router:
     #             if(aux.sign(vec2) != aux.sign(vecc)):
     #                 detwp =
 
-    def calc_vector_field(self, idx, fld: field.Field):
+    def calc_vector_field(self, idx: int, fld: field.Field) -> typing.Optional[wp.Waypoint]:
         """
         Рассчитать ближайшую промежуточную путевую точку
         согласно первому приближению векторного поля
@@ -185,7 +186,7 @@ class Router:
 
         return passthrough_wp
 
-    def calc_kick_wp(self, idx, fld: field.Field):
+    def calc_kick_wp(self, idx: int, fld: field.Field) -> wp.Waypoint:
         """
         Рассчитать точку для выравниявания по мячу
         """
@@ -199,7 +200,7 @@ class Router:
         align_wp = wp.Waypoint(align_pos, align_angle, align_type)
         return align_wp
 
-    def get_route(self, idx):
+    def get_route(self, idx: int) -> route.Route:
         """
         Получить маршрут для робота с индексом idx
         """

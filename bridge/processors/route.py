@@ -2,7 +2,6 @@
 Класс, описывающий текущий маршрут робота
 """
 
-from typing import List
 
 import bridge.processors.auxiliary as aux
 import bridge.processors.robot as robot
@@ -20,10 +19,10 @@ class Route:
         """
         self._robot = [wp.Waypoint(rbt.get_pos(), rbt._angle, wp.WType.T_ROBOT)]
         self._destination = [wp.Waypoint(aux.GRAVEYARD_POS, 0, wp.WType.T_GRAVEYARD)]
-        self._routewp: List[wp.Waypoint] = []
+        self._routewp: list[wp.Waypoint] = []
         # self.__route = [*self.robot, *self.__routewp, *self.__destination]
 
-    def update(self, rbt: robot.Robot):
+    def update(self, rbt: robot.Robot) -> None:
         """
         Обновить маршрут
 
@@ -34,25 +33,25 @@ class Route:
         #     len(self._routewp) >= 1:
         #     del self._routewp[0]
 
-    def clear(self):
+    def clear(self) -> None:
         """
         Очистить промежуточные точки маршрута
         """
         self._routewp = []
 
-    def __get_route(self):
+    def __get_route(self) -> list[wp.Waypoint]:
         """
         Получить маршрут в виде списка путевых точек
         """
         return [*self._robot, *self._routewp, *self._destination]
 
-    def set_dest_wp(self, dest: wp.Waypoint):
+    def set_dest_wp(self, dest: wp.Waypoint) -> None:
         """
         Задать конечную точку
         """
         self._destination = [dest]
 
-    def get_dest_wp(self):
+    def get_dest_wp(self) -> wp.Waypoint:
         """
         Получить конечную точку
         """
@@ -64,7 +63,7 @@ class Route:
         """
         return self.__get_route()[1]
 
-    def get_next_segment(self):
+    def get_next_segment(self) -> list[wp.Waypoint]:
         """
         Получить следующий сегмент маршрута в виде списка двух точек
         """
@@ -88,19 +87,19 @@ class Route:
         """
         return self.__get_route()[1].type
 
-    def insert_wp(self, wpt: wp.Waypoint):
+    def insert_wp(self, wpt: wp.Waypoint) -> None:
         """
         Вставить промежуточную путевую точку в начало маршрута
         """
         self._routewp.insert(0, wpt)
 
-    def is_used(self):
+    def is_used(self) -> bool:
         """
         Определить, используется ли маршрут
         """
         return self._destination[0].type != wp.WType.T_GRAVEYARD
 
-    def get_length(self):
+    def get_length(self) -> float:
         """
         Получить длину маршрута
         """
@@ -113,7 +112,7 @@ class Route:
             last_wp_pos = wpt.pos
         return dist
 
-    def __str__(self):
+    def __str__(self) -> str:
         strin = "ROUTE: "
         for wpt in self.__get_route():
             strin += " ->\n" + str(wpt)

@@ -3,8 +3,10 @@
 """
 
 import math
+import typing
 
 import bridge.processors.const as const
+import bridge.processors.robot as robot
 
 
 class Graph:
@@ -12,7 +14,7 @@ class Graph:
     Класс для работы с графами
     """
 
-    def __init__(self, num_vertices):
+    def __init__(self, num_vertices: int) -> None:
         """
         Конструктор
 
@@ -21,14 +23,14 @@ class Graph:
         self.num_vertices = num_vertices
         self.graph = [[0] * num_vertices for _ in range(num_vertices)]
 
-    def add_edge(self, from_vertex, to_vertex, weight):
+    def add_edge(self, from_vertex: int, to_vertex: int, weight: int) -> None:
         """
         Добавить ребро графу
         """
         self.graph[from_vertex][to_vertex] = weight
         self.graph[to_vertex][from_vertex] = weight
 
-    def dijkstra(self, start_vertex):
+    def dijkstra(self, start_vertex: int) -> list[float]:
         """
         Найти кратчайший путь в графе используя алгоритм Дейкстры
         """
@@ -59,24 +61,12 @@ class Graph:
         return distances
 
 
-class BobLine:
-    """
-    Борина линия
-    Надо ли?
-    """
-
-    def __init__(self, A, B, C):
-        self.A = A
-        self.B = B
-        self.C = C
-
-
 class Point:
     """
     Класс, описывающий точку (вектор)
     """
 
-    def __init__(self, x, y):
+    def __init__(self, x: float, y: float):
         self.x = x
         self.y = y
 
@@ -131,14 +121,26 @@ UP = Point(0, 1)
 GRAVEYARD_POS = Point(const.GRAVEYARD_POS_X, 0)
 
 
-def dist2line(p1, p2, p):
+class BobLine:
+    """
+    Борина линия
+    Надо ли?
+    """
+
+    def __init__(self, A: float, B: float, C: float):
+        self.A = A
+        self.B = B
+        self.C = C
+
+
+def dist2line(p1: Point, p2: Point, p: Point) -> float:
     """
     Рассчитать расстояние от точки p до прямой, образованной точками p1 и p2
     """
     return abs(vect_mult((p2 - p1).unity(), p - p1))
 
 
-def line_poly_intersect(p1, p2, points):
+def line_poly_intersect(p1: Point, p2: Point, points: list[Point]) -> bool:
     """
     Определить, пересекает ли линия p1-p2 полигон points
     """
@@ -150,7 +152,7 @@ def line_poly_intersect(p1, p2, points):
     return False
 
 
-def segment_poly_intersect(p1, p2, points):
+def segment_poly_intersect(p1: Point, p2: Point, points: list[Point]) -> typing.Optional[Point]:
     """
     Определить, пересекает ли отрезок p1-p2 полигон points
     Если да - возвращает одну из двух точек пересечения
@@ -163,7 +165,7 @@ def segment_poly_intersect(p1, p2, points):
     return None
 
 
-def is_point_inside_poly(p, points):
+def is_point_inside_poly(p: Point, points: list[Point]) -> bool:
     """
     Определить, лежит ли точка внутри полигона
     """
@@ -174,14 +176,16 @@ def is_point_inside_poly(p, points):
     return True
 
 
-def dist(a, b):
+def dist(a: Point, b: Point) -> float:
     """
     Определить расстояние между двумя точками
     """
     return math.hypot(a.x - b.x, a.y - b.y)
 
 
-def get_line_intersection(line1_start, line1_end, line2_start, line2_end, is_inf="SS"):
+def get_line_intersection(
+    line1_start: Point, line1_end: Point, line2_start: Point, line2_end: Point, is_inf: str = "SS"
+) -> typing.Optional[Point]:
     """
     Получить точку пересечения отрезков или прямых
 
@@ -231,58 +235,58 @@ def get_line_intersection(line1_start, line1_end, line2_start, line2_end, is_inf
     return None
 
 
-def vect_mult(v, u):
+def vect_mult(v: Point, u: Point) -> float:
     """
     Посчитать модуль векторного произведения векторов v и u
     """
     return v.x * u.y - v.y * u.x
 
 
-def scal_mult(v, u):
+def scal_mult(v: Point, u: Point) -> float:
     """
     Посчитать скалярное произведение векторов v и u
     """
     return v.x * u.x + v.y * u.y
 
 
-def rotate(p: Point, angle: float):
+def rotate(p: Point, angle: float) -> Point:
     """
     Повернуть вектор p на угол angle
     """
     return Point(p.x * math.cos(angle) - p.y * math.sin(angle), p.y * math.cos(angle) + p.x * math.sin(angle))
 
 
-def find_nearest_point(p, points, exclude=[]):
+def find_nearest_point(p: Point, points: list[Point], exclude: list[Point] = []) -> typing.Optional[Point]:
     """
     Найти ближайшую точку к p из облака points, игнорируя точки exclude
     """
     closest = None
     min_dist = 10e10
-    for i in range(0, len(points)):
-        if points[i] in exclude:
+    for _, point in enumerate(points):
+        if point in exclude:
             continue
-        if dist(p, points[i]) < min_dist:
-            min_dist = dist(p, points[i])
-            closest = points[i]
+        if dist(p, point) < min_dist:
+            min_dist = dist(p, point)
+            closest = point
     return closest
 
 
-def find_nearest_robot(robot, team, avoid=[]):
+def find_nearest_robot(robo: Point, team: list[robot.Robot], avoid: list[int] = []) -> robot.Robot:
     """
     Найти ближайший робот из массива team к точке robot, игнорируя точки avoid
     """
-    robot_id = -1
+    robo_id = -1
     min_dist = 10e10
-    for i in range(0, len(team)):
-        if i in avoid or not team[i].is_used():
+    for i, player in enumerate(team):
+        if i in avoid or not player.is_used():
             continue
-        if dist(robot, team[i].get_pos()) < min_dist:
-            min_dist = dist(robot, team[i].get_pos())
-            robot_id = i
-    return team[robot_id]
+        if dist(robo, player.get_pos()) < min_dist:
+            min_dist = dist(robo, player.get_pos())
+            robo_id = i
+    return team[robo_id]
 
 
-def wind_down_angle(angle: float):
+def wind_down_angle(angle: float) -> float:
     """
     Привести угол к диапазону [-pi, pi]
     """
@@ -292,7 +296,7 @@ def wind_down_angle(angle: float):
     return angle
 
 
-def closest_point_on_line(point1, point2, point):
+def closest_point_on_line(point1: Point, point2: Point, point: Point) -> Point:
     """
     Получить ближайшую к точке point току на линии point1-point2
     """
@@ -317,41 +321,41 @@ def closest_point_on_line(point1, point2, point):
     return closest_point
 
 
-def point_on_line(robot, point, distance):
+def point_on_line(robo: Point, point: Point, distance: float) -> Point:
     """
     Получить точку на линии robot-point,
     отстоящую от точки robot на расстояние distance
     """
-    vec_arg = math.atan2(point.y - robot.y, point.x - robot.x)
+    vec_arg = math.atan2(point.y - robo.y, point.x - robo.x)
 
     # Calculate the new point on the line at the specified distance from the robot
-    new_x = robot.x + distance * math.cos(vec_arg)
-    new_y = robot.y + distance * math.sin(vec_arg)
+    new_x = robo.x + distance * math.cos(vec_arg)
+    new_y = robo.y + distance * math.sin(vec_arg)
     return Point(new_x, new_y)
 
 
-def lerp(p1, p2, t):
+def lerp(p1: Point, p2: Point, t: float) -> Point:
     """
     Получить линейно интерполированное значение
     """
     return p1 * (1 - t) + p2 * t
 
 
-def minmax(x, a, b):
+def minmax(x: float, a: float, b: float) -> float:
     """
     Получить ближайшее к x число из диапазона [a, b]
     """
     return min(max(x, a), b)
 
 
-def angle_to_point(point1, point2):
+def angle_to_point(point1: Point, point2: Point) -> float:
     """
     Получить угол вектора p = point2 - point1
     """
     return (point2 - point1).arg()
 
 
-def sign(num):
+def sign(num: float) -> float:
     """
     Получить знак числа num (0 если num == 0)
     """
@@ -360,7 +364,7 @@ def sign(num):
     return num / abs(num)
 
 
-def det(a, b, c, d):
+def det(a: float, b: float, c: float, d: float) -> float:
     """
     Получить определитель матрицы:
     |a b|
@@ -369,7 +373,7 @@ def det(a, b, c, d):
     return a * d - b * c
 
 
-def line_intersect(m, bots):
+def line_intersect(m: BobLine, bots: list[BobLine]) -> typing.Optional[list[Point]]:
     """
     TODO написать доку
     """
@@ -385,16 +389,16 @@ def line_intersect(m, bots):
     return result
 
 
-def probability(inter, bots, pos):
+def probability(inter: list[Point], bots: list[robot.Robot], pos: Point) -> float:
     """
     TODO написать доку
     """
-    res = 1
+    res = 1.0
     # print(len(inter), end = ' ')
-    for i in range(len(inter)):
+    for i, intr in enumerate(inter):
         # koef = 1
         # print([inter[i].x, inter[i].y, bots[i].get_pos().x, bots[i].get_pos().y])
-        tmp_res_x = dist(inter[i], bots[i].get_pos())
+        tmp_res_x = dist(intr, bots[i].get_pos())
         tmp_res_y = math.sqrt(dist(pos, bots[i].get_pos()) ** 2 - tmp_res_x**2)
         ang = math.atan2(tmp_res_y, tmp_res_x)
         # abs(ang) < math.pi / 4
@@ -412,7 +416,7 @@ def probability(inter, bots, pos):
     return res
 
 
-def bot_position(pos, vecx, vecy):
+def bot_position(pos: Point, vecx: float, vecy: float) -> Point:
     """
     TODO написать доку
     """
@@ -422,7 +426,7 @@ def bot_position(pos, vecx, vecy):
     return Point(pos.x - vecx, pos.y - vecy)
 
 
-def shot_decision(pos, end, tobj):
+def shot_decision(pos: Point, end: list[Point], tobj: list:robot.Robot):
     """
     TODO написать доку
     """

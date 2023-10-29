@@ -3,6 +3,7 @@
 """
 import math
 import time
+import typing
 
 
 class Signal:
@@ -10,7 +11,13 @@ class Signal:
     Класс-генератор сигналов
     """
 
-    def __init__(self, period, waveform, ampoffset=None, lohi=None):
+    def __init__(
+        self,
+        period: float,
+        waveform: str,
+        ampoffset: typing.Optional[list[float]] = None,
+        lohi: typing.Optional[list[float]] = None,
+    ) -> None:
         """
         Конструтор
 
@@ -21,8 +28,8 @@ class Signal:
         self.period = period
         self.waveform = waveform
 
-        self.amp = 1
-        self.offset = 0
+        self.amp = 1.0
+        self.offset = 0.0
 
         if lohi is not None:
             self.amp = (lohi[1] - lohi[0]) / 2
@@ -33,25 +40,25 @@ class Signal:
 
         self.waveforms = {"SQUARE": self.square, "SINE": self.sine, "COSINE": self.cosine}
 
-    def get(self):
+    def get(self) -> float:
         """
         Получить значение сигнала
         """
         return self.waveforms[self.waveform]()
 
-    def square(self):
+    def square(self) -> float:
         """
         Получить значение меандра
         """
         return math.copysign(self.amp, math.sin(2 * math.pi * (time.time() - self.t_0) / self.period)) + self.offset
 
-    def sine(self):
+    def sine(self) -> float:
         """
         Получить значение синуса
         """
         return self.amp * math.sin(2 * math.pi * (time.time() - self.t_0) / self.period) + self.offset
 
-    def cosine(self):
+    def cosine(self) -> float:
         """
         Получить значение косинуса
         """

@@ -7,7 +7,7 @@ import math
 import bridge.processors.auxiliary as aux
 
 
-def shortesthull(p1: aux.Point, p2: aux.Point, points):
+def shortesthull(p1: aux.Point, p2: aux.Point, points: list[aux.Point]) -> list:
     """
     Получить кратчайший путь от точки p1 до точки p2, огибающий точки points
     """
@@ -29,7 +29,7 @@ def shortesthull(p1: aux.Point, p2: aux.Point, points):
     return hull[0]
 
 
-def quickhull(p1: aux.Point, p2: aux.Point, points, polarity=1):
+def quickhull(p1: aux.Point, p2: aux.Point, points: list[aux.Point], polarity=1) -> list[aux.Point] or None:
     """
     Найти половину выпуклой оболочки вокруг points с началом в p1, концом в p2
 
@@ -43,7 +43,7 @@ def quickhull(p1: aux.Point, p2: aux.Point, points, polarity=1):
     return None
 
 
-def quickhullupper(p1: aux.Point, p2: aux.Point, points):
+def quickhullupper(p1: aux.Point, p2: aux.Point, points: list[aux.Point]):
     """
     Найти верхнюю половину выпуклой оболочки вокруг points с началом в p1, концом в p2
     """

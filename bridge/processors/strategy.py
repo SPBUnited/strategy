@@ -9,7 +9,6 @@ import math
 # !v DEBUG ONLY
 import time
 from enum import Enum
-from typing import List
 
 import bridge.processors.auxiliary as aux
 import bridge.processors.const as const
@@ -53,7 +52,7 @@ class ActiveTeam(Enum):
 class Strategy:
     """Основной класс с кодом стратегии"""
 
-    def __init__(self, dbg_game_status=GameStates.RUN, dbg_state=States.DEBUG) -> None:
+    def __init__(self, dbg_game_status: GameStates = GameStates.RUN, dbg_state: States = States.DEBUG) -> None:
         self.game_status = GameStates.RUN
         self.active_team = 0
         self.state = States.ATTACK
@@ -68,8 +67,8 @@ class Strategy:
 
         # ATTACK
         self.robot_with_ball = None
-        self.connector: List[int] = []
-        self.popusk: List[int] = []
+        self.connector: list[int] = []
+        self.popusk: list[int] = []
         self.attack_state = "TO_BALL"
         self.attack_pos = aux.Point(0, 0)
         self.calc = False
@@ -111,7 +110,7 @@ class Strategy:
                 self.we_active = 0
         if self.active_team == ActiveTeam.ALL:
             self.we_active = 1
-        waypoints: List[wp.Waypoint] = [] * const.TEAM_ROBOTS_MAX_COUNT
+        waypoints: list[wp.Waypoint] = [] * const.TEAM_ROBOTS_MAX_COUNT
         for i in range(const.TEAM_ROBOTS_MAX_COUNT):
             waypoint = wp.Waypoint(field.allies[i].get_pos(), field.allies[i].get_angle(), wp.WType.S_ENDPOINT)
             waypoints[i] = waypoint
@@ -551,7 +550,7 @@ class Strategy:
                     )
                     waypoints[i] = waypoint
 
-    def penalty(self, field: field.Field, waypoints):
+    def penalty(self, field: field.Field, waypoints: list[wp.Waypoint]) -> None:
         """Настройка пенальти по команде судей"""
         if self.we_kick or 1:
             self.penalty_kick(field, waypoints)
@@ -559,7 +558,7 @@ class Strategy:
             robot_with_ball = aux.find_nearest_robot(field.ball.get_pos(), field.enemies)
             self.gk_go(field, waypoints, [const.GK], robot_with_ball)
 
-    def penalty_kick(self, field: field.Field, waypoints):
+    def penalty_kick(self, field: field.Field, waypoints: wp.Waypoint) -> None:
         """Пенальти (атака)"""
         self.is_started += 1
         if self.is_started < 5:
@@ -603,7 +602,7 @@ class Strategy:
 
         waypoints[const.PENALTY_KICKER] = waypoint
 
-    def prepare_kickof(self, field, waypoints):
+    def prepare_kickof(self, field, waypoints) -> None:
         """Настройка перед состоянием kickof по команде судей"""
         if self.we_active:
             self.we_kick = 1
@@ -611,7 +610,7 @@ class Strategy:
             self.we_kick = 0
         self.put_kickoff_waypoints(field, waypoints)
 
-    def put_kickoff_waypoints(self, field, waypoints):
+    def put_kickoff_waypoints(self, field, waypoints) -> None:
         """Подготовка перед состоянием kickof"""
         rC = 0
         if self.we_kick:
@@ -667,7 +666,7 @@ class Strategy:
         )
         waypoints[field.allies[const.GK].r_id] = waypoint
 
-    def kickoff(self, field, waypoints):
+    def kickoff(self, field: field.Field, waypoints: list[wp.Waypoint]) -> None:
         """Удар мяча из аута"""
         self.put_kickoff_waypoints(field, waypoints)
         # self.we_kick = 0

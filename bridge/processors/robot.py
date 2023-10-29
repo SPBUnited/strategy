@@ -105,7 +105,7 @@ class Robot(entity.Entity):
 
         self.is_kick_commited = False
 
-    def used(self, a):
+    def used(self, a) -> None:
         """
         Выставить флаг использования робота
         """

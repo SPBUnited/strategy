@@ -91,7 +91,7 @@ class Field:
             self.enemy_goal = self.b_goal
             self.side = const.POLARITY  # TODO УДАЛИИИИТЬ
 
-    def update_ball(self, pos):
+    def update_ball(self, pos: aux.Point) -> None:
         """
         Обновить положение мяча
         !!! Вызывать один раз за итерацию с постоянной частотой !!!
@@ -112,7 +112,7 @@ class Field:
         """
         self.y_team[idx].update(pos, angle, t)
 
-    def get_ball(self):
+    def get_ball(self) -> entity.Entity:
         """
         Получить объект мяча
 

@@ -21,7 +21,7 @@ class Entity:
     Хранит положение, скорость, угол и тп.
     """
 
-    def __init__(self, pos, angle, R) -> None:
+    def __init__(self, pos: aux.Point, angle: float, R: float) -> None:
         """
         Конструктор
 
@@ -44,7 +44,7 @@ class Entity:
         self._vel_fr = tau.FOD(T, Ts, True)
         self._radius = R
 
-    def update(self, pos, angle):
+    def update(self, pos: aux.Point, angle: float) -> None:
         """
         Обновить положение и рассчитать исходя из этого скорость и ускорение
         !!! Вызывать один раз за итерацию с постоянной частотой !!!

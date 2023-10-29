@@ -165,7 +165,7 @@ class SSLController(BaseProcessor):
                 )
         return status
 
-    def control_loop(self):
+    def control_loop(self) -> None:
         """
         Рассчитать стратегию, тактику и физику для роботов на поле
         """
@@ -188,7 +188,7 @@ class SSLController(BaseProcessor):
     sine = signal.Signal(2, "SINE", ampoffset=(1000, 0))
     cosine = signal.Signal(2, "COSINE", ampoffset=(1000, 0))
 
-    def control_assign(self):
+    def control_assign(self) -> None:
         """
         Определить связь номеров роботов с каналами управления
         """
