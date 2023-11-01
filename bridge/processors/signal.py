@@ -15,8 +15,8 @@ class Signal:
         self,
         period: float,
         waveform: str,
-        ampoffset: typing.Optional[list[float]] = None,
-        lohi: typing.Optional[list[float]] = None,
+        ampoffset: typing.Optional[tuple[float, float]] = None,
+        lohi: typing.Optional[tuple[float, float]] = None,
     ) -> None:
         """
         Конструтор

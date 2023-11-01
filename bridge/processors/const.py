@@ -24,7 +24,7 @@ GEOMETRY_PACKET_SIZE: int = 2
 
 DEBUG_ID = 14
 DEBUG_CTRL = 14
-CONTROL_MAPPING = {
+CONTROL_MAPPING: dict[int, int] = {
     # DEBUG_ID: DEBUG_CTRL
     # 0: 0,
     # 1: 1,
@@ -41,14 +41,13 @@ CONTROL_MAPPING = {
     12: 12,
     13: 13,
     14: 14,
-    None: None,
 }
 
 for i in range(TEAM_ROBOTS_MAX_COUNT):
     try:
         CONTROL_MAPPING[i]
     except KeyError:
-        CONTROL_MAPPING[i] = None
+        CONTROL_MAPPING[i] = -1
 
 TOPIC_SINK = "control-sink"
 ##################################################
@@ -82,7 +81,7 @@ BALL_R = 0.05
 ROBOT_R = 0.2
 GRAVEYARD_POS_X = -10000
 
-POLARITY = -1
+POLARITY = -1  # 1 если наши ворота на +x; -1 если наши ворота на -x
 GOAL_DX = POLARITY * 4500
 GOAL_DY = 1000
 GOAL_PEN = POLARITY * 1000

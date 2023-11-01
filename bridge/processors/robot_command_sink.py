@@ -63,11 +63,11 @@ class CommandSink(BaseProcessor):
 
         self.commands_writer.write(rules)
 
-    def get_rules(self):
+    def get_rules(self) -> bytes:
         """
         Сформировать массив команд для отправки на роботов
         """
-        rules = []
+        rules: list[float] = []
 
         for i in range(const.TEAM_ROBOTS_MAX_COUNT):
             if abs(self.b_control_team[i].speed_x) < 1.5:
@@ -112,5 +112,4 @@ class CommandSink(BaseProcessor):
 
         # rules = [15] * 15 * 32
         b = bytes()
-        rules = b.join((struct.pack("d", rule) for rule in rules))
-        return rules
+        return b.join((struct.pack("d", rule) for rule in rules))

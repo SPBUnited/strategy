@@ -70,43 +70,47 @@ class Point:
         self.x = x
         self.y = y
 
-    def __add__(self, p):
+    def __add__(self, p: typing.Optional["Point"]) -> "Point":
+        if p is None:
+            return self
         return Point(self.x + p.x, self.y + p.y)
 
-    def __neg__(self):
+    def __neg__(self) -> "Point":
         return Point(-self.x, -self.y)
 
-    def __sub__(self, p):
+    def __sub__(self, p: "Point") -> "Point":
         return self + -p
 
-    def __mul__(self, a: float):
+    def __mul__(self, a: float) -> "Point":
         return Point(self.x * a, self.y * a)
 
-    def __truediv__(self, a: float):
+    def __truediv__(self, a: float) -> "Point":
         return self * (1 / a)
 
-    def __pow__(self, a: float):
+    def __pow__(self, a: float) -> "Point":
         return Point(self.x**a, self.y**a)
 
-    def __eq__(self, p):
+    def __eq__(self, p: typing.Any) -> bool:
+        if isinstance(p, Point):
+            return False
         return self.x == p.x and self.y == p.y
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"x = {self.x:.2f}, y = {self.y:.2f}"
 
-    def mag(self):
+    def mag(self) -> float:
         """
         Получить модуль вектора
         """
         return math.hypot(self.x, self.y)
 
-    def arg(self):
+    def arg(self) -> float:
         """
         Получить аргумент вектора (угол относительно оси OX)
         """
         return math.atan2(self.y, self.x)
 
-    def unity(self):
+    def unity(self) -> "Point":
         """
         Получить единичный вектор, коллинеарный данному
         """
@@ -256,11 +260,11 @@ def rotate(p: Point, angle: float) -> Point:
     return Point(p.x * math.cos(angle) - p.y * math.sin(angle), p.y * math.cos(angle) + p.x * math.sin(angle))
 
 
-def find_nearest_point(p: Point, points: list[Point], exclude: list[Point] = []) -> typing.Optional[Point]:
+def find_nearest_point(p: Point, points: list[Point], exclude: list[Point] = []) -> Point:
     """
     Найти ближайшую точку к p из облака points, игнорируя точки exclude
     """
-    closest = None
+    closest = points[0]
     min_dist = 10e10
     for _, point in enumerate(points):
         if point in exclude:
@@ -334,7 +338,7 @@ def point_on_line(robo: Point, point: Point, distance: float) -> Point:
     return Point(new_x, new_y)
 
 
-def lerp(p1: Point, p2: Point, t: float) -> Point:
+def lerp(p1: typing.Any, p2: typing.Any, t: float) -> typing.Any:
     """
     Получить линейно интерполированное значение
     """
@@ -360,7 +364,7 @@ def sign(num: float) -> float:
     Получить знак числа num (0 если num == 0)
     """
     if num == 0:
-        return 0
+        return 0.0
     return num / abs(num)
 
 
@@ -373,7 +377,7 @@ def det(a: float, b: float, c: float, d: float) -> float:
     return a * d - b * c
 
 
-def line_intersect(m: BobLine, bots: list[BobLine]) -> typing.Optional[list[Point]]:
+def line_intersect(m: BobLine, bots: list[BobLine]) -> list[Point]:
     """
     TODO написать доку
     """
@@ -382,7 +386,7 @@ def line_intersect(m: BobLine, bots: list[BobLine]) -> typing.Optional[list[Poin
         mat_inv = det(m.A, m.B, n.A, n.B)
         res = Point(0, 0)
         if abs(mat_inv) < 1e-9:
-            return None
+            return []
         res.x = -det(m.C, m.B, n.C, n.B) / mat_inv
         res.y = -det(m.A, m.C, n.A, n.C) / mat_inv
         result.append(res)
@@ -426,7 +430,7 @@ def bot_position(pos: Point, vecx: float, vecy: float) -> Point:
     return Point(pos.x - vecx, pos.y - vecy)
 
 
-def shot_decision(pos: Point, end: list[Point], tobj: list:robot.Robot):
+def shot_decision(pos: Point, end: list[Point], tobj: list[robot.Robot]) -> tuple[Point, float, Point]:
     """
     TODO написать доку
     """
@@ -438,7 +442,7 @@ def shot_decision(pos: Point, end: list[Point], tobj: list:robot.Robot):
             tmp_counter += 1
     # mx_shot_prob = 0
     shot_point = pos
-    mx = 0
+    mx = 0.0
     # tmp_sum = Point(0, 0)
     # n = 0
     # print(st)
@@ -488,14 +492,14 @@ def shot_decision(pos: Point, end: list[Point], tobj: list:robot.Robot):
     return shot_point, mx, point_res
 
 
-def in_place(point, end, epsilon):
+def in_place(point: Point, end: Point, epsilon: float) -> bool:
     """
     Проверить, находится ли точка st в радиусе epsilon около end
     """
     return (point - end).mag() < epsilon
 
 
-def is_in_list(arr, x):
+def is_in_list(arr: typing.Any, x: typing.Any) -> bool:
     """
     Узнать, есть ли элемент x в списке arr
     """

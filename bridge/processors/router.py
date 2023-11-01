@@ -7,10 +7,9 @@
 import math
 import typing
 
-import entity
-
 import bridge.processors.auxiliary as aux
 import bridge.processors.const as const
+import bridge.processors.entity as ent
 import bridge.processors.field as field
 import bridge.processors.quickhull as qh
 import bridge.processors.route as route
@@ -144,9 +143,9 @@ class Router:
         if self.routes[idx].get_dest_wp().type == wp.WType.S_KEEP_BALL_DISTANCE:
             ball_sep_dist = const.KEEP_BALL_DIST
 
-        closest_robot: entity.Entity = None
+        closest_robot: ent.Entity
         closest_dist = dist
-        closest_separation = 0
+        closest_separation = 0.0
 
         # Расчет теней роботов для векторного поля
         for r in fld.all_bots:

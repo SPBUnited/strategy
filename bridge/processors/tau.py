@@ -13,7 +13,7 @@ class FOD:
     Реальное дифференцирующее звено первого порядка
     """
 
-    def __init__(self, T, Ts, is_angle=False):
+    def __init__(self, T: float, Ts: float, is_angle: bool = False) -> None:
         """
         Конструктор
 
@@ -22,11 +22,11 @@ class FOD:
         """
         self._t = T
         self._ts = Ts
-        self._int = 0
-        self._out = 0
+        self._int = 0.0
+        self._out = 0.0
         self._is_angle = is_angle
 
-    def process(self, x):
+    def process(self, x: float) -> float:
         """
         Рассчитать и получить следующее значение выхода звена
 
@@ -47,7 +47,7 @@ class FOD:
         self._int += self._out * self._ts
         return self._out
 
-    def get_val(self):
+    def get_val(self) -> float:
         """
         Получить последнее значение выхода звена без расчета
         """
@@ -59,7 +59,7 @@ class FOLP:
     Фильтр низких частот первого порядка
     """
 
-    def __init__(self, T, Ts):
+    def __init__(self, T: float, Ts: float) -> None:
         """
         Конструктор
 
@@ -68,10 +68,10 @@ class FOLP:
         """
         self._t = T
         self._ts = Ts
-        self._int = 0
-        self._out = 0
+        self._int = 0.0
+        self._out = 0.0
 
-    def process(self, x):
+    def process(self, x: float) -> float:
         """
         Рассчитать и получить следующее значение выхода звена
 
@@ -84,7 +84,7 @@ class FOLP:
         self._out = self._int / self._t
         return self._out
 
-    def get_val(self):
+    def get_val(self) -> float:
         """
         Получить последнее значение выхода звена без расчета
         """
@@ -96,23 +96,23 @@ class Integrator:
     Интегратор
     """
 
-    def __init__(self, Ts):
+    def __init__(self, Ts: float) -> None:
         """
         Конструктор
 
         dT - период квантования
         """
         self._ts = Ts
-        self._int = 0
-        self._out = 0
+        self._int = 0.0
+        self._out = 0.0
 
-    def reset(self):
+    def reset(self) -> None:
         """
         Сбросить значение интегратора
         """
         self._int = 0
 
-    def process(self, x):
+    def process(self, x: float) -> float:
         """
         Рассчитать и получить следующее значение выхода звена
 
@@ -124,7 +124,7 @@ class Integrator:
         self._out = self._int
         return self._out
 
-    def get_val(self):
+    def get_val(self) -> float:
         """
         Получить последнее значение выхода звена без расчета
         """
@@ -148,7 +148,14 @@ class PISD:
     величины, а не ошибки)
     """
 
-    def __init__(self, dT, gain, kd, ki, max_out) -> None:
+    def __init__(
+        self,
+        dT: float,
+        gain: list[float],
+        kd: list[float],
+        ki: list[float],
+        max_out: list[float],
+    ) -> None:
         """
         Конструктор
 
@@ -163,17 +170,17 @@ class PISD:
         self.__ki = ki
         self.__max_out = max_out
         self.__int = Integrator(dT)
-        self.__out = 0
+        self.__out = 0.0
         self.__mode = Mode.NORMAL
 
-    def select_mode(self, mode: Mode):
+    def select_mode(self, mode: Mode) -> None:
         """
         Выбрать набор коэффициентов регулятора
         """
         self.__mode = mode
         self.__int.reset()
 
-    def __get_gains(self):
+    def __get_gains(self) -> tuple[float, float, float, float]:
         """
         Получить коэффициенты регулятора
         """
@@ -184,7 +191,7 @@ class PISD:
             self.__max_out[self.__mode.value],
         )
 
-    def process(self, xerr, x_i):
+    def process(self, xerr: float, x_i: float) -> float:
         """
         Рассчитать следующий тик регулятора
         """
@@ -202,7 +209,7 @@ class PISD:
         self.__out = u_clipped
         return self.__out
 
-    def get_val(self):
+    def get_val(self) -> float:
         """
         Получить последнее значение выхода звена без расчета
         """
@@ -214,16 +221,16 @@ class RateLimiter:
     Ограничитель скорости роста
     """
 
-    def __init__(self, Ts, max_der) -> None:
+    def __init__(self, Ts: float, max_der: float) -> None:
         """
         Конструктор
         """
-        self.__out = 0
+        self.__out = 0.0
         self.__int = Integrator(Ts)
         self.__k = 1 / Ts
         self.__max_der = max_der
 
-    def process(self, x):
+    def process(self, x: float) -> float:
         """
         Рассчитать следующий тик звена
         """
@@ -231,7 +238,7 @@ class RateLimiter:
         self.__out = self.__int.process(u)
         return self.__out
 
-    def get_val(self):
+    def get_val(self) -> float:
         """
         Получить последнее значение выхода звена без расчета
         """

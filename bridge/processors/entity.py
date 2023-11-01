@@ -40,16 +40,17 @@ class Entity:
         self._acc_fx = tau.FOD(T, Ts)
         self._acc_fy = tau.FOD(T, Ts)
         self._angle = angle
-        self._anglevel = 0
+        self._anglevel = 0.0
         self._vel_fr = tau.FOD(T, Ts, True)
         self._radius = R
+        self.last_update_ = 0.0
 
-    def update(self, pos: aux.Point, angle: float) -> None:
+    def update(self, pos: aux.Point, angle: float, t: float) -> None:
         """
         Обновить положение и рассчитать исходя из этого скорость и ускорение
         !!! Вызывать один раз за итерацию с постоянной частотой !!!
 
-        @todo Реализовать расчет скоростей и ускорений
+        TODO Реализовать расчет скоростей и ускорений
         """
         self._pos = pos
         self._angle = angle
@@ -58,6 +59,13 @@ class Entity:
         self._acc.x = self._acc_fx.process(self._vel.x)
         self._acc.y = self._acc_fy.process(self._vel.y)
         self._anglevel = self._vel_fr.process(self._angle)
+        self.last_update_ = t
+
+    def last_update(self) -> float:
+        """
+        Получить время последнего обновления
+        """
+        return self.last_update_
 
     def get_pos(self) -> aux.Point:
         """Геттер положения"""

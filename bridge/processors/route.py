@@ -103,7 +103,7 @@ class Route:
         """
         Получить длину маршрута
         """
-        dist = 0
+        dist = 0.0
         last_wp_pos = self._robot[0].pos
         for wpt in self.__get_route():
             if wpt.type == wp.WType.S_BALL_GO or wpt.type == wp.WType.S_BALL_KICK or wpt.type == wp.WType.S_BALL_GRAB:

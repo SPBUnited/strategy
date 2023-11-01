@@ -104,7 +104,7 @@ class SSLController(BaseProcessor):
                 balls[ball_ind + (camera_id - 1) * const.MAX_BALLS_IN_CAMERA] = camera_id
                 balls[ball_ind + const.MAX_BALLS_IN_FIELD + (camera_id - 1) * const.MAX_BALLS_IN_CAMERA] = ball.x
                 balls[ball_ind + 2 * const.MAX_BALLS_IN_FIELD + (camera_id - 1) * const.MAX_BALLS_IN_CAMERA] = ball.y
-                self.field.update_ball(aux.Point(ball.x, ball.y))
+                self.field.update_ball(aux.Point(ball.x, ball.y), time.time())
 
             for i in range(const.TEAM_ROBOTS_MAX_COUNT):
                 if time.time() - self.field.b_team[i].last_update() > 1:

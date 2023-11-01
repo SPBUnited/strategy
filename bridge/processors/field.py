@@ -1,6 +1,7 @@
 """
 Модуль описания структуры Field для хранения информации об объектах на поле (роботы и мяч)
 """
+
 import bridge.processors.auxiliary as aux
 import bridge.processors.const as const
 import bridge.processors.entity as entity
@@ -12,7 +13,7 @@ class Goal:
     Структура, описывающая ключевые точки ворот
     """
 
-    def __init__(self, goal_dx, goal_dy, goal_pen) -> None:
+    def __init__(self, goal_dx: float, goal_dy: float, goal_pen: float) -> None:
 
         # Абсолютный центр
         self.center = aux.Point(goal_dx, 0)
@@ -56,7 +57,7 @@ class Field:
     Класс, хранящий информацию о всех объектах на поле и ключевых точках
     """
 
-    def __init__(self, ctrl_mapping, ally_color="b") -> None:
+    def __init__(self, ctrl_mapping: dict[int, int], ally_color: str = "b") -> None:
         """
         Конструктор
         Инициализирует все нулями
@@ -75,37 +76,39 @@ class Field:
             for i in range(const.TEAM_ROBOTS_MAX_COUNT)
         ]
         self.all_bots = [*self.b_team, *self.y_team]
-        self.y_goal = Goal(const.GOAL_DX, const.GOAL_DY, const.GOAL_PEN)
-        self.b_goal = Goal(-const.GOAL_DX, -const.GOAL_DY, -const.GOAL_PEN)
+        self.ally_goal = Goal(const.GOAL_DX, const.GOAL_DY, const.GOAL_PEN)
+        self.enemy_goal = Goal(-const.GOAL_DX, -const.GOAL_DY, -const.GOAL_PEN)
 
         if ally_color == "b":
             self.allies = [*self.b_team]
-            self.ally_goal = self.b_goal
             self.enemies = [*self.y_team]
-            self.enemy_goal = self.y_goal
-            self.side = -const.POLARITY  # TODO УДАЛИТЬ АААААААААААААААААААААА
         elif ally_color == "y":
             self.allies = [*self.y_team]
-            self.ally_goal = self.y_goal
             self.enemies = [*self.b_team]
-            self.enemy_goal = self.b_goal
-            self.side = const.POLARITY  # TODO УДАЛИИИИТЬ
 
-    def update_ball(self, pos: aux.Point) -> None:
+    def update_ball(self, pos: aux.Point, t: float) -> None:
         """
         Обновить положение мяча
         !!! Вызывать один раз за итерацию с постоянной частотой !!!
         """
-        self.ball.update(pos, 0)
+        self.ball.update(pos, 0, t)
 
-    def upbate_blu_robot(self, idx, pos, angle, t):
+    def is_ball_in(self, robo: robot.Robot) -> bool:
+        """
+        Определить, находится ли мяч внутри дриблера
+        """
+        return (robo.get_pos() - self.ball.get_pos()).mag() < const.BALL_GRABBED_DIST and abs(
+            aux.wind_down_angle((self.ball.get_pos() - robo.get_pos()).arg() - robo.get_angle())
+        ) < const.BALL_GRABBED_ANGLE
+
+    def upbate_blu_robot(self, idx: int, pos: aux.Point, angle: float, t: float) -> None:
         """
         Обновить положение робота синей команды
         !!! Вызывать один раз за итерацию с постоянной частотой !!!
         """
         self.b_team[idx].update(pos, angle, t)
 
-    def update_yel_robot(self, idx, pos, angle, t):
+    def update_yel_robot(self, idx: int, pos: aux.Point, angle: float, t: float) -> None:
         """
         Обновить положение робота желтой команды
         !!! Вызывать один раз за итерацию с постоянной частотой !!!
@@ -120,7 +123,7 @@ class Field:
         """
         return self.ball
 
-    def get_blu_team(self):
+    def get_blu_team(self) -> list[robot.Robot]:
         """
         Получить массив роботов синей команды
 
@@ -128,7 +131,7 @@ class Field:
         """
         return self.b_team
 
-    def get_yel_team(self):
+    def get_yel_team(self) -> list[robot.Robot]:
         """
         Получить массив роботов желтой команды
 
@@ -136,7 +139,7 @@ class Field:
         """
         return self.y_team
 
-    def is_ball_stop_near_goal(self):
+    def is_ball_stop_near_goal(self) -> bool:
         """
         Определить, находится ли мяч в штрафной зоне
         """
@@ -150,7 +153,7 @@ class Field:
             self.ball.get_pos().y - self.ally_goal.down.y
         )
 
-    def is_ball_moves_to_goal(self):
+    def is_ball_moves_to_goal(self) -> bool:
         """
         Определить, движется ли мяч в сторону ворот
         """

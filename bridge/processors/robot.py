@@ -7,6 +7,7 @@ import bridge.processors.auxiliary as aux
 import bridge.processors.const as const
 import bridge.processors.entity as entity
 import bridge.processors.field as field
+import bridge.processors.route as rt
 import bridge.processors.tau as tau
 import bridge.processors.waypoint as wp
 
@@ -16,18 +17,18 @@ class Robot(entity.Entity):
     Описание робота
     """
 
-    def __init__(self, pos, angle, R, color, r_id, ctrl_id):
+    def __init__(self, pos: aux.Point, angle: float, R: float, color: str, r_id: int, ctrl_id: int) -> None:
         super().__init__(pos, angle, R)
 
         self.r_id = r_id
         self.ctrl_id = ctrl_id
         self.__is_used = 0
         self.color = color
-        self.last_update_ = 0
+        self.last_update_ = 0.0
 
-        self.speed_x = 0
-        self.speed_y = 0
-        self.speed_r = 0
+        self.speed_x = 0.0
+        self.speed_y = 0.0
+        self.speed_r = 0.0
         self.kick_up_ = 0
         self.kick_forward_ = 0
         self.auto_kick_ = 0
@@ -36,7 +37,7 @@ class Robot(entity.Entity):
         self.dribbler_speed_ = 0
         self.kicker_charge_enable_ = 1
         self.beep = 0
-        self.role = None
+        self.role = 0
 
         # v! SIM
         if const.IS_SIMULATOR_USED:
@@ -105,48 +106,46 @@ class Robot(entity.Entity):
 
         self.is_kick_commited = False
 
-    def used(self, a) -> None:
+    def used(self, a: int) -> None:
         """
         Выставить флаг использования робота
         """
         self.__is_used = a
 
-    def is_used(self):
+    def is_used(self) -> int:
         """
         Узнать, используется ли робот
         """
         return self.__is_used
 
-    def last_update(self):
+    def last_update(self) -> float:
         """
         Получить время последнего обновления робота
         """
         return self.last_update_
 
-    def update(self, pos, angle, t):
+    def update(self, pos: aux.Point, angle: float, t: float) -> None:
         """
         Обновить состояние робота согласно SSL Vision
-
-        TODO добавить в Entity время последнего обновления
         """
-        super().update(pos, angle)
+        super().update(pos, angle, t)
         self.kick_forward_ = 0
         self.kick_up_ = 0
         self.last_update_ = t
 
-    def kick_forward(self):
+    def kick_forward(self) -> None:
         """
         Ударить вперед
         """
         self.kick_forward_ = 1
 
-    def kick_up(self):
+    def kick_up(self) -> None:
         """
         Ударить вверх
         """
         self.kick_up_ = 1
 
-    def copy_control_fields(self, robot):
+    def copy_control_fields(self, robot: "Robot") -> None:
         """
         Скопировать в данный робот поля управления робота robot
         """
@@ -162,13 +161,13 @@ class Robot(entity.Entity):
         self.kicker_charge_enable_ = robot.kicker_charge_enable_
         self.beep = robot.beep
 
-    def clear_fields(self):
+    def clear_fields(self) -> None:
         """
         Очистить поля управления
         """
-        self.speed_x = 0
-        self.speed_y = 0
-        self.speed_r = 0
+        self.speed_x = 0.0
+        self.speed_y = 0.0
+        self.speed_r = 0.0
         self.kick_up_ = 0
         self.kick_forward_ = 0
         self.auto_kick_ = 0
@@ -178,7 +177,7 @@ class Robot(entity.Entity):
         self.kicker_charge_enable_ = 0
         self.beep = 0
 
-    def is_kick_aligned(self, target: wp.Waypoint):
+    def is_kick_aligned(self, target: wp.Waypoint) -> bool:
         """
         Определить, выровнен ли робот относительно путевой точки target
         """
@@ -218,15 +217,7 @@ class Robot(entity.Entity):
         print(is_dist, is_angle, is_offset)
         return is_aligned
 
-    def is_ball_in(self, fld: field.Field):
-        """
-        Определить, находится ли мяч внутри дриблера
-        """
-        return (self.get_pos() - fld.ball.get_pos()).mag() < const.BALL_GRABBED_DIST and abs(
-            aux.wind_down_angle((fld.ball.get_pos() - self.get_pos()).arg() - self._angle)
-        ) < const.BALL_GRABBED_ANGLE
-
-    def go_route(self, route, fld: field.Field):
+    def go_route(self, route: rt.Route, fld: field.Field) -> None:
         """
         Двигаться по маршруту route
         """
@@ -264,7 +255,7 @@ class Robot(entity.Entity):
             or end_point.type == wp.WType.S_BALL_GO
         ) and dist < 1500:
 
-            print("IS KICK ALIGNED: ", self.is_kick_aligned(end_point), ",\tIS BALL GRABBED: ", self.is_ball_in(fld))
+            print("IS KICK ALIGNED: ", self.is_kick_aligned(end_point), ",\tIS BALL GRABBED: ", fld.is_ball_in(self))
 
             self.pos_reg.select_mode(tau.Mode.SOFT)
 
@@ -278,7 +269,7 @@ class Robot(entity.Entity):
             self.dribbler_enable_ = False
 
         if (end_point.type == wp.WType.S_BALL_KICK or end_point.type == wp.WType.S_BALL_GRAB) and (
-            self.is_kick_aligned(end_point) or self.is_ball_in(fld)
+            self.is_kick_aligned(end_point) or fld.is_ball_in(self)
         ):
             # vel0 = (self.getPos() - end_point.pos).unity()
             vel0 = -aux.rotate(aux.RIGHT, self._angle)
@@ -287,7 +278,7 @@ class Robot(entity.Entity):
 
             if end_point.type == wp.WType.S_BALL_KICK:
                 # self.auto_kick_ = 2 if self.r_id == const.GK else 1
-                if self._pos.x * fld.side > 500:
+                if self._pos.x * const.POLARITY > 500:
                     self.auto_kick_ = 2
                 else:
                     self.auto_kick_ = 1
@@ -316,7 +307,7 @@ class Robot(entity.Entity):
         #               self angle: ", '%.2f'%self.getAngle())
         self.update_vel_xyw(transl_vel, ang_vel)
 
-    def update_vel_xyw(self, vel: aux.Point, wvel: float):
+    def update_vel_xyw(self, vel: aux.Point, wvel: float) -> None:
         """
         Выполнить тик низкоуровневых регуляторов скорости робота
 
@@ -341,7 +332,7 @@ class Robot(entity.Entity):
         self.speed_x = vec_speed * math.cos(ang)
         self.speed_y = vec_speed * math.sin(ang)
 
-    def clamp_motors(self):
+    def clamp_motors(self) -> None:
         """
         Ограничить управляющее воздействие
         """
