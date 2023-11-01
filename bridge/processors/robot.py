@@ -6,8 +6,6 @@ import math
 import bridge.processors.auxiliary as aux
 import bridge.processors.const as const
 import bridge.processors.entity as entity
-import bridge.processors.field as field
-import bridge.processors.route as rt
 import bridge.processors.tau as tau
 import bridge.processors.waypoint as wp
 
@@ -217,96 +215,6 @@ class Robot(entity.Entity):
         print(is_dist, is_angle, is_offset)
         return is_aligned
 
-    def go_route(self, route: rt.Route, fld: field.Field) -> None:
-        """
-        Двигаться по маршруту route
-        """
-        cur_speed = self._vel.mag()
-
-        # print(route)
-
-        dist = route.get_length()
-
-        target_point = route.get_next_wp()
-        end_point = route.get_dest_wp()
-
-        # print(self.getPos(), target_point, end_point)
-        vel0 = (self.get_pos() - target_point.pos).unity()
-
-        dangle = (target_point.pos - self.get_pos()).arg()
-        rangle = aux.wind_down_angle(self._angle - dangle)
-        twpangle = aux.wind_down_angle(target_point.angle - dangle)
-
-        angle60_abs = math.pi / 6 if abs(rangle) < math.pi / 2 else 2 * math.pi / 6
-        # angle60_abs = 0
-        angle60_sign = aux.sign(twpangle + rangle)
-
-        angle60 = dangle + angle60_abs * angle60_sign
-
-        lerp_angles = [target_point.angle, angle60]
-
-        angle0 = aux.lerp(lerp_angles[0], lerp_angles[1], aux.minmax((dist - 100) / 1000, 0, 1))
-
-        self.pos_reg.select_mode(tau.Mode.NORMAL)
-
-        if (
-            end_point.type == wp.WType.S_BALL_KICK
-            or end_point.type == wp.WType.S_BALL_GRAB
-            or end_point.type == wp.WType.S_BALL_GO
-        ) and dist < 1500:
-
-            print("IS KICK ALIGNED: ", self.is_kick_aligned(end_point), ",\tIS BALL GRABBED: ", fld.is_ball_in(self))
-
-            self.pos_reg.select_mode(tau.Mode.SOFT)
-
-            if end_point.type == wp.WType.S_BALL_GO:
-                angle0 = end_point.angle
-
-            self.dribbler_enable_ = True
-            self.dribbler_speed_ = 15
-            self.kicker_voltage_ = 15
-        else:
-            self.dribbler_enable_ = False
-
-        if (end_point.type == wp.WType.S_BALL_KICK or end_point.type == wp.WType.S_BALL_GRAB) and (
-            self.is_kick_aligned(end_point) or fld.is_ball_in(self)
-        ):
-            # vel0 = (self.getPos() - end_point.pos).unity()
-            vel0 = -aux.rotate(aux.RIGHT, self._angle)
-            # angle0 = end_point.angle
-            angle0 = self._angle
-
-            if end_point.type == wp.WType.S_BALL_KICK:
-                # self.auto_kick_ = 2 if self.r_id == const.GK else 1
-                if self._pos.x * const.POLARITY > 500:
-                    self.auto_kick_ = 2
-                else:
-                    self.auto_kick_ = 1
-            else:
-                self.auto_kick_ = 0
-
-            transl_vel = vel0 * 300
-
-        else:
-            self.auto_kick_ = 0
-
-            err = dist
-            u = self.pos_reg.process(err, -cur_speed)
-            transl_vel = vel0 * u
-
-        angle0 = end_point.angle
-        aerr = aux.wind_down_angle(angle0 - self.get_angle())
-
-        u_a = self.angle_reg.process(aerr, -self._anglevel)
-        ang_vel = u_a
-
-        # if self.r_id == const.GK and self.color == 'b':
-        #     print("is aligned: ", self.is_kick_aligned(end_point), ",
-        #               angle60: ", '%.2f'%angle60, ", end angle: ", '%.2f'%end_point.angle, \
-        #               ", angle0: ", '%.2f'%angle0, ", aerr: ", '%.2f'%aerr, ",
-        #               self angle: ", '%.2f'%self.getAngle())
-        self.update_vel_xyw(transl_vel, ang_vel)
-
     def update_vel_xyw(self, vel: aux.Point, wvel: float) -> None:
         """
         Выполнить тик низкоуровневых регуляторов скорости робота
@@ -354,3 +262,117 @@ class Robot(entity.Entity):
             + " "
             + str(self.speed_r)
         )
+
+
+def find_nearest_robot(robo: aux.Point, team: list[Robot], avoid: list[int] = []) -> Robot:
+    """
+    Найти ближайший робот из массива team к точке robot, игнорируя точки avoid
+    """
+    robo_id = -1
+    min_dist = 10e10
+    for i, player in enumerate(team):
+        if i in avoid or not player.is_used():
+            continue
+        if aux.dist(robo, player.get_pos()) < min_dist:
+            min_dist = aux.dist(robo, player.get_pos())
+            robo_id = i
+    return team[robo_id]
+
+
+def probability(inter: list[aux.Point], bots: list[Robot], pos: aux.Point) -> float:
+    """
+    TODO написать доку
+    """
+    res = 1.0
+    # print(len(inter), end = ' ')
+    for i, intr in enumerate(inter):
+        # koef = 1
+        # print([inter[i].x, inter[i].y, bots[i].get_pos().x, bots[i].get_pos().y])
+        tmp_res_x = aux.dist(intr, bots[i].get_pos())
+        tmp_res_y = math.sqrt(aux.dist(pos, bots[i].get_pos()) ** 2 - tmp_res_x**2)
+        ang = math.atan2(tmp_res_y, tmp_res_x)
+        # abs(ang) < math.pi / 4
+        if abs(ang) > math.pi / 2:
+            continue
+        # print(tmpRes)
+        # if tmpResX < 0:
+        #     koef = 0
+        # elif tmpResX > const.ROBOT_R * 100 * 15:
+        #     koef = 1
+        # else:
+        #     koef = tmpResX / (const.ROBOT_R * 100 * 15)
+        # res *= (2 * abs(ang) / math.pi) * (dist(st, bots[i].get_pos()) / 54e6)
+        res *= 1 / (2 * abs(ang) / math.pi)
+    return res
+
+
+def bot_position(pos: aux.Point, vecx: float, vecy: float) -> aux.Point:
+    """
+    TODO написать доку
+    """
+    modul = (vecx**2 + vecy**2) ** (0.5)
+    vecx = (vecx / modul) * const.ROBOT_R * 1000 * 2
+    vecy = (vecy / modul) * const.ROBOT_R * 1000 * 2
+    return aux.Point(pos.x - vecx, pos.y - vecy)
+
+
+def shot_decision(pos: aux.Point, end: list[aux.Point], tobj: list[Robot]) -> tuple[aux.Point, float, aux.Point]:
+    """
+    TODO написать доку
+    """
+    objs = tobj.copy()
+    tmp_counter = 0
+    for obj in range(len(objs)):
+        if not objs[obj - tmp_counter].is_used():
+            objs.pop(obj - tmp_counter)
+            tmp_counter += 1
+    # mx_shot_prob = 0
+    shot_point = pos
+    mx = 0.0
+    # tmp_sum = Point(0, 0)
+    # n = 0
+    # print(st)
+    # for bot in obj:
+    #     # print([bot.get_pos().x, bot.get_pos().y], end = " ")
+    #     plt.plot(bot.get_pos().x, bot.get_pos().y, 'bo')
+    # t = np.arange(-4500*1.0, 1000*1.0, 10)
+    for point in end:  # checkai
+        A = -(point.y - pos.y)
+        B = point.x - pos.x
+        C = pos.x * (point.y - pos.y) - pos.y * (point.x - pos.x)
+        tmp_line = aux.BobLine(A, B, C)
+        # plt.plot(t, (tmpLine.A*t + tmpLine.C)/tmpLine.B, 'g--')
+        lines = []
+        for bot in objs:
+            tmp_c = -(B * bot.get_pos().x - A * bot.get_pos().y)
+            line2 = aux.BobLine(B, -A, tmp_c)
+            lines.append(line2)
+        inter = aux.line_intersect(tmp_line, lines)
+        # plt.plot(inter[0].x, inter[0].y, 'bx')
+        # plt.plot(inter[1].x, inter[1].y, 'gx')
+        tmp_prob = probability(inter, objs, pos)
+        # print(tmp_prob, end = " ")
+        if tmp_prob > mx:
+            mx = tmp_prob
+            shot_point = bot_position(pos, point.x - pos.x, point.y - pos.y)
+            point_res = point
+        # if tmp_prob > mx:
+        #     mx = tmp_prob
+        #     shot_point = botPosition(st, point.x - st.x, point.y - st.y)
+        #     point_res = point
+        #     n = 1
+        #     sum = point
+        # elif tmp_prob == mx:
+        #     sum += point
+        #     n += 1
+        # else:
+        #     point_res = sum / n
+        #     shot_point = botPosition(st, point_res.x - st.x, point_res.y - st.y)
+        #     sum = Point(0, 0)
+        #     n = 0
+    # plt.plot(t, -(point_res.A*t + point_res.C)/point_res.B, 'r-')
+    # plt.plot(shot_point.x, shot_point.y, 'r^')
+    # plt.axis('equal')
+    # plt.grid(True)
+    # plt.show()
+    return shot_point, mx, point_res

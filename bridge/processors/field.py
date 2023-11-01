@@ -158,5 +158,5 @@ class Field:
         Определить, движется ли мяч в сторону ворот
         """
         return (
-            self.ball._vel.mag() > const.GK_INTERCEPT_SPEED
+            self.ball.get_vel().mag() > const.GK_INTERCEPT_SPEED
         )  # and self.ball._vel.x / self.ally_goal.center.x > 0 нужно протестить

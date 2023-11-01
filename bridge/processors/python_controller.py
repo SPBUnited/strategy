@@ -177,7 +177,7 @@ class SSLController(BaseProcessor):
         self.router.reroute(self.field)
 
         for i in range(const.TEAM_ROBOTS_MAX_COUNT):
-            self.field.allies[i].go_route(self.router.get_route(i), self.field)
+            self.router.get_route(i).go_route(self.field.allies[i], self.field)
 
         # for i in range(const.TEAM_ROBOTS_MAX_COUNT):
         #     print(self.field.y_team[i])

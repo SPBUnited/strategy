@@ -71,6 +71,10 @@ class Entity:
         """Геттер положения"""
         return self._pos
 
+    def get_anglevel(self) -> float:
+        """Геттер скорости"""
+        return self._anglevel
+
     def get_vel(self) -> aux.Point:
         """Геттер скорости"""
         return self._vel

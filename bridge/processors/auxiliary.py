@@ -6,7 +6,6 @@ import math
 import typing
 
 import bridge.processors.const as const
-import bridge.processors.robot as robot
 
 
 class Graph:
@@ -275,21 +274,6 @@ def find_nearest_point(p: Point, points: list[Point], exclude: list[Point] = [])
     return closest
 
 
-def find_nearest_robot(robo: Point, team: list[robot.Robot], avoid: list[int] = []) -> robot.Robot:
-    """
-    Найти ближайший робот из массива team к точке robot, игнорируя точки avoid
-    """
-    robo_id = -1
-    min_dist = 10e10
-    for i, player in enumerate(team):
-        if i in avoid or not player.is_used():
-            continue
-        if dist(robo, player.get_pos()) < min_dist:
-            min_dist = dist(robo, player.get_pos())
-            robo_id = i
-    return team[robo_id]
-
-
 def wind_down_angle(angle: float) -> float:
     """
     Привести угол к диапазону [-pi, pi]
@@ -391,105 +375,6 @@ def line_intersect(m: BobLine, bots: list[BobLine]) -> list[Point]:
         res.y = -det(m.A, m.C, n.A, n.C) / mat_inv
         result.append(res)
     return result
-
-
-def probability(inter: list[Point], bots: list[robot.Robot], pos: Point) -> float:
-    """
-    TODO написать доку
-    """
-    res = 1.0
-    # print(len(inter), end = ' ')
-    for i, intr in enumerate(inter):
-        # koef = 1
-        # print([inter[i].x, inter[i].y, bots[i].get_pos().x, bots[i].get_pos().y])
-        tmp_res_x = dist(intr, bots[i].get_pos())
-        tmp_res_y = math.sqrt(dist(pos, bots[i].get_pos()) ** 2 - tmp_res_x**2)
-        ang = math.atan2(tmp_res_y, tmp_res_x)
-        # abs(ang) < math.pi / 4
-        if abs(ang) > math.pi / 2:
-            continue
-        # print(tmpRes)
-        # if tmpResX < 0:
-        #     koef = 0
-        # elif tmpResX > const.ROBOT_R * 100 * 15:
-        #     koef = 1
-        # else:
-        #     koef = tmpResX / (const.ROBOT_R * 100 * 15)
-        # res *= (2 * abs(ang) / math.pi) * (dist(st, bots[i].get_pos()) / 54e6)
-        res *= 1 / (2 * abs(ang) / math.pi)
-    return res
-
-
-def bot_position(pos: Point, vecx: float, vecy: float) -> Point:
-    """
-    TODO написать доку
-    """
-    modul = (vecx**2 + vecy**2) ** (0.5)
-    vecx = (vecx / modul) * const.ROBOT_R * 1000 * 2
-    vecy = (vecy / modul) * const.ROBOT_R * 1000 * 2
-    return Point(pos.x - vecx, pos.y - vecy)
-
-
-def shot_decision(pos: Point, end: list[Point], tobj: list[robot.Robot]) -> tuple[Point, float, Point]:
-    """
-    TODO написать доку
-    """
-    objs = tobj.copy()
-    tmp_counter = 0
-    for obj in range(len(objs)):
-        if not objs[obj - tmp_counter].is_used():
-            objs.pop(obj - tmp_counter)
-            tmp_counter += 1
-    # mx_shot_prob = 0
-    shot_point = pos
-    mx = 0.0
-    # tmp_sum = Point(0, 0)
-    # n = 0
-    # print(st)
-    # for bot in obj:
-    #     # print([bot.get_pos().x, bot.get_pos().y], end = " ")
-    #     plt.plot(bot.get_pos().x, bot.get_pos().y, 'bo')
-    # t = np.arange(-4500*1.0, 1000*1.0, 10)
-    for point in end:  # checkai
-        A = -(point.y - pos.y)
-        B = point.x - pos.x
-        C = pos.x * (point.y - pos.y) - pos.y * (point.x - pos.x)
-        tmp_line = BobLine(A, B, C)
-        # plt.plot(t, (tmpLine.A*t + tmpLine.C)/tmpLine.B, 'g--')
-        lines = []
-        for bot in objs:
-            tmp_c = -(B * bot.get_pos().x - A * bot.get_pos().y)
-            line2 = BobLine(B, -A, tmp_c)
-            lines.append(line2)
-        inter = line_intersect(tmp_line, lines)
-        # plt.plot(inter[0].x, inter[0].y, 'bx')
-        # plt.plot(inter[1].x, inter[1].y, 'gx')
-        tmp_prob = probability(inter, objs, pos)
-        # print(tmp_prob, end = " ")
-        if tmp_prob > mx:
-            mx = tmp_prob
-            shot_point = bot_position(pos, point.x - pos.x, point.y - pos.y)
-            point_res = point
-        # if tmp_prob > mx:
-        #     mx = tmp_prob
-        #     shot_point = botPosition(st, point.x - st.x, point.y - st.y)
-        #     point_res = point
-        #     n = 1
-        #     sum = point
-        # elif tmp_prob == mx:
-        #     sum += point
-        #     n += 1
-        # else:
-        #     point_res = sum / n
-        #     shot_point = botPosition(st, point_res.x - st.x, point_res.y - st.y)
-        #     sum = Point(0, 0)
-        #     n = 0
-    # plt.plot(t, -(point_res.A*t + point_res.C)/point_res.B, 'r-')
-    # plt.plot(shot_point.x, shot_point.y, 'r^')
-    # plt.axis('equal')
-    # plt.grid(True)
-    # plt.show()
-    return shot_point, mx, point_res
 
 
 def in_place(point: Point, end: Point, epsilon: float) -> bool:

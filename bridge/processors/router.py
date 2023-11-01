@@ -67,7 +67,7 @@ class Router:
                 or self.routes[idx].get_next_type() == wp.WType.S_BALL_GRAB
             ):
                 # if not field.allies[idx].is_kick_aligned(self.routes[idx].get_dest_wp()):
-                align_wp = self.calc_kick_wp(idx, fld)
+                align_wp = self.calc_kick_wp(idx)
                 self.routes[idx].insert_wp(align_wp)
 
             if idx == const.GK:
@@ -185,7 +185,7 @@ class Router:
 
         return passthrough_wp
 
-    def calc_kick_wp(self, idx: int, fld: field.Field) -> wp.Waypoint:
+    def calc_kick_wp(self, idx: int) -> wp.Waypoint:
         """
         Рассчитать точку для выравниявания по мячу
         """
