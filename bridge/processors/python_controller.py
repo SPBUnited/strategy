@@ -28,7 +28,6 @@ class SSLController(BaseProcessor):
     """
 
     max_commands_to_persist: int = 20
-    our_color: str = "b"
 
     vision_reader: DataReader = attr.ib(init=False)
     referee_reader: DataReader = attr.ib(init=False)
@@ -54,9 +53,9 @@ class SSLController(BaseProcessor):
         self.commands_sink_writer = DataWriter(data_bus, const.TOPIC_SINK, 20)
         self._ssl_converter = SSL_WrapperPacket()
 
-        self.field = field.Field(self.ctrl_mapping, self.our_color)
+        self.field = field.Field(self.ctrl_mapping)
         self.router = router.Router(self.field)
-        self.strategy = strategy.Strategy(self.dbg_game_status, self.dbg_state)
+        self.strategy = strategy.Strategy()
 
     def get_last_referee_command(self) -> RefereeCommand:
         """
@@ -112,7 +111,7 @@ class SSLController(BaseProcessor):
                 if time.time() - self.field.y_team[i].last_update() > 1:
                     self.field.y_team[i].used(0)
 
-            # self.strategy.changeGameState(strategy.GameStates.RUN, 0)
+            # self.strategy.change_game_state(strategy.GameStates.RUN, 0)
 
             # TODO Вынести в константы
             game_controller_mapping = {
@@ -134,16 +133,16 @@ class SSLController(BaseProcessor):
                 self.count_halt_cmd += 1
             else:
                 self.count_halt_cmd = 0
-                self.strategy.changeGameState(game_controller_mapping[cur_cmd.state], cur_cmd.commandForTeam)
+                self.strategy.change_game_state(game_controller_mapping[cur_cmd.state], cur_cmd.commandForTeam)
                 if cur_cmd.state == 4:
                     print("End game")
                 elif cur_cmd.state == 10:
                     print("Uknown command 10")
 
-            if self.count_halt_cmd > 10:
-                self.strategy.changeGameState(strategy.GameStates.HALT, cur_cmd.commandForTeam)
+            # if self.count_halt_cmd > 10:
+            #     self.strategy.change_game_state(strategy.GameStates.HALT, cur_cmd.commandForTeam)
 
-            # self.strategy.changeGameState(strategy.GameStates.PREPARE_KICKOFF, 0)
+            # self.strategy.change_game_state(strategy.GameStates.PREPARE_KICKOFF, 0)
 
             # TODO: Barrier states
             for robot_det in detection.robots_blue:
@@ -213,7 +212,7 @@ class SSLController(BaseProcessor):
         self.cur_time = time.time()
 
         # print(self.dt)
-        # print(self.our_color)
+        # print(const.OUR_COLOR)
         self.read_vision()
         self.control_loop()
 

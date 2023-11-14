@@ -2,6 +2,7 @@
 Описание полей и интерфейсов взаимодействия с роботом
 """
 import math
+import typing
 
 import bridge.processors.auxiliary as aux
 import bridge.processors.const as const
@@ -264,10 +265,12 @@ class Robot(entity.Entity):
         )
 
 
-def find_nearest_robot(robo: aux.Point, team: list[Robot], avoid: list[int] = []) -> Robot:
+def find_nearest_robot(robo: aux.Point, team: list[Robot], avoid: typing.Optional[list[int]] = None) -> Robot:
     """
     Найти ближайший робот из массива team к точке robot, игнорируя точки avoid
     """
+    if avoid is None:
+        avoid = []
     robo_id = -1
     min_dist = 10e10
     for i, player in enumerate(team):
@@ -316,7 +319,7 @@ def bot_position(pos: aux.Point, vecx: float, vecy: float) -> aux.Point:
     return aux.Point(pos.x - vecx, pos.y - vecy)
 
 
-def shot_decision(pos: aux.Point, end: list[aux.Point], tobj: list[Robot]) -> tuple[aux.Point, float, aux.Point]:
+def shot_decision(pos: aux.Point, end: list[aux.Point], tobj: list[Robot]) -> aux.Point:
     """
     TODO написать доку
     """
@@ -327,7 +330,7 @@ def shot_decision(pos: aux.Point, end: list[aux.Point], tobj: list[Robot]) -> tu
             objs.pop(obj - tmp_counter)
             tmp_counter += 1
     # mx_shot_prob = 0
-    shot_point = pos
+    # shot_point = pos
     mx = 0.0
     # tmp_sum = Point(0, 0)
     # n = 0
@@ -354,8 +357,8 @@ def shot_decision(pos: aux.Point, end: list[aux.Point], tobj: list[Robot]) -> tu
         # print(tmp_prob, end = " ")
         if tmp_prob > mx:
             mx = tmp_prob
-            shot_point = bot_position(pos, point.x - pos.x, point.y - pos.y)
             point_res = point
+            # shot_point = bot_position(pos, point.x - pos.x, point.y - pos.y)
         # if tmp_prob > mx:
         #     mx = tmp_prob
         #     shot_point = botPosition(st, point.x - st.x, point.y - st.y)
@@ -375,4 +378,4 @@ def shot_decision(pos: aux.Point, end: list[aux.Point], tobj: list[Robot]) -> tu
     # plt.axis('equal')
     # plt.grid(True)
     # plt.show()
-    return shot_point, mx, point_res
+    return point_res

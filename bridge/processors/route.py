@@ -124,11 +124,11 @@ class Route:
         #     strin += " -> " + str(wp)
         return strin
 
-    def go_route(self, robot: robot.Robot, fld: field.Field) -> None:
+    def go_route(self, rbt: robot.Robot, fld: field.Field) -> None:
         """
         Двигаться по маршруту route
         """
-        cur_speed = robot.get_vel().mag()
+        cur_speed = rbt.get_vel().mag()
 
         # print(self)
 
@@ -137,11 +137,11 @@ class Route:
         target_point = self.get_next_wp()
         end_point = self.get_dest_wp()
 
-        # print(robot.getPos(), target_point, end_point)
-        vel0 = (robot.get_pos() - target_point.pos).unity()
+        # print(rbt.getPos(), target_point, end_point)
+        vel0 = (rbt.get_pos() - target_point.pos).unity()
 
-        dangle = (target_point.pos - robot.get_pos()).arg()
-        rangle = aux.wind_down_angle(robot._angle - dangle)
+        dangle = (target_point.pos - rbt.get_pos()).arg()
+        rangle = aux.wind_down_angle(rbt.get_angle() - dangle)
         twpangle = aux.wind_down_angle(target_point.angle - dangle)
 
         angle60_abs = math.pi / 6 if abs(rangle) < math.pi / 2 else 2 * math.pi / 6
@@ -154,7 +154,7 @@ class Route:
 
         angle0 = aux.lerp(lerp_angles[0], lerp_angles[1], aux.minmax((dist - 100) / 1000, 0, 1))
 
-        robot.pos_reg.select_mode(tau.Mode.NORMAL)
+        rbt.pos_reg.select_mode(tau.Mode.NORMAL)
 
         if (
             end_point.type == wp.WType.S_BALL_KICK
@@ -162,53 +162,53 @@ class Route:
             or end_point.type == wp.WType.S_BALL_GO
         ) and dist < 1500:
 
-            print("IS KICK ALIGNED: ", robot.is_kick_aligned(end_point), ",\tIS BALL GRABBED: ", fld.is_ball_in(robot))
+            print("IS KICK ALIGNED: ", rbt.is_kick_aligned(end_point), ",\tIS BALL GRABBED: ", fld.is_ball_in(rbt))
 
-            robot.pos_reg.select_mode(tau.Mode.SOFT)
+            rbt.pos_reg.select_mode(tau.Mode.SOFT)
 
             if end_point.type == wp.WType.S_BALL_GO:
                 angle0 = end_point.angle
 
-            robot.dribbler_enable_ = True
-            robot.dribbler_speed_ = 15
-            robot.kicker_voltage_ = 15
+            rbt.dribbler_enable_ = True
+            rbt.dribbler_speed_ = 15
+            rbt.kicker_voltage_ = 15
         else:
-            robot.dribbler_enable_ = False
+            rbt.dribbler_enable_ = False
 
         if (end_point.type == wp.WType.S_BALL_KICK or end_point.type == wp.WType.S_BALL_GRAB) and (
-            robot.is_kick_aligned(end_point) or fld.is_ball_in(robot)
+            rbt.is_kick_aligned(end_point) or fld.is_ball_in(rbt)
         ):
-            # vel0 = (robot.getPos() - end_point.pos).unity()
-            vel0 = -aux.rotate(aux.RIGHT, robot._angle)
+            # vel0 = (rbt.getPos() - end_point.pos).unity()
+            vel0 = -aux.rotate(aux.RIGHT, rbt.get_angle())
             # angle0 = end_point.angle
-            angle0 = robot._angle
+            angle0 = rbt.get_angle()
 
             if end_point.type == wp.WType.S_BALL_KICK:
-                # robot.auto_kick_ = 2 if robot.r_id == const.GK else 1
-                if robot._pos.x * const.POLARITY > 500:
-                    robot.auto_kick_ = 2
+                # rbt.auto_kick_ = 2 if rbt.r_id == const.GK else 1
+                if rbt.get_pos().x * const.POLARITY > 500:
+                    rbt.auto_kick_ = 2
                 else:
-                    robot.auto_kick_ = 1
+                    rbt.auto_kick_ = 1
             else:
-                robot.auto_kick_ = 0
+                rbt.auto_kick_ = 0
 
             transl_vel = vel0 * 300
 
         else:
-            robot.auto_kick_ = 0
+            rbt.auto_kick_ = 0
 
             err = dist
-            u = robot.pos_reg.process(err, -cur_speed)
+            u = rbt.pos_reg.process(err, -cur_speed)
             transl_vel = vel0 * u
 
         angle0 = end_point.angle
-        aerr = aux.wind_down_angle(angle0 - robot.get_angle())
+        aerr = aux.wind_down_angle(angle0 - rbt.get_angle())
 
-        ang_vel = robot.angle_reg.process(aerr, -robot.get_anglevel())
+        ang_vel = rbt.angle_reg.process(aerr, -rbt.get_anglevel())
 
-        # if robot.r_id == const.GK and robot.color == 'b':
-        #     print("is aligned: ", robot.is_kick_aligned(end_point), ",
+        # if rbt.r_id == const.GK and rbt.color == 'b':
+        #     print("is aligned: ", rbt.is_kick_aligned(end_point), ",
         #               angle60: ", '%.2f'%angle60, ", end angle: ", '%.2f'%end_point.angle, \
         #               ", angle0: ", '%.2f'%angle0, ", aerr: ", '%.2f'%aerr, ",
-        #               robot angle: ", '%.2f'%robot.getAngle())
-        robot.update_vel_xyw(transl_vel, ang_vel)
+        #               rbt angle: ", '%.2f'%rbt.getAngle())
+        rbt.update_vel_xyw(transl_vel, ang_vel)

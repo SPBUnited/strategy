@@ -9,7 +9,6 @@ import typing
 
 import bridge.processors.auxiliary as aux
 import bridge.processors.const as const
-import bridge.processors.entity as ent
 import bridge.processors.field as field
 import bridge.processors.quickhull as qh
 import bridge.processors.route as route
@@ -104,20 +103,6 @@ class Router:
                 if not is_inside:
                     self.routes[idx].insert_wp(pth_wp)
 
-    # def calcPenDetour(self, idx, field: field.Field):
-    #     self_pos = field.allies[idx].get_pos()
-    #     detwp = None
-    #     for goal in [*field.ally_goal, *field.enemy_goal]:
-    #         vec1 = aux.vect_mult(self.routes[idx].getNextVec().unity(),
-    #                   (goal.forwup - self_pos).unity())
-    #         vec2 = aux.vect_mult(self.routes[idx].getNextVec().unity(),
-    #                   (goal.forwdown - self_pos).unity())
-    #         vecc = aux.vect_mult(self.routes[idx].getNextVec().unity(),
-    #                   (goal.center - self_pos).unity())
-    #         if(aux.sign(vec1) != aux.sign(vecc)):
-    #             if(aux.sign(vec2) != aux.sign(vecc)):
-    #                 detwp =
-
     def calc_vector_field(self, idx: int, fld: field.Field) -> typing.Optional[wp.Waypoint]:
         """
         Рассчитать ближайшую промежуточную путевую точку
@@ -143,9 +128,8 @@ class Router:
         if self.routes[idx].get_dest_wp().type == wp.WType.S_KEEP_BALL_DISTANCE:
             ball_sep_dist = const.KEEP_BALL_DIST
 
-        closest_robot: ent.Entity
+        closest_robot: typing.Any = None
         closest_dist = dist
-        closest_separation = 0.0
 
         # Расчет теней роботов для векторного поля
         for r in fld.all_bots:
@@ -159,7 +143,6 @@ class Router:
                 closest_robot = r
                 closest_dist = robot_dist
                 closest_separation = robot_separation
-
         ball_separation = aux.dist(
             aux.closest_point_on_line(self_pos, target_point.pos, fld.ball.get_pos()), fld.ball.get_pos()
         )

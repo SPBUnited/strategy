@@ -4,10 +4,10 @@
 
 ##################################################
 # GAME SETTING CONSTS
-GK = 10
-PENALTY_KICKER = 9
-ENEMY_GK = 8
-IS_SIMULATOR_USED = False
+GK = 5
+PENALTY_KICKER = 0
+ENEMY_GK = 5
+IS_SIMULATOR_USED = True
 CAMERAS_COUNT: int = 4
 MAX_BALLS_IN_CAMERA: int = 64
 MAX_BALLS_IN_FIELD: int = CAMERAS_COUNT * MAX_BALLS_IN_CAMERA
@@ -26,21 +26,22 @@ DEBUG_ID = 14
 DEBUG_CTRL = 14
 CONTROL_MAPPING: dict[int, int] = {
     # DEBUG_ID: DEBUG_CTRL
-    # 0: 0,
-    # 1: 1,
-    # 2: 2,
-    # 3: 3,
-    # 4: 4,
-    # 5: 5,
-    # 6: 6,
-    # 7: 7,
-    # 8: 8,
+    0: 0,
+    1: 1,
+    2: 2,
+    3: 3,
+    4: 4,
+    5: 5,
+    6: 6,
+    7: 7,
+    8: 8,
     9: 9,
     10: 10,
     11: 11,
     12: 12,
     13: 13,
     14: 14,
+    15: 15,
 }
 
 for i in range(TEAM_ROBOTS_MAX_COUNT):
@@ -81,6 +82,7 @@ BALL_R = 0.05
 ROBOT_R = 0.2
 GRAVEYARD_POS_X = -10000
 
+OUR_COLOR = "b"
 POLARITY = -1  # 1 если наши ворота на +x; -1 если наши ворота на -x
 GOAL_DX = POLARITY * 4500
 GOAL_DY = 1000

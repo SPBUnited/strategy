@@ -57,7 +57,7 @@ class Field:
     Класс, хранящий информацию о всех объектах на поле и ключевых точках
     """
 
-    def __init__(self, ctrl_mapping: dict[int, int], ally_color: str = "b") -> None:
+    def __init__(self, ctrl_mapping: dict[int, int]) -> None:
         """
         Конструктор
         Инициализирует все нулями
@@ -65,7 +65,6 @@ class Field:
         TODO Сделать инициализацию реальными параметрами для корректного
         определения скоростей и ускорений в первые секунды
         """
-        self.ally_color = ally_color
         self.ball = entity.Entity(aux.GRAVEYARD_POS, 0, const.BALL_R)
         self.b_team = [
             robot.Robot(aux.GRAVEYARD_POS, 0, const.ROBOT_R, "b", i, ctrl_mapping[i])
@@ -79,10 +78,10 @@ class Field:
         self.ally_goal = Goal(const.GOAL_DX, const.GOAL_DY, const.GOAL_PEN)
         self.enemy_goal = Goal(-const.GOAL_DX, -const.GOAL_DY, -const.GOAL_PEN)
 
-        if ally_color == "b":
+        if const.OUR_COLOR == "b":
             self.allies = [*self.b_team]
             self.enemies = [*self.y_team]
-        elif ally_color == "y":
+        elif const.OUR_COLOR == "y":
             self.allies = [*self.y_team]
             self.enemies = [*self.b_team]
 

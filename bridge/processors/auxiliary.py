@@ -126,8 +126,7 @@ GRAVEYARD_POS = Point(const.GRAVEYARD_POS_X, 0)
 
 class BobLine:
     """
-    Борина линия
-    Надо ли?
+    Прямая в виде Ax+By+C=0
     """
 
     def __init__(self, A: float, B: float, C: float):
@@ -259,10 +258,12 @@ def rotate(p: Point, angle: float) -> Point:
     return Point(p.x * math.cos(angle) - p.y * math.sin(angle), p.y * math.cos(angle) + p.x * math.sin(angle))
 
 
-def find_nearest_point(p: Point, points: list[Point], exclude: list[Point] = []) -> Point:
+def find_nearest_point(p: Point, points: list[Point], exclude: typing.Optional[list[Point]] = None) -> Point:  #
     """
     Найти ближайшую точку к p из облака points, игнорируя точки exclude
     """
+    if exclude is None:
+        exclude = []
     closest = points[0]
     min_dist = 10e10
     for _, point in enumerate(points):
@@ -382,10 +383,3 @@ def in_place(point: Point, end: Point, epsilon: float) -> bool:
     Проверить, находится ли точка st в радиусе epsilon около end
     """
     return (point - end).mag() < epsilon
-
-
-def is_in_list(arr: typing.Any, x: typing.Any) -> bool:
-    """
-    Узнать, есть ли элемент x в списке arr
-    """
-    return x in arr

@@ -39,7 +39,7 @@ def quickhull(p1: aux.Point, p2: aux.Point, points: list[aux.Point], polarity: i
     if polarity == 1:
         return [p1] + quickhullupper(p1, p2, points) + [p2]
     if polarity == -1:
-        return list(reversed(([p2] + quickhullupper(p2, p1, points) + [p1])))
+        return list(reversed(([p2] + quickhullupper(p2, p1, points) + [p1])))  # pylint: disable = arguments-out-of-order
     return []
 
 
@@ -60,8 +60,8 @@ def quickhullupper(p1: aux.Point, p2: aux.Point, points: list[aux.Point]) -> lis
     max_dist = 0.0
     max_p = None
     for p in uppoints:
-        if aux.dist2line(p2, p1, p) > max_dist:
-            max_dist = aux.dist2line(p2, p1, p)
+        if aux.dist2line(p2, p1, p) > max_dist:  # pylint: disable = arguments-out-of-order
+            max_dist = aux.dist2line(p2, p1, p)  # pylint: disable = arguments-out-of-order
             max_p = p
 
     if max_p is None:
