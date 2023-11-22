@@ -28,6 +28,7 @@ class SSLController(BaseProcessor):
     """
 
     max_commands_to_persist: int = 20
+    ally_color: str = "y"
 
     vision_reader: DataReader = attr.ib(init=False)
     referee_reader: DataReader = attr.ib(init=False)
@@ -53,7 +54,7 @@ class SSLController(BaseProcessor):
         self.commands_sink_writer = DataWriter(data_bus, const.TOPIC_SINK, 20)
         self._ssl_converter = SSL_WrapperPacket()
 
-        self.field = field.Field(self.ctrl_mapping)
+        self.field = field.Field(self.ctrl_mapping, self.ally_color)
         self.router = router.Router(self.field)
         self.strategy = strategy.Strategy()
 
@@ -196,7 +197,7 @@ class SSLController(BaseProcessor):
         # print(self.square.get())
         for i in range(const.TEAM_ROBOTS_MAX_COUNT):
             if self.field.allies[i].is_used():
-                self.field.allies[i].color = "b"
+                self.field.allies[i].color = self.ally_color
             # self.field.allies[i].speed_r = self.square.get()
             self.commands_sink_writer.write(self.field.allies[i])
 
@@ -212,7 +213,7 @@ class SSLController(BaseProcessor):
         self.cur_time = time.time()
 
         # print(self.dt)
-        # print(const.OUR_COLOR)
+        # print(self.ally_color)
         self.read_vision()
         self.control_loop()
 

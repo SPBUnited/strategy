@@ -57,7 +57,7 @@ class Field:
     Класс, хранящий информацию о всех объектах на поле и ключевых точках
     """
 
-    def __init__(self, ctrl_mapping: dict[int, int]) -> None:
+    def __init__(self, ctrl_mapping: dict[int, int], ally_color: str) -> None:
         """
         Конструктор
         Инициализирует все нулями
@@ -65,6 +65,11 @@ class Field:
         TODO Сделать инициализацию реальными параметрами для корректного
         определения скоростей и ускорений в первые секунды
         """
+        self.ally_color = ally_color
+        if self.ally_color == "b":
+            self.polarity = const.POLARITY * -1
+        else:
+            self.polarity = const.POLARITY
         self.ball = entity.Entity(aux.GRAVEYARD_POS, 0, const.BALL_R)
         self.b_team = [
             robot.Robot(aux.GRAVEYARD_POS, 0, const.ROBOT_R, "b", i, ctrl_mapping[i])
@@ -75,13 +80,15 @@ class Field:
             for i in range(const.TEAM_ROBOTS_MAX_COUNT)
         ]
         self.all_bots = [*self.b_team, *self.y_team]
-        self.ally_goal = Goal(const.GOAL_DX, const.GOAL_DY, const.GOAL_PEN)
-        self.enemy_goal = Goal(-const.GOAL_DX, -const.GOAL_DY, -const.GOAL_PEN)
+        self.ally_goal = Goal(const.GOAL_DX * self.polarity, const.GOAL_DY * self.polarity, const.GOAL_PEN * self.polarity)
+        self.enemy_goal = Goal(
+            -const.GOAL_DX * self.polarity, -const.GOAL_DY * self.polarity, -const.GOAL_PEN * self.polarity
+        )
 
-        if const.OUR_COLOR == "b":
+        if self.ally_color == "b":
             self.allies = [*self.b_team]
             self.enemies = [*self.y_team]
-        elif const.OUR_COLOR == "y":
+        elif self.ally_color == "y":
             self.allies = [*self.y_team]
             self.enemies = [*self.b_team]
 

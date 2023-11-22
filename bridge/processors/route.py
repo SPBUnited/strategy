@@ -5,7 +5,6 @@
 import math
 
 import bridge.processors.auxiliary as aux
-import bridge.processors.const as const
 import bridge.processors.field as field
 import bridge.processors.robot as robot
 import bridge.processors.tau as tau
@@ -185,10 +184,10 @@ class Route:
 
             if end_point.type == wp.WType.S_BALL_KICK:
                 # rbt.auto_kick_ = 2 if rbt.r_id == const.GK else 1
-                if rbt.get_pos().x * const.POLARITY > 500:
-                    rbt.auto_kick_ = 2
-                else:
-                    rbt.auto_kick_ = 1
+                # if rbt.get_pos().x * field.polarity > 500:
+                #     rbt.auto_kick_ = 2
+                # else:
+                rbt.auto_kick_ = 1
             else:
                 rbt.auto_kick_ = 0
 
