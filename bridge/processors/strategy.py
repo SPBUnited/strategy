@@ -57,11 +57,12 @@ class Strategy:
             waypoints[i] = waypoint
 
         self.run(field, waypoints)
+        #print(waypoints)
 
         return waypoints
 
     def distance(self, p1, p2):
-        return math.sqrt((p1.x - p2.x)**2, (p1.y - p2.y)**2)
+        return math.sqrt((p1.x - p2.x)**2 + (p1.y - p2.y)**2)
 
     def getIndexHolding(self, field: field.Field): # Возвращает индекс атакующего робота (для врагов индекс + 3), None -- в случае неопределенного статуса
         minDistEnemy = 4500
@@ -93,10 +94,40 @@ class Strategy:
         # field.allies[i].getPos() - координаты робота союзника с id i
         # waypoints[i] = wp.Waypoint(field.allies[i].getPos(), field.allies[i].getAngle(), wp.WType.S_ENDPOINT) - задать точку для езды. Куда, с каким углом, тип.
 
-        if True: # Здесь будет условие смены атаки на защиту для данного робота
-            self.chooseKick(field, 0)
-        else:
-            pass
+        goal_pos = aux.Point(-6000, 0)
+        enemy_pos = field.enemies[0].getPos()
+        self_pos = field.allies[0].getPos()
+
+        # print(enemy_pos.x, enemy_pos.y)
+       
+        # print(self_pos.x, self_pos.y, sep = ", ", end = "\n")
+        # print(len(waypoints))
+
+        alpha = math.atan2(enemy_pos.y - goal_pos.y, enemy_pos.x - goal_pos.x)
+        beta = math.atan2(self_pos.y - goal_pos.y, self_pos.x - goal_pos.x) - alpha
+        dist_to_goal = math.sqrt((self_pos.x - goal_pos.x) ** 2 + (self_pos.y - goal_pos.y ** 2))
+
+        length = dist_to_goal * math.cos(beta)
+        #path_len = dist_to_goal * math.sin(beta)
+        #path_angle = beta + (math.pi / 2)
+        path_point = aux.Point(goal_pos.x + length * math.cos(alpha), goal_pos.y + length * math.sin(alpha))
+        
+        target_point = aux.Point(path_point.x + 100 * math.cos(alpha + (math.pi / 2)), path_point.y + 100 * math.sin(alpha + (math.pi / 2)))
+
+        # waypoints[0] = wp.Waypoint(aux.Point(0, 0), field.allies[0].getAngle(), wp.WType.S_ENDPOINT)
+        waypoints[0] = wp.Waypoint(path_point, alpha, wp.WType.S_ENDPOINT)
+        
+
+        print(path_point.x, path_point.y, self_pos.x, sep = ", ", end = "\n")
+
+        # for i in range(len(waypoints)):
+        #     waypoints[i] = wp.Waypoint(aux.Point(0, 0), 0, wp.WType.S_ENDPOINT)
+            
+
+        #if True: # Здесь будет условие смены атаки на защиту для данного робота
+        #    self.chooseKick(field, 0)
+        #else:
+        #    pass
 
         pass
 
@@ -108,7 +139,7 @@ class Strategy:
 
         for i in range(self.n):
             dist = self.distance(myPos, field.enemies[i].getPos())
-            D = dist * (4500 - ballPos.x) / (field.enemies[i].getPos() - ballPos.x)
+            D = dist * (4500 - ballPos.x) / (field.enemies[i].getPos().x - ballPos.x)
             if (self.robotRadius + self.ballRadius + 20) / dist > 1: alphaNew = math.asin(1)
             else: alphaNew = math.asin((self.robotRadius + self.ballRadius + 20) / dist)
             

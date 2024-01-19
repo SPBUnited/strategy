@@ -5,7 +5,7 @@ import bridge.processors.auxiliary as aux
 GK = 10
 PENALTY_KICKER = 9
 ENEMY_GK = 8
-IS_SIMULATOR_USED = False
+IS_SIMULATOR_USED = True
 CAMERAS_COUNT: int = 4
 MAX_BALLS_IN_CAMERA: int = 64
 MAX_BALLS_IN_FIELD: int = CAMERAS_COUNT * MAX_BALLS_IN_CAMERA
@@ -25,15 +25,15 @@ DEBUG_CTRL = 14
 CONTROL_MAPPING = \
 {
     # DEBUG_ID: DEBUG_CTRL
-    # 0: 0,
-    # 1: 1,
-    # 2: 2,
-    # 3: 3,
-    # 4: 4,
-    # 5: 5,
-    # 6: 6,
-    # 7: 7,
-    # 8: 8,
+    0: 0,
+    1: 1,
+    2: 2,
+    3: 3,
+    4: 4,
+    5: 5,
+    6: 6,
+    7: 7,
+    8: 8,
     9: 9,
     10: 10,
     11: 11,
