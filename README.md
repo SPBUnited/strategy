@@ -4,7 +4,7 @@
 
 1. Install `zmqpp` according the to instructions from the page below. Skip `libsodium` part: do not clone it and do not use `--with-libsodium` flag. Skip `make check` and `make installcheck` steps
 
-    https://github.com/zeromq/zmqpp#installation 
+    https://github.com/zeromq/zmqpp#installation
 2. Install `Python 3.9`
 
 3. Clone this project and install dependencies from `requirements.txt`:
@@ -27,6 +27,6 @@
 
 2. Run python version of `LARCmaCS`
 
-2. Run bridge: `python main.py`    
+2. Run bridge: `python main.py`
  # strategy
 # strategy
