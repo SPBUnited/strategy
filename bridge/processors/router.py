@@ -156,7 +156,7 @@ class Router:
         # angle_cos = aux.scal_mult((closest_robot.get_pos() - self_pos).unity(),
         # (target_point.pos - self_pos).unity())
         if closest_robot is not None and closest_dist != 0:
-            side = aux.vect_mult(closest_robot.get_pos() - self_pos, target_point.pos - self_pos)
+            side = aux.vec_mult(closest_robot.get_pos() - self_pos, target_point.pos - self_pos)
             # offset_angle_val = 200*math.pi/6 * closest_dist**(-2)
             offset_angle_val = -2 * math.atan((sep_dist - closest_separation) / (2 * (closest_dist)))
             offset_angle = offset_angle_val if side < 0 else -offset_angle_val
@@ -170,7 +170,7 @@ class Router:
 
     def calc_kick_wp(self, idx: int) -> wp.Waypoint:
         """
-        Рассчитать точку для выравниявания по мячу
+        Рассчитать точку для выравнивания по мячу
         """
         target_point = self.routes[idx].get_dest_wp()
         target_pos = target_point.pos

@@ -139,7 +139,7 @@ def dist2line(p1: Point, p2: Point, p: Point) -> float:
     """
     Рассчитать расстояние от точки p до прямой, образованной точками p1 и p2
     """
-    return abs(vect_mult((p2 - p1).unity(), p - p1))
+    return abs(vec_mult((p2 - p1).unity(), p - p1))
 
 
 def line_poly_intersect(p1: Point, p2: Point, points: list[Point]) -> bool:
@@ -147,9 +147,9 @@ def line_poly_intersect(p1: Point, p2: Point, points: list[Point]) -> bool:
     Определить, пересекает ли линия p1-p2 полигон points
     """
     vec = p2 - p1
-    old_sign = sign(vect_mult(vec, points[0] - p1))
+    old_sign = sign(vec_mult(vec, points[0] - p1))
     for p in points:
-        if old_sign != sign(vect_mult(vec, p - p1)):
+        if old_sign != sign(vec_mult(vec, p - p1)):
             return True
     return False
 
@@ -171,9 +171,9 @@ def is_point_inside_poly(p: Point, points: list[Point]) -> bool:
     """
     Определить, лежит ли точка внутри полигона
     """
-    old_sign = sign(vect_mult(p - points[-1], points[0] - points[-1]))
+    old_sign = sign(vec_mult(p - points[-1], points[0] - points[-1]))
     for i in range(len(points) - 1):
-        if old_sign != sign(vect_mult(p - points[i], points[i + 1] - points[i])):
+        if old_sign != sign(vec_mult(p - points[i], points[i + 1] - points[i])):
             return False
     return True
 
@@ -194,7 +194,7 @@ def get_line_intersection(
     is_inf задает ограничения на точку пересечения. Имеет вид 'AB', параметр A
     задает параметры первой прямой, B - второй.
 
-    S(egment) - задан отрезок
+    S(segment) - задан отрезок
     R(ay) - задан луч (начало - _start, направление - _end), точка пересечения валидна только
     если находится на луче _start-_end
     L(ine) - задана прямая
@@ -237,7 +237,7 @@ def get_line_intersection(
     return None
 
 
-def vect_mult(v: Point, u: Point) -> float:
+def vec_mult(v: Point, u: Point) -> float:
     """
     Посчитать модуль векторного произведения векторов v и u
     """

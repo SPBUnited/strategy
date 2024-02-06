@@ -54,7 +54,7 @@ def quickhullupper(p1: aux.Point, p2: aux.Point, points: list[aux.Point]) -> lis
     uppoints = []
 
     for p in points:
-        if aux.vect_mult(vec, p - p1) > 0:
+        if aux.vec_mult(vec, p - p1) > 0:
             uppoints.append(p)
 
     max_dist = 0.0

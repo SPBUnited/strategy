@@ -184,7 +184,7 @@ class Robot(entity.Entity):
         #       const.KICK_ALIGN_DIST*const.KICK_ALIGN_DIST_MULT, \
         #       round(abs(aux.wind_down_angle(self._angle - target.angle)), 2),
         #       const.KICK_ALIGN_ANGLE, \
-        #     # round(abs(aux.vect_mult(
+        #     # round(abs(aux.vec_mult(
         #           aux.rotate(aux.i, target.angle), target.pos - self._pos)), 2),
         #           const.KICK_ALIGN_OFFSET)
         #       round(aux.dist(aux.closest_point_on_line(

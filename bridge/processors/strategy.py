@@ -1,7 +1,7 @@
 """Верхнеуровневый код стратегии"""
 # pylint: disable=redefined-outer-name
 
-# @package Stratery
+# @package Strategy
 # Расчет требуемых положений роботов исходя из ситуации на поле
 
 import math
@@ -23,7 +23,7 @@ class States(Enum):
     """Класс с глобальными состояниями игры"""
 
     DEBUG = 0
-    DEFENCE = 1
+    DEFENSE = 1
     ATTACK = 2
 
 
@@ -39,7 +39,7 @@ class GameStates(Enum):
     PREPARE_PENALTY = 7
     PENALTY = 8
     FREE_KICK = 9
-    BALL_PLACMENT = 11
+    BALL_PLACEMENT = 11
 
 
 class ActiveTeam(Enum):
@@ -61,7 +61,7 @@ class Strategy:
         self.timer = 0.0
         self.is_ball_moved = 0
 
-        # DEFENCE
+        # DEFENSE
         self.old_def_helper = -1
         self.old_def = -1
         self.steal_flag = 0
@@ -126,10 +126,10 @@ class Strategy:
                 self.prepare_penalty(field, waypoints)
             elif self.game_status == GameStates.PENALTY:
                 self.penalty(field, waypoints)
-            elif self.game_status == GameStates.BALL_PLACMENT:
+            elif self.game_status == GameStates.BALL_PLACEMENT:
                 self.keep_distance(field, waypoints)
             elif self.game_status == GameStates.PREPARE_KICKOFF:
-                self.prepare_kickof(field, waypoints)
+                self.prepare_kickoff(field, waypoints)
             elif self.game_status == GameStates.KICKOFF:
                 self.kickoff(field, waypoints)
             elif self.game_status == GameStates.FREE_KICK:
@@ -150,8 +150,8 @@ class Strategy:
                 if aux.dist(rivals_robot_with_ball.get_pos(), field.ball.get_pos()) < aux.dist(
                     allies_robot_with_ball.get_pos(), field.ball.get_pos()
                 ):  # TODO: улучшить определение защиты/атаки
-                    self.state = States.DEFENCE
-                    print("defence")
+                    self.state = States.DEFENSE
+                    print("defense")
                 else:
                     self.state = States.ATTACK
                     self.reset_all_attack_var()
@@ -165,9 +165,9 @@ class Strategy:
                 if abs(field.ball.get_pos().x - field.enemy_goal.center.x) < abs(
                     field.ball.get_pos().x - field.ally_goal.center.x
                 ):
-                    self.state = States.DEFENCE
+                    self.state = States.DEFENSE
                 else:
-                    if self.state == States.DEFENCE:
+                    if self.state == States.DEFENSE:
                         self.reset_all_attack_var()
                     self.state = States.ATTACK
         else:
@@ -178,15 +178,15 @@ class Strategy:
 
         if self.state == States.DEBUG:
             self.debug(field, waypoints)
-        elif self.state == States.DEFENCE:
-            wall = self.defence(field, waypoints)
+        elif self.state == States.DEFENSE:
+            wall = self.defense(field, waypoints)
         elif self.state == States.ATTACK:
             self.decide_popusk_position(field)
             self.pre_attack(field)
 
             self.attack(field, waypoints)
 
-        if self.state != States.DEFENCE:
+        if self.state != States.DEFENSE:
             self.old_def_helper = -1
             self.old_def = -1
             self.steal_flag = 0
@@ -283,14 +283,14 @@ class Strategy:
 
         walline = aux.point_on_line(field.ally_goal.center, field.ball.get_pos(), const.GOAL_WALLLINE_OFFSET)
         walldir = aux.rotate((field.ally_goal.center - field.ball.get_pos()).unity(), math.pi / 2)
-        dirsign = -aux.sign(aux.vect_mult(field.ally_goal.center, field.ball.get_pos()))
+        dirsign = -aux.sign(aux.vec_mult(field.ally_goal.center, field.ball.get_pos()))
 
         wall = []
         for i in range(len(gk_wall_idx_list) - 1):
             wall.append(walline - walldir * (i + 1) * dirsign * (1 + (i % 2) * -2) * const.GOAL_WALL_ROBOT_SEPARATION)
             waypoints[gk_wall_idx_list[i + 1]] = wp.Waypoint(wall[i], walldir.arg(), wp.WType.S_ENDPOINT)
 
-    def defence(
+    def defense(
         self, field: field.Field, waypoints: list[wp.Waypoint], ENDPOINT_TYPE: wp.WType = wp.WType.S_ENDPOINT
     ) -> list[int]:
         """Защита"""
@@ -618,8 +618,8 @@ class Strategy:
 
         waypoints[const.PENALTY_KICKER] = waypoint
 
-    def prepare_kickof(self, field: field.Field, waypoints: list[wp.Waypoint]) -> None:
-        """Настройка перед состоянием kickof по команде судей"""
+    def prepare_kickoff(self, field: field.Field, waypoints: list[wp.Waypoint]) -> None:
+        """Настройка перед состоянием kickoff по команде судей"""
         if self.we_active:
             self.we_kick = 1
         else:
@@ -627,7 +627,7 @@ class Strategy:
         self.put_kickoff_waypoints(field, waypoints)
 
     def put_kickoff_waypoints(self, field: field.Field, waypoints: list[wp.Waypoint]) -> None:
-        """Подготовка перед состоянием kickof"""
+        """Подготовка перед состоянием kickoff"""
         rC = 0
         if self.we_kick:
             for i in range(const.TEAM_ROBOTS_MAX_COUNT):
@@ -709,7 +709,7 @@ class Strategy:
         """Свободный удар (после любого нарушения/остановки игры) по команде судей"""
         wall = []
         if not self.we_active:
-            wall = self.defence(field, waypoints, wp.WType.S_KEEP_BALL_DISTANCE)
+            wall = self.defense(field, waypoints, wp.WType.S_KEEP_BALL_DISTANCE)
             self.keep_distance(field, waypoints)
         else:
             self.state = States.ATTACK
