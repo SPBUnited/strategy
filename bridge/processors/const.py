@@ -1,10 +1,12 @@
-import bridge.processors.auxiliary as aux
+"""
+Определение необходимых констант
+"""
 
 ##################################################
 # GAME SETTING CONSTS
-GK = 10
-PENALTY_KICKER = 9
-ENEMY_GK = 8
+GK = 0
+PENALTY_KICKER = 1
+ENEMY_GK = 5
 IS_SIMULATOR_USED = True
 CAMERAS_COUNT: int = 4
 MAX_BALLS_IN_CAMERA: int = 64
@@ -22,8 +24,7 @@ GEOMETRY_PACKET_SIZE: int = 2
 
 DEBUG_ID = 14
 DEBUG_CTRL = 14
-CONTROL_MAPPING = \
-{
+CONTROL_MAPPING: dict[int, int] = {
     # DEBUG_ID: DEBUG_CTRL
     0: 0,
     1: 1,
@@ -40,21 +41,21 @@ CONTROL_MAPPING = \
     12: 12,
     13: 13,
     14: 14,
-    None: None
+    15: 15,
 }
 
 for i in range(TEAM_ROBOTS_MAX_COUNT):
     try:
         CONTROL_MAPPING[i]
-    except:
-        CONTROL_MAPPING[i] = None
+    except KeyError:
+        CONTROL_MAPPING[i] = -1
 
 TOPIC_SINK = "control-sink"
 ##################################################
 
 ##################################################
 # CONTROL CONSTS
-Ts = 0.05 # s
+Ts = 0.05  # s
 
 # ROBOT SETTING CONSTS
 # MAX_SPEED = 100
@@ -79,9 +80,9 @@ GK_PEN_KICKOUT_SPEED = 500
 
 BALL_R = 0.05
 ROBOT_R = 0.2
-GRAVEYARD_POS = aux.Point(-10000, 0)
+GRAVEYARD_POS_X = -10000
 
-POLARITY = -1
+POLARITY = -1  # 1 если ворота синих на +x; -1 если ворота синих на -x
 GOAL_DX = POLARITY * 4500
 GOAL_DY = 1000
 GOAL_PEN = POLARITY * 1000

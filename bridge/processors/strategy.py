@@ -1,25 +1,34 @@
-## @package Stratery
-# 
+"""Верхнеуровневый код стратегии"""
+# pylint: disable=redefined-outer-name
+
+# @package Strategy
 # Расчет требуемых положений роботов исходя из ситуации на поле
 
-import bridge.processors.field as field
-import bridge.processors.waypoint as wp
-import bridge.processors.const as const
-import bridge.processors.auxiliary as aux
-import bridge.processors.signal as signal
-import bridge.processors.robot as robot
 import math
+
+# !v DEBUG ONLY
+import time
+import typing
 from enum import Enum
 
-#!v DEBUG ONLY
-import time
+import bridge.processors.auxiliary as aux
+import bridge.processors.const as const
+import bridge.processors.field as field  # pylint: disable = unused-import
+import bridge.processors.robot as robot
+import bridge.processors.signal as signal
+import bridge.processors.waypoint as wp
 
 class States(Enum):
+    """Класс с глобальными состояниями игры"""
+
     DEBUG = 0
-    DEFENCE = 1
+    DEFENSE = 1
     ATTACK = 2
 
+
 class GameStates(Enum):
+    """Класс с командами от судей"""
+
     HALT = 0
     STOP = 1
     RUN = 2
@@ -29,14 +38,19 @@ class GameStates(Enum):
     PREPARE_PENALTY = 7
     PENALTY = 8
     FREE_KICK = 9
-    BALL_PLACMENT = 11
+    BALL_PLACEMENT = 11
+
 
 class ActiveTeam(Enum):
+    """Класс с командами"""
+
     ALL = 0
     YELLOW = 1
     BLUE = 2
 
+
 class Strategy:
+
     def __init__(self, dbg_game_status = GameStates.RUN, dbg_state = States.DEBUG) -> None:
         self.game_status = GameStates.RUN
         self.active_team = 0
@@ -47,19 +61,43 @@ class Strategy:
         self.goalUp = 500
         self.goalDown = -500
 
-    def process(self, field: field.Field):
+    def process(self, field: field.Field) -> list[wp.Waypoint]:
         """
         Рассчитать конечные точки для каждого робота
         """
         waypoints = [None]*const.TEAM_ROBOTS_MAX_COUNT
         for i in range(const.TEAM_ROBOTS_MAX_COUNT):
-            waypoint = wp.Waypoint(field.allies[i].getPos(), field.allies[i].getAngle(), wp.WType.S_ENDPOINT)
-            waypoints[i] = waypoint
+            waypoints.append(wp.Waypoint(field.allies[i].get_pos(), field.allies[i].get_angle(), wp.WType.S_ENDPOINT))
 
-        self.run(field, waypoints)
-        #print(waypoints)
+        if self.game_status != GameStates.PENALTY:
+            self.is_started = 0
 
+        if self.game_status == GameStates.RUN:
+            self.run(field, waypoints)
+        else:
+            if self.game_status == GameStates.TIMEOUT:
+                self.timeout(field, waypoints)
+            elif self.game_status == GameStates.HALT:
+                pass
+                # self.halt(field, waypoints)
+            elif self.game_status == GameStates.PREPARE_PENALTY:
+                self.prepare_penalty(field, waypoints)
+            elif self.game_status == GameStates.PENALTY:
+                self.penalty(field, waypoints)
+            elif self.game_status == GameStates.BALL_PLACEMENT:
+                self.keep_distance(field, waypoints)
+            elif self.game_status == GameStates.PREPARE_KICKOFF:
+                self.prepare_kickoff(field, waypoints)
+            elif self.game_status == GameStates.KICKOFF:
+                self.kickoff(field, waypoints)
+            elif self.game_status == GameStates.FREE_KICK:
+                self.free_kick(field, waypoints)
+            elif self.game_status == GameStates.STOP:
+                self.keep_distance(field, waypoints)
+
+        # print(self.game_status, self.state)
         return waypoints
+
 
     def distance(self, p1, p2):
         return math.sqrt((p1.x - p2.x)**2 + (p1.y - p2.y)**2)
@@ -199,4 +237,3 @@ class Strategy:
             self.xR = 4500
             self.yR = 0
         #pass
-
