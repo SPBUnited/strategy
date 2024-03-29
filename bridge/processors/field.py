@@ -32,6 +32,9 @@ class Goal:
         self.forwup = self.forw + self.vup
         self.forwdown = self.forw + self.vdown
 
+        self.goal_up = self.center + aux.Point(0, goal_dy / 2)
+        self.goal_down = self.center - aux.Point(0, goal_dy / 2)
+
         # Оболочка штрафной зоны
         self.hull = [
             self.up + self.eye_up * const.GOAL_BOUND_OFFSET,
@@ -39,7 +42,7 @@ class Goal:
             self.forw + (self.eye_forw) * const.GOAL_BOUND_OFFSET,
             self.forwdown + (self.eye_forw - self.eye_up) * const.GOAL_BOUND_OFFSET,
             self.down - self.eye_up * const.GOAL_BOUND_OFFSET,
-            aux.GRAVEYARD_POS * self.eye_forw.x,
+            aux.Point(const.GRAVEYARD_POS_X, 0) * self.eye_forw.x,
         ]
 
         # Попуск

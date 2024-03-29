@@ -100,11 +100,14 @@ class SSLController(BaseProcessor):
 
             detection = ssl_package_content.detection
             camera_id = detection.camera_id
+            tmp_ball = None
             for ball_ind, ball in enumerate(detection.balls):
                 balls[ball_ind + (camera_id - 1) * const.MAX_BALLS_IN_CAMERA] = camera_id
                 balls[ball_ind + const.MAX_BALLS_IN_FIELD + (camera_id - 1) * const.MAX_BALLS_IN_CAMERA] = ball.x
                 balls[ball_ind + 2 * const.MAX_BALLS_IN_FIELD + (camera_id - 1) * const.MAX_BALLS_IN_CAMERA] = ball.y
-                self.field.update_ball(aux.Point(ball.x, ball.y), time.time())
+                tmp_ball = ball
+            if tmp_ball is not None:
+                self.field.update_ball(aux.Point(tmp_ball.x, tmp_ball.y), time.time())
 
             for i in range(const.TEAM_ROBOTS_MAX_COUNT):
                 if time.time() - self.field.b_team[i].last_update() > 1:
@@ -115,7 +118,7 @@ class SSLController(BaseProcessor):
             # self.strategy.change_game_state(strategy.GameStates.RUN, 0)
 
             # TODO Вынести в константы
-            game_controller_mapping = {
+            '''game_controller_mapping = {
                 1: strategy.GameStates.STOP,
                 2: strategy.GameStates.RUN,
                 3: strategy.GameStates.TIMEOUT,
@@ -139,11 +142,11 @@ class SSLController(BaseProcessor):
                     print("End game")
                 elif cur_cmd.state == 10:
                     print("Uknown command 10")
-
+            '''
             # if self.count_halt_cmd > 10:
             #     self.strategy.change_game_state(strategy.GameStates.HALT, cur_cmd.commandForTeam)
 
-            # self.strategy.change_game_state(strategy.GameStates.PREPARE_KICKOFF, 0)
+            self.strategy.change_game_state(strategy.GameStates.RUN, 0)
 
             # TODO: Barrier states
             for robot_det in detection.robots_blue:

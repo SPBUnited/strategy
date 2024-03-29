@@ -87,7 +87,7 @@ class Point:
         return self * (1 / a)
 
     def __pow__(self, a: float) -> "Point":
-        return Point(self.x**a, self.y**a)
+        return Point(self.x ** a, self.y ** a)
 
     def __eq__(self, p: typing.Any) -> bool:
         if isinstance(p, Point):
@@ -121,7 +121,7 @@ class Point:
 
 RIGHT = Point(1, 0)
 UP = Point(0, 1)
-GRAVEYARD_POS = Point(const.GRAVEYARD_POS_X, 0)
+GRAVEYARD_POS = Point(0, const.GRAVEYARD_POS_X)
 
 
 class BobLine:
@@ -194,7 +194,7 @@ def get_line_intersection(
     is_inf задает ограничения на точку пересечения. Имеет вид 'AB', параметр A
     задает параметры первой прямой, B - второй.
 
-    S(egment) - задан отрезок
+    S(segment) - задан отрезок
     R(ay) - задан луч (начало - _start, направление - _end), точка пересечения валидна только
     если находится на луче _start-_end
     L(ine) - задана прямая
@@ -285,10 +285,12 @@ def wind_down_angle(angle: float) -> float:
     return angle
 
 
-def closest_point_on_line(point1: Point, point2: Point, point: Point) -> Point:
+def closest_point_on_line(point1: Point, point2: Point, point: Point) -> typing.Optional[Point]:
     """
     Получить ближайшую к точке point току на линии point1-point2
     """
+    if point1 is None or point2 is None:
+        return None
     line_vector = (point2.x - point1.x, point2.y - point1.y)
     line_length = dist(point1, point2)
 
@@ -383,3 +385,40 @@ def in_place(point: Point, end: Point, epsilon: float) -> bool:
     Проверить, находится ли точка st в радиусе epsilon около end
     """
     return (point - end).mag() < epsilon
+
+
+def circles_inter(p0: Point, p1: Point, r0: float, r1: float) -> tuple:
+    """
+    Get intersects of 2 circles:
+        p0, r0 - координаты центра и радиус первой окружности
+        p1, r1 - координаты центра и радиус второй окружности
+    """
+    d = dist(p0, p1)
+    a = (r0 ** 2 - r1 ** 2 + d ** 2) / (2 * d)
+    h = math.sqrt(r0 ** 2 - a ** 2)
+    x2 = p0.x + a * (p1.x - p0.x) / d
+    y2 = p0.y + a * (p1.y - p0.y) / d
+    x3 = x2 + h * (p1.y - p0.y) / d
+    y3 = y2 - h * (p1.x - p0.x) / d
+    x4 = x2 - h * (p1.y - p0.y) / d
+    y4 = y2 + h * (p1.x - p0.x) / d
+    return Point(x3, y3), Point(x4, y4)
+
+
+def get_tangent_points(point0: Point, point1: Point, r: float):
+    """
+    Get tangents
+    """
+    d = dist(point0, point1)
+    if d < r:
+        return None
+    elif d == r:
+        return point1
+    else:
+        midx, midy = (point0.x + point1.x) / 2, (point0.y + point1.y) / 2
+        p2, p3 = circles_inter(point0, Point(midx, midy), r, d / 2)
+        return p2, p3
+
+def get_angle_between_points(a: Point, b: Point, c: Point) -> float:
+    ang = math.degrees(math.atan2(c.y - b.y, c.x - b.x) - math.atan2(a.y - b.y, a.x - b.x))
+    return ang + 360 if ang < 0 else ang
