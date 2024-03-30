@@ -42,7 +42,7 @@ class Goal:
             self.forw + (self.eye_forw) * const.GOAL_BOUND_OFFSET,
             self.forwdown + (self.eye_forw - self.eye_up) * const.GOAL_BOUND_OFFSET,
             self.down - self.eye_up * const.GOAL_BOUND_OFFSET,
-            aux.Point(const.GRAVEYARD_POS_X, 0) * self.eye_forw.x,
+            aux.FIELD_INF * self.eye_forw.x,
         ]
 
         # Попуск
@@ -88,6 +88,8 @@ class Field:
             -const.GOAL_DX * self.polarity, -const.GOAL_DY * self.polarity, -const.GOAL_PEN * self.polarity
         )
 
+        self.enemy_goal = self.ally_goal
+
         if self.ally_color == "b":
             self.allies = [*self.b_team]
             self.enemies = [*self.y_team]
@@ -110,7 +112,7 @@ class Field:
             aux.wind_down_angle((self.ball.get_pos() - robo.get_pos()).arg() - robo.get_angle())
         ) < const.BALL_GRABBED_ANGLE
 
-    def upbate_blu_robot(self, idx: int, pos: aux.Point, angle: float, t: float) -> None:
+    def update_blu_robot(self, idx: int, pos: aux.Point, angle: float, t: float) -> None:
         """
         Обновить положение робота синей команды
         !!! Вызывать один раз за итерацию с постоянной частотой !!!
@@ -156,10 +158,12 @@ class Field:
         #       self.ball.get_pos().x - self.ally_goal.forw.x,
         #       self.ally_goal.up.y - self.ball.get_pos().y,
         #       self.ball.get_pos().y - self.ally_goal.down.y)
-        return aux.sign(self.ally_goal.center.x - self.ball.get_pos().x) == aux.sign(
-            self.ball.get_pos().x - self.ally_goal.forw.x
-        ) and aux.sign(self.ally_goal.up.y - self.ball.get_pos().y) == aux.sign(
-            self.ball.get_pos().y - self.ally_goal.down.y
+        return (
+            aux.sign(self.ally_goal.center.x - self.ball.get_pos().x)
+            == aux.sign(self.ball.get_pos().x - self.ally_goal.forw.x)
+            and aux.sign(self.ally_goal.up.y - self.ball.get_pos().y)
+            == aux.sign(self.ball.get_pos().y - self.ally_goal.down.y)
+            and not self.is_ball_moves_to_goal()
         )
 
     def is_ball_moves_to_goal(self) -> bool:
@@ -167,5 +171,6 @@ class Field:
         Определить, движется ли мяч в сторону ворот
         """
         return (
-            self.ball.get_vel().mag() > const.GK_INTERCEPT_SPEED
-        )  # and self.ball._vel.x / self.ally_goal.center.x > 0 нужно протестить
+            aux.scal_mult(self.ball.get_vel(), (self.ally_goal.center - self.ball.get_pos()).unity())
+            > const.GK_INTERCEPT_SPEED
+        )

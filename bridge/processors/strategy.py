@@ -146,10 +146,15 @@ class Strategy:
                 self.keep_distance(field, waypoints)
 
         # print(self.game_status, self.state)
+        self.image.update_window()
         return waypoints
 
     def run(self, field: field.Field, waypoints: list[wp.Waypoint]) -> None:
         """Определение глобального состояния игры"""
+        for i in range(const.TEAM_ROBOTS_MAX_COUNT):
+            waypoints[i] = wp.Waypoint(field.allies[i].get_pos(), field.allies[i].get_angle(), wp.WType.S_STOP)
+
+
         if field.ball.get_vel().mag() < 200:
             if self.is_ball_moved or time.time() - self.timer > 0.1:
                 rivals_robot_with_ball = robot.find_nearest_robot(field.ball.get_pos(), field.enemies, [const.ENEMY_GK])
@@ -180,8 +185,8 @@ class Strategy:
             self.is_ball_moved = 1
         wall = []
 
-        #self.state = States.ATTACK
-        #self.state = States.DEFENCE
+        self.state = States.ATTACK
+        # self.state = States.DEFENCE
 
         if self.state == States.DEBUG:
             self.debug(field, waypoints)
@@ -190,7 +195,6 @@ class Strategy:
         elif self.state == States.ATTACK:
             self.decide_popusk_position(field)
             self.pre_attack(field)
-
             self.attack(field, waypoints)
 
         if self.state != States.DEFENCE:
@@ -199,8 +203,16 @@ class Strategy:
             self.steal_flag = 0
 
         robot_with_ball = robot.find_nearest_robot(field.ball.get_pos(), field.enemies)
-        self.goalk(field, waypoints, [const.GK] + wall, robot_with_ball)
 
+        wall = [13]
+        self.goalk(field, waypoints, [const.GK] + wall, field.allies[13])
+
+        pnt = self.choose_kick_point(field, 13)
+        if pnt is None:
+            pnt = field.enemy_goal.center
+        #waypoints[13] = wp.Waypoint(field.ball.get_pos(), aux.angle_to_point(field.ball.get_pos(), pnt), wp.WType.S_BALL_KICK)
+
+        # waypoints[9]  = wp.Waypoint(field.ally_goal.center, 0, wp.WType.S_ENDPOINT)
 
     square = signal.Signal(8, "SQUARE", ampoffset=(300, 0))
     square_ang = signal.Signal(8, "SQUARE", lohi=(0, 3.14))
@@ -209,7 +221,7 @@ class Strategy:
         """Отладка"""
 
         robot_with_ball = robot.find_nearest_robot(field.ball.get_pos(), field.allies)
-        self.gk_go(field, waypoints, [const.GK], robot_with_ball)
+        self.goalk(field, waypoints, [const.GK], robot_with_ball)
 
         waypoints[const.DEBUG_ID].pos = field.ball.get_pos()
         waypoints[const.DEBUG_ID].angle = (field.ally_goal.center - field.ball.get_pos() + aux.UP * self.square.get()).arg()
@@ -373,7 +385,7 @@ class Strategy:
             b = ball_pos
             if c.y > a.y: continue #Shadow intersection
             ang = aux.get_angle_between_points(a, b, c)
-            print(ang, c.y, a.y)
+            # print(ang, c.y, a.y)
             if (ang > max_):
                 max_ = ang
                 maxId = i
@@ -717,7 +729,7 @@ class Strategy:
             self.attack(field, waypoints)
         robot_with_ball = robot.find_nearest_robot(field.ball.get_pos(), field.enemies)
         self.gk_go(field, waypoints, [const.GK] + wall, robot_with_ball)
-    
+
     def goalk(
         self, field: field.Field, waypoints: list[wp.Waypoint], gk_wall_idx_list: list[int], robot_with_ball: robot.Robot
     ) -> None:
@@ -757,8 +769,10 @@ class Strategy:
             self.ball_start_point = None
 
         if gk_pos is None:
-            gk_pos = aux.point_on_line(field.ally_goal.center, field.ball.get_pos(), const.GK_FORW)
-
+            gk_pos = aux.point_on_line(field.ally_goal.center - field.ally_goal.eye_forw * 1000, field.ball.get_pos(), const.GK_FORW + 1000)
+            gk_pos.x = min(field.ally_goal.center.x + field.ally_goal.eye_forw.x * 300, gk_pos.x, key=lambda x: abs(x))
+            if abs(gk_pos.y) > abs(field.ally_goal.goal_up.y):
+                gk_pos.y = abs(field.ally_goal.goal_up.y) * abs(gk_pos.y) / gk_pos.y
             self.image.draw_dot(gk_pos, 10, [255, 255, 255])
         else:
             self.image.draw_dot(gk_pos, 10, [0, 0, 0])
@@ -773,12 +787,12 @@ class Strategy:
                 field.ball.get_pos(), field.ally_goal.eye_forw.arg(), wp.WType.S_BALL_KICK_UP
             )
 
-        # wallline = [field.ally_goal.forw + field.ally_goal.eye_forw * const.GOAL_WALLLINE_OFFSET]
-        # wallline.append(wallline[0] + field.ally_goal.eye_up)
+        wallline = [field.ally_goal.forw + field.ally_goal.eye_forw * const.GOAL_WALLLINE_OFFSET]
+        wallline.append(wallline[0] + field.ally_goal.eye_up)
 
         walline = aux.point_on_line(field.ally_goal.center, field.ball.get_pos(), const.GOAL_WALLLINE_OFFSET)
         walldir = aux.rotate((field.ally_goal.center - field.ball.get_pos()).unity(), math.pi / 2)
-        dirsign = -aux.sign(aux.vect_mult(field.ally_goal.center, field.ball.get_pos()))
+        dirsign = -aux.sign(aux.vec_mult(field.ally_goal.center, field.ball.get_pos()))
 
         wall = []
         for i in range(len(gk_wall_idx_list) - 1):

@@ -23,7 +23,7 @@ class Image:
     """
 
     def __init__(self) -> None:
-        self.disable = True
+        self.disable = False
 
         if self.disable:
             return
@@ -89,7 +89,7 @@ class Image:
             self.screen, robot_color, [r.x * self.scale + self.middle_x, -r.y * self.scale + self.middle_y], end_point, 2
         )
 
-    def draw_dot(self, pos: aux.Point, size: float = 3, color: tuple[int, int, int] = (255, 0, 0)) -> None:
+    def draw_dot(self, pos: aux.Point, size: float = 3, color: tuple[int, int, int] = [255, 0, 0]) -> None:
         """
         draw single point
         """

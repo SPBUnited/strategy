@@ -83,12 +83,13 @@ class CommandSink(BaseProcessor):
             rules.append(self.b_control_team[i].kick_forward_)
             rules.append(self.b_control_team[i].kick_up_)
             rules.append(self.b_control_team[i].auto_kick_)
-            rules.append(100)
+            rules.append(self.b_control_team[i].kicker_voltage_)
             rules.append(self.b_control_team[i].dribbler_enable_)
             rules.append(self.b_control_team[i].dribbler_speed_)
             rules.append(self.b_control_team[i].kicker_charge_enable_)
             rules.append(self.b_control_team[i].beep)
             rules.append(0)
+
         for i in range(const.TEAM_ROBOTS_MAX_COUNT):
             if abs(self.y_control_team[i].speed_x) < 1.5:
                 self.y_control_team[i].speed_x = 0
@@ -103,7 +104,7 @@ class CommandSink(BaseProcessor):
             rules.append(self.y_control_team[i].kick_forward_)
             rules.append(self.y_control_team[i].kick_up_)
             rules.append(self.y_control_team[i].auto_kick_)
-            rules.append(100)
+            rules.append(self.y_control_team[i].kicker_voltage_)
             rules.append(self.y_control_team[i].dribbler_enable_)
             rules.append(self.y_control_team[i].dribbler_speed_)
             rules.append(self.y_control_team[i].kicker_charge_enable_)

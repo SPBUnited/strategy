@@ -51,7 +51,7 @@ class Robot(entity.Entity):
         # v! REAL
         else:
             self.k_xx = -250 / 20
-            self.k_yy = 250 / 20
+            self.k_yy = 0.5*250 / 20
             self.k_ww = 6 / 20
             self.k_wy = 0
             self.t_wy = 0.15
@@ -70,11 +70,11 @@ class Robot(entity.Entity):
 
         # !v REAL
         # if self.r_id != const.GK:
-        gains_full = [2, 0.2, 0, const.MAX_SPEED] # 4, 0.2
-        gains_soft = [8, 0.5, 0, const.SOFT_MAX_SPEED]
+        gains_full = [3, 0.32, 0, const.MAX_SPEED]
+        gains_soft = [10, 0.32, 10, const.SOFT_MAX_SPEED]
         # gains_soft = gains_full
         a_gains_full = [2, 0.1, 0.1, const.MAX_SPEED_R] # 4, 0.1, 0.1
-        a_gains_soft = [4, 0.07, 4, const.SOFT_MAX_SPEED_R]
+        a_gains_soft = [4, 0.07, 8, const.SOFT_MAX_SPEED_R]
         # a_gains_soft = a_gains_full
         # else:
         #     gains_full = [6, 0.8, 0, const.MAX_SPEED]
@@ -88,7 +88,14 @@ class Robot(entity.Entity):
         # a_gains_full = [2, 0.1, 0.1, const.MAX_SPEED_R]
         # a_gains_soft = [1, 0.07, 0, const.SOFT_MAX_SPEED_R]
 
-        self.pos_reg = tau.PISD(
+        self.pos_reg_x = tau.PISD(
+            const.Ts,
+            [gains_full[0], gains_soft[0]],
+            [gains_full[1], gains_soft[1]],
+            [gains_full[2], gains_soft[2]],
+            [gains_full[3], gains_soft[3]],
+        )
+        self.pos_reg_y = tau.PISD(
             const.Ts,
             [gains_full[0], gains_soft[0]],
             [gains_full[1], gains_soft[1]],
@@ -209,6 +216,9 @@ class Robot(entity.Entity):
         )
         is_aligned = is_dist and is_angle and is_offset
 
+        # if self.r_id == 9:
+        #     print("is_dist: ", is_dist, ",\tis_angle: ", is_angle, ",\tis_offset: ", is_offset)
+
         if is_aligned:
             self.is_kick_commited = True
         else:
@@ -224,6 +234,9 @@ class Robot(entity.Entity):
         """
         self.speed_x = self.xx_flp.process(1 / self.k_xx * aux.rotate(vel, -self._angle).x)
         self.speed_y = self.yy_flp.process(1 / self.k_yy * aux.rotate(vel, -self._angle).y)
+
+        # self.speed_x = self.xx_flp.process(1 / self.k_xx * vel.x)
+        # self.speed_y = self.yy_flp.process(1 / self.k_yy * vel.y)
 
         # RcompY = self.Kwy * self.RcompFfy.process(self.RcompFdy.process(self.speed_y))
         # RcompY = self.Kwy * self.RcompFdy.process(abs(float(self.speed_y)**2))

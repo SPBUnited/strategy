@@ -91,7 +91,7 @@ class Router:
                         break
                     convex_hull = qh.shortesthull(self_pos, self_pos + self.routes[idx].get_next_vec(), goal.hull)
                     for j in range(len(convex_hull) - 2, 0, -1):
-                        self.routes[idx].insert_wp(wp.Waypoint(convex_hull[j], 0, wp.WType.R_PASSTHROUGH))
+                        self.routes[idx].insert_wp(wp.Waypoint(convex_hull[j], 4, wp.WType.R_PASSTHROUGH))
 
             pth_wp = self.calc_vector_field(idx, fld)
             if pth_wp is not None:
@@ -133,7 +133,7 @@ class Router:
 
         # Расчет теней роботов для векторного поля
         for r in fld.all_bots:
-            if r == self or r.is_used() == 0:
+            if r.r_id == idx or r.is_used() == 0:
                 continue
             robot_separation = aux.dist(aux.closest_point_on_line(self_pos, target_point.pos, r.get_pos()), r.get_pos())
             robot_dist = aux.dist(self_pos, r.get_pos())
@@ -156,7 +156,7 @@ class Router:
         # angle_cos = aux.scal_mult((closest_robot.get_pos() - self_pos).unity(),
         # (target_point.pos - self_pos).unity())
         if closest_robot is not None and closest_dist != 0:
-            side = aux.vect_mult(closest_robot.get_pos() - self_pos, target_point.pos - self_pos)
+            side = aux.vec_mult(closest_robot.get_pos() - self_pos, target_point.pos - self_pos)
             # offset_angle_val = 200*math.pi/6 * closest_dist**(-2)
             offset_angle_val = -2 * math.atan((sep_dist - closest_separation) / (2 * (closest_dist)))
             offset_angle = offset_angle_val if side < 0 else -offset_angle_val
@@ -170,7 +170,7 @@ class Router:
 
     def calc_kick_wp(self, idx: int) -> wp.Waypoint:
         """
-        Рассчитать точку для выравниявания по мячу
+        Рассчитать точку для выравнивания по мячу
         """
         target_point = self.routes[idx].get_dest_wp()
         target_pos = target_point.pos
@@ -179,6 +179,7 @@ class Router:
         align_pos = target_pos - aux.rotate(aux.RIGHT, target_angle) * const.KICK_ALIGN_DIST
         align_angle = target_angle
         align_type = wp.WType.R_BALL_ALIGN
+        # align_type = wp.WType.S_ENDPOINT
         align_wp = wp.Waypoint(align_pos, align_angle, align_type)
         return align_wp
 

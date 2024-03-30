@@ -154,7 +154,7 @@ class SSLController(BaseProcessor):
                     self.field.b_team[robot_det.robot_id].used(0)
                 else:
                     self.field.b_team[robot_det.robot_id].used(1)
-                self.field.upbate_blu_robot(
+                self.field.update_blu_robot(
                     robot_det.robot_id, aux.Point(robot_det.x, robot_det.y), robot_det.orientation, time.time()
                 )
 
