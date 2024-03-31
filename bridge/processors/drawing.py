@@ -23,7 +23,7 @@ class Image:
     """
 
     def __init__(self) -> None:
-        self.disable = False
+        self.disable = True
 
         if self.disable:
             return
@@ -33,7 +33,7 @@ class Image:
         self.screen = pygame.display.set_mode((width, heigh), pygame.RESIZABLE)
         pygame.display.set_caption("Football Field")
 
-        goal_dx, goal_dy = abs(const.GOAL_DX), abs(3000)
+        goal_dx, goal_dy = abs(const.GOAL_DX), abs(1500)
         self.scale = min(width / 2 / goal_dx, heigh / 2 / goal_dy)
         self.middle_x, self.middle_y = self.screen.get_size()
         self.middle_x = round(self.middle_x / 2)

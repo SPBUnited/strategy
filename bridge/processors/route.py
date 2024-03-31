@@ -246,6 +246,7 @@ class Route:
 
         if (
             end_point.type == wp.WType.S_BALL_KICK
+            or end_point.type == wp.WType.S_BALL_KICK_UP
             or end_point.type == wp.WType.S_BALL_GRAB
             or end_point.type == wp.WType.S_BALL_GO
         ) and dist < 500:
@@ -264,7 +265,7 @@ class Route:
         else:
             rbt.dribbler_enable_ = False
 
-        if (end_point.type == wp.WType.S_BALL_KICK or end_point.type == wp.WType.S_BALL_GRAB) and (
+        if (end_point.type == wp.WType.S_BALL_KICK or end_point.type == wp.WType.S_BALL_KICK_UP or end_point.type == wp.WType.S_BALL_GRAB) and (
             rbt.is_kick_aligned(end_point) or fld.is_ball_in(rbt)
         ):
             # vel0 = (rbt.get_pos() - end_point.pos).unity()
@@ -278,6 +279,8 @@ class Route:
                 #     rbt.auto_kick_ = 2
                 # else:
                 rbt.auto_kick_ = 1
+            elif end_point.type == wp.WType.S_BALL_KICK_UP:
+                rbt.auto_kick_ = 2
             else:
                 rbt.auto_kick_ = 0
 

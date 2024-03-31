@@ -44,6 +44,16 @@ class Goal:
             self.down - self.eye_up * const.GOAL_BOUND_OFFSET,
             aux.FIELD_INF * self.eye_forw.x,
         ]
+        print(
+            "testset:   ", 
+            self.up + self.eye_up * const.GOAL_BOUND_OFFSET,
+            self.forwup + (self.eye_forw + self.eye_up) * const.GOAL_BOUND_OFFSET,
+            self.forw + (self.eye_forw) * const.GOAL_BOUND_OFFSET,
+            self.forwdown + (self.eye_forw - self.eye_up) * const.GOAL_BOUND_OFFSET,
+            self.down - self.eye_up * const.GOAL_BOUND_OFFSET,
+            aux.FIELD_INF * self.eye_forw.x,
+            "a: ", self.forwup
+        )
 
         # Попуск
         self.popusk_positions = [
