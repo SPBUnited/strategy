@@ -47,9 +47,9 @@ class Goal:
 
         # Попуск
         self.popusk_positions = [
-            aux.Point(0, 0),
             aux.Point(0, 2000),
             aux.Point(0, -2000),
+            aux.Point(0, 0),
             aux.Point(aux.sign(goal_dx) * 2000, 2000),
             aux.Point(aux.sign(goal_dx) * 2000, -2000),
         ]
@@ -88,7 +88,7 @@ class Field:
             -const.GOAL_DX * self.polarity, -const.GOAL_DY * self.polarity, -const.GOAL_PEN * self.polarity
         )
 
-        self.enemy_goal = self.ally_goal
+        #self.enemy_goal = self.ally_goal
 
         if self.ally_color == "b":
             self.allies = [*self.b_team]

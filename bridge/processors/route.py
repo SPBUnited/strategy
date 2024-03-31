@@ -217,9 +217,6 @@ class Route:
 
         end_point = self.get_dest_wp()
 
-        if rbt.r_id == 9:
-            print(end_point)
-
         vec_err = target_point.pos - rbt.get_pos()
 
 

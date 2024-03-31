@@ -154,7 +154,7 @@ class Strategy:
         for i in range(const.TEAM_ROBOTS_MAX_COUNT):
             waypoints[i] = wp.Waypoint(field.allies[i].get_pos(), field.allies[i].get_angle(), wp.WType.S_STOP)
 
-
+        '''
         if field.ball.get_vel().mag() < 200:
             if self.is_ball_moved or time.time() - self.timer > 0.1:
                 rivals_robot_with_ball = robot.find_nearest_robot(field.ball.get_pos(), field.enemies, [const.ENEMY_GK])
@@ -185,7 +185,7 @@ class Strategy:
             self.is_ball_moved = 1
         wall = []
 
-        self.state = States.ATTACK
+        # self.state = States.ATTACK
         # self.state = States.DEFENCE
 
         if self.state == States.DEBUG:
@@ -201,18 +201,30 @@ class Strategy:
             self.old_def_helper = -1
             self.old_def = -1
             self.steal_flag = 0
+        '''
 
         robot_with_ball = robot.find_nearest_robot(field.ball.get_pos(), field.enemies)
 
-        wall = [13]
-        self.goalk(field, waypoints, [const.GK] + wall, field.allies[13])
+        id_1 = 1
+        id_2 = 2
+        a_id = 0
+        d_id = 0
+        if aux.dist(field.allies[id_1].get_pos(), field.ball.get_pos()) < aux.dist(field.allies[id_2].get_pos(), field.ball.get_pos()):
+            a_id = id_1
+            d_id = id_2
+        else:
+            a_id = id_2
+            d_id = id_1
 
-        pnt = self.choose_kick_point(field, 13)
+        wall = [d_id]
+        self.goalk(field, waypoints, [const.GK] + wall, robot_with_ball)
+
+        pnt = self.choose_kick_point(field, a_id)
         if pnt is None:
             pnt = field.enemy_goal.center
-        #waypoints[13] = wp.Waypoint(field.ball.get_pos(), aux.angle_to_point(field.ball.get_pos(), pnt), wp.WType.S_BALL_KICK)
+        waypoints[a_id] = wp.Waypoint(field.ball.get_pos(), aux.angle_to_point(field.ball.get_pos(), pnt), wp.WType.S_BALL_KICK)
 
-        # waypoints[9]  = wp.Waypoint(field.ally_goal.center, 0, wp.WType.S_ENDPOINT)
+        #waypoints[9]  = wp.Waypoint(field.ally_goal.center, 0, wp.WType.S_ENDPOINT)
 
     square = signal.Signal(8, "SQUARE", ampoffset=(300, 0))
     square_ang = signal.Signal(8, "SQUARE", lohi=(0, 3.14))
@@ -266,6 +278,16 @@ class Strategy:
         self.old_def = def1.r_id
 
         used_robots_id.append(def1.r_id)
+
+        wall_bots = []
+        for r in works_robots:
+            i = r.r_id
+            if field.allies[i].r_id not in used_robots_id:
+                wall_bots.append(field.allies[i].r_id)
+                used_robots_id.append(field.allies[i].r_id)
+        return sorted(wall_bots)
+    
+
         rbs = sorted(field.enemies, reverse=True, key=lambda x: x.get_pos().x)
         rbs_r_ids = []
         x_attack = 3500
@@ -340,6 +362,9 @@ class Strategy:
             if robot.r_id != field.allies[robot_inx].r_id:
                 if aux.dist(robot.get_pos(), field.enemy_goal.center) < aux.dist(field.enemy_goal.center, ball_pos):
                     positions.append(robot.get_pos())
+        for robot in field.enemies:
+            if aux.dist(robot.get_pos(), field.enemy_goal.center) < aux.dist(field.enemy_goal.center, ball_pos):
+                positions.append(robot.get_pos())
 
         positions = sorted(positions, key=lambda x: x.y)
 
