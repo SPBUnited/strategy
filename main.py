@@ -31,7 +31,7 @@ if __name__ == "__main__":
         #     dbg_state=strategy.States.ATTACK,
         # ),
         SSLController(
-            ally_color="b",
+            ally_color=const.COLOR,
             # should_debug=True,
             processing_pause=const.Ts,  # type:ignore
             # reduce_pause_on_process_time=True,

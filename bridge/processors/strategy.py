@@ -146,6 +146,8 @@ class Strategy:
                 self.keep_distance(field, waypoints)
 
         # print(self.game_status, self.state)
+        for id in [9, 10, 13]:
+            self.image.draw_robot(field.allies[id].get_pos(), field.allies[id].get_angle())
         self.image.update_window()
         return waypoints
 
@@ -205,8 +207,8 @@ class Strategy:
 
         robot_with_ball = robot.find_nearest_robot(field.ball.get_pos(), field.enemies)
 
-        id_1 = 1
-        id_2 = 2
+        id_1 = 9
+        id_2 = 13
         a_id = 0
         d_id = 0
         if aux.dist(field.allies[id_1].get_pos(), field.ball.get_pos()) < aux.dist(field.allies[id_2].get_pos(), field.ball.get_pos()):
@@ -222,12 +224,17 @@ class Strategy:
         pnt = self.choose_kick_point(field, a_id)
         if pnt is None:
             pnt = field.enemy_goal.center
+        # for i in range(const.TEAM_ROBOTS_MAX_COUNT):
+        #     waypoints[i] = wp.Waypoint(field.allies[i].get_pos(), field.allies[i].get_angle(), wp.WType.S_STOP)
+
         waypoints[a_id] = wp.Waypoint(field.ball.get_pos(), aux.angle_to_point(field.ball.get_pos(), pnt), wp.WType.S_BALL_KICK)
+        # self.goalk(field, waypoints, [const.GK], None)
 
-        #waypoints[9]  = wp.Waypoint(field.ally_goal.center, 0, wp.WType.S_ENDPOINT)
 
-    square = signal.Signal(8, "SQUARE", ampoffset=(300, 0))
-    square_ang = signal.Signal(8, "SQUARE", lohi=(0, 3.14))
+        # waypoints[10]  = wp.Waypoint(aux.Point(self.square.get(), 0), 0, wp.WType.S_ENDPOINT)
+
+    square = signal.Signal(15, "SQUARE", ampoffset=(1200, 0))
+    square_ang = signal.Signal(4, "SQUARE", lohi=(0, 1))
 
     def debug(self, field: field.Field, waypoints: list[wp.Waypoint]) -> list[wp.Waypoint]:
         """Отладка"""
@@ -403,6 +410,7 @@ class Strategy:
 
         segments.append(field.enemy_goal.goal_down)
         max_ = 0.0
+        print(field.ally_goal.center)
         maxId = -1
         for i in range(0, len(segments), 2):
             c = segments[i]
@@ -608,7 +616,7 @@ class Strategy:
             self.penalty_kick(field, waypoints)
         else:
             robot_with_ball = robot.find_nearest_robot(field.ball.get_pos(), field.enemies)
-            self.gk_go(field, waypoints, [const.GK], robot_with_ball)
+            self.goalk(field, waypoints, [const.GK], robot_with_ball)
 
     def penalty_kick(self, field: field.Field, waypoints: list[wp.Waypoint]) -> None:
         """Пенальти (атака)"""
@@ -739,7 +747,7 @@ class Strategy:
             waypoints[go_kick.r_id] = waypoint
 
         robot_with_ball = robot.find_nearest_robot(field.ball.get_pos(), field.enemies)
-        self.gk_go(field, waypoints, [const.GK], robot_with_ball)
+        self.goalk(field, waypoints, [const.GK], robot_with_ball)
 
     def free_kick(self, field: field.Field, waypoints: list[wp.Waypoint]) -> None:
         """Свободный удар (после любого нарушения/остановки игры) по команде судей"""
@@ -753,7 +761,7 @@ class Strategy:
             self.pre_attack(field)
             self.attack(field, waypoints)
         robot_with_ball = robot.find_nearest_robot(field.ball.get_pos(), field.enemies)
-        self.gk_go(field, waypoints, [const.GK] + wall, robot_with_ball)
+        self.goalk(field, waypoints, [const.GK] + wall, robot_with_ball)
 
     def goalk(
         self, field: field.Field, waypoints: list[wp.Waypoint], gk_wall_idx_list: list[int], robot_with_ball: robot.Robot

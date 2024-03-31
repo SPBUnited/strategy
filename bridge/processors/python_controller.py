@@ -215,7 +215,7 @@ class SSLController(BaseProcessor):
         self.delta_t = time.time() - self.cur_time
         self.cur_time = time.time()
 
-        # print(self.dt)
+        # print(self.delta_t)
         # print(self.ally_color)
         self.read_vision()
         self.control_loop()

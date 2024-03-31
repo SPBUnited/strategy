@@ -259,9 +259,9 @@ class Route:
             if end_point.type == wp.WType.S_BALL_GO:
                 angle0 = end_point.angle
 
-            rbt.dribbler_enable_ = True
-            rbt.dribbler_speed_ = 15
-            rbt.kicker_voltage_ = 10
+            rbt.dribbler_enable_ = False
+            rbt.dribbler_speed_ = 0
+            rbt.kicker_voltage_ = 15
         else:
             rbt.dribbler_enable_ = False
 
@@ -284,7 +284,7 @@ class Route:
             else:
                 rbt.auto_kick_ = 0
 
-            transl_vel = vel0 * 200
+            transl_vel = vel0 * 400
 
         else:
             rbt.auto_kick_ = 0

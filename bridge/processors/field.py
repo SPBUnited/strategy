@@ -44,16 +44,6 @@ class Goal:
             self.down - self.eye_up * const.GOAL_BOUND_OFFSET,
             aux.FIELD_INF * self.eye_forw.x,
         ]
-        print(
-            "testset:   ", 
-            self.up + self.eye_up * const.GOAL_BOUND_OFFSET,
-            self.forwup + (self.eye_forw + self.eye_up) * const.GOAL_BOUND_OFFSET,
-            self.forw + (self.eye_forw) * const.GOAL_BOUND_OFFSET,
-            self.forwdown + (self.eye_forw - self.eye_up) * const.GOAL_BOUND_OFFSET,
-            self.down - self.eye_up * const.GOAL_BOUND_OFFSET,
-            aux.FIELD_INF * self.eye_forw.x,
-            "a: ", self.forwup
-        )
 
         # Попуск
         self.popusk_positions = [
@@ -83,7 +73,7 @@ class Field:
             self.polarity = const.POLARITY * -1
         else:
             self.polarity = const.POLARITY
-        self.ball = entity.Entity(aux.GRAVEYARD_POS, 0, const.BALL_R)
+        self.ball = entity.Entity(aux.GRAVEYARD_POS, 0, const.BALL_R, 0.2)
         self.b_team = [
             robot.Robot(aux.GRAVEYARD_POS, 0, const.ROBOT_R, "b", i, ctrl_mapping[i])
             for i in range(const.TEAM_ROBOTS_MAX_COUNT)
@@ -97,8 +87,6 @@ class Field:
         self.enemy_goal = Goal(
             -const.GOAL_DX * self.polarity, -const.GOAL_DY * self.polarity, -const.GOAL_PEN * self.polarity
         )
-
-        #self.enemy_goal = self.ally_goal
 
         if self.ally_color == "b":
             self.allies = [*self.b_team]
