@@ -44,8 +44,9 @@ class Router:
                 if aux.is_point_inside_poly(dest_pos, goal.hull):
                     closest_out = aux.find_nearest_point(dest_pos, goal.hull, [goal.up, aux.GRAVEYARD_POS, goal.down])
                     angle0 = target.angle
+                    k = 1.2
                     self.routes[idx].set_dest_wp(
-                        wp.Waypoint(goal.center + (closest_out - goal.center) * 1.2, angle0, wp.WType.S_ENDPOINT)
+                        wp.Waypoint(goal.center + (closest_out - goal.center) * k, angle0, wp.WType.S_ENDPOINT)
                     )
                     return
         self.routes[idx].set_dest_wp(target)

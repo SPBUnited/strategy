@@ -115,6 +115,7 @@ class Strategy:
                 self.we_active = 0
         if self.active_team == ActiveTeam.ALL:
             self.we_active = 1
+
         waypoints: list[wp.Waypoint] = []
         for i in range(const.TEAM_ROBOTS_MAX_COUNT):
             waypoints.append(wp.Waypoint(field.allies[i].get_pos(), field.allies[i].get_angle(), wp.WType.S_ENDPOINT))
@@ -144,11 +145,17 @@ class Strategy:
                 self.free_kick(field, waypoints)
             elif self.game_status == GameStates.STOP:
                 self.keep_distance(field, waypoints)
-
         # print(self.game_status, self.state)
-        for id in [9, 10, 13]:
+
+        if field.is_ball_moves() and self.ball_start_point is None:
+            self.ball_start_point = field.ball.get_pos()
+        else:
+            self.ball_start_point = None
+
+        for id in [9, 10, 8]:
             self.image.draw_robot(field.allies[id].get_pos(), field.allies[id].get_angle())
         self.image.update_window()
+
         return waypoints
 
     def run(self, field: field.Field, waypoints: list[wp.Waypoint]) -> None:
@@ -207,16 +214,16 @@ class Strategy:
 
         robot_with_ball = robot.find_nearest_robot(field.ball.get_pos(), field.enemies)
 
-        id_1 = 9
-        id_2 = 13
-        a_id = 0
-        d_id = 0
-        if aux.dist(field.allies[id_1].get_pos(), field.ball.get_pos()) < aux.dist(field.allies[id_2].get_pos(), field.ball.get_pos()):
-            a_id = id_1
-            d_id = id_2
-        else:
-            a_id = id_2
-            d_id = id_1
+        a_id = 9
+        d_id = 8
+        # id_1 = 9
+        # id_2 = 8
+        # if aux.dist(field.allies[id_1].get_pos(), field.ball.get_pos()) < aux.dist(field.allies[id_2].get_pos(), field.ball.get_pos()):
+        #     a_id = id_1
+        #     d_id = id_2
+        # else:
+        #     a_id = id_2
+        #     d_id = id_1
 
         wall = [d_id]
         self.goalk(field, waypoints, [const.GK] + wall, robot_with_ball)
@@ -248,6 +255,17 @@ class Strategy:
 
         # print(field.ball.get_pos(), waypoints[const.DEBUG_ID])
         return waypoints
+
+    def passs(self, field: field.Field, kicker_id: int, receiver_id: int) -> None:
+        if field.is_ball_moves_to_goal() and (self.ball_start_point - field.ball.get_pos()).mag() > const.INTERCEPT_SPEED * 0.5:
+            tmpPos = aux.get_line_intersection(
+                self.ball_start_point, field.ball.get_pos(), field.ally_goal.down, field.ally_goal.up, "RS"
+            )
+            if tmpPos is not None:
+                gk_pos = aux.closest_point_on_line(field.ball.get_pos(), tmpPos, field.allies[receiver_id].get_pos())
+        else:
+            self.ball_start_point = None
+
 
     def defence(
         self, field: field.Field, waypoints: list[wp.Waypoint], ENDPOINT_TYPE: wp.WType = wp.WType.S_ENDPOINT
@@ -377,7 +395,7 @@ class Strategy:
 
         segments = [field.enemy_goal.goal_up]
         for p in positions:
-            tangents = aux.get_tangent_points(p, ball_pos, const.ROBOT_R * 100)
+            tangents = aux.get_tangent_points(p, ball_pos, const.ROBOT_R)
             if tangents is None or len(tangents) != 2:
                 print(p, ball_pos, tangents)
                 continue
@@ -410,7 +428,6 @@ class Strategy:
 
         segments.append(field.enemy_goal.goal_down)
         max_ = 0.0
-        print(field.ally_goal.center)
         maxId = -1
         for i in range(0, len(segments), 2):
             c = segments[i]
@@ -790,16 +807,12 @@ class Strategy:
                     0.5,
                 )
 
-        if field.is_ball_moves_to_goal():
-            if self.ball_start_point is None:
-                self.ball_start_point = field.ball.get_pos()
-            elif (self.ball_start_point - field.ball.get_pos()).mag() > const.GK_INTERCEPT_SPEED:
-                tmpPos = aux.get_line_intersection(
-                    self.ball_start_point, field.ball.get_pos(), field.ally_goal.down, field.ally_goal.up, "RS"
-                )
+        if field.is_ball_moves_to_goal() and (self.ball_start_point - field.ball.get_pos()).mag() > const.INTERCEPT_SPEED * 0.5:
+            tmpPos = aux.get_line_intersection(
+                self.ball_start_point, field.ball.get_pos(), field.ally_goal.down, field.ally_goal.up, "RS"
+            )
+            if tmpPos is not None:
                 gk_pos = aux.closest_point_on_line(field.ball.get_pos(), tmpPos, field.allies[gk_wall_idx_list[0]].get_pos())
-        else:
-            self.ball_start_point = None
 
         if gk_pos is None:
             gk_pos = aux.point_on_line(field.ally_goal.center - field.ally_goal.eye_forw * 1000, field.ball.get_pos(), const.GK_FORW + 1000)

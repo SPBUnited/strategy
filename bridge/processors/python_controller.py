@@ -94,6 +94,7 @@ class SSLController(BaseProcessor):
             if geometry:
                 field_info[0] = geometry.field.field_length
                 field_info[1] = geometry.field.field_width
+                # print(field_info)
                 if geometry.field.field_length != 0 and geometry.field.goal_width != 0:
                     const.GOAL_DX = geometry.field.field_length / 2
                     const.GOAL_DY = geometry.field.goal_width
@@ -102,9 +103,8 @@ class SSLController(BaseProcessor):
             camera_id = detection.camera_id
             tmp_ball = None
             for ball_ind, ball in enumerate(detection.balls):
-                balls[ball_ind + (camera_id - 1) * const.MAX_BALLS_IN_CAMERA] = camera_id
-                balls[ball_ind + const.MAX_BALLS_IN_FIELD + (camera_id - 1) * const.MAX_BALLS_IN_CAMERA] = ball.x
-                balls[ball_ind + 2 * const.MAX_BALLS_IN_FIELD + (camera_id - 1) * const.MAX_BALLS_IN_CAMERA] = ball.y
+                balls[ball_ind + (camera_id - 1) * const.MAX_BALLS_IN_CAMERA] = ball.x
+                balls[ball_ind + const.MAX_BALLS_IN_FIELD + (camera_id - 1) * const.MAX_BALLS_IN_CAMERA] = ball.y
                 tmp_ball = ball
             if tmp_ball is not None:
                 self.field.update_ball(aux.Point(tmp_ball.x, tmp_ball.y), time.time())

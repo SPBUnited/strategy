@@ -313,10 +313,10 @@ def probability(inter: list[aux.Point], bots: list[Robot], pos: aux.Point) -> fl
         # print(tmpRes)
         # if tmpResX < 0:
         #     koef = 0
-        # elif tmpResX > const.ROBOT_R * 100 * 15:
+        # elif tmpResX > const.ROBOT_R * 15:
         #     koef = 1
         # else:
-        #     koef = tmpResX / (const.ROBOT_R * 100 * 15)
+        #     koef = tmpResX / (const.ROBOT_R * 15)
         # res *= (2 * abs(ang) / math.pi) * (dist(st, bots[i].get_pos()) / 54e6)
         res *= 1 / (2 * abs(ang) / math.pi)
     return res
@@ -327,8 +327,8 @@ def bot_position(pos: aux.Point, vecx: float, vecy: float) -> aux.Point:
     TODO написать доку
     """
     modul = (vecx**2 + vecy**2) ** (0.5)
-    vecx = (vecx / modul) * const.ROBOT_R * 1000 * 2
-    vecy = (vecy / modul) * const.ROBOT_R * 1000 * 2
+    vecx = (vecx / modul) * const.ROBOT_R * 2
+    vecy = (vecy / modul) * const.ROBOT_R * 2
     return aux.Point(pos.x - vecx, pos.y - vecy)
 
 

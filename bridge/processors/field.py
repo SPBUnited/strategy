@@ -13,7 +13,7 @@ class Goal:
     Структура, описывающая ключевые точки ворот
     """
 
-    def __init__(self, goal_dx: float, goal_dy: float, goal_pen: float) -> None:
+    def __init__(self, goal_dx: float, goal_dy: float, pen_dx: float, pen_dy: float) -> None:
 
         # Абсолютный центр
         self.center = aux.Point(goal_dx, 0)
@@ -21,27 +21,24 @@ class Goal:
         # Относительные вектора
         self.eye_forw = aux.Point(-aux.sign(goal_dx), 0)
         self.eye_up = aux.Point(0, aux.sign(goal_dy))
-        self.vup = aux.Point(0, goal_dy)
-        self.vdown = aux.Point(0, -goal_dy)
-        self.vpen = aux.Point(-goal_pen, 0)
+
+        self.vec_up = aux.Point(0, goal_dy / 2)
+        self.vec_pen = aux.Point(-pen_dx, 0)
+        self.vec_pen_up = aux.Point(0, goal_dy / 2)
 
         # Абсолютные вектора
-        self.up = self.center + self.vup
-        self.down = self.center + self.vdown
-        self.forw = self.center + self.vpen
-        self.forwup = self.forw + self.vup
-        self.forwdown = self.forw + self.vdown
-
-        self.goal_up = self.center + aux.Point(0, goal_dy / 2)
-        self.goal_down = self.center - aux.Point(0, goal_dy / 2)
+        self.up = self.center + self.vec_up
+        self.down = self.center - self.vec_up
+        self.frw = self.center + self.vec_pen
+        self.frw_up = self.frw + self.vec_pen_up
+        self.frw_down = self.frw - self.vec_pen_up
 
         # Оболочка штрафной зоны
         self.hull = [
-            self.up + self.eye_up * const.GOAL_BOUND_OFFSET,
-            self.forwup + (self.eye_forw + self.eye_up) * const.GOAL_BOUND_OFFSET,
-            self.forw + (self.eye_forw) * const.GOAL_BOUND_OFFSET,
-            self.forwdown + (self.eye_forw - self.eye_up) * const.GOAL_BOUND_OFFSET,
-            self.down - self.eye_up * const.GOAL_BOUND_OFFSET,
+            self.center + self.vec_pen_up,
+            self.frw_up,
+            self.frw_down,
+            self.center - self.vec_pen_up,
             aux.FIELD_INF * self.eye_forw.x,
         ]
 
@@ -83,10 +80,15 @@ class Field:
             for i in range(const.TEAM_ROBOTS_MAX_COUNT)
         ]
         self.all_bots = [*self.b_team, *self.y_team]
-        self.ally_goal = Goal(const.GOAL_DX * self.polarity, const.GOAL_DY * self.polarity, const.GOAL_PEN * self.polarity)
+        self.ally_goal = Goal(
+             const.GOAL_DX * self.polarity,  const.GOAL_DY * self.polarity,  const.GOAL_PEN_DX * self.polarity,  const.GOAL_PEN_DY * self.polarity
+            )
         self.enemy_goal = Goal(
-            -const.GOAL_DX * self.polarity, -const.GOAL_DY * self.polarity, -const.GOAL_PEN * self.polarity
+            -const.GOAL_DX * self.polarity, -const.GOAL_DY * self.polarity, -const.GOAL_PEN_DX * self.polarity, -const.GOAL_PEN_DY * self.polarity
         )
+
+        if const.SELF_PLAY:
+            self.enemy_goal = self.ally_goal
 
         if self.ally_color == "b":
             self.allies = [*self.b_team]
@@ -152,23 +154,27 @@ class Field:
         """
         Определить, находится ли мяч в штрафной зоне
         """
-        # print(self.ally_goal.center.x - self.ball.get_pos().x,
-        #       self.ball.get_pos().x - self.ally_goal.forw.x,
-        #       self.ally_goal.up.y - self.ball.get_pos().y,
-        #       self.ball.get_pos().y - self.ally_goal.down.y)
         return (
-            aux.sign(self.ally_goal.center.x - self.ball.get_pos().x)
-            == aux.sign(self.ball.get_pos().x - self.ally_goal.forw.x)
-            and aux.sign(self.ally_goal.up.y - self.ball.get_pos().y)
-            == aux.sign(self.ball.get_pos().y - self.ally_goal.down.y)
+            aux.is_point_inside_poly(self.ball.get_pos(), self.ally_goal.hull)
             and not self.is_ball_moves_to_goal()
         )
+    
+    def is_ball_moves(self) -> bool:
+        return (
+            self.ball.get_vel().mag() > const.INTERCEPT_SPEED
+        )
 
+    def is_ball_moves_to_point(self, point: aux.Point) -> bool:
+        """
+        Определить, движется ли мяч в сторону точки
+        """
+        return (
+            aux.scal_mult(self.ball.get_vel(), (point - self.ball.get_pos()).unity())
+            > const.INTERCEPT_SPEED
+        )
+    
     def is_ball_moves_to_goal(self) -> bool:
         """
         Определить, движется ли мяч в сторону ворот
         """
-        return (
-            aux.scal_mult(self.ball.get_vel(), (self.ally_goal.center - self.ball.get_pos()).unity())
-            > const.GK_INTERCEPT_SPEED
-        )
+        return self.is_ball_moves_to_point(self.ally_goal.center)
