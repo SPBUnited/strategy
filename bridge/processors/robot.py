@@ -51,7 +51,7 @@ class Robot(entity.Entity):
         # v! REAL
         else:
             self.k_xx = -250 / 20
-            self.k_yy = 0.5*250 / 20
+            self.k_yy = 0.5 * 250 / 20
             self.k_ww = 6 / 20
             self.k_wy = 0
             self.t_wy = 0.15
@@ -74,7 +74,7 @@ class Robot(entity.Entity):
         gains_soft = [3, 0.25, 0, const.SOFT_MAX_SPEED]
         # gains_soft = [10, 0.32, 0, const.SOFT_MAX_SPEED]
         # gains_soft = gains_full
-        a_gains_full = [4, 0.1, 0.1, const.MAX_SPEED_R] # 4, 0.1, 0.1
+        a_gains_full = [6, 0.1, 0.1, const.MAX_SPEED_R]  # 4, 0.1, 0.1
         # a_gains_soft = [4, 0.07, 8, const.SOFT_MAX_SPEED_R]
         a_gains_soft = a_gains_full
         # else:
@@ -112,6 +112,11 @@ class Robot(entity.Entity):
         )
 
         self.is_kick_commited = False
+
+    def __eq__(self, robo: typing.Any) -> bool:
+        if not isinstance(robo, Robot):
+            return False
+        return self.r_id == robo.r_id and self.color == robo.color
 
     def used(self, a: int) -> None:
         """
@@ -152,9 +157,16 @@ class Robot(entity.Entity):
         """
         self.kick_up_ = 1
 
+    def set_dribbler_speed(self, speed: float) -> None:
+        """
+        Включить дриблер и задать его скорость
+        """
+        self.dribbler_enable_ = True
+        self.dribbler_speed_ = round(aux.minmax(speed, 0.0, 15.0))
+
     def copy_control_fields(self, robot: "Robot") -> None:
         """
-        Скопировать в данный робот поля управления робота robot
+        Скопировать в данный "робот" поля управления робота robot
         """
         self.speed_x = robot.speed_x
         self.speed_y = robot.speed_y
@@ -278,9 +290,9 @@ class Robot(entity.Entity):
         )
 
 
-def find_nearest_robot(robo: aux.Point, team: list[Robot], avoid: typing.Optional[list[int]] = None) -> Robot:
+def find_nearest_robot(point: aux.Point, team: list[Robot], avoid: typing.Optional[list[int]] = None) -> Robot:
     """
-    Найти ближайший робот из массива team к точке robot, игнорируя точки avoid
+    Найти ближайший робот из массива team к точке point, игнорируя точки avoid
     """
     if avoid is None:
         avoid = []
@@ -289,8 +301,8 @@ def find_nearest_robot(robo: aux.Point, team: list[Robot], avoid: typing.Optiona
     for i, player in enumerate(team):
         if i in avoid or not player.is_used():
             continue
-        if aux.dist(robo, player.get_pos()) < min_dist:
-            min_dist = aux.dist(robo, player.get_pos())
+        if aux.dist(point, player.get_pos()) < min_dist:
+            min_dist = aux.dist(point, player.get_pos())
             robo_id = i
     return team[robo_id]
 

@@ -81,10 +81,16 @@ class Field:
         ]
         self.all_bots = [*self.b_team, *self.y_team]
         self.ally_goal = Goal(
-             const.GOAL_DX * self.polarity,  const.GOAL_DY * self.polarity,  const.GOAL_PEN_DX * self.polarity,  const.GOAL_PEN_DY * self.polarity
-            )
+            const.GOAL_DX * self.polarity,
+            const.GOAL_DY * self.polarity,
+            const.GOAL_PEN_DX * self.polarity,
+            const.GOAL_PEN_DY * self.polarity,
+        )
         self.enemy_goal = Goal(
-            -const.GOAL_DX * self.polarity, -const.GOAL_DY * self.polarity, -const.GOAL_PEN_DX * self.polarity, -const.GOAL_PEN_DY * self.polarity
+            -const.GOAL_DX * self.polarity,
+            -const.GOAL_DY * self.polarity,
+            -const.GOAL_PEN_DX * self.polarity,
+            -const.GOAL_PEN_DY * self.polarity,
         )
 
         if const.SELF_PLAY:
@@ -154,25 +160,21 @@ class Field:
         """
         Определить, находится ли мяч в штрафной зоне
         """
-        return (
-            aux.is_point_inside_poly(self.ball.get_pos(), self.ally_goal.hull)
-            and not self.is_ball_moves_to_goal()
-        )
-    
+        return aux.is_point_inside_poly(self.ball.get_pos(), self.ally_goal.hull) and not self.is_ball_moves_to_goal()
+
     def is_ball_moves(self) -> bool:
-        return (
-            self.ball.get_vel().mag() > const.INTERCEPT_SPEED
-        )
+        """
+        Определить, движется ли мяч
+        """
+        return self.ball.get_vel().mag() > const.INTERCEPT_SPEED
 
     def is_ball_moves_to_point(self, point: aux.Point) -> bool:
         """
         Определить, движется ли мяч в сторону точки
         """
-        return (
-            aux.scal_mult(self.ball.get_vel(), (point - self.ball.get_pos()).unity())
-            > const.INTERCEPT_SPEED
-        )
-    
+        # print(self.ball.get_vel(), aux.scal_mult(self.ball.get_vel(), (point - self.ball.get_pos()).unity()))
+        return aux.scal_mult(self.ball.get_vel(), (point - self.ball.get_pos()).unity()) > const.INTERCEPT_SPEED
+
     def is_ball_moves_to_goal(self) -> bool:
         """
         Определить, движется ли мяч в сторону ворот

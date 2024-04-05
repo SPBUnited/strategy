@@ -87,10 +87,10 @@ class Point:
         return self * (1 / a)
 
     def __pow__(self, a: float) -> "Point":
-        return Point(self.x ** a, self.y ** a)
+        return Point(self.x**a, self.y**a)
 
     def __eq__(self, p: typing.Any) -> bool:
-        if isinstance(p, Point):
+        if not isinstance(p, Point):
             return False
         return self.x == p.x and self.y == p.y
 
@@ -286,9 +286,16 @@ def wind_down_angle(angle: float) -> float:
     return angle
 
 
-def closest_point_on_line(point1: Point, point2: Point, point: Point) -> Point:
+def closest_point_on_line(point1: Point, point2: Point, point: Point, is_inf: str = "S") -> Point:
     """
     Получить ближайшую к точке point току на линии point1-point2
+
+    is_inf задает ограничения на точку пересечения.
+
+    S(segment) - задан отрезок
+    R(ay) - задан луч (начало - point1, направление - point2), точка пересечения валидна только
+    если находится на луче point1 - point2
+    L(ine) - задана прямая
     """
     line_vector = (point2.x - point1.x, point2.y - point1.y)
     line_length = dist(point1, point2)
@@ -301,9 +308,9 @@ def closest_point_on_line(point1: Point, point2: Point, point: Point) -> Point:
     point_vector = (point.x - point1.x, point.y - point1.y)
     dot_product = point_vector[0] * line_direction[0] + point_vector[1] * line_direction[1]
 
-    if dot_product <= 0:
+    if dot_product <= 0 and is_inf != "L":
         return point1
-    if dot_product >= line_length:
+    if dot_product >= line_length and is_inf == "S":
         return point2
 
     closest_point = Point(point1.x + line_direction[0] * dot_product, point1.y + line_direction[1] * dot_product)
@@ -386,15 +393,15 @@ def in_place(point: Point, end: Point, epsilon: float) -> bool:
     return (point - end).mag() < epsilon
 
 
-def circles_inter(p0: Point, p1: Point, r0: float, r1: float) -> tuple:
+def circles_inter(p0: Point, p1: Point, r0: float, r1: float) -> tuple[Point, Point]:
     """
     Get intersects of 2 circles:
         p0, r0 - координаты центра и радиус первой окружности
         p1, r1 - координаты центра и радиус второй окружности
     """
     d = dist(p0, p1)
-    a = (r0 ** 2 - r1 ** 2 + d ** 2) / (2 * d)
-    h = math.sqrt(r0 ** 2 - a ** 2)
+    a = (r0**2 - r1**2 + d**2) / (2 * d)
+    h = math.sqrt(r0**2 - a**2)
     x2 = p0.x + a * (p1.x - p0.x) / d
     y2 = p0.y + a * (p1.y - p0.y) / d
     x3 = x2 + h * (p1.y - p0.y) / d
@@ -404,7 +411,7 @@ def circles_inter(p0: Point, p1: Point, r0: float, r1: float) -> tuple:
     return Point(x3, y3), Point(x4, y4)
 
 
-def get_tangent_points(point0: Point, point1: Point, r: float):
+def get_tangent_points(point0: Point, point1: Point, r: float) -> None | Point | tuple[Point, Point]:
     """
     Get tangents
     """
@@ -417,6 +424,7 @@ def get_tangent_points(point0: Point, point1: Point, r: float):
         midx, midy = (point0.x + point1.x) / 2, (point0.y + point1.y) / 2
         p2, p3 = circles_inter(point0, Point(midx, midy), r, d / 2)
         return p2, p3
+
 
 def get_angle_between_points(a: Point, b: Point, c: Point) -> float:
     ang = math.degrees(math.atan2(c.y - b.y, c.x - b.x) - math.atan2(a.y - b.y, a.x - b.x))

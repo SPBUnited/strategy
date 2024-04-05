@@ -12,8 +12,6 @@ from strategy_bridge.processors import BaseProcessor
 import bridge.processors.auxiliary as aux
 import bridge.processors.const as const
 import bridge.processors.robot as robot
-import bridge.processors.const as const
-
 
 
 @attr.s(auto_attribs=True)
@@ -114,7 +112,7 @@ class CommandSink(BaseProcessor):
                 rules.append(self.y_control_team[i].beep)
                 rules.append(0)
         else:
-            control_team = self.y_control_team if const.COLOR == 'y'  else self.b_control_team
+            control_team = self.y_control_team if const.COLOR == "y" else self.b_control_team
             for i in range(const.TEAM_ROBOTS_MAX_COUNT):
                 if abs(control_team[i].speed_x) < 1.5:
                     control_team[i].speed_x = 0
@@ -126,8 +124,8 @@ class CommandSink(BaseProcessor):
                 rules.append(control_team[i].speed_x)
                 rules.append(control_team[i].speed_y)
                 rules.append(control_team[i].speed_r)
-                rules.append(control_team[i].kick_forward_)
                 rules.append(control_team[i].kick_up_)
+                rules.append(control_team[i].kick_forward_)
                 rules.append(control_team[i].auto_kick_)
                 rules.append(control_team[i].kicker_voltage_)
                 rules.append(control_team[i].dribbler_enable_)
@@ -139,6 +137,6 @@ class CommandSink(BaseProcessor):
                 for _ in range(13):
                     rules.append(0)
 
-        #rules = [15] * 13 * 32
+        # rules = [15] * 13 * 32
         b = bytes()
         return b.join((struct.pack("d", rule) for rule in rules))

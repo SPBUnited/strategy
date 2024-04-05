@@ -62,6 +62,9 @@ class Router:
             if not self.routes[idx].is_used():
                 continue
 
+            if self.routes[idx].get_next_type() == wp.WType.S_BALL_ROTATE:
+                continue
+
             if (
                 self.routes[idx].get_next_type() == wp.WType.S_BALL_KICK
                 or self.routes[idx].get_next_type() == wp.WType.S_BALL_GRAB

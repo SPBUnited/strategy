@@ -73,7 +73,7 @@ class SSLController(BaseProcessor):
         """
         status = False
 
-        balls = np.zeros(const.BALL_PACKET_SIZE * const.MAX_BALLS_IN_FIELD)
+        balls: list[aux.Point] = []
         field_info = np.zeros(const.GEOMETRY_PACKET_SIZE)
 
         queue = self.vision_reader.read_new()
@@ -100,25 +100,19 @@ class SSLController(BaseProcessor):
                     const.GOAL_DY = geometry.field.goal_width
 
             detection = ssl_package_content.detection
-            camera_id = detection.camera_id
-            tmp_ball = None
-            for ball_ind, ball in enumerate(detection.balls):
-                balls[ball_ind + (camera_id - 1) * const.MAX_BALLS_IN_CAMERA] = ball.x
-                balls[ball_ind + const.MAX_BALLS_IN_FIELD + (camera_id - 1) * const.MAX_BALLS_IN_CAMERA] = ball.y
-                tmp_ball = ball
-            if tmp_ball is not None:
-                self.field.update_ball(aux.Point(tmp_ball.x, tmp_ball.y), time.time())
-
+            # camera_id = detection.camera_id
+            for ball in detection.balls:
+                balls.append(aux.Point(ball.x, ball.y))
             for i in range(const.TEAM_ROBOTS_MAX_COUNT):
-                if time.time() - self.field.b_team[i].last_update() > 1:
+                if time.time() - self.field.b_team[i].last_update() > 10:
                     self.field.b_team[i].used(0)
-                if time.time() - self.field.y_team[i].last_update() > 1:
+                if time.time() - self.field.y_team[i].last_update() > 10:
                     self.field.y_team[i].used(0)
 
             # self.strategy.change_game_state(strategy.GameStates.RUN, 0)
 
             # TODO Вынести в константы
-            '''game_controller_mapping = {
+            """game_controller_mapping = {
                 1: strategy.GameStates.STOP,
                 2: strategy.GameStates.RUN,
                 3: strategy.GameStates.TIMEOUT,
@@ -142,7 +136,7 @@ class SSLController(BaseProcessor):
                     print("End game")
                 elif cur_cmd.state == 10:
                     print("Uknown command 10")
-            '''
+            """
             # if self.count_halt_cmd > 10:
             #     self.strategy.change_game_state(strategy.GameStates.HALT, cur_cmd.commandForTeam)
 
@@ -166,6 +160,14 @@ class SSLController(BaseProcessor):
                 self.field.update_yel_robot(
                     robot_det.robot_id, aux.Point(robot_det.x, robot_det.y), robot_det.orientation, time.time()
                 )
+
+        if len(balls) != 0:
+            balls_sum = aux.Point(0, 0)
+            for ball in balls:
+                balls_sum += ball
+            ball = balls_sum / len(balls)
+            self.field.update_ball(ball, time.time())
+
         return status
 
     def control_loop(self) -> None:
@@ -208,11 +210,10 @@ class SSLController(BaseProcessor):
     def process(self) -> None:
         """
         Выполнить цикл процессора
-
-        OFFTOP Что означает @debugger?
         """
 
         self.delta_t = time.time() - self.cur_time
+        # print(self.delta_t)
         self.cur_time = time.time()
 
         # print(self.delta_t)

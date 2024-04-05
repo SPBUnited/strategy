@@ -4,7 +4,7 @@
 
 ##################################################
 # GAME SETTING CONSTS
-COLOR = 'b'
+COLOR = "b"
 POLARITY = 1  # 1 если ворота синих на +x; -1 если ворота синих на -x
 
 IS_SIMULATOR_USED = False
@@ -70,7 +70,7 @@ Ts = 0.05  # s
 # BASE_KICKER_VOLTAGE = 7.0
 MAX_SPEED = 1000
 MAX_SPEED_R = 30
-SOFT_MAX_SPEED = 500
+SOFT_MAX_SPEED = 750
 SOFT_MAX_SPEED_R = 16
 ACCELERATION = 3
 BASE_KICKER_VOLTAGE = 7.0
@@ -88,12 +88,12 @@ BALL_R = 50
 ROBOT_R = 200
 GRAVEYARD_POS_X = -10000
 
-GOAL_DX = 4000  #width / 2
+GOAL_DX = 4000  # width / 2
 GOAL_DY = 1000
 GOAL_PEN_DX = 1000
 GOAL_PEN_DY = 2000
 GOAL_WALLLINE_OFFSET = 1000
-GOAL_WALL_ROBOT_SEPARATION = 100  #расстояние между роботами в стенке
+GOAL_WALL_ROBOT_SEPARATION = 100  # расстояние между роботами в стенке
 
 GK_FORW = 500
 KICK_ALIGN_DIST = 200
