@@ -185,6 +185,25 @@ def dist(a: Point, b: Point) -> float:
     """
     return math.hypot(a.x - b.x, a.y - b.y)
 
+def average_point(points: list[Point]) -> Point:
+    """
+    Возвращает точку с усредненными координатами
+    """
+    point = Point(0,0)
+    for p in points:
+        point += p
+    return point / len(points)
+
+def average_angle(angles: list[float]) -> float:
+    """
+    Возвращает средний угол
+    """
+    delta_angle = 0.0
+    angle_zero = angles[0]
+    for ang in angles:
+        delta_angle += wind_down_angle(ang - angle_zero)
+    return delta_angle / len(angles) + angle_zero
+
 
 def get_line_intersection(
     line1_start: Point, line1_end: Point, line2_start: Point, line2_end: Point, is_inf: str = "SS"

@@ -26,8 +26,8 @@ class WType(Enum):
     S_KEEP_BALL_DISTANCE = 5
     S_STOP = 6  # Kostil for stopping
     S_BALL_KICK_UP = 7  # Захватить мяч и мгновенно его пнуть up
-    S_BALL_ROTATE = 8  # Разворачиваться с мячом
-    # waypoint.pos - вектор из центра робота в центр поворота; waypoint.angle - угловая скорость (рад/с)
+    S_VELOCITY = 8  # Разворачиваться с мячом
+    # waypoint.pos - скорость; waypoint.angle - угловая скорость
 
     R_PASSTHROUGH = 10  # Двигаться в точку не останавливаясь (промежуточная точка пути)
     R_BALL_ALIGN = 11  # Выровняться напротив мяча, приготовившись его захватить

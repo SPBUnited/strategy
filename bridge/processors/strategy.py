@@ -10,6 +10,7 @@ import math
 import typing
 from enum import Enum
 from typing import Optional
+from time import time
 
 import bridge.processors.auxiliary as aux
 import bridge.processors.const as const
@@ -18,6 +19,7 @@ import bridge.processors.field as field  # pylint: disable = unused-import
 import bridge.processors.robot as robot
 import bridge.processors.signal as signal
 import bridge.processors.waypoint as wp
+import bridge.processors.twisted_kick as twist
 
 
 class States(Enum):
@@ -222,11 +224,32 @@ class Strategy:
         # if field.is_ball_in(field.allies[14]):
         #     w = 2 * 3.14 / 4
         #     delta_r = aux.rotate(aux.Point(200, 0), math.pi * 1.2)
-        #     waypoints[14] = wp.Waypoint(delta_r, w, wp.WType.S_BALL_ROTATE)
+        #     waypoints[14] = wp.Waypoint(delta_r, w, wp.WType.S_VELOCITY)
         # else:
         #     waypoints[14] = wp.Waypoint(field.ball.get_pos(), 0, wp.WType.S_BALL_GRAB)
 
         # waypoints[14]  = wp.Waypoint(aux.Point(self.square.get(), -2000), 1.507, wp.WType.S_ENDPOINT)
+        id = 14
+        w = 2 * 3.14 / 10
+        waypoints[id] = twist.spin_with_ball(w)
+        if field.allies[id].get_pos().x == 0:
+            return
+        if not "x_min" in globals():
+            global x_min, x_max
+            self.timer = time()
+            x_min = field.allies[id].get_pos().x
+            x_max = field.allies[id].get_pos().x
+        else:
+            x = field.allies[id].get_pos().x
+            if x < x_min:
+                x_min = x
+
+            elif x > x_max:
+                x_max = x
+            print("real radius: ", (x_max - x_min) / 2)
+            # print("vel: ", field.allies[id].get_vel(), "\t; ang_vel: ", field.allies[id].get_anglevel())
+            # print("angle speed: ", w, "\t -> ", (field.allies[id].get_angle() - ang00) / (time() - self.timer))
+
 
     square = signal.Signal(15, "SQUARE", ampoffset=(-1200, -2500))
     square_ang = signal.Signal(4, "SQUARE", lohi=(0, 1))
@@ -279,12 +302,12 @@ class Strategy:
             ):
                 w = 2 * 3.14 / 4
                 delta_r = aux.rotate(aux.Point(200, 0), math.pi * 1.2)
-                waypoints[receiver_id] = wp.Waypoint(delta_r, w, wp.WType.S_BALL_ROTATE)
+                waypoints[receiver_id] = wp.Waypoint(delta_r, w, wp.WType.S_VELOCITY)
             else:
                 w = 2 * 3.14 / 4
                 delta_r = aux.rotate(aux.Point(200, 0), math.pi * 1.2)
                 field.allies[receiver_id].kick_forward()
-                waypoints[receiver_id] = wp.Waypoint(delta_r * 1000, w / 1000, wp.WType.S_BALL_ROTATE)
+                waypoints[receiver_id] = wp.Waypoint(delta_r * 1000, w / 1000, wp.WType.S_VELOCITY)
 
         elif (
             field.is_ball_moves_to_point(field.allies[receiver_id].get_pos())

@@ -62,7 +62,7 @@ class Router:
             if not self.routes[idx].is_used():
                 continue
 
-            if self.routes[idx].get_next_type() == wp.WType.S_BALL_ROTATE:
+            if self.routes[idx].get_next_type() == wp.WType.S_VELOCITY:
                 continue
 
             if (

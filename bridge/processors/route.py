@@ -130,11 +130,14 @@ class Route:
         """
         target_point = self.get_next_wp()
 
-        if target_point.type == wp.WType.S_BALL_ROTATE:
-            ang_vel = target_point.angle
-            transl_vel = aux.rotate(target_point.pos, rbt.get_angle()) * ang_vel
+        if target_point.type == wp.WType.S_VELOCITY:
+            wvel = target_point.angle
+            vel = target_point.pos
             rbt.kicker_voltage_ = 7
-            return rbt.update_vel_xyw(transl_vel, ang_vel)
+            rbt.speed_x = rbt.xx_flp.process(1 / rbt.k_xx * vel.x)
+            rbt.speed_y = rbt.yy_flp.process(1 / rbt.k_yy * vel.y)
+            rbt.speed_r = 1 / rbt.k_ww * wvel
+            return
 
         cur_vel = rbt.get_vel()
 
