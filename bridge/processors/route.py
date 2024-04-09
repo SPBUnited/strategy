@@ -133,7 +133,7 @@ class Route:
         if target_point.type == wp.WType.S_VELOCITY:
             wvel = target_point.angle
             vel = target_point.pos
-            rbt.kicker_voltage_ = 7
+            # rbt.kicker_voltage_ = 7
             rbt.speed_x = rbt.xx_flp.process(1 / rbt.k_xx * vel.x)
             rbt.speed_y = rbt.yy_flp.process(1 / rbt.k_yy * vel.y)
             rbt.speed_r = 1 / rbt.k_ww * wvel

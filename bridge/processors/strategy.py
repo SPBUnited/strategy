@@ -1,7 +1,7 @@
 """Верхнеуровневый код стратегии"""
 # pylint: disable=redefined-outer-name
 
-# @package Stratery
+# @package Strategy
 # Расчет требуемых положений роботов исходя из ситуации на поле
 
 import math
@@ -15,7 +15,7 @@ from time import time
 import bridge.processors.auxiliary as aux
 import bridge.processors.const as const
 import bridge.processors.drawing as draw
-import bridge.processors.field as field  # pylint: disable = unused-import
+import bridge.processors.field as field
 import bridge.processors.robot as robot
 import bridge.processors.signal as signal
 import bridge.processors.waypoint as wp
@@ -61,7 +61,7 @@ class Strategy:
         self.active_team: ActiveTeam = ActiveTeam.ALL
         self.state = dbg_state
         self.we_active = 1
-        self.timer = 0.0
+        self.timer = time()
         self.is_ball_moved = 0
 
         # DEFENCE
@@ -85,6 +85,7 @@ class Strategy:
         self.penalty_timer = 0
 
         self.image = draw.Image()
+        self.image.draw_field()
         self.ball_start_point: Optional[aux.Point] = None
         self.start_rotating: float = 0.0
 
@@ -152,8 +153,9 @@ class Strategy:
                 self.keep_distance(field, waypoints)
         # print(self.game_status, self.state)
 
-        for id in [9, 10, 8]:
-            self.image.draw_robot(field.allies[id].get_pos(), field.allies[id].get_angle())
+        # for id in [9, 10, 8]:
+        #     self.image.draw_robot(field.allies[id].get_pos(), field.allies[id].get_angle())
+        self.image.draw_dot(field.ball.get_pos())
         self.image.update_window()
 
         return waypoints
@@ -229,27 +231,21 @@ class Strategy:
         #     waypoints[14] = wp.Waypoint(field.ball.get_pos(), 0, wp.WType.S_BALL_GRAB)
 
         # waypoints[14]  = wp.Waypoint(aux.Point(self.square.get(), -2000), 1.507, wp.WType.S_ENDPOINT)
-        id = 14
+        id = 8
         w = 2 * 3.14 / 10
-        waypoints[id] = twist.spin_with_ball(w)
-        if field.allies[id].get_pos().x == 0:
-            return
-        if not "x_min" in globals():
-            global x_min, x_max
-            self.timer = time()
-            x_min = field.allies[id].get_pos().x
-            x_max = field.allies[id].get_pos().x
+        field.allies[id].set_dribbler_speed(15)
+        field.allies[id].kicker_voltage_ = 5
+        # waypoints[id] = wp.Waypoint(aux.Point(-100, 100), 3, wp.WType.S_VELOCITY)
+        if time() - self.timer < 0.5:
+            field.allies[id].kick_forward()
+        elif time() - self.timer < 1000:
+            waypoints[id] = wp.Waypoint(aux.Point(-0, 0), 0, wp.WType.S_VELOCITY)
+        elif time() - self.timer < 10.5:
+            # waypoints[id] = wp.Waypoint(aux.Point(0, 100), 3, wp.WType.S_VELOCITY)
+            waypoints[id] = twist.spin_with_ball(1)
         else:
-            x = field.allies[id].get_pos().x
-            if x < x_min:
-                x_min = x
-
-            elif x > x_max:
-                x_max = x
-            print("real radius: ", (x_max - x_min) / 2)
-            # print("vel: ", field.allies[id].get_vel(), "\t; ang_vel: ", field.allies[id].get_anglevel())
-            # print("angle speed: ", w, "\t -> ", (field.allies[id].get_angle() - ang00) / (time() - self.timer))
-
+            field.allies[id].kick_forward()
+            self.timer = time()
 
     square = signal.Signal(15, "SQUARE", ampoffset=(-1200, -2500))
     square_ang = signal.Signal(4, "SQUARE", lohi=(0, 1))
@@ -444,13 +440,13 @@ class Strategy:
         ball_pos = field.ball.get_pos()
 
         positions = []
-        for robot in field.allies:
-            if robot.r_id != field.allies[robot_inx].r_id:
-                if aux.dist(robot.get_pos(), field.enemy_goal.center) < aux.dist(field.enemy_goal.center, ball_pos):
-                    positions.append(robot.get_pos())
-        for robot in field.enemies:
-            if aux.dist(robot.get_pos(), field.enemy_goal.center) < aux.dist(field.enemy_goal.center, ball_pos):
-                positions.append(robot.get_pos())
+        for rbt in field.allies:
+            if rbt.r_id != field.allies[robot_inx].r_id:
+                if aux.dist(rbt.get_pos(), field.enemy_goal.center) < aux.dist(field.enemy_goal.center, ball_pos):
+                    positions.append(rbt.get_pos())
+        for rbt in field.enemies:
+            if aux.dist(rbt.get_pos(), field.enemy_goal.center) < aux.dist(field.enemy_goal.center, ball_pos):
+                positions.append(rbt.get_pos())
 
         positions = sorted(positions, key=lambda x: x.y)
 
