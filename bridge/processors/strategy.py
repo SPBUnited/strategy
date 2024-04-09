@@ -86,6 +86,11 @@ class Strategy:
         self.ball_start_point: Optional[aux.Point] = None
         self.start_rotating: float = 0.0
 
+
+        self.k = 14
+        self.r = 8
+        self.r_pos = aux.Point(-2500, -1500)
+
     def change_game_state(self, new_state: GameStates, upd_active_team: int) -> None:
         """Изменение состояния игры и цвета команды"""
         self.game_status = new_state
@@ -217,7 +222,19 @@ class Strategy:
         # waypoints[a_id] = wp.Waypoint(field.ball.get_pos(), aux.angle_to_point(field.ball.get_pos(), pnt), wp.WType.S_BALL_KICK)
         # self.goalk(field, waypoints, [const.GK], None)
 
-        self.passs(field, waypoints, 14, 8)
+
+        if (not field.is_ball_moves()):
+            kicker = robot.find_nearest_robot(field.ball.get_pos(), field.allies)
+            if (kicker.r_id == 14):
+                self.k = 14
+                self.r = 8
+                self.r_pos = aux.Point(-2500, -1500)
+            else:
+                self.k = 8
+                self.r = 14
+                self.r_pos = aux.Point(-2500, 1500)
+        self.pass_kicker(field, waypoints, self.k, self.r)
+        self.pass_receiver(field, waypoints, self.r, self.r_pos)
 
         # if field.is_ball_in(field.allies[14]):
         #     w = 2 * 3.14 / 4
@@ -244,70 +261,69 @@ class Strategy:
         # print(field.ball.get_pos(), waypoints[const.DEBUG_ID])
         return waypoints
 
-    def passs(self, field: field.Field, waypoints: list[wp.Waypoint], kicker_id: int, receiver_id: int) -> None:
+    def pass_kicker(self, field: field.Field, waypoints: list[wp.Waypoint], kicker_id: int, receiver_id: int) -> None:
+        """
+        Отдает пас от робота kicker_id роботу receiver_id
+        Должна вызываться в конечном автомате постоянно, пока первый робот не даст пас
+        """
+        kicker = field.allies[kicker_id]
+        receiver = field.allies[receiver_id]
+        if not field.is_ball_moves() and robot.find_nearest_robot(field.ball.get_pos(), field.all_bots) == kicker:
+            waypoints[kicker_id] = wp.Waypoint(
+                field.ball.get_pos(),
+                aux.angle_to_point(field.ball.get_pos(), receiver.get_pos()),
+                wp.WType.S_BALL_KICK,
+            )
+        else:
+            waypoints[kicker_id].type = wp.WType.S_STOP
+
+    def pass_receiver(self, field: field.Field, waypoints: list[wp.Waypoint], receiver_id: int, receive_point: aux.Point) -> None:
         """
         Отдает пас от робота kicker_id роботу receiver_id
         Должна вызываться в конечном автомате постоянно, пока второй робот не поймает мяч
         TODO: прописать действия отдающего пас робота после удара и принимающего пас робота до удара
         """
-        robot_near_ball = robot.find_nearest_robot(field.ball.get_pos(), field.all_bots)
-        field.allies[receiver_id].set_dribbler_speed(15)
-        if not field.is_ball_moves() and robot_near_ball == field.allies[kicker_id]:
-            print("start")
-            waypoints[kicker_id] = wp.Waypoint(
-                field.ball.get_pos(),
-                aux.angle_to_point(field.ball.get_pos(), field.allies[receiver_id].get_pos()),
-                wp.WType.S_BALL_KICK,
-            )
-            waypoints[receiver_id] = wp.Waypoint(
-                aux.Point(-2500, -2000),
-                aux.angle_to_point(field.allies[receiver_id].get_pos(), field.ball.get_pos()),
-                wp.WType.S_ENDPOINT,
-            )
-
-        elif (
-            not field.is_ball_moves_to_point(field.allies[receiver_id].get_pos())
-            and robot_near_ball == field.allies[receiver_id] 
-        ):
-
-            waypoints[receiver_id] = wp.Waypoint(field.ball.get_pos(), aux.angle_to_point(field.allies[receiver_id].get_pos(), self.choose_kick_point(field, receiver_id)), wp.WType.S_BALL_KICK)
-        elif field.is_ball_in(field.allies[receiver_id]):
-            print("A")
-            waypoints[kicker_id].type = wp.WType.S_STOP
-            if (
-                abs(
-                    aux.angle_to_point(field.allies[receiver_id].get_pos(), field.enemy_goal.center)
-                    - field.allies[receiver_id].get_angle()
-                )
-                > const.KICK_ALIGN_ANGLE
-            ):
-                w = 2 * 3.14 / 4
-                delta_r = aux.rotate(aux.Point(200, 0), math.pi * 1.2)
-                waypoints[receiver_id] = wp.Waypoint(delta_r, w, wp.WType.S_BALL_ROTATE)
-            else:
-                w = 2 * 3.14 / 4
-                delta_r = aux.rotate(aux.Point(200, 0), math.pi * 1.2)
-                field.allies[receiver_id].kick_forward()
-                waypoints[receiver_id] = wp.Waypoint(delta_r * 1000, w / 1000, wp.WType.S_BALL_ROTATE)
-        elif (
-            field.is_ball_moves_to_point(field.allies[receiver_id].get_pos())
+        receiver = field.allies[receiver_id]
+        # if (
+        #     not field.is_ball_moves_to_point(receiver.get_pos())
+        #     and robot_near_ball == field.allies[receiver_id]
+        # ):
+        #     waypoints[receiver_id] = wp.Waypoint(field.ball.get_pos(), aux.angle_to_point(field.allies[receiver_id].get_pos(), self.choose_kick_point(field, receiver_id)), wp.WType.S_BALL_KICK)
+        # elif field.is_ball_in(field.allies[receiver_id]):
+        #     print("A")
+        #     waypoints[kicker_id].type = wp.WType.S_STOP
+        #     if (
+        #         abs(
+        #             aux.angle_to_point(field.allies[receiver_id].get_pos(), field.enemy_goal.center)
+        #             - field.allies[receiver_id].get_angle()
+        #         )
+        #         > const.KICK_ALIGN_ANGLE
+        #     ):
+        #         w = 2 * 3.14 / 4
+        #         delta_r = aux.rotate(aux.Point(200, 0), math.pi * 1.2)
+        #         waypoints[receiver_id] = wp.Waypoint(delta_r, w, wp.WType.S_BALL_ROTATE)
+        #     else:
+        #         w = 2 * 3.14 / 4
+        #         delta_r = aux.rotate(aux.Point(200, 0), math.pi * 1.2)
+        #         field.allies[receiver_id].kick_forward()
+        #         waypoints[receiver_id] = wp.Waypoint(delta_r * 1000, w / 1000, wp.WType.S_BALL_ROTATE)
+        if (
+            field.is_ball_moves_to_point(receiver.get_pos())
             and self.ball_start_point is not None
             and (self.ball_start_point - field.ball.get_pos()).mag() > const.INTERCEPT_SPEED
         ):
             print("caching a ball")
             target = aux.closest_point_on_line(
-                self.ball_start_point, field.ball.get_pos(), field.allies[receiver_id].get_pos(), "R"
+                self.ball_start_point, field.ball.get_pos(), receiver.get_pos(), "R"
             )
 
             waypoints[receiver_id] = wp.Waypoint(
                 target, aux.angle_to_point(field.ball.get_pos(), self.ball_start_point), wp.WType.S_ENDPOINT
             )
-            waypoints[kicker_id].type = wp.WType.S_STOP
         else:
-            print("pass failed", 0)
-            waypoints[receiver_id].type = wp.WType.S_STOP
-            waypoints[kicker_id].type = wp.WType.S_STOP
-        print(field.ball.get_vel())
+            waypoints[receiver_id] = wp.Waypoint(
+                receive_point, aux.angle_to_point(receiver.get_pos(), field.ball.get_pos()), wp.WType.S_ENDPOINT
+            )
 
     def defence(
         self, field: field.Field, waypoints: list[wp.Waypoint], ENDPOINT_TYPE: wp.WType = wp.WType.S_ENDPOINT
