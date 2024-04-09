@@ -130,9 +130,13 @@ class Route:
         """
         target_point = self.get_next_wp()
 
+        rbt.kicker_charge_enable_ = 1
+        rbt.kicker_voltage_ = 7
+
         if target_point.type == wp.WType.S_BALL_ROTATE:
             ang_vel = target_point.angle
             transl_vel = aux.rotate(target_point.pos, rbt.get_angle()) * ang_vel
+            rbt.kicker_charge_enable_ = 1
             rbt.kicker_voltage_ = 7
             return rbt.update_vel_xyw(transl_vel, ang_vel)
 
@@ -183,7 +187,7 @@ class Route:
 
             rbt.dribbler_enable_ = True
             rbt.dribbler_speed_ = 15
-            rbt.kicker_voltage_ = 10
+            rbt.kicker_voltage_ = 7
         else:
             pass
 
@@ -191,13 +195,15 @@ class Route:
             end_point.type == wp.WType.S_BALL_KICK
             or end_point.type == wp.WType.S_BALL_KICK_UP
             or end_point.type == wp.WType.S_BALL_GRAB
-        ) and (rbt.is_kick_aligned(end_point) or fld.is_ball_in(rbt)):
+        ) and rbt.is_kick_aligned(end_point):
             # vel0 = (rbt.get_pos() - end_point.pos).unity()
             vel0 = -aux.rotate(aux.RIGHT, rbt.get_angle())
             # angle0 = end_point.angle
             angle0 = rbt.get_angle()
 
             if end_point.type == wp.WType.S_BALL_KICK:
+                print("A" * 1000)
+
                 rbt.auto_kick_ = 1
             elif end_point.type == wp.WType.S_BALL_KICK_UP:
                 rbt.auto_kick_ = 2

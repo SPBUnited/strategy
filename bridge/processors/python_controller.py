@@ -167,7 +167,12 @@ class SSLController(BaseProcessor):
                 balls_sum += ball
             ball = balls_sum / len(balls)
             self.field.update_ball(ball, time.time())
-
+        else:
+            r = self.field.ally_with_ball
+            if r is not None:
+                self.field.update_ball(r.get_pos() + aux.rotate(aux.Point(r.get_radius(), 0), r.get_angle()), time.time())
+            elif time.time() - self.field.ball.last_update() > 1:
+                self.field.update_ball(self.field.ball.get_pos(), time.time())
         return status
 
     def control_loop(self) -> None:

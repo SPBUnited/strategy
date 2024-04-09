@@ -65,6 +65,8 @@ class Field:
         TODO Сделать инициализацию реальными параметрами для корректного
         определения скоростей и ускорений в первые секунды
         """
+        self.ally_with_ball = None
+
         self.ally_color = ally_color
         if self.ally_color == "b":
             self.polarity = const.POLARITY * -1
@@ -109,14 +111,27 @@ class Field:
         !!! Вызывать один раз за итерацию с постоянной частотой !!!
         """
         self.ball.update(pos, 0, t)
+        
+        self.ally_with_ball = None
+        for r in self.allies:
+            if self._is_ball_in(r):
+                self.ally_with_ball = r
 
-    def is_ball_in(self, robo: robot.Robot) -> bool:
+
+    def _is_ball_in(self, robo: robot.Robot) -> bool:
         """
         Определить, находится ли мяч внутри дриблера
         """
         return (robo.get_pos() - self.ball.get_pos()).mag() < const.BALL_GRABBED_DIST and abs(
             aux.wind_down_angle((self.ball.get_pos() - robo.get_pos()).arg() - robo.get_angle())
         ) < const.BALL_GRABBED_ANGLE
+
+    def is_ball_in(self, robo: robot.Robot) -> bool:
+        """
+        Определить, находится ли мяч внутри дриблера
+        """
+        print(self.ally_with_ball)
+        return robo == self.ally_with_ball
 
     def update_blu_robot(self, idx: int, pos: aux.Point, angle: float, t: float) -> None:
         """

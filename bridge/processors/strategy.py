@@ -217,7 +217,7 @@ class Strategy:
         # waypoints[a_id] = wp.Waypoint(field.ball.get_pos(), aux.angle_to_point(field.ball.get_pos(), pnt), wp.WType.S_BALL_KICK)
         # self.goalk(field, waypoints, [const.GK], None)
 
-        # # self.passs(field, waypoints, 14, 8)
+        self.passs(field, waypoints, 14, 8)
 
         # if field.is_ball_in(field.allies[14]):
         #     w = 2 * 3.14 / 4
@@ -226,7 +226,7 @@ class Strategy:
         # else:
         #     waypoints[14] = wp.Waypoint(field.ball.get_pos(), 0, wp.WType.S_BALL_GRAB)
 
-        # waypoints[14]  = wp.Waypoint(aux.Point(self.square.get(), -2000), 1.507, wp.WType.S_ENDPOINT)
+        #waypoints[14]  = wp.Waypoint(aux.Point(self.square.get(), -2000), 1.507, wp.WType.S_ENDPOINT)
 
     square = signal.Signal(15, "SQUARE", ampoffset=(-1200, -2500))
     square_ang = signal.Signal(4, "SQUARE", lohi=(0, 1))
@@ -253,9 +253,10 @@ class Strategy:
         robot_near_ball = robot.find_nearest_robot(field.ball.get_pos(), field.all_bots)
         field.allies[receiver_id].set_dribbler_speed(15)
         if not field.is_ball_moves() and robot_near_ball == field.allies[kicker_id]:
+            print("start")
             waypoints[kicker_id] = wp.Waypoint(
                 field.ball.get_pos(),
-                aux.angle_to_point(field.ball.get_pos(), aux.Point(-2500, -2000)),
+                aux.angle_to_point(field.ball.get_pos(), field.allies[receiver_id].get_pos()),
                 wp.WType.S_BALL_KICK,
             )
             waypoints[receiver_id] = wp.Waypoint(
@@ -265,10 +266,13 @@ class Strategy:
             )
 
         elif (
-            not field.is_ball_moves()
-            and robot_near_ball == field.allies[receiver_id]
-            or field.is_ball_in(field.allies[receiver_id])
+            not field.is_ball_moves_to_point(field.allies[receiver_id].get_pos())
+            and robot_near_ball == field.allies[receiver_id] 
         ):
+
+            waypoints[receiver_id] = wp.Waypoint(field.ball.get_pos(), aux.angle_to_point(field.allies[receiver_id].get_pos(), self.choose_kick_point(field, receiver_id)), wp.WType.S_BALL_KICK)
+        elif field.is_ball_in(field.allies[receiver_id]):
+            print("A")
             waypoints[kicker_id].type = wp.WType.S_STOP
             if (
                 abs(
@@ -285,7 +289,6 @@ class Strategy:
                 delta_r = aux.rotate(aux.Point(200, 0), math.pi * 1.2)
                 field.allies[receiver_id].kick_forward()
                 waypoints[receiver_id] = wp.Waypoint(delta_r * 1000, w / 1000, wp.WType.S_BALL_ROTATE)
-
         elif (
             field.is_ball_moves_to_point(field.allies[receiver_id].get_pos())
             and self.ball_start_point is not None
