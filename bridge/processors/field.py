@@ -7,6 +7,8 @@ import bridge.processors.const as const
 import bridge.processors.entity as entity
 import bridge.processors.robot as robot
 
+from math import sin
+
 
 class Goal:
     """
@@ -111,7 +113,7 @@ class Field:
         !!! Вызывать один раз за итерацию с постоянной частотой !!!
         """
         self.ball.update(pos, 0, t)
-        
+
         self.ally_with_ball = None
         for r in self.allies:
             if self._is_ball_in(r):
@@ -187,8 +189,9 @@ class Field:
         """
         Определить, движется ли мяч в сторону точки
         """
-        # print(self.ball.get_vel(), aux.scal_mult(self.ball.get_vel(), (point - self.ball.get_pos()).unity()))
-        return aux.scal_mult(self.ball.get_vel(), (point - self.ball.get_pos()).unity()) > const.INTERCEPT_SPEED
+        vec_to_point = point - self.ball.get_pos()
+        # print( self.ball.get_vel().mag() * (sin(vec_to_point.arg() - self.ball.get_vel().mag()) ** 2) , const.INTERCEPT_SPEED)
+        return self.ball.get_vel().mag() * (sin(vec_to_point.arg() - self.ball.get_vel().mag()) ** 2) > const.INTERCEPT_SPEED
 
     def is_ball_moves_to_goal(self) -> bool:
         """

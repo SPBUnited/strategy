@@ -223,9 +223,9 @@ class Strategy:
         # self.goalk(field, waypoints, [const.GK], None)
 
 
-        if (not field.is_ball_moves()):
+        if not field.is_ball_moves_to_point(field.allies[self.r].get_pos()):
             kicker = robot.find_nearest_robot(field.ball.get_pos(), field.allies)
-            if (kicker.r_id == 14):
+            if kicker.r_id == 14:
                 self.k = 14
                 self.r = 8
                 self.r_pos = aux.Point(-2500, -1500)
@@ -235,6 +235,7 @@ class Strategy:
                 self.r_pos = aux.Point(-2500, 1500)
         self.pass_kicker(field, waypoints, self.k, self.r)
         self.pass_receiver(field, waypoints, self.r, self.r_pos)
+        print(field.ball.get_vel())
 
         # if field.is_ball_in(field.allies[14]):
         #     w = 2 * 3.14 / 4
@@ -268,7 +269,7 @@ class Strategy:
         """
         kicker = field.allies[kicker_id]
         receiver = field.allies[receiver_id]
-        if not field.is_ball_moves() and robot.find_nearest_robot(field.ball.get_pos(), field.all_bots) == kicker:
+        if not field.is_ball_moves_to_point(receiver.get_pos()):
             waypoints[kicker_id] = wp.Waypoint(
                 field.ball.get_pos(),
                 aux.angle_to_point(field.ball.get_pos(), receiver.get_pos()),
@@ -866,7 +867,7 @@ class Strategy:
         if (
             field.is_ball_moves_to_goal()
             and self.ball_start_point is not None
-            and (self.ball_start_point - field.ball.get_pos()).mag() > const.INTERCEPT_SPEED * 0.5
+            and (self.ball_start_point - field.ball.get_pos()).mag() > const.INTERCEPT_SPEED
         ):
             tmpPos = aux.get_line_intersection(
                 self.ball_start_point, field.ball.get_pos(), field.ally_goal.down, field.ally_goal.up, "RS"

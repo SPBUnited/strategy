@@ -70,7 +70,7 @@ class Robot(entity.Entity):
 
         # !v REAL
         # if self.r_id != const.GK:
-        gains_full = [3, 0.25, 0, const.MAX_SPEED]
+        gains_full = [3, 0.35, 0, const.MAX_SPEED]
         gains_soft = [3, 0.25, 0, const.SOFT_MAX_SPEED]
         # gains_soft = [10, 0.32, 0, const.SOFT_MAX_SPEED]
         # gains_soft = gains_full
@@ -217,7 +217,7 @@ class Robot(entity.Entity):
 
         commit_scale = 1.2 if self.is_kick_commited else 1
         is_dist = (self.get_pos() - target.pos).mag() < const.KICK_ALIGN_DIST * const.KICK_ALIGN_DIST_MULT * commit_scale
-        is_angle = abs(aux.wind_down_angle(self._angle - target.angle)) < const.KICK_ALIGN_ANGLE * commit_scale
+        is_angle = self.is_kick_aligned_by_angle(target)
         is_offset = (
             aux.dist(
                 aux.closest_point_on_line(
@@ -236,7 +236,17 @@ class Robot(entity.Entity):
             self.is_kick_commited = True
         else:
             self.is_kick_commited = False
+
         return is_aligned
+
+
+    def is_kick_aligned_by_angle(self, target: wp.Waypoint) -> bool:
+        """
+        Определить, выровнен ли робот относительно путевой точки target
+        """
+        commit_scale = 1.2 if self.is_kick_commited else 1
+        return abs(aux.wind_down_angle(self._angle - target.angle)) < const.KICK_ALIGN_ANGLE * commit_scale
+
 
     def update_vel_xyw(self, vel: aux.Point, wvel: float) -> None:
         """

@@ -204,20 +204,9 @@ class Route:
             # angle0 = end_point.angle
             angle0 = rbt.get_angle()
 
-            if end_point.type == wp.WType.S_BALL_KICK:
-                print("A" * 1000)
-
-                rbt.auto_kick_ = 1
-            elif end_point.type == wp.WType.S_BALL_KICK_UP:
-                rbt.auto_kick_ = 2
-            else:
-                rbt.auto_kick_ = 0
-
             transl_vel = vel0 * 400
 
         else:
-            rbt.auto_kick_ = 0
-
             u_x = -rbt.pos_reg_x.process(vec_err.x, -cur_vel.x)
             u_y = -rbt.pos_reg_y.process(vec_err.y, -cur_vel.y)
             # transl_vel = vel0 * u
@@ -238,5 +227,13 @@ class Route:
         # vel0 = -aux.rotate(aux.RIGHT, rbt.get_angle())
         # transl_vel = vel0 * 200
         # ang_vel = 0.7
+
+
+        if end_point.type == wp.WType.S_BALL_KICK and rbt.is_kick_aligned_by_angle(end_point):
+            rbt.auto_kick_ = 1
+        elif end_point.type == wp.WType.S_BALL_KICK_UP and rbt.is_kick_aligned_by_angle(end_point):
+            rbt.auto_kick_ = 2
+        else:
+            rbt.auto_kick_ = 0
 
         rbt.update_vel_xyw(transl_vel, ang_vel)

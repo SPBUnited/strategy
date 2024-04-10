@@ -172,7 +172,8 @@ class SSLController(BaseProcessor):
             if r is not None:
                 self.field.update_ball(r.get_pos() + aux.rotate(aux.Point(r.get_radius(), 0), r.get_angle()), time.time())
             elif time.time() - self.field.ball.last_update() > 1:
-                self.field.update_ball(self.field.ball.get_pos(), time.time())
+                # self.field.update_ball(self.field.ball.get_pos(), time.time())
+                self.field.ball._vel = aux.Point(0, 0)
         return status
 
     def control_loop(self) -> None:
