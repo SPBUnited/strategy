@@ -103,11 +103,6 @@ class SSLController(BaseProcessor):
             # camera_id = detection.camera_id
             for ball in detection.balls:
                 balls.append(aux.Point(ball.x, ball.y))
-            for i in range(const.TEAM_ROBOTS_MAX_COUNT):
-                if time.time() - self.field.b_team[i].last_update() > 10:
-                    self.field.b_team[i].used(0)
-                if time.time() - self.field.y_team[i].last_update() > 10:
-                    self.field.y_team[i].used(0)
 
             # self.strategy.change_game_state(strategy.GameStates.RUN, 0)
 
@@ -144,7 +139,7 @@ class SSLController(BaseProcessor):
 
             # TODO: Barrier states
             for robot_det in detection.robots_blue:
-                if time.time() - self.field.b_team[robot_det.robot_id].last_update() > 0.3:
+                if time.time() - self.field.b_team[robot_det.robot_id].last_update() > 0.5:
                     self.field.b_team[robot_det.robot_id].used(0)
                 else:
                     self.field.b_team[robot_det.robot_id].used(1)
@@ -153,7 +148,7 @@ class SSLController(BaseProcessor):
                 )
 
             for robot_det in detection.robots_yellow:
-                if time.time() - self.field.y_team[robot_det.robot_id].last_update() > 0.3:
+                if time.time() - self.field.y_team[robot_det.robot_id].last_update() > 0.5:
                     self.field.y_team[robot_det.robot_id].used(0)
                 else:
                     self.field.y_team[robot_det.robot_id].used(1)

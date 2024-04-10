@@ -9,7 +9,7 @@ import math
 # !v DEBUG ONLY
 import typing
 from enum import Enum
-from typing import Optional
+from typing import Optional, Union
 
 import bridge.processors.auxiliary as aux
 import bridge.processors.const as const
@@ -223,19 +223,21 @@ class Strategy:
         # self.goalk(field, waypoints, [const.GK], None)
 
 
-        if not field.is_ball_moves_to_point(field.allies[self.r].get_pos()):
-            kicker = robot.find_nearest_robot(field.ball.get_pos(), field.allies)
-            if kicker.r_id == 14:
-                self.k = 14
-                self.r = 8
-                self.r_pos = aux.Point(-2500, -1500)
-            else:
-                self.k = 8
-                self.r = 14
-                self.r_pos = aux.Point(-2500, 1500)
-        self.pass_kicker(field, waypoints, self.k, self.r)
-        self.pass_receiver(field, waypoints, self.r, self.r_pos)
-        print(field.ball.get_vel())
+        # if not field.is_ball_moves_to_point(field.allies[self.r].get_pos()):
+        #     kicker = robot.find_nearest_robot(field.ball.get_pos(), field.allies)
+        #     if kicker.r_id == 14:
+        #         self.k = 14
+        #         self.r = 8
+        #         self.r_pos = aux.Point(-2500, -1500)
+        #     else:
+        #         self.k = 8
+        #         self.r = 14
+        #         self.r_pos = aux.Point(-2500, 1500)
+        # self.pass_kicker(field, waypoints, self.k, self.r)
+        # self.pass_receiver(field, waypoints, self.r, self.r_pos)
+        # print(field.ball.get_vel())
+        field.enemies[0]._pos = aux.Point(0, 700)
+        print(self.estimate_pass_point(field, aux.Point(0, 0), aux.Point(0, 1000)))
 
         # if field.is_ball_in(field.allies[14]):
         #     w = 2 * 3.14 / 4
@@ -437,16 +439,57 @@ class Strategy:
                 used_robots_id.append(field.allies[i].r_id)
         return sorted(wall_bots)
 
-    def choose_kick_point(self, field: field.Field, robot_inx: int) -> Optional[aux.Point]:
+    def estimate_pass_point(self, field: field.Field, frm: aux.Point, to: aux.Point):
+        positions = []
+        for robot in field.enemies:
+            if robot.is_used() or robot.r_id == 0:
+                positions.append([robot.r_id, robot.get_pos()])
+        positions = sorted(positions, key=lambda x: x[1].y)
+
+        tangents = []
+        for p in positions:
+            tgs = aux.get_tangent_points(p[1], frm, const.ROBOT_R)
+            if tgs is None or isinstance(tgs, aux.Point):
+                print(p, frm, tgs)
+                continue
+            #print(tgs[0], tgs[1])
+            tangents.append([p[0], tgs])
+            print(tgs[1])
+
+        min_ = 10e3
+    
+        shadows_bots = []
+        for i in range(len(tangents)):
+            ang1 = aux.get_angle_between_points(to, frm, tangents[i][1][0])
+            ang2 = aux.get_angle_between_points(to, frm, tangents[i][1][1])
+
+            if not ((ang1 >= 180 and ang2 >= 180) or (ang1 <= 180 and ang2 <= 180)):
+                shadows_bots.append(tangents[i][0])
+            
+            if ang1 > 180:
+                ang1 = 360 - ang1
+            if ang2 > 180:
+                ang2 = 360 - ang2
+
+            if ang1 < min_:
+                min_ = ang1
+            if ang2 < min_:
+                min_ = ang2
+        # if minId == -1:
+        #     return 0
+        # print(min_, minId)
+        return min(abs(min_ / const.MIN_GOOD_ANGLE), 1)
+
+    def choose_kick_point(self, field: field.Field, robot_inx: int) -> Union[aux.Point, float]:
         ball_pos = field.ball.get_pos()
 
         positions = []
         for robot in field.allies:
             if robot.r_id != field.allies[robot_inx].r_id:
-                if aux.dist(robot.get_pos(), field.enemy_goal.center) < aux.dist(field.enemy_goal.center, ball_pos):
+                if aux.dist(robot.get_pos(), field.enemy_goal.center) < aux.dist(field.enemy_goal.center, ball_pos) and robot.is_used():
                     positions.append(robot.get_pos())
         for robot in field.enemies:
-            if aux.dist(robot.get_pos(), field.enemy_goal.center) < aux.dist(field.enemy_goal.center, ball_pos):
+            if aux.dist(robot.get_pos(), field.enemy_goal.center) < aux.dist(field.enemy_goal.center, ball_pos) and robot.is_used():
                 positions.append(robot.get_pos())
 
         positions = sorted(positions, key=lambda x: x.y)
@@ -498,7 +541,7 @@ class Strategy:
                 maxId = i
 
         if maxId == -1:
-            return None
+            return field.enemy_goal.center, 0
 
         A = segments[maxId + 1]
         B = ball_pos
@@ -508,7 +551,11 @@ class Strategy:
         CA = A - C
         pnt = C + CA * 0.5 * (tmp1 / tmp2)
         self.image.draw_dot(pnt, 10, (255, 0, 0))
-        return pnt
+
+        if max_ > 180:
+            max_ = 360 - max_
+        max_ /= 2
+        return pnt, min(max_ / const.MIN_GOOD_ANGLE, 1)
 
     def reset_all_attack_var(self) -> None:
         """Обнуление глобальных параметров атаки, используется при смене состояния на атаку"""
