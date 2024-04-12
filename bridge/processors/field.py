@@ -7,7 +7,7 @@ import bridge.processors.const as const
 import bridge.processors.entity as entity
 import bridge.processors.robot as robot
 
-from math import sin
+from math import cos
 
 
 class Goal:
@@ -191,7 +191,7 @@ class Field:
         """
         vec_to_point = point - self.ball.get_pos()
         # print( self.ball.get_vel().mag() * (sin(vec_to_point.arg() - self.ball.get_vel().mag()) ** 2) , const.INTERCEPT_SPEED)
-        return self.ball.get_vel().mag() * (sin(vec_to_point.arg() - self.ball.get_vel().mag()) ** 2) > const.INTERCEPT_SPEED
+        return self.ball.get_vel().mag() * (cos(vec_to_point.arg() - self.ball.get_vel().arg()) ** 2) > const.INTERCEPT_SPEED * 2
 
     def is_ball_moves_to_goal(self) -> bool:
         """

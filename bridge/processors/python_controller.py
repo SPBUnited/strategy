@@ -118,7 +118,7 @@ class SSLController(BaseProcessor):
                 8: strategy.GameStates.PENALTY,
                 9: strategy.GameStates.FREE_KICK,
                 10: strategy.GameStates.HALT,
-                11: strategy.GameStates.BALL_PLACMENT,
+                11: strategy.GameStates.BALL_PLACEMENT,
             }
 
             cur_cmd = self.get_last_referee_command()
@@ -212,12 +212,11 @@ class SSLController(BaseProcessor):
         """
         Выполнить цикл процессора
         """
-
+        
         self.delta_t = time.time() - self.cur_time
         # print(self.delta_t)
         self.cur_time = time.time()
 
-        # print(self.delta_t)
         # print(self.ally_color)
         self.read_vision()
         self.control_loop()

@@ -10,7 +10,7 @@ POLARITY = 1  # 1 если ворота синих на +x; -1 если воро
 IS_SIMULATOR_USED = False
 SELF_PLAY = True
 
-GK = 11
+GK = 13
 PENALTY_KICKER = 1
 ENEMY_GK = 5
 
@@ -61,7 +61,7 @@ TOPIC_SINK = "control-sink"
 
 ##################################################
 # CONTROL CONSTS
-Ts = 0.05  # s
+Ts = 0.03 # s
 
 # ROBOT SETTING CONSTS
 # MAX_SPEED = 100
@@ -79,7 +79,7 @@ R_KP = 7
 R_KD = 0
 KP = 0.1
 
-INTERCEPT_SPEED = 300
+INTERCEPT_SPEED = 50
 GK_PEN_KICKOUT_SPEED = 500
 ##################################################
 # GEOMETRY CONSTS
@@ -108,4 +108,5 @@ BALL_GRABBED_ANGLE = 0.8
 VANISH_DIST = 200
 
 # SOME STRATEGY TRASH
-MIN_GOOD_ANGLE = 20
+MIN_GOOD_ANGLE = 90
+ROBOT_SPEED = 1.5

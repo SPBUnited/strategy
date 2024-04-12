@@ -21,7 +21,7 @@ class Entity:
     Хранит положение, скорость, угол и тп.
     """
 
-    def __init__(self, pos: aux.Point, angle: float, R: float, T: float = 0.05) -> None:
+    def __init__(self, pos: aux.Point, angle: float, R: float, T: float = const.Ts) -> None:
         """
         Конструктор
 

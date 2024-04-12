@@ -71,7 +71,7 @@ class Robot(entity.Entity):
         # !v REAL
         # if self.r_id != const.GK:
         gains_full = [3, 0.35, 0, const.MAX_SPEED]
-        gains_soft = [3, 0.25, 0, const.SOFT_MAX_SPEED]
+        gains_soft = [2.5, 0.35, 0, const.SOFT_MAX_SPEED]
         # gains_soft = [10, 0.32, 0, const.SOFT_MAX_SPEED]
         # gains_soft = gains_full
         a_gains_full = [6, 0.1, 0.1, const.MAX_SPEED_R]  # 4, 0.1, 0.1
@@ -111,7 +111,7 @@ class Robot(entity.Entity):
             [a_gains_full[3], a_gains_soft[3]],
         )
 
-        self.is_kick_commited = False
+        self.is_kick_committed = False
 
     def __eq__(self, robo: typing.Any) -> bool:
         if not isinstance(robo, Robot):
@@ -215,7 +215,7 @@ class Robot(entity.Entity):
         # print(aux.i, target.angle, aux.rotate(aux.i, target.angle), target.pos,
         #                                       self._pos, target.pos - self._pos)
 
-        commit_scale = 1.2 if self.is_kick_commited else 1
+        commit_scale = 1.2 if self.is_kick_committed else 1
         is_dist = (self.get_pos() - target.pos).mag() < const.KICK_ALIGN_DIST * const.KICK_ALIGN_DIST_MULT * commit_scale
         is_angle = self.is_kick_aligned_by_angle(target)
         is_offset = (
@@ -233,9 +233,9 @@ class Robot(entity.Entity):
         #     print("is_dist: ", is_dist, ",\tis_angle: ", is_angle, ",\tis_offset: ", is_offset)
 
         if is_aligned:
-            self.is_kick_commited = True
+            self.is_kick_committed = True
         else:
-            self.is_kick_commited = False
+            self.is_kick_committed = False
 
         return is_aligned
 
@@ -244,7 +244,7 @@ class Robot(entity.Entity):
         """
         Определить, выровнен ли робот относительно путевой точки target
         """
-        commit_scale = 1.2 if self.is_kick_commited else 1
+        commit_scale = 1.2 if self.is_kick_committed else 1
         return abs(aux.wind_down_angle(self._angle - target.angle)) < const.KICK_ALIGN_ANGLE * commit_scale
 
 
