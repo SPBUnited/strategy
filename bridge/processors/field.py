@@ -2,12 +2,13 @@
 Модуль описания структуры Field для хранения информации об объектах на поле (роботы и мяч)
 """
 
+from math import cos
+from typing import Optional
+
 import bridge.processors.auxiliary as aux
 import bridge.processors.const as const
 import bridge.processors.entity as entity
 import bridge.processors.robot as robot
-
-from math import cos
 
 
 class Goal:
@@ -67,7 +68,7 @@ class Field:
         TODO Сделать инициализацию реальными параметрами для корректного
         определения скоростей и ускорений в первые секунды
         """
-        self.ally_with_ball = None
+        self.ally_with_ball: Optional[robot.Robot] = None
 
         self.ally_color = ally_color
         if self.ally_color == "b":
@@ -118,7 +119,6 @@ class Field:
         for r in self.allies:
             if self._is_ball_in(r):
                 self.ally_with_ball = r
-
 
     def _is_ball_in(self, robo: robot.Robot) -> bool:
         """
@@ -190,8 +190,10 @@ class Field:
         Определить, движется ли мяч в сторону точки
         """
         vec_to_point = point - self.ball.get_pos()
-        # print( self.ball.get_vel().mag() * (sin(vec_to_point.arg() - self.ball.get_vel().mag()) ** 2) , const.INTERCEPT_SPEED)
-        return self.ball.get_vel().mag() * (cos(vec_to_point.arg() - self.ball.get_vel().arg()) ** 2) > const.INTERCEPT_SPEED * 2
+        return (
+            self.ball.get_vel().mag() * (cos(vec_to_point.arg() - self.ball.get_vel().arg()) ** 2)
+            > const.INTERCEPT_SPEED * 2
+        )
 
     def is_ball_moves_to_goal(self) -> bool:
         """

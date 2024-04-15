@@ -228,7 +228,6 @@ class Route:
         # transl_vel = vel0 * 200
         # ang_vel = 0.7
 
-
         if end_point.type == wp.WType.S_BALL_KICK and rbt.is_kick_aligned_by_angle(end_point):
             rbt.auto_kick_ = 1
         elif end_point.type == wp.WType.S_BALL_KICK_UP and rbt.is_kick_aligned_by_angle(end_point):

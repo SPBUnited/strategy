@@ -1,15 +1,16 @@
+import math
+
+import bridge.processors.auxiliary as aux
 import bridge.processors.const as const
 import bridge.processors.field as field
-import bridge.processors.waypoint as wp
-import bridge.processors.auxiliary as aux
 import bridge.processors.robot as robot
+import bridge.processors.waypoint as wp
 
-import math
 
 class RefStates:
     def __init__(self) -> None:
         self.we_active = 1
-        
+
         # PENALTY
         self.we_kick = 0
         self.is_started = 0

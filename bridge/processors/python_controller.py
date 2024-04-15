@@ -212,7 +212,7 @@ class SSLController(BaseProcessor):
         """
         Выполнить цикл процессора
         """
-        
+
         self.delta_t = time.time() - self.cur_time
         # print(self.delta_t)
         self.cur_time = time.time()

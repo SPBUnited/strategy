@@ -61,7 +61,7 @@ TOPIC_SINK = "control-sink"
 
 ##################################################
 # CONTROL CONSTS
-Ts = 0.03 # s
+Ts = 0.03  # s
 
 # ROBOT SETTING CONSTS
 # MAX_SPEED = 100
