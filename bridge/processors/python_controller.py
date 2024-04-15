@@ -74,6 +74,13 @@ class SSLController(BaseProcessor):
         status = False
 
         balls: list[aux.Point] = []
+        b_bots_id: list[int] = []
+        b_bots_pos: list[list] = [[] for _ in range(const.TEAM_ROBOTS_MAX_COUNT)]
+        b_bots_ang: list[list] = [[] for _ in range(const.TEAM_ROBOTS_MAX_COUNT)]
+
+        y_bots_id: list[int] = []
+        y_bots_pos: list[list] = [[] for _ in range(const.TEAM_ROBOTS_MAX_COUNT)]
+        y_bots_ang: list[list] = [[] for _ in range(const.TEAM_ROBOTS_MAX_COUNT)]
         field_info = np.zeros(const.GEOMETRY_PACKET_SIZE)
 
         queue = self.vision_reader.read_new()
@@ -107,20 +114,7 @@ class SSLController(BaseProcessor):
             # self.strategy.change_game_state(strategy.GameStates.RUN, 0)
 
             # TODO Вынести в константы
-            """game_controller_mapping = {
-                1: strategy.GameStates.STOP,
-                2: strategy.GameStates.RUN,
-                3: strategy.GameStates.TIMEOUT,
-                4: strategy.GameStates.HALT,
-                5: strategy.GameStates.PREPARE_KICKOFF,
-                6: strategy.GameStates.KICKOFF,
-                7: strategy.GameStates.PREPARE_PENALTY,
-                8: strategy.GameStates.PENALTY,
-                9: strategy.GameStates.FREE_KICK,
-                10: strategy.GameStates.HALT,
-                11: strategy.GameStates.BALL_PLACEMENT,
-            }
-
+            """
             cur_cmd = self.get_last_referee_command()
             if cur_cmd.state == 0:
                 self.count_halt_cmd += 1
@@ -143,18 +137,21 @@ class SSLController(BaseProcessor):
                     self.field.b_team[robot_det.robot_id].used(0)
                 else:
                     self.field.b_team[robot_det.robot_id].used(1)
-                self.field.update_blu_robot(
-                    robot_det.robot_id, aux.Point(robot_det.x, robot_det.y), robot_det.orientation, time.time()
-                )
+                b_bots_id.append(robot_det.robot_id)
+                b_bots_pos[robot_det.robot_id].append(aux.Point(robot_det.x, robot_det.y))
+                b_bots_ang[robot_det.robot_id].append(robot_det.orientation)
+                # self.field.update_blu_robot(
+                #     robot_det.robot_id, aux.Point(robot_det.x, robot_det.y), robot_det.orientation, time.time()
+                # )
 
             for robot_det in detection.robots_yellow:
                 if time.time() - self.field.y_team[robot_det.robot_id].last_update() > 0.5:
                     self.field.y_team[robot_det.robot_id].used(0)
                 else:
                     self.field.y_team[robot_det.robot_id].used(1)
-                self.field.update_yel_robot(
-                    robot_det.robot_id, aux.Point(robot_det.x, robot_det.y), robot_det.orientation, time.time()
-                )
+                y_bots_id.append(robot_det.robot_id)
+                y_bots_pos[robot_det.robot_id].append(aux.Point(robot_det.x, robot_det.y))
+                y_bots_ang[robot_det.robot_id].append(robot_det.orientation)
 
         if len(balls) != 0:
             balls_sum = aux.Point(0, 0)
@@ -162,13 +159,19 @@ class SSLController(BaseProcessor):
                 balls_sum += ball
             ball = balls_sum / len(balls)
             self.field.update_ball(ball, time.time())
-        else:
-            r = self.field.ally_with_ball
-            if r is not None:
-                self.field.update_ball(r.get_pos() + aux.rotate(aux.Point(r.get_radius(), 0), r.get_angle()), time.time())
-            elif time.time() - self.field.ball.last_update() > 1:
-                # self.field.update_ball(self.field.ball.get_pos(), time.time())
-                self.field.ball._vel = aux.Point(0, 0)
+
+        for r_id in b_bots_id:
+            position = aux.average_point(b_bots_pos[r_id])
+            angle = aux.average_angle(b_bots_ang[r_id])
+            if position != self.field.b_team[r_id].get_pos():
+                self.field.update_blu_robot(r_id, position, angle, time.time())
+
+        for r_id in y_bots_id:
+            position = aux.average_point(y_bots_pos[r_id])
+            angle = sum(y_bots_ang[r_id]) / len(y_bots_ang[r_id])
+            if position != self.field.y_team[r_id].get_pos():
+                self.field.update_blu_robot(r_id, position, angle, time.time())
+
         return status
 
     def control_loop(self) -> None:

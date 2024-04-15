@@ -106,7 +106,7 @@ class Image:
         if self.disable:
             return
         pygame.display.flip()
-        self.draw_field()
+        # self.draw_field()
 
     def draw_bang_bang_trajectory(
         self, pos1: aux.Point, v1: aux.Point, pos2: aux.Point, v2: Optional[aux.Point] = None

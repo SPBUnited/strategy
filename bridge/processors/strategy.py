@@ -11,6 +11,7 @@ import typing
 from enum import Enum
 from time import time
 from typing import Optional
+from time import time
 
 import bridge.processors.auxiliary as aux
 import bridge.processors.const as const
@@ -20,6 +21,7 @@ import bridge.processors.ref_states as refs
 import bridge.processors.robot as robot
 import bridge.processors.signal as signal
 import bridge.processors.waypoint as wp
+import bridge.processors.twisted_kick as twist
 
 
 class States(Enum):
@@ -81,6 +83,7 @@ class Strategy:
         self.used_pop_pos = [False, False, False, False, False]
 
         self.image = draw.Image()
+        self.image.draw_field()
         self.ball_start_point: Optional[aux.Point] = None
         self.start_rotating: float = 0.0
 
@@ -257,11 +260,26 @@ class Strategy:
         # if field.is_ball_in(field.allies[14]):
         #     w = 2 * 3.14 / 4
         #     delta_r = aux.rotate(aux.Point(200, 0), math.pi * 1.2)
-        #     waypoints[14] = wp.Waypoint(delta_r, w, wp.WType.S_BALL_ROTATE)
+        #     waypoints[14] = wp.Waypoint(delta_r, w, wp.WType.S_VELOCITY)
         # else:
         #     waypoints[14] = wp.Waypoint(field.ball.get_pos(), 0, wp.WType.S_BALL_GRAB)
 
         # waypoints[14]  = wp.Waypoint(aux.Point(self.square.get(), -2000), 1.507, wp.WType.S_ENDPOINT)
+        id = 8
+        w = 2 * 3.14 / 10
+        field.allies[id].set_dribbler_speed(15)
+        field.allies[id].kicker_voltage_ = 5
+        # waypoints[id] = wp.Waypoint(aux.Point(-100, 100), 3, wp.WType.S_VELOCITY)
+        if time() - self.timer < 0.5:
+            field.allies[id].kick_forward()
+        elif time() - self.timer < 1000:
+            waypoints[id] = wp.Waypoint(aux.Point(-0, 0), 0, wp.WType.S_VELOCITY)
+        elif time() - self.timer < 10.5:
+            # waypoints[id] = wp.Waypoint(aux.Point(0, 100), 3, wp.WType.S_VELOCITY)
+            waypoints[id] = twist.spin_with_ball(1)
+        else:
+            field.allies[id].kick_forward()
+            self.timer = time()
 
     square = signal.Signal(15, "SQUARE", ampoffset=(-1200, -2500))
     square_ang = signal.Signal(4, "SQUARE", lohi=(0, 1))
@@ -339,12 +357,14 @@ class Strategy:
                 )
                 > const.KICK_ALIGN_ANGLE
             ):
-                twist.r
+                w = 2 * 3.14 / 4
+                delta_r = aux.rotate(aux.Point(200, 0), math.pi * 1.2)
+                waypoints[receiver_id] = wp.Waypoint(delta_r, w, wp.WType.S_VELOCITY)
             else:
                 w = 2 * 3.14 / 4
                 delta_r = aux.rotate(aux.Point(200, 0), math.pi * 1.2)
                 field.allies[receiver_id].kick_forward()
-                waypoints[receiver_id] = wp.Waypoint(delta_r * 1000, w / 1000, wp.WType.S_BALL_ROTATE)
+                waypoints[receiver_id] = wp.Waypoint(delta_r * 1000, w / 1000, wp.WType.S_VELOCITY)
 
 
     def defence(
