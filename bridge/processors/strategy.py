@@ -91,6 +91,9 @@ class Strategy:
         self.r = 8
         self.r_pos = aux.Point(-2500, -1500)
 
+        self.wait_kick = False
+        self.wait_kick_timer = 0
+
     def change_game_state(self, new_state: GameStates, upd_active_team: int) -> None:
         """Изменение состояния игры и цвета команды"""
         self.game_status = new_state
@@ -261,10 +264,13 @@ class Strategy:
         self.goalk(field, waypoints, [13], None)"""
 
         if field.is_ball_in(field.allies[12]):
-            kick_point = self.choose_kick_point(field, 12, field.ball.get_pos())
-            self.kick_with_rotation(field, waypoints, 12, kick_point[0])
+            # kick_point = self.choose_kick_point(field, 12, field.ball.get_pos())[0]
+            kick_point = field.allies[8].get_pos()
+            self.kick_with_rotation(field, waypoints, 12, kick_point)
         else:
             waypoints[12] = wp.Waypoint(field.ball.get_pos(), 0, wp.WType.S_BALL_GRAB)
+            self.wait_kick = False
+            self.start_rotating_ang = None
 
         # if time() - self.timer > 5 and self.timer1 is None:
         #     field.allies[12].kick_forward()
@@ -354,12 +360,12 @@ class Strategy:
         A = abs(signed_A)
         x = aux.wind_down_angle(kicker.get_angle() - self.start_rotating_ang)
 
-        beta = 3
+        beta = 5
         w0 = 0.5
         a = beta / A - w0 / (A**2)
         b = 2*A*a - beta
         w = - a * x * x + b * abs(x) + w0
-        if signed_A < x:
+        if signed_A < 0:
             w *= -1
 
         if abs(signed_A-x) > const.KICK_ALIGN_ANGLE:
@@ -368,7 +374,16 @@ class Strategy:
             # waypoints[kicker_id] = wp.Waypoint(delta_r, w, wp.WType.S_VELOCITY)
             waypoints[kicker_id] = twist.spin_with_ball(w)
         else:
-            field.allies[kicker_id].kick_forward()
+            if not self.wait_kick:
+                self.wait_kick = True
+                self.wait_kick_timer = time()
+            else:
+                wt = 1
+                if time() - self.wait_kick_timer > wt:
+                    self.wait_kick = False
+                    field.allies[kicker_id].kick_forward()
+                else:
+                    field.allies[kicker_id].set_dribbler_speed(max(3, 15 - 20 * (time() - self.wait_kick_timer)))
             waypoints[kicker_id] = wp.Waypoint(aux.Point(0, 0), 0, wp.WType.S_STOP)
 
     def defense(

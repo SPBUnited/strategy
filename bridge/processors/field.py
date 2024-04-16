@@ -115,11 +115,6 @@ class Field:
         """
         self.ball.update(pos, 0, t)
 
-        self.ally_with_ball = None
-        for r in self.allies:
-            if self._is_ball_in(r):
-                self.ally_with_ball = r
-
     def _is_ball_in(self, robo: robot.Robot) -> bool:
         """
         Определить, находится ли мяч внутри дриблера

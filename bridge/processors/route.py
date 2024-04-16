@@ -177,9 +177,6 @@ class Route:
         rbt.pos_reg_x.select_mode(tau.Mode.NORMAL)
         rbt.pos_reg_y.select_mode(tau.Mode.NORMAL)
 
-        rbt.dribbler_enable_ = True
-        rbt.dribbler_speed_ = 15
-
         if (
             end_point.type == wp.WType.S_BALL_KICK
             or end_point.type == wp.WType.S_BALL_KICK_UP

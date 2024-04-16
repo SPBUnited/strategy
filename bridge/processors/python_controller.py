@@ -159,6 +159,15 @@ class SSLController(BaseProcessor):
                 balls_sum += ball
             ball = balls_sum / len(balls)
             self.field.update_ball(ball, time.time())
+        elif self.field.ally_with_ball is not None:
+            ally = self.field.ally_with_ball
+            ball = ally.get_pos() + aux.rotate(aux.RIGHT, ally.get_angle()) * ally.get_radius() / 2
+            self.field.update_ball(ball, time.time())
+
+        self.field.ally_with_ball = None
+        for r in self.field.allies:
+            if self.field._is_ball_in(r):
+                self.field.ally_with_ball = r
 
         for r_id in b_bots_id:
             position = aux.average_point(b_bots_pos[r_id])
