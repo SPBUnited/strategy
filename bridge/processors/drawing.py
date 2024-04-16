@@ -68,25 +68,20 @@ class Image:
         )  # Вертикальная линия
         pygame.draw.circle(self.screen, line_color, (self.middle_x, self.middle_y), 50, 2)  # Круг в центре
 
-    def draw_poly(self, dots: list[aux.Point], color: tuple[int, int, int] = (0, 255, 255)) -> None:
+    def draw_poly(self, dots: list[aux.Point], color: tuple[int, int, int] = (255, 255, 255)) -> None:
         """
         Connect nearest dots with line 
         """
         new_dots = dots.copy()
         for i, dot in enumerate(dots):
-            print(dot)
             new_dots[i] = dot * self.scale + aux.Point(self.middle_x, self.middle_y)
-            print(dot.x, dot.y, "...")
 
         for i in range(len(new_dots) - 1):
             pygame.draw.line(
                 self.screen, color, (new_dots[i].x, new_dots[i].y), (new_dots[i+1].x, new_dots[i+1].y), 2
             )
-        # pygame.draw.line(
-        #     self.screen, color, (dots[len(dots) - 1].x, dots[len(dots) - 1].y), (dots[0].x, dots[0].y), 2
-        # )
         pygame.draw.line(
-            self.screen, color, (0.0, 150.0), (150.0, 150.0), 2
+            self.screen, color, (dots[len(dots) - 1].x, dots[len(dots) - 1].y), (dots[0].x, dots[0].y), 2
         )
 
 

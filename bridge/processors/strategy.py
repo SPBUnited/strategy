@@ -64,6 +64,7 @@ class Strategy:
         self.active_team: ActiveTeam = ActiveTeam.ALL
         self.state = dbg_state
         self.timer = time()
+        self.timer1 = None
         self.is_ball_moved = 0
 
         # DEFENSE
@@ -84,7 +85,7 @@ class Strategy:
         self.image = draw.Image()
         self.image.draw_field()
         self.ball_start_point: Optional[aux.Point] = None
-        self.start_rotating: float = 0.0
+        self.start_rotating_ang: Optional[float] = None
 
         self.k = 14
         self.r = 8
@@ -166,6 +167,7 @@ class Strategy:
         self.image.draw_poly(field.ally_goal.hull)
         self.image.draw_poly(field.enemy_goal.hull)
         self.image.update_window()
+        # self.image.draw_field()
 
         return waypoints
 
@@ -229,7 +231,7 @@ class Strategy:
 
         # waypoints[a_id] = wp.Waypoint(field.ball.get_pos(), aux.angle_to_point(field.ball.get_pos(), pnt), wp.WType.S_BALL_KICK)
         # self.goalk(field, waypoints, [const.GK], None)
-
+        """
         if not field.is_ball_moves_to_point(field.allies[self.r].get_pos()):
             kicker = robot.find_nearest_robot(field.ball.get_pos(), field.allies)
             if kicker.r_id == 14:
@@ -256,16 +258,24 @@ class Strategy:
             )
 
         # self.goalk(field, waypoints, [13], robot.find_nearest_robot(field.ball.get_pos(), field.allies, [const.GK]))
-        self.goalk(field, waypoints, [13], None)
+        self.goalk(field, waypoints, [13], None)"""
 
-        # if field.is_ball_in(field.allies[14]):
-        #     w = 2 * 3.14 / 4
-        #     delta_r = aux.rotate(aux.Point(200, 0), math.pi * 1.2)
-        #     waypoints[14] = wp.Waypoint(delta_r, w, wp.WType.S_VELOCITY)
-        # else:
-        #     waypoints[14] = wp.Waypoint(field.ball.get_pos(), 0, wp.WType.S_BALL_GRAB)
+        if field.is_ball_in(field.allies[12]):
+            kick_point = self.choose_kick_point(field, 12, field.ball.get_pos())
+            self.kick_with_rotation(field, waypoints, 12, kick_point[0])
+        else:
+            waypoints[12] = wp.Waypoint(field.ball.get_pos(), 0, wp.WType.S_BALL_GRAB)
 
+        # if time() - self.timer > 5 and self.timer1 is None:
+        #     field.allies[12].kick_forward()
+        #     self.timer1 = time()
+        # elif self.timer1 is not None and field.is_ball_moves():
+        #     print(time() - self.timer1)
+        # print(field.is_ball_moves())
+        # field.allies[12].set_dribbler_speed(15)
         # waypoints[14]  = wp.Waypoint(aux.Point(self.square.get(), -2000), 1.507, wp.WType.S_ENDPOINT)
+
+
 
     square = signal.Signal(15, "SQUARE", ampoffset=(-1200, -2500))
     square_ang = signal.Signal(4, "SQUARE", lohi=(0, 1))
@@ -337,16 +347,29 @@ class Strategy:
         Прицеливание и удар в точку при условии, что мяч находится в захвате у робота
         """
         kicker = field.allies[kicker_id]
-        if abs(aux.angle_to_point(kicker.get_pos(), kick_point) - kicker.get_angle()) > const.KICK_ALIGN_ANGLE:
-            w = 2 * 3.14 / 4
+        if self.start_rotating_ang is None:
+            self.start_rotating_ang = kicker.get_angle()
+
+        signed_A = aux.wind_down_angle(aux.angle_to_point(kicker.get_pos(), kick_point) - self.start_rotating_ang)
+        A = abs(signed_A)
+        x = aux.wind_down_angle(kicker.get_angle() - self.start_rotating_ang)
+
+        beta = 3
+        w0 = 0.5
+        a = beta / A - w0 / (A**2)
+        b = 2*A*a - beta
+        w = - a * x * x + b * abs(x) + w0
+        if signed_A < x:
+            w *= -1
+
+        if abs(signed_A-x) > const.KICK_ALIGN_ANGLE:
+            field.allies[kicker_id].set_dribbler_speed(max(7, 15 - abs(w) * 5))
             # delta_r = aux.Point(-160, -120)
             # waypoints[kicker_id] = wp.Waypoint(delta_r, w, wp.WType.S_VELOCITY)
             waypoints[kicker_id] = twist.spin_with_ball(w)
         else:
-            w = 2 * 3.14 / 4
-            delta_r = aux.rotate(aux.Point(200, 0), math.pi * 1.2)
             field.allies[kicker_id].kick_forward()
-            waypoints[kicker_id] = wp.Waypoint(delta_r * 1000, w / 1000, wp.WType.S_VELOCITY)
+            waypoints[kicker_id] = wp.Waypoint(aux.Point(0, 0), 0, wp.WType.S_STOP)
 
     def defense(
         self, field: field.Field, waypoints: list[wp.Waypoint], ENDPOINT_TYPE: wp.WType = wp.WType.S_ENDPOINT

@@ -3,6 +3,7 @@
 """
 
 import math
+import time
 
 import bridge.processors.auxiliary as aux
 import bridge.processors.const as const
@@ -25,6 +26,9 @@ class Route:
         self._destination = [wp.Waypoint(aux.GRAVEYARD_POS, 0, wp.WType.T_GRAVEYARD)]
         self._routewp: list[wp.Waypoint] = []
         # self.__route = [*self.robot, *self.__routewp, *self.__destination]
+
+        self.go_flag = 0
+        self.go_time = 0
 
     def update(self, rbt: robot.Robot) -> None:
         """
@@ -133,10 +137,11 @@ class Route:
         rbt.kicker_charge_enable_ = 1
         rbt.kicker_voltage_ = 7
 
-        if target_point.type == wp.WType.S_VELOCITY:
+        if target_point.type == wp.WType.S_VELOCITY: #and self.go_flag == 0:
             wvel = target_point.angle
             vel = target_point.pos
-            # rbt.kicker_voltage_ = 7
+            # rbt.set_dribbler_speed(7)
+            rbt.kicker_voltage_ = 15
             rbt.speed_x = rbt.xx_flp.process(1 / rbt.k_xx * vel.x)
             rbt.speed_y = rbt.yy_flp.process(1 / rbt.k_yy * vel.y)
             rbt.speed_r = 1 / rbt.k_ww * wvel
@@ -191,7 +196,7 @@ class Route:
                 angle0 = end_point.angle
 
             rbt.dribbler_enable_ = True
-            rbt.dribbler_speed_ = 5
+            rbt.dribbler_speed_ = 15
             rbt.kicker_voltage_ = 7
         else:
             pass
@@ -208,6 +213,13 @@ class Route:
 
             transl_vel = vel0 * 400
 
+            if end_point.type == wp.WType.S_BALL_GRAB:
+                transl_vel = vel0 * 200
+                # if self.go_flag == 0:
+                #     self.go_flag = 1
+                #     self.go_time = time.time()
+                
+
         else:
             u_x = -rbt.pos_reg_x.process(vec_err.x, -cur_vel.x)
             u_y = -rbt.pos_reg_y.process(vec_err.y, -cur_vel.y)
@@ -218,9 +230,19 @@ class Route:
             if end_point.type == wp.WType.R_PASSTHROUGH:
                 transl_vel = transl_vel.unity() * const.MAX_SPEED
 
+
         aerr = aux.wind_down_angle(angle0 - rbt.get_angle())
 
         ang_vel = rbt.angle_reg.process(aerr, -rbt.get_anglevel())
+
+        # if self.go_flag == 1:  #NOTE: kostil
+        #     print(time.time() - self.go_time)
+        #     if time.time() - self.go_time < 1:
+        #         vel0 = -aux.rotate(aux.RIGHT, rbt.get_angle())
+        #         transl_vel = vel0 * 200
+        #         ang_vel = 0
+        #     else:
+        #         self.go_flag = 0
 
         if end_point.type == wp.WType.S_STOP:
             transl_vel = aux.Point(0, 0)
