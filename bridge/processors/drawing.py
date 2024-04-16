@@ -68,6 +68,28 @@ class Image:
         )  # Вертикальная линия
         pygame.draw.circle(self.screen, line_color, (self.middle_x, self.middle_y), 50, 2)  # Круг в центре
 
+    def draw_poly(self, dots: list[aux.Point], color: tuple[int, int, int] = (0, 255, 255)) -> None:
+        """
+        Connect nearest dots with line 
+        """
+        new_dots = dots.copy()
+        for i, dot in enumerate(dots):
+            print(dot)
+            new_dots[i] = dot * self.scale + aux.Point(self.middle_x, self.middle_y)
+            print(dot.x, dot.y, "...")
+
+        for i in range(len(new_dots) - 1):
+            pygame.draw.line(
+                self.screen, color, (new_dots[i].x, new_dots[i].y), (new_dots[i+1].x, new_dots[i+1].y), 2
+            )
+        # pygame.draw.line(
+        #     self.screen, color, (dots[len(dots) - 1].x, dots[len(dots) - 1].y), (dots[0].x, dots[0].y), 2
+        # )
+        pygame.draw.line(
+            self.screen, color, (0.0, 150.0), (150.0, 150.0), 2
+        )
+
+
     def draw_robot(self, r: aux.Point, angle: float = 0.0) -> None:
         """
         draw robot
@@ -233,7 +255,7 @@ class Image:
 
                 print("Triangle with end speed; path time: ", t1 + t2)
 
-        graf_for_params(v_arr, a_arr)
+        graph_for_params(v_arr, a_arr)
 
 
 def trapeze(delta_pos: aux.Point, v1: aux.Point, v2: Optional[aux.Point], n: int = 10) -> Optional[aux.Point]:
@@ -399,7 +421,7 @@ def dist_for_v(delta_pos: aux.Point, v: aux.Point, v1: aux.Point, v2: Optional[a
         return aux.dist((v1 + v) * t1 / 2 + (v2 + v) * t2 / 2, delta_pos)
 
 
-def graf_for_params(v: list[aux.Point], a: list[aux.Point]) -> None:
+def graph_for_params(v: list[aux.Point], a: list[aux.Point]) -> None:
     """
     nothing interesting, pls you don't need to watch here
     """

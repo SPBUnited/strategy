@@ -1,12 +1,19 @@
-import math
-
+"""
+Генерация объектов типа wp.Waypoint для роботов, движущихся с мячом
+"""
 import bridge.processors.auxiliary as aux
-import bridge.processors.const as const
 import bridge.processors.waypoint as wp
 
+
 def spin_with_ball(w: float) -> wp.Waypoint:
+    """
+    Расчёт скорости робота для поворота с мячом с угловой скоростью w (рад/сек)
+    """
     # delta_r = aux.rotate(aux.Point(200, 0), math.pi * 1.75)
-    delta_r = aux.Point(-50, 100)
+    if w > 0:
+        delta_r = aux.Point(-160, -120)
+    else:
+        delta_r = aux.Point(160, -120)
     vel = delta_r * w
 
     k_w = 1.65

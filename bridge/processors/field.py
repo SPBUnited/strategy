@@ -27,7 +27,7 @@ class Goal:
 
         self.vec_up = aux.Point(0, goal_dy / 2)
         self.vec_pen = aux.Point(-pen_dx, 0)
-        self.vec_pen_up = aux.Point(0, goal_dy / 2)
+        self.vec_pen_up = aux.Point(0, pen_dy)
 
         # Абсолютные вектора
         self.up = self.center + self.vec_up

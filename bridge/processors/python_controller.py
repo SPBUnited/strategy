@@ -124,7 +124,7 @@ class SSLController(BaseProcessor):
                 if cur_cmd.state == 4:
                     print("End game")
                 elif cur_cmd.state == 10:
-                    print("Uknown command 10")
+                    print("Unknown command 10")
             """
             # if self.count_halt_cmd > 10:
             #     self.strategy.change_game_state(strategy.GameStates.HALT, cur_cmd.commandForTeam)

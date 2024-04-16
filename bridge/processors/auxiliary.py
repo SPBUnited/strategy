@@ -185,14 +185,16 @@ def dist(a: Point, b: Point) -> float:
     """
     return math.hypot(a.x - b.x, a.y - b.y)
 
+
 def average_point(points: list[Point]) -> Point:
     """
     Возвращает точку с усредненными координатами
     """
-    point = Point(0,0)
+    point = Point(0, 0)
     for p in points:
         point += p
     return point / len(points)
+
 
 def average_angle(angles: list[float]) -> float:
     """
