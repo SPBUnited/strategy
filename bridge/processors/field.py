@@ -127,7 +127,7 @@ class Field:
         """
         Определить, находится ли мяч внутри дриблера
         """
-        print(self.ally_with_ball)
+        #print(self.ally_with_ball)
         return robo == self.ally_with_ball
 
     def update_blu_robot(self, idx: int, pos: aux.Point, angle: float, t: float) -> None:

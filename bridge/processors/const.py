@@ -7,7 +7,7 @@
 COLOR = "b"
 POLARITY = 1  # 1 если ворота синих на +x; -1 если ворота синих на -x
 
-IS_SIMULATOR_USED = False
+IS_SIMULATOR_USED = True
 SELF_PLAY = True
 
 GK = 13

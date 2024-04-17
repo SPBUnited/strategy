@@ -263,14 +263,17 @@ class Strategy:
         # self.goalk(field, waypoints, [13], robot.find_nearest_robot(field.ball.get_pos(), field.allies, [const.GK]))
         self.goalk(field, waypoints, [13], None)"""
 
-        if field.is_ball_in(field.allies[12]):
+        if field.is_ball_in(field.allies[0]):
             # kick_point = self.choose_kick_point(field, 12, field.ball.get_pos())[0]
-            kick_point = field.allies[8].get_pos()
-            self.kick_with_rotation(field, waypoints, 12, kick_point)
+            kick_point = field.ally_goal.center
+            self.kick_with_rotation(field, waypoints, 0, kick_point)
+            print("in")
         else:
-            waypoints[12] = wp.Waypoint(field.ball.get_pos(), 0, wp.WType.S_BALL_GRAB)
+            waypoints[0] = wp.Waypoint(field.ball.get_pos(), 0, wp.WType.S_BALL_GRAB)
             self.wait_kick = False
             self.start_rotating_ang = None
+            waypoints[0] = wp.Waypoint(field.ball.get_pos(), 0, wp.WType.S_ENDPOINT)
+            #print("not in")
 
         # if time() - self.timer > 5 and self.timer1 is None:
         #     field.allies[12].kick_forward()
@@ -279,7 +282,7 @@ class Strategy:
         #     print(time() - self.timer1)
         # print(field.is_ball_moves())
         # field.allies[12].set_dribbler_speed(15)
-        # waypoints[14]  = wp.Waypoint(aux.Point(self.square.get(), -2000), 1.507, wp.WType.S_ENDPOINT)
+        waypoints[0]  = wp.Waypoint(aux.Point(0, 0), 0, wp.WType.S_ENDPOINT)
 
 
 

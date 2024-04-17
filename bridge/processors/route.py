@@ -255,5 +255,4 @@ class Route:
             rbt.auto_kick_ = 2
         else:
             rbt.auto_kick_ = 0
-
         rbt.update_vel_xyw(transl_vel, ang_vel)

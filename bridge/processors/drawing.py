@@ -23,7 +23,7 @@ class Image:
     """
 
     def __init__(self) -> None:
-        self.disable = False
+        self.disable = True
 
         if self.disable:
             return
@@ -72,6 +72,9 @@ class Image:
         """
         Connect nearest dots with line 
         """
+        if self.disable:
+            return
+
         new_dots = dots.copy()
         for i, dot in enumerate(dots):
             new_dots[i] = dot * self.scale + aux.Point(self.middle_x, self.middle_y)
