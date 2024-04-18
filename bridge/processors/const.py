@@ -10,7 +10,7 @@ POLARITY = 1  # 1 если ворота синих на +x; -1 если воро
 IS_SIMULATOR_USED = True
 SELF_PLAY = True
 
-GK = 13
+GK = 2
 PENALTY_KICKER = 1
 ENEMY_GK = 5
 

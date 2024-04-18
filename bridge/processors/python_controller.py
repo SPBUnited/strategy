@@ -179,7 +179,7 @@ class SSLController(BaseProcessor):
             position = aux.average_point(y_bots_pos[r_id])
             angle = sum(y_bots_ang[r_id]) / len(y_bots_ang[r_id])
             if position != self.field.y_team[r_id].get_pos():
-                self.field.update_blu_robot(r_id, position, angle, time.time())
+                self.field.update_yel_robot(r_id, position, angle, time.time())
 
         return status
 
@@ -189,6 +189,7 @@ class SSLController(BaseProcessor):
         """
         self.router.update(self.field)
         waypoints = self.strategy.process(self.field)
+
         for i in range(const.TEAM_ROBOTS_MAX_COUNT):
             self.router.get_route(i).clear()
             self.router.set_dest(i, waypoints[i], self.field)

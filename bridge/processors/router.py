@@ -68,6 +68,7 @@ class Router:
             if (
                 self.routes[idx].get_next_type() == wp.WType.S_BALL_KICK
                 or self.routes[idx].get_next_type() == wp.WType.S_BALL_KICK_UP
+                or self.routes[idx].get_next_type() == wp.WType.S_BALL_PASS
             ):
                 # if not field.allies[idx].is_kick_aligned(self.routes[idx].get_dest_wp()):
                 align_wp = self.calc_kick_wp(idx)

@@ -27,6 +27,7 @@ class WType(Enum):
     S_STOP = 6  # Kostil for stopping
     S_BALL_KICK_UP = 7  # Захватить мяч и мгновенно его пнуть up
     S_VELOCITY = 8  # Разворачиваться с мячом
+    S_BALL_PASS = 9 # Give pass to point
     # waypoint.pos - скорость; waypoint.angle - угловая скорость
 
     R_PASSTHROUGH = 10  # Двигаться в точку не останавливаясь (промежуточная точка пути)

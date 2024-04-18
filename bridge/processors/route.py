@@ -114,7 +114,7 @@ class Route:
         dist = 0.0
         last_wp_pos = self._robot[0].pos
         for wpt in self.__get_route():
-            if wpt.type == wp.WType.S_BALL_GO or wpt.type == wp.WType.S_BALL_KICK or wpt.type == wp.WType.S_BALL_GRAB:
+            if wpt.type == wp.WType.S_BALL_GO or wpt.type == wp.WType.S_BALL_KICK or wpt.type == wp.WType.S_BALL_GRAB or wpt.type == wp.WType.S_BALL_KICK_UP or wpt.type == wp.WType.S_BALL_PASS:
                 break
             dist += (wpt.pos - last_wp_pos).mag()
             last_wp_pos = wpt.pos
@@ -135,7 +135,6 @@ class Route:
         target_point = self.get_next_wp()
 
         rbt.kicker_charge_enable_ = 1
-        rbt.kicker_voltage_ = 7
 
         if target_point.type == wp.WType.S_VELOCITY: #and self.go_flag == 0:
             wvel = target_point.angle
@@ -146,7 +145,7 @@ class Route:
             rbt.speed_y = rbt.yy_flp.process(1 / rbt.k_yy * vel.y)
             rbt.speed_r = 1 / rbt.k_ww * wvel
             return
-
+    
         cur_vel = rbt.get_vel()
 
         dist = self.get_length()
@@ -182,6 +181,7 @@ class Route:
             or end_point.type == wp.WType.S_BALL_KICK_UP
             or end_point.type == wp.WType.S_BALL_GRAB
             or end_point.type == wp.WType.S_BALL_GO
+            or end_point.type == wp.WType.S_BALL_PASS
         ) and dist < 500:
 
             # print("IS KICK ALIGNED: ", rbt.is_kick_aligned(end_point), ",\tIS BALL GRABBED: ", fld.is_ball_in(rbt))
@@ -194,7 +194,9 @@ class Route:
 
             rbt.dribbler_enable_ = True
             rbt.dribbler_speed_ = 15
-            rbt.kicker_voltage_ = 7
+            rbt.kicker_voltage_ = 15
+            if end_point.type == wp.WType.S_BALL_PASS:
+                rbt.kicker_voltage_ = 7
         else:
             pass
 
@@ -202,6 +204,7 @@ class Route:
             end_point.type == wp.WType.S_BALL_KICK
             or end_point.type == wp.WType.S_BALL_KICK_UP
             or end_point.type == wp.WType.S_BALL_GRAB
+            or end_point.type == wp.WType.S_BALL_PASS
         ) and rbt.is_kick_aligned(end_point):
             # vel0 = (rbt.get_pos() - end_point.pos).unity()
             vel0 = -aux.rotate(aux.RIGHT, rbt.get_angle())
@@ -249,7 +252,7 @@ class Route:
         # transl_vel = vel0 * 200
         # ang_vel = 0.7
 
-        if end_point.type == wp.WType.S_BALL_KICK and rbt.is_kick_aligned_by_angle(end_point):
+        if (end_point.type == wp.WType.S_BALL_KICK or end_point.type == wp.WType.S_BALL_PASS) and rbt.is_kick_aligned_by_angle(end_point):
             rbt.auto_kick_ = 1
         elif end_point.type == wp.WType.S_BALL_KICK_UP and rbt.is_kick_aligned_by_angle(end_point):
             rbt.auto_kick_ = 2
