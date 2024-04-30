@@ -91,8 +91,10 @@ class Strategy:
         self.r = 8
         self.r_pos = aux.Point(-2500, -1500)
 
-        self.wait_kick = False
-        self.wait_kick_timer = 0
+        self.wait_kick_timer: Optional[float] = None
+
+        self.desision_timer = 0
+        self.current_dessision = 0
 
         self.desision_timer = 0
         self.current_dessision = 0
@@ -372,24 +374,23 @@ class Strategy:
         beta = 5
         w0 = 0.5
         a = beta / A - w0 / (A**2)
-        b = 2*A*a - beta
-        w = - a * x * x + b * abs(x) + w0
+        b = 2 * A * a - beta
+        w = -a * x * x + b * abs(x) + w0
         if signed_A < 0:
             w *= -1
 
-        if abs(signed_A-x) > const.KICK_ALIGN_ANGLE:
+        if abs(signed_A - x) > const.KICK_ALIGN_ANGLE:
             field.allies[kicker_id].set_dribbler_speed(max(7, 15 - abs(w) * 5))
             # delta_r = aux.Point(-160, -120)
             # waypoints[kicker_id] = wp.Waypoint(delta_r, w, wp.WType.S_VELOCITY)
             waypoints[kicker_id] = twist.spin_with_ball(w)
         else:
-            if not self.wait_kick:
-                self.wait_kick = True
+            if self.wait_kick_timer is None:
                 self.wait_kick_timer = time()
             else:
                 wt = 1
                 if time() - self.wait_kick_timer > wt:
-                    self.wait_kick = False
+                    self.wait_kick_timer = None
                     field.allies[kicker_id].kick_forward()
                 else:
                     field.allies[kicker_id].set_dribbler_speed(max(3, 15 - 20 * (time() - self.wait_kick_timer)))
@@ -520,7 +521,7 @@ class Strategy:
         for p in positions:
             tgs = aux.get_tangent_points(p[1], frm, const.ROBOT_R)
             if tgs is None or isinstance(tgs, aux.Point):
-                print(p, frm, tgs)
+                print("Err while estimate pass point", p, frm, tgs)
                 continue
             # print(tgs[0], tgs[1])
             tangents.append([p[0], tgs])

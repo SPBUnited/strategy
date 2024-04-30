@@ -70,23 +70,17 @@ class Image:
 
     def draw_poly(self, dots: list[aux.Point], color: tuple[int, int, int] = (255, 255, 255)) -> None:
         """
-        Connect nearest dots with line 
+        Connect nearest dots with line
         """
         if self.disable:
             return
-
         new_dots = dots.copy()
         for i, dot in enumerate(dots):
             new_dots[i] = dot * self.scale + aux.Point(self.middle_x, self.middle_y)
 
         for i in range(len(new_dots) - 1):
-            pygame.draw.line(
-                self.screen, color, (new_dots[i].x, new_dots[i].y), (new_dots[i+1].x, new_dots[i+1].y), 2
-            )
-        pygame.draw.line(
-            self.screen, color, (dots[len(dots) - 1].x, dots[len(dots) - 1].y), (dots[0].x, dots[0].y), 2
-        )
-
+            pygame.draw.line(self.screen, color, (new_dots[i].x, new_dots[i].y), (new_dots[i + 1].x, new_dots[i + 1].y), 2)
+        pygame.draw.line(self.screen, color, (dots[len(dots) - 1].x, dots[len(dots) - 1].y), (dots[0].x, dots[0].y), 2)
 
     def draw_robot(self, r: aux.Point, angle: float = 0.0) -> None:
         """

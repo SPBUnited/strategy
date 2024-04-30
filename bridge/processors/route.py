@@ -3,7 +3,6 @@
 """
 
 import math
-import time
 
 import bridge.processors.auxiliary as aux
 import bridge.processors.const as const
@@ -136,7 +135,7 @@ class Route:
 
         rbt.kicker_charge_enable_ = 1
 
-        if target_point.type == wp.WType.S_VELOCITY: #and self.go_flag == 0:
+        if target_point.type == wp.WType.S_VELOCITY:  # and self.go_flag == 0:
             wvel = target_point.angle
             vel = target_point.pos
             # rbt.set_dribbler_speed(7)
@@ -218,7 +217,6 @@ class Route:
                 # if self.go_flag == 0:
                 #     self.go_flag = 1
                 #     self.go_time = time.time()
-                
 
         else:
             u_x = -rbt.pos_reg_x.process(vec_err.x, -cur_vel.x)
@@ -229,7 +227,6 @@ class Route:
 
             if end_point.type == wp.WType.R_PASSTHROUGH:
                 transl_vel = transl_vel.unity() * const.MAX_SPEED
-
 
         aerr = aux.wind_down_angle(angle0 - rbt.get_angle())
 

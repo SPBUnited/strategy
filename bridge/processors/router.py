@@ -190,7 +190,7 @@ class Router:
         # align_type = wp.WType.S_ENDPOINT
         align_wp = wp.Waypoint(align_pos, align_angle, align_type)
         return align_wp
-    
+
     def calc_grab_wp(self, idx: int) -> wp.Waypoint:
         """
         Рассчитать точку для захвата мяча
