@@ -85,7 +85,7 @@ class Strategy:
         self.image = draw.Image()
         self.image.draw_field()
         self.ball_start_point: Optional[aux.Point] = None
-        self.start_rotating_ang: Optional[float] = None
+        self.twist_w: float = 0.5
 
         self.k = 14
         self.r = 8
@@ -93,11 +93,9 @@ class Strategy:
 
         self.wait_kick_timer: Optional[float] = None
 
-        self.desision_timer = 0
-        self.current_dessision = 0
-
-        self.desision_timer = 0
-        self.current_dessision = 0
+        self.desision_flag = 0
+        self.current_dessision = [0, 0]
+        self.desision_border = 0.3
 
     def change_game_state(self, new_state: GameStates, upd_active_team: int) -> None:
         """Изменение состояния игры и цвета команды"""
@@ -240,62 +238,66 @@ class Strategy:
         # waypoints[a_id] = wp.Waypoint(field.ball.get_pos(), aux.angle_to_point(field.ball.get_pos(), pnt), wp.WType.S_BALL_KICK)
         # self.goalk(field, waypoints, [const.GK], None)
         
+        '''
         if not field.is_ball_moves_to_point(field.allies[self.r].get_pos()):
             kicker = robot.find_nearest_robot(field.ball.get_pos(), field.allies)
-            if kicker.r_id == 0:
-                self.k = 0
-                self.r = 1
+            old = self.desision_flag
+            if kicker.r_id == 12:
+                self.desision_flag = 0
+                self.k = 12
+                self.r = 14
                 self.r_pos = aux.Point(-2500, -1500)
             else:
-                self.k = 1
-                self.r = 0
+                self.desision_flag = 1
+                self.k = 14
+                self.r = 12
                 self.r_pos = aux.Point(-2500, 1500)
+            if old != self.desision_flag:
+                self.desision_border = 0.3
 
-        if time() - self.desision_timer > 3:
-            self.desision_timer = time()
-            self.current_dessision = self.choose_kick_point(field, self.k)
+        tmp = self.choose_kick_point(field, self.k)
+
+        if tmp[1] > self.current_dessision[1] * 1.3:
+            self.current_dessision = tmp
+        
+        print(tmp[1])
+        if self.current_dessision[1] < self.desision_border:
+            self.desision_border = 0.5
+            self.pass_kicker(field, waypoints, self.k, self.r)
+        else:
+            self.desision_border = 0.3
+            waypoints[self.k] = wp.Waypoint(
+                field.ball.get_pos(), aux.angle_to_point(field.allies[self.k].get_pos(), self.current_dessision[0]), wp.WType.S_BALL_KICK
+            )
+        '''
+            
         #pass_pnt = self.estimate_pass_point(field, field.allies[self.k].get_pos(), field.allies[self.r].get_pos())
 
         #goal2_pnt = self.choose_kick_point(field, self.r, field.allies[self.r].get_pos())[1]
 
-        self.pass_receiver(field, waypoints, self.r, self.r_pos)
-        if self.current_dessision[1] < 0.3:
-            self.pass_kicker(field, waypoints, self.k, self.r)
-            # print(field.ball.get_vel())
-        else:
-            waypoints[self.k] = wp.Waypoint(
-                field.ball.get_pos(), aux.angle_to_point(field.allies[self.k].get_pos(), self.current_dessision[0]), wp.WType.S_BALL_KICK
-            )
+        # self.pass_receiver(field, waypoints, self.r, self.r_pos)
+     
 
         self.goalk(field, waypoints, [const.GK], robot.find_nearest_robot(field.ball.get_pos(), field.allies, [const.GK]))
         # self.goalk(field, waypoints, [13], None)
 
 
         # GRAB AND KICK
-        # if field.is_ball_in(field.allies[0]):
-        #     # kick_point = self.choose_kick_point(field, 12, field.ball.get_pos())[0]
-        #     kick_point = field.ally_goal.center
-        #     self.kick_with_rotation(field, waypoints, 0, kick_point)
-        #     print("in")
-        # else:
-        #     waypoints[0] = wp.Waypoint(field.ball.get_pos(), 0, wp.WType.S_BALL_GRAB)
-        #     self.wait_kick = False
-        #     self.start_rotating_ang = None
-        #     waypoints[0] = wp.Waypoint(field.ball.get_pos(), 0, wp.WType.S_ENDPOINT)
-        #     print("not in")
-
-        # if time() - self.timer > 5 and self.timer1 is None:
-        #     field.allies[12].kick_forward()
-        #     self.timer1 = time()
-        # elif self.timer1 is not None and field.is_ball_moves():
-        #     print(time() - self.timer1)
-        # print(field.is_ball_moves())
-        # field.allies[12].set_dribbler_speed(15)
-        # waypoints[0]  = wp.Waypoint(aux.Point(self.square.get(), 0), self.square_ang.get(), wp.WType.S_ENDPOINT)
+        if field.is_ball_in(field.allies[12]):
+            # kick_point = self.choose_kick_point(field, 12, field.ball.get_pos())[0]
+            kick_point = field.allies[14].get_pos()
+            self.kick_with_rotation(field, waypoints, 12, kick_point)
+            print("in")
+        else:
+            waypoints[12] = wp.Waypoint(field.ball.get_pos(), aux.angle_to_point(field.allies[12].get_pos(), field.ball.get_pos()), wp.WType.S_BALL_GRAB)
+            self.wait_kick = False
+            self.start_rotating_ang = None
+            print("not in")
+            self.twist_w = 0.5
 
 
 
-    square = signal.Signal(15, "SQUARE", lohi=(-2000, 2000))
+    square = signal.Signal(15, "SQUARE", lohi=(-2000, -1000))
     square_ang = signal.Signal(4, "SQUARE", lohi=(0, 4))
 
     def debug(self, field: field.Field, waypoints: list[wp.Waypoint]) -> list[wp.Waypoint]:
@@ -364,26 +366,27 @@ class Strategy:
         Прицеливание и удар в точку при условии, что мяч находится в захвате у робота
         """
         kicker = field.allies[kicker_id]
-        if self.start_rotating_ang is None:
-            self.start_rotating_ang = kicker.get_angle()
 
-        signed_A = aux.wind_down_angle(aux.angle_to_point(kicker.get_pos(), kick_point) - self.start_rotating_ang)
-        A = abs(signed_A)
-        x = aux.wind_down_angle(kicker.get_angle() - self.start_rotating_ang)
+        # signed_A = aux.wind_down_angle(aux.angle_to_point(kicker.get_pos(), kick_point) - self.start_rotating_ang)
+        # A = abs(signed_A)
+        signed_x = aux.wind_down_angle(aux.angle_to_point(kicker.get_pos(), kick_point) - kicker.get_angle())
+        x = abs(signed_x)
 
-        beta = 5
-        w0 = 0.5
-        a = beta / A - w0 / (A**2)
-        b = 2 * A * a - beta
-        w = -a * x * x + b * abs(x) + w0
-        if signed_A < 0:
+        beta = 6
+        a = beta / x - self.twist_w / (x**2)
+        b = 2 * x * a - beta
+        w = self.twist_w + b * const.Ts
+        self.twist_w = w
+        if signed_x < 0:
             w *= -1
 
-        if abs(signed_A - x) > const.KICK_ALIGN_ANGLE:
-            field.allies[kicker_id].set_dribbler_speed(max(7, 15 - abs(w) * 5))
+        if x > const.KICK_ALIGN_ANGLE:
+            print(w)
+            field.allies[kicker_id].set_dribbler_speed(max(7, 15 - abs(w) * 0.5))
             # delta_r = aux.Point(-160, -120)
             # waypoints[kicker_id] = wp.Waypoint(delta_r, w, wp.WType.S_VELOCITY)
             waypoints[kicker_id] = twist.spin_with_ball(w)
+            self.wait_kick_timer = None
         else:
             if self.wait_kick_timer is None:
                 self.wait_kick_timer = time()
@@ -393,8 +396,9 @@ class Strategy:
                     self.wait_kick_timer = None
                     field.allies[kicker_id].kick_forward()
                 else:
-                    field.allies[kicker_id].set_dribbler_speed(max(3, 15 - 20 * (time() - self.wait_kick_timer)))
-            waypoints[kicker_id] = wp.Waypoint(aux.Point(0, 0), 0, wp.WType.S_STOP)
+                    print(field.allies[kicker_id].dribbler_speed_)
+                    field.allies[kicker_id].set_dribbler_speed(max(6, 15 - 15 * (time() - self.wait_kick_timer)))
+            # waypoints[kicker_id] = wp.Waypoint(aux.Point(0, 0), 0, wp.WType.S_STOP)
 
     def defense(
         self, field: field.Field, waypoints: list[wp.Waypoint], ENDPOINT_TYPE: wp.WType = wp.WType.S_ENDPOINT
@@ -640,7 +644,7 @@ class Strategy:
         dist = (ball_pos - pnt).mag() / 1000
         max_ang = 57.3 * aux.wind_down_angle(2 * math.atan2(const.ROBOT_SPEED, -0.25 * dist + 4.5)) / 2
 
-        print(max_, max_ang, max_ / max_ang)
+        # print(max_, max_ang, max_ / max_ang)
         return pnt, min(max_ / max_ang, 1)
 
     def reset_all_attack_var(self) -> None:

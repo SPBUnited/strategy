@@ -195,7 +195,7 @@ class Route:
             rbt.dribbler_speed_ = 15
             rbt.kicker_voltage_ = 15
             if end_point.type == wp.WType.S_BALL_PASS:
-                rbt.kicker_voltage_ = 7
+                rbt.kicker_voltage_ = 12
         else:
             pass
 
