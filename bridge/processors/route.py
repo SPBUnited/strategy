@@ -139,7 +139,7 @@ class Route:
             wvel = target_point.angle
             vel = target_point.pos
             # rbt.set_dribbler_speed(7)
-            rbt.kicker_voltage_ = 15
+            rbt.kicker_voltage_ = 10
             rbt.speed_x = rbt.xx_flp.process(1 / rbt.k_xx * vel.x)
             rbt.speed_y = rbt.yy_flp.process(1 / rbt.k_yy * vel.y)
             rbt.speed_r = 1 / rbt.k_ww * wvel
@@ -194,8 +194,12 @@ class Route:
             rbt.dribbler_enable_ = True
             rbt.dribbler_speed_ = 15
             rbt.kicker_voltage_ = 15
-            if end_point.type == wp.WType.S_BALL_PASS:
-                rbt.kicker_voltage_ = 12
+            if end_point.type == wp.WType.S_BALL_GRAB:
+                rbt.kicker_voltage_ = 0
+            elif end_point.type == wp.WType.S_BALL_PASS:
+                rbt.kicker_voltage_ = 10
+            elif end_point.type == wp.WType.S_BALL_KICK_UP:
+                rbt.kicker_voltage_ = 10
         else:
             pass
 
@@ -255,4 +259,5 @@ class Route:
             rbt.auto_kick_ = 2
         else:
             rbt.auto_kick_ = 0
+            
         rbt.update_vel_xyw(transl_vel, ang_vel)
