@@ -290,23 +290,6 @@ class Robot(entity.Entity):
         )
 
 
-def find_nearest_robot(point: aux.Point, team: list[Robot], avoid: typing.Optional[list[int]] = None) -> Robot:
-    """
-    Найти ближайший робот из массива team к точке point, игнорируя точки avoid
-    """
-    if avoid is None:
-        avoid = []
-    robo_id = -1
-    min_dist = 10e10
-    for i, player in enumerate(team):
-        if i in avoid or not player.is_used():
-            continue
-        if aux.dist(point, player.get_pos()) < min_dist:
-            min_dist = aux.dist(point, player.get_pos())
-            robo_id = i
-    return team[robo_id]
-
-
 def probability(inter: list[aux.Point], bots: list[Robot], pos: aux.Point) -> float:
     """
     TODO написать доку

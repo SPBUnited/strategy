@@ -195,3 +195,35 @@ class Field:
         Определить, движется ли мяч в сторону ворот
         """
         return self.is_ball_moves_to_point(self.ally_goal.center)
+
+    def find_popusks(self, num: int, attacker_id: int) -> list[robot.Robot]:
+        """
+        Найти num роботов, ближайших к вражеским воротам
+        """
+        robots: list[robot.Robot] = []
+        ids: list[int] = [const.GK, attacker_id]
+        if len(self.allies) < num:
+            return None #сам виноват
+
+        while len(robots) < num:
+            robo = find_nearest_robot(self.enemy_goal.center, self.allies, ids)
+            robots.append(robo)
+            ids.append(robo.r_id)
+        return robots
+
+def find_nearest_robot(point: aux.Point, team: list[robot.Robot], avoid: Optional[list[int]] = None) -> robot.Robot:
+    """
+    Найти ближайший робот из массива team к точке point, игнорируя точки avoid
+    """
+    if avoid is None:
+        avoid = []
+    robo_id = -1
+    min_dist = 10e10
+
+    for i, player in enumerate(team):
+        if player.r_id in avoid or not player.is_used():
+            continue
+        if aux.dist(point, player.get_pos()) < min_dist:
+            min_dist = aux.dist(point, player.get_pos())
+            robo_id = i
+    return team[robo_id]

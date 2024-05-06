@@ -2,7 +2,7 @@ import math
 
 import bridge.processors.auxiliary as aux
 import bridge.processors.const as const
-import bridge.processors.field as field
+import bridge.processors.field as fld
 import bridge.processors.robot as robot
 import bridge.processors.waypoint as wp
 
@@ -16,7 +16,7 @@ class RefStates:
         self.is_started = 0
         self.penalty_timer = 0
 
-    def prepare_penalty(self, field: field.Field, waypoints: list[wp.Waypoint]) -> None:
+    def prepare_penalty(self, field: fld.Field, waypoints: list[wp.Waypoint]) -> None:
         """Подготовка пенальти по команде от судей"""
         if self.we_active:
             self.we_kick = 1
@@ -58,7 +58,7 @@ class RefStates:
             waypoints[field.allies[const.GK].r_id] = waypoint
 
     def halt(
-        self, field: field.Field, waypoints: list[wp.Waypoint]
+        self, field: fld.Field, waypoints: list[wp.Waypoint]
     ) -> None:  # TODO: проверить что роботы останавливаются на самом деле
         """Пауза по команде от судей"""
         for i in range(const.TEAM_ROBOTS_MAX_COUNT):
@@ -66,7 +66,7 @@ class RefStates:
                 waypoint = wp.Waypoint(field.allies[i].get_pos(), field.allies[i].get_angle(), wp.WType.S_ENDPOINT)
                 waypoints[i] = waypoint
 
-    def timeout(self, field: field.Field, waypoints: list[wp.Waypoint]) -> None:
+    def timeout(self, field: fld.Field, waypoints: list[wp.Waypoint]) -> None:
         """Таймаут по команде от судей"""
         rC = 0
         for i in range(const.TEAM_ROBOTS_MAX_COUNT):
@@ -75,7 +75,7 @@ class RefStates:
                 waypoints[i] = waypoint
                 rC += 1
 
-    def keep_distance(self, field: field.Field, waypoints: list[wp.Waypoint]) -> None:
+    def keep_distance(self, field: fld.Field, waypoints: list[wp.Waypoint]) -> None:
         # TODO: вшить в waypoint или в стратегию удержание расстояния до мяча
         """Удержание расстояния до мяча по команде судей"""
         for i in range(const.TEAM_ROBOTS_MAX_COUNT):
@@ -88,7 +88,7 @@ class RefStates:
                     )
                     waypoints[i] = waypoint
 
-    def penalty_kick(self, field: field.Field, waypoints: list[wp.Waypoint]) -> None:
+    def penalty_kick(self, field: fld.Field, waypoints: list[wp.Waypoint]) -> None:
         """Пенальти (атака)"""
         self.is_started += 1
         if self.is_started < 5:
@@ -132,7 +132,7 @@ class RefStates:
 
         waypoints[const.PENALTY_KICKER] = waypoint
 
-    def prepare_kickoff(self, field: field.Field, waypoints: list[wp.Waypoint]) -> None:
+    def prepare_kickoff(self, field: fld.Field, waypoints: list[wp.Waypoint]) -> None:
         """Настройка перед состоянием kickoff по команде судей"""
         if self.we_active:
             self.we_kick = 1
@@ -140,7 +140,7 @@ class RefStates:
             self.we_kick = 0
         self.put_kickoff_waypoints(field, waypoints)
 
-    def put_kickoff_waypoints(self, field: field.Field, waypoints: list[wp.Waypoint]) -> None:
+    def put_kickoff_waypoints(self, field: fld.Field, waypoints: list[wp.Waypoint]) -> None:
         """Подготовка перед состоянием kickoff"""
         rC = 0
         if self.we_kick:
@@ -196,12 +196,12 @@ class RefStates:
         )
         waypoints[field.allies[const.GK].r_id] = waypoint
 
-    def kickoff(self, field: field.Field, waypoints: list[wp.Waypoint]) -> None:
+    def kickoff(self, field: fld.Field, waypoints: list[wp.Waypoint]) -> None:
         """Удар мяча из аута"""
         self.put_kickoff_waypoints(field, waypoints)
         # self.we_kick = 0
         if self.we_kick:
-            go_kick = robot.find_nearest_robot(field.ball.get_pos(), field.allies)
+            go_kick = fld.find_nearest_robot(field.ball.get_pos(), field.allies)
             target = field.enemy_goal.center
             target.y = 300
             waypoint = wp.Waypoint(
@@ -209,7 +209,7 @@ class RefStates:
             )
             waypoints[go_kick.r_id] = waypoint
         else:
-            go_kick = robot.find_nearest_robot(field.ball.get_pos(), field.allies)
+            go_kick = fld.find_nearest_robot(field.ball.get_pos(), field.allies)
             target = aux.point_on_line(field.ball.get_pos(), aux.Point(field.polarity * const.GOAL_DX, 0), 200)
             waypoint = wp.Waypoint(
                 target, (field.ball.get_pos() - field.allies[go_kick.r_id].get_pos()).arg(), wp.WType.S_IGNOREOBSTACLES
