@@ -218,7 +218,7 @@ class Robot(entity.Entity):
             < const.KICK_ALIGN_OFFSET * commit_scale
         )
         is_aligned = is_dist and is_angle and is_offset
-        
+
         if self.r_id == 11:
             print("is_dist: ", is_dist, ",\tis_angle: ", is_angle, ",\tis_offset: ", is_offset)
 
@@ -259,7 +259,6 @@ class Robot(entity.Entity):
         vec_speed = math.sqrt(self.speed_x**2 + self.speed_y**2)
         r_speed = abs(self.speed_r)
 
-       
         vec_speed *= ((const.MAX_SPEED_R - r_speed) / const.MAX_SPEED_R) ** 4
 
         ang = math.atan2(self.speed_y, self.speed_x)
@@ -387,3 +386,10 @@ def shot_decision(pos: aux.Point, end: list[aux.Point], tobj: list[Robot]) -> au
     # plt.grid(True)
     # plt.show()
     return point_res
+
+
+def robots_ids(robots: list[Robot]) -> list[int]:
+    ids = []
+    for robot in robots:
+        ids.append(robot.r_id)
+    return ids

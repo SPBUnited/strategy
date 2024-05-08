@@ -18,7 +18,7 @@ def spin_with_ball(w: float) -> wp.Waypoint:
         delta_r = aux.Point(160, 0)
     vel = delta_r * w
 
-    k_w = 1.65 #костыль для приближения значений угловой скорости к рад/с
+    k_w = 1.65  # костыль для приближения значений угловой скорости к рад/с
     k_vel = 0.4 * k_w
     # print("target radius: ", delta_r.mag())
     return wp.Waypoint(vel * k_vel, w * k_w, wp.WType.S_VELOCITY)

@@ -133,10 +133,6 @@ class SSLController(BaseProcessor):
 
             # TODO: Barrier states
             for robot_det in detection.robots_blue:
-                if time.time() - self.field.b_team[robot_det.robot_id].last_update() > 0.5:
-                    self.field.b_team[robot_det.robot_id].used(0)
-                else:
-                    self.field.b_team[robot_det.robot_id].used(1)
                 b_bots_id.append(robot_det.robot_id)
                 b_bots_pos[robot_det.robot_id].append(aux.Point(robot_det.x, robot_det.y))
                 b_bots_ang[robot_det.robot_id].append(robot_det.orientation)
@@ -145,10 +141,6 @@ class SSLController(BaseProcessor):
                 # )
 
             for robot_det in detection.robots_yellow:
-                if time.time() - self.field.y_team[robot_det.robot_id].last_update() > 0.5:
-                    self.field.y_team[robot_det.robot_id].used(0)
-                else:
-                    self.field.y_team[robot_det.robot_id].used(1)
                 y_bots_id.append(robot_det.robot_id)
                 y_bots_pos[robot_det.robot_id].append(aux.Point(robot_det.x, robot_det.y))
                 y_bots_ang[robot_det.robot_id].append(robot_det.orientation)
@@ -169,16 +161,26 @@ class SSLController(BaseProcessor):
             if self.field._is_ball_in(r):
                 self.field.ally_with_ball = r
 
-        for r_id in b_bots_id:
+        for r_id in set(b_bots_id):
             position = aux.average_point(b_bots_pos[r_id])
             angle = aux.average_angle(b_bots_ang[r_id])
-            if position != self.field.b_team[r_id].get_pos():
+            if position != self.field.b_team[r_id].get_pos() or const.IS_SIMULATOR_USED:
                 self.field.update_blu_robot(r_id, position, angle, time.time())
+        for robot in self.field.b_team:
+            if time.time() - robot.last_update() > 0.5:
+                robot.used(0)
+            else:
+                robot.used(1)
 
-        for r_id in y_bots_id:
+        for robot in self.field.y_team:
+            if time.time() - robot.last_update() > 0.5:
+                robot.used(0)
+            else:
+                robot.used(1)
+        for r_id in set(y_bots_id):
             position = aux.average_point(y_bots_pos[r_id])
             angle = sum(y_bots_ang[r_id]) / len(y_bots_ang[r_id])
-            if position != self.field.y_team[r_id].get_pos():
+            if position != self.field.y_team[r_id].get_pos() or const.IS_SIMULATOR_USED:
                 self.field.update_yel_robot(r_id, position, angle, time.time())
 
         return status

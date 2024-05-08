@@ -127,7 +127,7 @@ class Field:
         """
         Определить, находится ли мяч внутри дриблера
         """
-        #print(self.ally_with_ball)
+        # print(self.ally_with_ball)
         return robo == self.ally_with_ball
 
     def update_blu_robot(self, idx: int, pos: aux.Point, angle: float, t: float) -> None:
@@ -196,20 +196,23 @@ class Field:
         """
         return self.is_ball_moves_to_point(self.ally_goal.center)
 
-    def find_popusks(self, num: int, attacker_id: int) -> list[robot.Robot]:
+    def find_nearest_allies(self, point: aux.Point, num: int, avoid: list[Optional[int]] = [None]) -> list[robot.Robot]:
         """
-        Найти num роботов, ближайших к вражеским воротам
+        Найти num роботов из field.allies, ближайших к точке point
         """
+        if avoid is [None]:
+            avoid = []
+        avoid += [const.GK]
         robots: list[robot.Robot] = []
-        ids: list[int] = [const.GK, attacker_id]
-        if len(self.allies) < num:
-            return None #сам виноват
+        # if len(self.allies) < num:
+        #     return None  # сам виноват
 
         while len(robots) < num:
-            robo = find_nearest_robot(self.enemy_goal.center, self.allies, ids)
+            robo = find_nearest_robot(point, self.allies, avoid)
             robots.append(robo)
-            ids.append(robo.r_id)
+            avoid.append(robo.r_id)
         return robots
+
 
 def find_nearest_robot(point: aux.Point, team: list[robot.Robot], avoid: Optional[list[int]] = None) -> robot.Robot:
     """

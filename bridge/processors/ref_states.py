@@ -3,7 +3,6 @@ import math
 import bridge.processors.auxiliary as aux
 import bridge.processors.const as const
 import bridge.processors.field as fld
-import bridge.processors.robot as robot
 import bridge.processors.waypoint as wp
 
 

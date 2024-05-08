@@ -2,8 +2,10 @@
 Модуль с тестами для отладки на полигоне
 """
 from time import time
-import bridge.processors.waypoint as wp
+
 import bridge.processors.field as fld
+import bridge.processors.waypoint as wp
+
 
 def test_ping(field: fld.Field, waypoints: list[wp.Waypoint], id: int) -> None:
     """
@@ -11,7 +13,7 @@ def test_ping(field: fld.Field, waypoints: list[wp.Waypoint], id: int) -> None:
     Измерят с точностью до одной итерации (результат больше настоящей задержки, но не более чем на const.Ts)
     """
 
-    if not timer in globals():
+    if timer not in globals():
         global timer, timer1
         timer = time()
     else:

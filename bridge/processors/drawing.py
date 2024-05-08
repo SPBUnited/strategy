@@ -23,7 +23,7 @@ class Image:
     """
 
     def __init__(self) -> None:
-        self.disable = True
+        self.disable = False
 
         if self.disable:
             return
