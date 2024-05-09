@@ -163,7 +163,7 @@ class Strategy:
         roles = ATTACK_ROLES[:atks] + DEFENSE_ROLES[:defs]
         return [Role.GOALKEEPER, Role.ATTACKER] + sorted(roles, key = lambda x: x.value)
 
-    def choose_robots_for_roles(self, field: fld.Field, roles: list[Role], wall_wps: list[wp.Waypoint] | None) -> list[Role]:
+    def choose_robots_for_roles(self, field: fld.Field, roles: list[Role], wall_pos: aux.Point) -> list[Role]:
         robot_roles: list[Role] = [Role.UNAVAILABLE for _ in range(const.TEAM_ROBOTS_MAX_COUNT)]
         used_ids: list[int] = []
 
@@ -180,7 +180,7 @@ class Strategy:
             elif role == Role.ATTACKER:
                 robot_id = fld.find_nearest_robot(field.ball.get_pos(), field.allies, used_ids).r_id
             elif role == Role.WALLLINER:
-                robot_id = fld.find_nearest_robot(wall_wps.pop(0).pos, field.allies, used_ids).r_id
+                robot_id = fld.find_nearest_robot(wall_pos, field.allies, used_ids).r_id
             elif role == Role.FORWARD:
                 robot_id = fld.find_nearest_robot(field.enemy_goal.center, field.allies, used_ids).r_id
             robot_roles[robot_id] = role
@@ -193,18 +193,12 @@ class Strategy:
         """
         Рассчитать конечные точки для каждого робота
         """
-        if self.active_team == ActiveTeam.ALL:
+        if      self.active_team == ActiveTeam.ALL or \
+                field.ally_color == "b" and self.active_team == ActiveTeam.BLUE or \
+                field.ally_color == "y" and self.active_team == ActiveTeam.YELLOW:
             self.refs.we_active = 1
-        elif field.ally_color == "b":
-            if self.active_team == ActiveTeam.BLUE:
-                self.refs.we_active = 1
-            else:
-                self.refs.we_active = 0
         else:
-            if self.active_team == ActiveTeam.YELLOW:
-                self.refs.we_active = 1
-            else:
-                self.refs.we_active = 0
+            self.refs.we_active = 0
 
         if self.ball_history[self.ball_history_idx] is None:
             self.ball_start_point = self.ball_history[0]
@@ -217,7 +211,7 @@ class Strategy:
 
         waypoints: list[wp.Waypoint] = []
         for i in range(const.TEAM_ROBOTS_MAX_COUNT):
-            waypoints.append(wp.Waypoint(field.allies[i].get_pos(), field.allies[i].get_angle(), wp.WType.S_ENDPOINT))
+            waypoints.append(wp.Waypoint(field.allies[i].get_pos(), field.allies[i].get_angle(), wp.WType.S_STOP))
 
         if self.game_status != GameStates.PENALTY:
             self.refs.is_started = 0
@@ -252,8 +246,9 @@ class Strategy:
                 self.refs.keep_distance(field, waypoints)
         # print(self.game_status, self.state)
 
-        for i in [14, 11]:
-            self.image.draw_robot(field.allies[i].get_pos(), field.allies[i].get_angle())
+        for rbt in field.allies:
+            if rbt.is_used():
+                self.image.draw_robot(rbt.get_pos(), rbt.get_angle())
         self.image.draw_dot(field.ball.get_pos(), 5)
         self.image.draw_poly(field.ally_goal.hull)
         self.image.draw_poly(field.enemy_goal.hull)
@@ -268,33 +263,36 @@ class Strategy:
         roles - роли роботов, отсортированные по приоритету
         robot_roles - список соответствия id робота и его роли
         """
-        for i in range(const.TEAM_ROBOTS_MAX_COUNT):
-            waypoints[i] = wp.Waypoint(field.allies[i].get_pos(), field.allies[i].get_angle(), wp.WType.S_STOP)
 
         "Определение набора ролей для роботов"
         roles = self.choose_roles(field)
         print(roles)
 
         "Вычисление конечных точек, которые не зависят от выбранного робота"
-        wallliners = roles.count(Role.WALLLINER)
-        gk_wp, wall_wps = self.goalk(field, wallliners, field.ally_with_ball)
-        waypoints[const.GK] = gk_wp
+        wall_enemy = field.ball.get_pos()
+        wall_pos = self.calc_wall_pos(field, wall_enemy)
+
 
         "Выбор роботов для всех ролей, с учетом вычесленных выше точек"
-        robot_roles = self.choose_robots_for_roles(field, roles, wall_wps)
+        robot_roles = self.choose_robots_for_roles(field, roles, wall_pos)
         # print(robot_roles)
 
         "Вычисление конечных точек, которые зависят от положения робота и создание путевых точек"
         self.forwards = find_role(field, robot_roles, Role.FORWARD)
         if self.forwards is not None:
-            self.set_forwards_wps(field, waypoints, field.ball.get_pos())
+            self.set_forwards_wps(field, waypoints)
 
-        attacker_id = find_role(field, robot_roles, Role.ATTACKER)[0].r_id
-        self.attacker(field, waypoints, attacker_id)
+        if Role.ATTACKER in robot_roles:
+            attacker_id = find_role(field, robot_roles, Role.ATTACKER)[0].r_id
+            self.attacker(field, waypoints, attacker_id)
 
+        if Role.WALLLINER in robot_roles:
+            wallliners = find_role(field, robot_roles, Role.WALLLINER)
+            self.set_wallliners_wps(field, waypoints, wallliners, wall_enemy)
 
+        if Role.GOALKEEPER in robot_roles:
+            waypoints[const.GK] = self.goalk(field, field.ally_with_ball)
 
-            # self.set_forwards_wps(field, waypoints, field.ball.get_pos())
 
     square = signal.Signal(15, "SQUARE", lohi=(-2000, -1000))
     square_ang = signal.Signal(4, "SQUARE", lohi=(0, 4))
@@ -313,7 +311,7 @@ class Strategy:
         return waypoints
 
     def attacker(self, field: fld.Field, waypoints: list[wp.Waypoint], attacker_id: int) -> None:
-
+        """Логика действий для робота с мячом"""
         tmp = self.choose_kick_point(field, attacker_id)
         est = self.estimate_pass_point(field, field.ball.get_pos(), tmp[0])
         # print(max(est, self.estimate_pass_point(field, field.ball.get_pos(), self.current_dessision[0])))
@@ -331,7 +329,56 @@ class Strategy:
                 wp.WType.S_BALL_KICK
             )
 
+    def calc_wall_pos(self, field: fld.Field, ball: aux.Point) -> aux.Point:
+        for i in range(len(field.ally_goal.hull) * 1): #NOTE: исправить пересечение прямой с углом зоны
+            point = aux.get_line_intersection(field.ally_goal.hull[i-1], field.ally_goal.hull[i], field.ally_goal.center, ball, "SR")
+            if point is not None:
+                return point
+        return field.ally_goal.frw
+
+    def set_wall_targets(self, field: fld.Field, num: int, ball: aux.Point) -> list[aux.Point]:
+        if aux.is_point_inside_poly(ball, field.ally_goal.hull):
+            ball = fld.find_nearest_robot(field.ally_goal.center, field.enemies).get_pos()
+        poses = []
+
+        lines: list[tuple[aux.Point, aux.Point]] =[]
+        intersections = []
+        for i in range(len(field.ally_goal.hull) * 1): #NOTE: исправить пересечение прямой с углом зоны
+            point = aux.get_line_intersection(field.ally_goal.hull[i-1], field.ally_goal.hull[i], ball, field.ally_goal.down, "SS")
+            if point is not None:
+                lines.append([field.ally_goal.hull[i-1], field.ally_goal.hull[i]])
+                intersections.append(point)
+
+            point = aux.get_line_intersection(field.ally_goal.hull[i-1], field.ally_goal.hull[i], ball, field.ally_goal.up, "SS")
+            if point is not None:
+                lines.append([field.ally_goal.hull[i-1], field.ally_goal.hull[i]])
+                intersections.append(point)
+
+        wall_vec = intersections[1] - intersections[0]
+        if wall_vec.mag() > num * 2 * const.ROBOT_R:
+            for i in range(num):
+                delta = const.ROBOT_R * (2 * i + 1)
+                poses.append(intersections[0] + wall_vec.unity() * delta)
+                self.image.draw_dot(intersections[0] + wall_vec.unity() * delta, const.ROBOT_R * self.image.scale, (128, 128, 128))
+        else:
+            wall_middle = intersections[0] + wall_vec / 2
+            for i in range(num):
+                delta = const.ROBOT_R * (-(num - 1) + 2 * i)
+                poses.append(wall_middle + wall_vec.unity() * delta)
+                self.image.draw_dot(wall_middle + wall_vec.unity() * delta, const.ROBOT_R * self.image.scale, (200, 200, 200))
+
+        return poses
+
+    def set_wallliners_wps(self, field: fld.Field, waypoints: list[wp.Waypoint], wallliners: list[robot.Robot], enemy_pos: aux.Point) -> None:
+        poses = self.set_wall_targets(field, len(wallliners), enemy_pos)
+
+        for pos in poses:
+            robot = fld.find_nearest_robot(pos, wallliners)
+            waypoints[robot.r_id] = wp.Waypoint(pos, field.ally_goal.eye_forw.arg(), wp.WType.S_ENDPOINT)
+
+
     def choose_receiver(self, field: fld.Field) -> int:
+        """Выбирает робота для получения паса"""
         receiver_id = None
         receiver_score = 0.0
         for forward in self.forwards:
@@ -343,7 +390,8 @@ class Strategy:
                 receiver_score = score
         return receiver_id
 
-    def set_forwards_wps(self, field: fld.Field, waypoints: list[wp.Waypoint], ball_pos: aux.Point) -> None:
+    def set_forwards_wps(self, field: fld.Field, waypoints: list[wp.Waypoint]) -> None:
+        """Расставляет роботов по точкам для получения паса"""
         pos_num = len(self.forwards)
         poses = [
             aux.Point(3500 * field.polarity, 1500),
@@ -351,14 +399,14 @@ class Strategy:
             aux.Point(2500 * field.polarity, 0),
         ]
         poses = poses[: (pos_num + 1)]
-        bad_pos = aux.find_nearest_point(ball_pos, poses)
+        bad_pos = aux.find_nearest_point(field.ball.get_pos(), poses)
 
         used_forwards: list[int] = []
 
         for pos in poses:
             if pos == bad_pos:
                 continue
-            if len(used_forwards) == len(self.forwards):
+            if len(used_forwards) == pos_num:
                 return
             pop = fld.find_nearest_robot(pos, self.forwards, used_forwards)
             used_forwards.append(pop.r_id)
@@ -594,9 +642,8 @@ class Strategy:
     def goalk(
         self,
         field: fld.Field,
-        wall_num: int,
         robot_with_ball: Optional[robot.Robot],
-    ) -> tuple[wp.Waypoint, list[wp.Waypoint] | None]:
+    ) -> wp.Waypoint:
         """
         Управление вратарём и стенкой
         Возвращает массив с элементами класса Waypoint, где 0й элемент - вратарь, а остальные - стенка
@@ -653,23 +700,7 @@ class Strategy:
         if field.is_ball_stop_near_goal() or field.ally_with_ball == field.allies[const.GK]:
             gk_wp = wp.Waypoint(field.ball.get_pos(), field.ally_goal.eye_forw.arg(), wp.WType.S_BALL_KICK_UP)
 
-        wall_wps: list[wp.Waypoint] = []
-
-        wallline = [field.ally_goal.frw + field.ally_goal.eye_forw * const.GOAL_WALLLINE_OFFSET]
-        wallline.append(wallline[0] + field.ally_goal.eye_up)
-
-        walline = aux.point_on_line(field.ally_goal.center, field.ball.get_pos(), const.GOAL_WALLLINE_OFFSET)
-        walldir = aux.rotate((field.ally_goal.center - field.ball.get_pos()).unity(), math.pi / 2)
-        dirsign = -aux.sign(aux.vec_mult(field.ally_goal.center, field.ball.get_pos()))
-
-        wall = []
-        for i in range(wall_num):
-            wall.append(walline - walldir * (i + 1) * dirsign * (1 + (i % 2) * -2) * const.GOAL_WALL_ROBOT_SEPARATION)
-            wall_wps.append(wp.Waypoint(wall[i], walldir.arg(), wp.WType.S_IGNOREOBSTACLES))
-            if field.is_ball_moves_to_goal():
-                wall_wps[i].type = wp.WType.S_STOP
-
-        return gk_wp, wall_wps
+        return gk_wp
 
 def delete_role(roles: list[Role], role_to_delete: Role) -> None:
     """Удаляет роль из массива (если роли в массиве нет, удаляет роль самого низкого приоритета)"""

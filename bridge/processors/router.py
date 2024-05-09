@@ -46,7 +46,7 @@ class Router:
                     angle0 = target.angle
                     k = 1.2
                     self.routes[idx].set_dest_wp(
-                        wp.Waypoint(goal.center + (closest_out - goal.center) * k, angle0, wp.WType.S_ENDPOINT)
+                        wp.Waypoint(goal.center + (closest_out - goal.center) * k, angle0, wp.WType.R_PASSTHROUGH)
                     )
                     return
         self.routes[idx].set_dest_wp(target)

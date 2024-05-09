@@ -38,11 +38,11 @@ class Goal:
 
         # Оболочка штрафной зоны
         self.hull = [
+            aux.FIELD_INF * self.eye_forw.x,
             self.center + self.vec_pen_up,
             self.frw_up,
             self.frw_down,
             self.center - self.vec_pen_up,
-            aux.FIELD_INF * self.eye_forw.x,
         ]
 
         # Попуск
@@ -186,7 +186,7 @@ class Field:
         """
         vec_to_point = point - self.ball.get_pos()
         return (
-            self.ball.get_vel().mag() * (cos(vec_to_point.arg() - self.ball.get_vel().arg()) ** 2)
+            self.ball.get_vel().mag() * (cos(vec_to_point.arg() - self.ball.get_vel().arg()) ** 3)
             > const.INTERCEPT_SPEED * 2
         )
 
@@ -196,11 +196,11 @@ class Field:
         """
         return self.is_ball_moves_to_point(self.ally_goal.center)
 
-    def find_nearest_allies(self, point: aux.Point, num: int, avoid: list[Optional[int]] = [None]) -> list[robot.Robot]:
+    def find_nearest_allies(self, point: aux.Point, num: int, avoid: Optional[list[int]] = None) -> list[robot.Robot]:
         """
         Найти num роботов из field.allies, ближайших к точке point
         """
-        if avoid is [None]:
+        if avoid is None:
             avoid = []
         avoid += [const.GK]
         robots: list[robot.Robot] = []

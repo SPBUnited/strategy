@@ -89,7 +89,7 @@ class Image:
         if self.disable:
             return
         robot_color = (0, 0, 255)
-        robot_radius = 20
+        robot_radius = const.ROBOT_R * self.scale
         robot_length = 40
         end_point = (
             int(r.x * self.scale + self.middle_x + robot_length * math.cos(angle)),
