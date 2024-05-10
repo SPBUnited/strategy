@@ -23,27 +23,25 @@ class Image:
     """
 
     def __init__(self) -> None:
-        self.disable = False
+        self.disable = True
 
-        if self.disable:
-            return
-
-        pygame.init()
         width, heigh = 1200, 900
-        self.screen = pygame.display.set_mode((width, heigh), pygame.RESIZABLE)
-        pygame.display.set_caption("Football Field")
-
         goal_dx, goal_dy = abs(const.GOAL_DX), abs(3000)
         self.scale = min(width / 2 / goal_dx, heigh / 2 / goal_dy)
-        self.middle_x, self.middle_y = self.screen.get_size()
-        self.middle_x = round(self.middle_x / 2)
-        self.middle_y = round(self.middle_y / 2)
-        self.upper_border = self.middle_y - goal_dy * self.scale
-        self.lower_border = self.middle_y + goal_dy * self.scale
-        self.left_border = self.middle_x - goal_dx * self.scale
-        self.right_border = self.middle_x + goal_dx * self.scale
         self.size_x = goal_dx * self.scale * 2
         self.size_y = goal_dy * self.scale * 2
+
+        if not self.disable:
+            self.middle_x, self.middle_y = self.screen.get_size()
+            self.middle_x = round(self.middle_x / 2)
+            self.middle_y = round(self.middle_y / 2)
+            self.upper_border = self.middle_y - goal_dy * self.scale
+            self.lower_border = self.middle_y + goal_dy * self.scale
+            self.left_border = self.middle_x - goal_dx * self.scale
+            self.right_border = self.middle_x + goal_dx * self.scale
+            pygame.init()
+            self.screen = pygame.display.set_mode((width, heigh), pygame.RESIZABLE)
+            pygame.display.set_caption("Football Field")
 
     def draw_field(self) -> None:
         """
