@@ -37,18 +37,18 @@ class Router:
         """
         Установить единственную путевую точку для робота с индексом idx
         """
-        if idx != const.GK:
-            # self_pos = fld.allies[idx].get_pos()
-            dest_pos = target.pos
-            for goal in [fld.ally_goal, fld.enemy_goal]:
-                if aux.is_point_inside_poly(dest_pos, goal.hull):
-                    closest_out = aux.find_nearest_point(dest_pos, goal.hull, [goal.up, aux.GRAVEYARD_POS, goal.down])
-                    angle0 = target.angle
-                    k = 1.2
-                    self.routes[idx].set_dest_wp(
-                        wp.Waypoint(goal.center + (closest_out - goal.center) * k, angle0, wp.WType.R_PASSTHROUGH)
-                    )
-                    return
+        # if idx != const.GK and target.type != wp.WType.R_IGNORE_GOAl_HULL:
+        #     # self_pos = fld.allies[idx].get_pos()
+        #     dest_pos = target.pos
+        #     for goal in [fld.ally_goal, fld.enemy_goal]:
+        #         if aux.is_point_inside_poly(dest_pos, goal.hull):
+        #             closest_out = aux.find_nearest_point(dest_pos, goal.hull, [goal.up, aux.GRAVEYARD_POS, goal.down])
+        #             angle0 = target.angle
+        #             k = 1.2
+        #             self.routes[idx].set_dest_wp(
+        #                 wp.Waypoint(goal.center + (closest_out - goal.center) * k, angle0, wp.WType.R_PASSTHROUGH)
+        #             )
+        #             return
         self.routes[idx].set_dest_wp(target)
 
     def reroute(self, fld: field.Field) -> None:
@@ -77,7 +77,7 @@ class Router:
                 align_wp = self.calc_grab_wp(idx)
                 self.routes[idx].insert_wp(align_wp)
 
-            if idx == const.GK:
+            if idx == const.GK or self.routes[idx].get_dest_wp().type == wp.WType.R_IGNORE_GOAl_HULL:
                 pth_wp = self.calc_vector_field(idx, fld)
                 if pth_wp is not None:
                     self.routes[idx].insert_wp(pth_wp)
@@ -127,6 +127,7 @@ class Router:
         if (
             self.routes[idx].get_dest_wp().type == wp.WType.S_IGNOREOBSTACLES
             or self.routes[idx].get_dest_wp().type == wp.WType.S_BALL_GO
+            or self.routes[idx].get_dest_wp().type == wp.WType.R_IGNORE_GOAl_HULL
         ):
             return None
 
