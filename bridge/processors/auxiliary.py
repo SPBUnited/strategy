@@ -406,6 +406,20 @@ def line_intersect(m: BobLine, bots: list[BobLine]) -> list[Point]:
         result.append(res)
     return result
 
+def nearest_point_on_poly(p: Point, poly: list[Point]) -> Point:
+    """
+    TODO
+    """
+    min_ = 10e10
+    ans = Point(0, 0)
+    for i, _ in enumerate(poly):
+        pnt = closest_point_on_line(poly[i - 1], poly[i], p)
+        d = dist(pnt, p)
+        if d < min_:
+            min_ = d
+            ans = pnt
+    return ans
+
 
 def in_place(point: Point, end: Point, epsilon: float) -> bool:
     """

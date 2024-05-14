@@ -45,6 +45,14 @@ class Goal:
             self.center - self.vec_pen_up,
         ]
 
+        self.big_hull = [
+            aux.FIELD_INF * self.eye_forw.x,
+            self.center + self.vec_pen_up + self.eye_up * const.ROBOT_R,
+            self.frw_up + (self.eye_forw + self.eye_up) * const.ROBOT_R,
+            self.frw_down + (self.eye_forw - self.eye_up) * const.ROBOT_R,
+            self.center - self.vec_pen_up - self.eye_up * const.ROBOT_R,
+        ]
+
         # Попуск
         self.popusk_positions = [
             aux.Point(0, 2000),

@@ -37,18 +37,17 @@ class Router:
         """
         Установить единственную путевую точку для робота с индексом idx
         """
-        # if idx != const.GK and target.type != wp.WType.R_IGNORE_GOAl_HULL:
-        #     # self_pos = fld.allies[idx].get_pos()
-        #     dest_pos = target.pos
-        #     for goal in [fld.ally_goal, fld.enemy_goal]:
-        #         if aux.is_point_inside_poly(dest_pos, goal.hull):
-        #             closest_out = aux.find_nearest_point(dest_pos, goal.hull, [goal.up, aux.GRAVEYARD_POS, goal.down])
-        #             angle0 = target.angle
-        #             k = 1.2
-        #             self.routes[idx].set_dest_wp(
-        #                 wp.Waypoint(goal.center + (closest_out - goal.center) * k, angle0, wp.WType.R_PASSTHROUGH)
-        #             )
-        #             return
+        if idx != const.GK and target.type != wp.WType.R_IGNORE_GOAl_HULL:
+            # self_pos = fld.allies[idx].get_pos()
+            dest_pos = target.pos
+            for goal in [fld.ally_goal, fld.enemy_goal]:
+                if aux.is_point_inside_poly(dest_pos, goal.big_hull):
+                    closest_out = aux.nearest_point_on_poly(dest_pos, goal.big_hull)
+                    angle0 = target.angle
+                    self.routes[idx].set_dest_wp(
+                        wp.Waypoint(closest_out, angle0, wp.WType.R_PASSTHROUGH)
+                    )
+                    return
         self.routes[idx].set_dest_wp(target)
 
     def reroute(self, fld: field.Field) -> None:
@@ -84,20 +83,20 @@ class Router:
                 continue
 
             for goal in [fld.ally_goal, fld.enemy_goal]:
-                if aux.is_point_inside_poly(self_pos, goal.hull):
-                    closest_out = aux.find_nearest_point(self_pos, goal.hull, [goal.up, aux.GRAVEYARD_POS, goal.down])
+                if aux.is_point_inside_poly(self_pos, goal.big_hull):
+                    closest_out = aux.find_nearest_point(self_pos, goal.big_hull, [goal.up, aux.GRAVEYARD_POS, goal.down])
                     angle0 = self.routes[idx].get_dest_wp().angle
                     self.routes[idx].set_dest_wp(
                         wp.Waypoint(goal.center + (closest_out - goal.center) * 1.2, angle0, wp.WType.S_ENDPOINT)
                     )
                     continue
-                pint = aux.segment_poly_intersect(self_pos, self_pos + self.routes[idx].get_next_vec(), goal.hull)
+                pint = aux.segment_poly_intersect(self_pos, self.routes[idx].get_next_wp().pos, goal.big_hull)
                 if pint is not None:
-                    if aux.is_point_inside_poly(self.routes[idx].get_dest_wp().pos, goal.hull):
+                    if aux.is_point_inside_poly(self.routes[idx].get_dest_wp().pos, goal.big_hull):
                         angle0 = self.routes[idx].get_dest_wp().angle
                         self.routes[idx].set_dest_wp(wp.Waypoint(pint, angle0, wp.WType.S_ENDPOINT))
                         break
-                    convex_hull = qh.shortesthull(self_pos, self_pos + self.routes[idx].get_next_vec(), goal.hull)
+                    convex_hull = qh.shortesthull(self_pos, self_pos + self.routes[idx].get_next_vec(), goal.big_hull)
                     for j in range(len(convex_hull) - 2, 0, -1):
                         self.routes[idx].insert_wp(wp.Waypoint(convex_hull[j], 4, wp.WType.R_PASSTHROUGH))
 
@@ -105,7 +104,7 @@ class Router:
             if pth_wp is not None:
                 is_inside = False
                 for goal in [fld.ally_goal, fld.enemy_goal]:
-                    if aux.is_point_inside_poly(pth_wp.pos, goal.hull):
+                    if aux.is_point_inside_poly(pth_wp.pos, goal.big_hull):
                         is_inside = True
                         break
                 if not is_inside:

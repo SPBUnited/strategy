@@ -8,7 +8,7 @@ COLOR = "b"
 POLARITY = 1  # 1 если ворота синих на +x; -1 если ворота синих на -x
 
 IS_SIMULATOR_USED = True
-SELF_PLAY = True
+SELF_PLAY = False
 
 GK = 0
 PENALTY_KICKER = 1
@@ -61,7 +61,7 @@ TOPIC_SINK = "control-sink"
 
 ##################################################
 # CONTROL CONSTS
-Ts = 0.03  # s
+Ts = 0.05  # s
 
 # ROBOT SETTING CONSTS
 # MAX_SPEED = 100

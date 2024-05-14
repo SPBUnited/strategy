@@ -136,9 +136,6 @@ class SSLController(BaseProcessor):
                 b_bots_id.append(robot_det.robot_id)
                 b_bots_pos[robot_det.robot_id].append(aux.Point(robot_det.x, robot_det.y))
                 b_bots_ang[robot_det.robot_id].append(robot_det.orientation)
-                # self.field.update_blu_robot(
-                #     robot_det.robot_id, aux.Point(robot_det.x, robot_det.y), robot_det.orientation, time.time()
-                # )
 
             for robot_det in detection.robots_yellow:
                 y_bots_id.append(robot_det.robot_id)
@@ -172,16 +169,16 @@ class SSLController(BaseProcessor):
             else:
                 robot.used(1)
 
+        for r_id in set(y_bots_id):
+            position = aux.average_point(y_bots_pos[r_id])
+            angle = aux.average_angle(y_bots_ang[r_id])
+            if position != self.field.y_team[r_id].get_pos() or const.IS_SIMULATOR_USED:
+                self.field.update_yel_robot(r_id, position, angle, time.time())
         for robot in self.field.y_team:
             if time.time() - robot.last_update() > 0.5:
                 robot.used(0)
             else:
                 robot.used(1)
-        for r_id in set(y_bots_id):
-            position = aux.average_point(y_bots_pos[r_id])
-            angle = sum(y_bots_ang[r_id]) / len(y_bots_ang[r_id])
-            if position != self.field.y_team[r_id].get_pos() or const.IS_SIMULATOR_USED:
-                self.field.update_yel_robot(r_id, position, angle, time.time())
 
         return status
 
