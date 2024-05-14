@@ -1,3 +1,4 @@
-strategy-bridge==0.3.0
-numpy==1.26.1
-matplotlib
+attrs==21.2.0
+numpy==1.21.2
+protobuf==3.19.1
+pyzmq==22.3.0
