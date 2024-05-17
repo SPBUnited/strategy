@@ -53,15 +53,6 @@ class Goal:
             self.center - self.vec_pen_up - self.eye_up * const.ROBOT_R,
         ]
 
-        # Попуск
-        self.popusk_positions = [
-            aux.Point(0, 2000),
-            aux.Point(0, -2000),
-            aux.Point(0, 0),
-            aux.Point(aux.sign(goal_dx) * 2000, 2000),
-            aux.Point(aux.sign(goal_dx) * 2000, -2000),
-        ]
-
 
 class Field:
     """

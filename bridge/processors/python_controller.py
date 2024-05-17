@@ -13,11 +13,7 @@ from strategy_bridge.processors import BaseProcessor
 from strategy_bridge.utils.debugger import debugger
 
 import bridge.processors.auxiliary as aux
-import bridge.processors.const as const
-import bridge.processors.field as field
-import bridge.processors.router as router
-import bridge.processors.signal as signal
-import bridge.processors.strategy as strategy
+from bridge.processors import const, field, router, signal, strategy
 
 
 # TODO: Refactor this class and corresponding matlab scripts

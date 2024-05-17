@@ -5,11 +5,8 @@
 import math
 
 import bridge.processors.auxiliary as aux
-import bridge.processors.const as const
-import bridge.processors.field as field
-import bridge.processors.robot as robot
-import bridge.processors.tau as tau
 import bridge.processors.waypoint as wp
+from bridge.processors import const, field, robot, tau
 
 
 class Route:
@@ -113,13 +110,13 @@ class Route:
         dist = 0.0
         last_wp_pos = self._robot[0].pos
         for wpt in self.__get_route():
-            if (
-                wpt.type == wp.WType.S_BALL_GO
-                or wpt.type == wp.WType.S_BALL_KICK
-                or wpt.type == wp.WType.S_BALL_GRAB
-                or wpt.type == wp.WType.S_BALL_KICK_UP
-                or wpt.type == wp.WType.S_BALL_PASS
-            ):
+            if wpt.type in [
+                wp.WType.S_BALL_GO,
+                wpt.type == wp.WType.S_BALL_KICK,
+                wpt.type == wp.WType.S_BALL_GRAB,
+                wpt.type == wp.WType.S_BALL_KICK_UP,
+                wpt.type == wp.WType.S_BALL_PASS,
+            ]:
                 break
             dist += (wpt.pos - last_wp_pos).mag()
             last_wp_pos = wpt.pos
@@ -182,11 +179,14 @@ class Route:
         rbt.pos_reg_y.select_mode(tau.Mode.NORMAL)
 
         if (
-            end_point.type == wp.WType.S_BALL_KICK
-            or end_point.type == wp.WType.S_BALL_KICK_UP
-            or end_point.type == wp.WType.S_BALL_GRAB
-            or end_point.type == wp.WType.S_BALL_GO
-            or end_point.type == wp.WType.S_BALL_PASS
+            end_point.type
+            in [
+                wp.WType.S_BALL_KICK,
+                wp.WType.S_BALL_KICK_UP,
+                wp.WType.S_BALL_GRAB,
+                wp.WType.S_BALL_GO,
+                wp.WType.S_BALL_PASS,
+            ]
         ) and dist < 500:
 
             # print("IS KICK ALIGNED: ", rbt.is_kick_aligned(end_point), ",\tIS BALL GRABBED: ", fld.is_ball_in(rbt))
@@ -199,7 +199,7 @@ class Route:
 
             rbt.dribbler_enable_ = True
             rbt.dribbler_speed_ = 15
-            rbt.kicker_voltage_ = 15
+            rbt.kicker_voltage_ = 10
             if end_point.type == wp.WType.S_BALL_GRAB:
                 rbt.kicker_voltage_ = 0
             elif end_point.type == wp.WType.S_BALL_PASS:
@@ -210,10 +210,13 @@ class Route:
             pass
 
         if (
-            end_point.type == wp.WType.S_BALL_KICK
-            or end_point.type == wp.WType.S_BALL_KICK_UP
-            or end_point.type == wp.WType.S_BALL_GRAB
-            or end_point.type == wp.WType.S_BALL_PASS
+            end_point.type
+            in [
+                wp.WType.S_BALL_KICK,
+                wp.WType.S_BALL_KICK_UP,
+                wp.WType.S_BALL_GRAB,
+                wp.WType.S_BALL_PASS,
+            ]
         ) and rbt.is_kick_aligned(end_point):
             # vel0 = (rbt.get_pos() - end_point.pos).unity()
             vel0 = -aux.rotate(aux.RIGHT, rbt.get_angle())
@@ -235,7 +238,7 @@ class Route:
             transl_vel = aux.Point(u_x, u_y)
             angle0 = end_point.angle
 
-            if end_point.type == wp.WType.R_PASSTHROUGH:
+            if target_point.type == wp.WType.R_PASSTHROUGH:
                 transl_vel = transl_vel.unity() * const.MAX_SPEED
 
         aerr = aux.wind_down_angle(angle0 - rbt.get_angle())
@@ -260,7 +263,7 @@ class Route:
         # ang_vel = 0.7
 
         if (
-            end_point.type == wp.WType.S_BALL_KICK or end_point.type == wp.WType.S_BALL_PASS
+            end_point.type in [wp.WType.S_BALL_KICK, wp.WType.S_BALL_PASS]
         ) and rbt.is_kick_aligned_by_angle(end_point):
             rbt.auto_kick_ = 1
         elif end_point.type == wp.WType.S_BALL_KICK_UP and rbt.is_kick_aligned_by_angle(end_point):

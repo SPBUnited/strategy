@@ -8,10 +8,8 @@ import math
 import typing
 
 import bridge.processors.auxiliary as aux
-import bridge.processors.const as const
-import bridge.processors.field as field
+from bridge.processors import const, field, route
 import bridge.processors.quickhull as qh
-import bridge.processors.route as route
 import bridge.processors.waypoint as wp
 
 
@@ -44,9 +42,7 @@ class Router:
                 if aux.is_point_inside_poly(dest_pos, goal.big_hull):
                     closest_out = aux.nearest_point_on_poly(dest_pos, goal.big_hull)
                     angle0 = target.angle
-                    self.routes[idx].set_dest_wp(
-                        wp.Waypoint(closest_out, angle0, wp.WType.R_PASSTHROUGH)
-                    )
+                    self.routes[idx].set_dest_wp(wp.Waypoint(closest_out, angle0, wp.WType.S_ENDPOINT))
                     return
         self.routes[idx].set_dest_wp(target)
 
@@ -83,14 +79,14 @@ class Router:
                 continue
 
             for goal in [fld.ally_goal, fld.enemy_goal]:
-                if aux.is_point_inside_poly(self_pos, goal.big_hull):
+                if aux.is_point_inside_poly(self_pos, goal.hull):
                     closest_out = aux.find_nearest_point(self_pos, goal.big_hull, [goal.up, aux.GRAVEYARD_POS, goal.down])
                     angle0 = self.routes[idx].get_dest_wp().angle
                     self.routes[idx].set_dest_wp(
                         wp.Waypoint(goal.center + (closest_out - goal.center) * 1.2, angle0, wp.WType.S_ENDPOINT)
                     )
                     continue
-                pint = aux.segment_poly_intersect(self_pos, self.routes[idx].get_next_wp().pos, goal.big_hull)
+                pint = aux.segment_poly_intersect(self_pos, self.routes[idx].get_next_wp().pos, goal.hull)
                 if pint is not None:
                     if aux.is_point_inside_poly(self.routes[idx].get_dest_wp().pos, goal.big_hull):
                         angle0 = self.routes[idx].get_dest_wp().angle
@@ -124,9 +120,12 @@ class Router:
             return None
 
         if (
-            self.routes[idx].get_dest_wp().type == wp.WType.S_IGNOREOBSTACLES
-            or self.routes[idx].get_dest_wp().type == wp.WType.S_BALL_GO
-            or self.routes[idx].get_dest_wp().type == wp.WType.R_IGNORE_GOAl_HULL
+            self.routes[idx].get_dest_wp().type
+            in [
+                wp.WType.S_IGNOREOBSTACLES,
+                wp.WType.S_BALL_GO,
+                wp.WType.R_IGNORE_GOAl_HULL
+            ]
         ):
             return None
 

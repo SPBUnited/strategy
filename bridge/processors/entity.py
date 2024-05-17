@@ -10,8 +10,7 @@
 """
 
 import bridge.processors.auxiliary as aux
-import bridge.processors.const as const
-import bridge.processors.tau as tau
+from bridge.processors import const, tau
 
 
 class Entity:
