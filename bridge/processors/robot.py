@@ -69,7 +69,6 @@ class Robot(entity.Entity):
         # self.a0Flp = tau.FOLP(self.a0TF, const.Ts)
 
         # !v REAL
-        # if self.r_id != const.GK:
         gains_full = [3, 0.35, 0, const.MAX_SPEED]
         gains_soft = [3, 0.35, 0.1, const.SOFT_MAX_SPEED]
         a_gains_full = [8, 0.1, 0, const.MAX_SPEED_R]
@@ -187,6 +186,7 @@ class Robot(entity.Entity):
         self.dribbler_speed_ = robot.dribbler_speed_
         self.kicker_charge_enable_ = robot.kicker_charge_enable_
         self.beep = robot.beep
+        self.__is_used = robot.is_used()
 
     def clear_fields(self) -> None:
         """

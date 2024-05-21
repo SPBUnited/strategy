@@ -52,6 +52,7 @@ class SSLController(BaseProcessor):
 
         self.field = field.Field(self.ctrl_mapping, self.ally_color)
         self.router = router.Router(self.field)
+        
         self.strategy = strategy.Strategy()
 
     def get_last_referee_command(self) -> RefereeCommand:

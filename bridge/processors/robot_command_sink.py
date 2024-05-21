@@ -49,6 +49,8 @@ class CommandSink(BaseProcessor):
 
         for cmd in cmds:
             r = cmd.content
+            if not r.is_used():
+                continue
             ctrl_id = r.ctrl_id
 
             if ctrl_id is None:
@@ -58,6 +60,8 @@ class CommandSink(BaseProcessor):
                 self.b_control_team[ctrl_id].copy_control_fields(r)
             elif r.color == "y":
                 self.y_control_team[ctrl_id].copy_control_fields(r)
+                #self.y_control_team[ctrl_id].used(1)
+
 
         rules = self.get_rules()
 
@@ -112,8 +116,17 @@ class CommandSink(BaseProcessor):
                 rules.append(self.y_control_team[i].beep)
                 rules.append(0)
         else:
-            control_team = self.y_control_team if const.COLOR == "y" else self.b_control_team
             for i in range(const.TEAM_ROBOTS_MAX_COUNT):
+                control_team = self.y_control_team if self.y_control_team[i].is_used() else self.b_control_team
+            
+                if self.y_control_team[i].is_used():
+                    pass
+                elif self.b_control_team[i].is_used():
+                    pass
+                else:
+                    for _ in range(13):
+                        rules.append(0)
+                    continue
                 if abs(control_team[i].speed_x) < 1.5:
                     control_team[i].speed_x = 0
                 if abs(control_team[i].speed_y) < 1.5:

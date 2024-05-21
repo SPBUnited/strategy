@@ -27,7 +27,7 @@ class RefStates:
                 if (
                     field.allies[i].is_used()
                     and field.allies[i].r_id != const.PENALTY_KICKER
-                    and field.allies[i].r_id != const.GK
+                    and field.allies[i].r_id != field.gk_id
                 ):
                     waypoint = wp.Waypoint(
                         aux.Point(3000 * field.polarity, 2500 - 1000 * rC), field.allies[i].get_angle(), wp.WType.S_ENDPOINT
@@ -43,18 +43,18 @@ class RefStates:
             waypoint = wp.Waypoint(
                 field.ally_goal.center, aux.angle_to_point(field.ally_goal.center, field.ball.get_pos()), wp.WType.S_ENDPOINT
             )
-            waypoints[field.allies[const.GK].r_id] = waypoint
+            waypoints[field.allies[field.gk_id].r_id] = waypoint
         else:
             rC = 0
             for i in range(const.TEAM_ROBOTS_MAX_COUNT):
-                if field.allies[i].is_used() and field.allies[i].r_id != const.GK:
+                if field.allies[i].is_used() and field.allies[i].r_id != field.gk_id:
                     waypoint = wp.Waypoint(aux.Point(3000 * -field.polarity, 2500 - 1000 * rC), 0, wp.WType.S_ENDPOINT)
                     waypoints[i] = waypoint
                     rC += 1
             waypoint = wp.Waypoint(
                 field.ally_goal.center, aux.angle_to_point(field.ally_goal.center, field.ball.get_pos()), wp.WType.S_ENDPOINT
             )
-            waypoints[field.allies[const.GK].r_id] = waypoint
+            waypoints[field.allies[field.gk_id].r_id] = waypoint
 
     def halt(
         self, field: fld.Field, waypoints: list[wp.Waypoint]
@@ -144,7 +144,7 @@ class RefStates:
         rC = 0
         if self.we_kick:
             for i in range(const.TEAM_ROBOTS_MAX_COUNT):
-                if field.allies[i].is_used() and field.allies[i].r_id != const.GK:
+                if field.allies[i].is_used() and field.allies[i].r_id != field.gk_id:
                     if rC < 3:
                         if rC == 1:
                             waypoint = wp.Waypoint(
@@ -169,7 +169,7 @@ class RefStates:
                     rC += 1
         else:
             for i in range(const.TEAM_ROBOTS_MAX_COUNT):
-                if field.allies[i].is_used() and field.allies[i].r_id != const.GK:
+                if field.allies[i].is_used() and field.allies[i].r_id != field.gk_id:
                     if rC == 0:
                         waypoint = wp.Waypoint(
                             aux.Point(700 * field.polarity, 0),
@@ -193,7 +193,7 @@ class RefStates:
         waypoint = wp.Waypoint(
             field.ally_goal.center, aux.angle_to_point(field.ally_goal.center, field.ball.get_pos()), wp.WType.S_ENDPOINT
         )
-        waypoints[field.allies[const.GK].r_id] = waypoint
+        waypoints[field.allies[field.gk_id].r_id] = waypoint
 
     def kickoff(self, field: fld.Field, waypoints: list[wp.Waypoint]) -> None:
         """Удар мяча из аута"""

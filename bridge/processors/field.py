@@ -53,7 +53,6 @@ class Goal:
             self.center - self.vec_pen_up - self.eye_up * const.ROBOT_R,
         ]
 
-
 class Field:
     """
     Класс, хранящий информацию о всех объектах на поле и ключевых точках
@@ -69,6 +68,9 @@ class Field:
         """
         self.ally_with_ball: Optional[robot.Robot] = None
 
+        self.gk_id = const.GK if ally_color == const.COLOR else const.ENEMY_GK
+
+        print(self.gk_id)
         self.ally_color = ally_color
         if self.ally_color == "b":
             self.polarity = const.POLARITY * -1
@@ -201,7 +203,7 @@ class Field:
         """
         if avoid is None:
             avoid = []
-        avoid += [const.GK]
+        avoid += [self.gk_id]
         robots: list[robot.Robot] = []
         # if len(self.allies) < num:
         #     return None  # сам виноват

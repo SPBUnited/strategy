@@ -11,9 +11,9 @@ POLARITY = -1  # 1 если ворота синих на +x; -1 если вор�
 IS_SIMULATOR_USED = False
 SELF_PLAY = True
 
-GK = 11
+GK = 9
 PENALTY_KICKER = 1
-ENEMY_GK = 5
+ENEMY_GK = 2
 
 CAMERAS_COUNT: int = 4
 MAX_BALLS_IN_CAMERA: int = 64

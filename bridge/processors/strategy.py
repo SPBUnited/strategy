@@ -143,14 +143,14 @@ class Strategy:
         ]
 
         atk_min = 1
-        def_min = 1
+        def_min = 0
         # atk_min = 0
         # def_min = 0
 
         free_allies = -atk_min - def_min - 1
 
         for ally in field.allies:
-            if ally.is_used() and ally.r_id != const.GK:
+            if ally.is_used() and ally.r_id != field.gk_id:
                 free_allies += 1
 
         free_allies = max(0, free_allies)
@@ -173,17 +173,17 @@ class Strategy:
                 robot_roles[robot_id] = role
                 delete_role(roles, role)
 
-        if const.SELF_PLAY:
-            for robot_id, role in enumerate(self.prev_roles):
-                if role in [Role.WALLLINER]:
-                    used_ids.append(robot_id)
-                    robot_roles[robot_id] = role
-                    delete_role(roles, role)
+        # if const.SELF_PLAY:
+        #     for robot_id, role in enumerate(self.prev_roles):
+        #         if role in [Role.WALLLINER]:
+        #             used_ids.append(robot_id)
+        #             robot_roles[robot_id] = role
+        #             delete_role(roles, role)
 
         for role in roles:
             robot_id = -1
             if role == Role.GOALKEEPER:
-                robot_id = const.GK
+                robot_id = field.gk_id
             elif role == Role.WALLLINER:
                 # robot_id = 11
                 robot_id = fld.find_nearest_robot(wall_pos, field.allies, used_ids).r_id
@@ -251,7 +251,7 @@ class Strategy:
                     self.refs.penalty_kick(field, waypoints)
                 else:
                     robot_with_ball = fld.find_nearest_robot(field.ball.get_pos(), field.enemies)
-                    waypoints[const.GK] = self.goalk(field, 0, robot_with_ball)[0]
+                    waypoints[field.gk_id] = self.goalk(field, 0, robot_with_ball)[0]
             elif self.game_status == GameStates.BALL_PLACEMENT:
                 self.refs.keep_distance(field, waypoints)
             elif self.game_status == GameStates.PREPARE_KICKOFF:
@@ -259,7 +259,7 @@ class Strategy:
             elif self.game_status == GameStates.KICKOFF:
                 self.refs.kickoff(field, waypoints)
                 robot_with_ball = fld.find_nearest_robot(field.ball.get_pos(), field.enemies)
-                waypoints[const.GK] = self.goalk(field, 0, robot_with_ball)[0]
+                waypoints[field.gk_id] = self.goalk(field, 0, robot_with_ball)[0]
             # elif self.game_status == GameStates.FREE_KICK:
             #     self.free_kick(field, waypoints)
             elif self.game_status == GameStates.STOP:
@@ -291,7 +291,6 @@ class Strategy:
 
         "Определение набора ролей для роботов"
         roles = self.choose_roles(field)
-        print(roles)
 
         "Вычисление конечных точек, которые не зависят от выбранного робота"
         if aux.is_point_inside_poly(field.ball.get_pos(), field.ally_goal.hull):
@@ -312,16 +311,14 @@ class Strategy:
         if Role.ATTACKER in robot_roles:
             attacker_id = find_role(field, robot_roles, Role.ATTACKER)[0].r_id
             self.attacker(field, waypoints, attacker_id)
-            print(waypoints[attacker_id].pos)
 
         wallliners = find_role(field, robot_roles, Role.WALLLINER)
         if Role.WALLLINER in robot_roles:
             self.set_wallliners_wps(field, waypoints, wallliners, wall_enemy)
 
         if Role.GOALKEEPER in robot_roles:
-            waypoints[const.GK] = self.goalk(field, wallliners, field.ally_with_ball)
+            waypoints[field.gk_id] = self.goalk(field, wallliners, field.ally_with_ball)
 
-        print(field.ally_with_ball)
 
     square = signal.Signal(15, "SQUARE", lohi=(-500, 500))
     square_ang = signal.Signal(4, "SQUARE", lohi=(0, 4))
@@ -330,7 +327,7 @@ class Strategy:
         """Отладка"""
 
         fld.find_nearest_robot(field.ball.get_pos(), field.allies)
-        # self.goalk(field, waypoints, [const.GK], robot_with_ball)
+        # self.goalk(field, waypoints, [field.gk_id], robot_with_ball)
 
         # waypoints[const.DEBUG_ID].pos = field.ball.get_pos()
         # waypoints[const.DEBUG_ID].angle = (field.ally_goal.center - field.ball.get_pos() + aux.UP * self.square.get()).arg()
@@ -350,7 +347,7 @@ class Strategy:
             )
 
 
-        print(est, attacker_id)
+        # print(est, attacker_id)
 
         if est < self.desision_border and len(self.forwards) > 0:
             receiver_id = self.choose_receiver(field)
@@ -400,9 +397,12 @@ class Strategy:
         intersections[0] = ball + (intersections[0] - ball).unity() * length
         intersections[1] = ball + (intersections[1] - ball).unity() * length
         for point in field.ally_goal.big_hull:
+            inter = aux.get_line_intersection(ball, point, intersections[0], intersections[1], "RS")
+            if inter is None:
+                continue
             if aux.is_point_inside_poly(point, [ball, intersections[0], intersections[1]]):
                 scale = aux.dist(ball, point) / aux.dist(
-                    ball, aux.get_line_intersection(ball, point, intersections[0], intersections[1], "RS")
+                    ball, inter
                 )
                 intersections[0] = aux.lerp(ball, intersections[0], scale)
                 intersections[1] = aux.lerp(ball, intersections[1], scale)
@@ -438,7 +438,6 @@ class Strategy:
         for i in range(len(wallliners)):
             point = aux.closest_point_on_line(poses[0], poses[len(poses) - 1], wallliners[i].get_pos(), "L")
             projections.append([point.y, wallliners[i].r_id])
-            print(wallliners[i].r_id)
         projections = sorted(projections, key=lambda x: x[0])
         poses = sorted(poses, key=lambda x: x.y)
 
@@ -653,13 +652,11 @@ class Strategy:
             c = segments[i]
             a = segments[i + 1]
             b = ball_pos
-            # print(c.y, a.y)
             if (c.y - a.y) * goal.eye_up.y < 0:
                 continue  # Shadow intersection
             ang = abs(
                 aux.get_angle_between_points(a, b, c)
             )  # Саша, я тут градусы на радианы заменил, надеюсь ничего не сломалось
-            # print(ang, c.y, a.y)
             if ang > max_:
                 max_ = ang
                 maxId = i
@@ -670,20 +667,16 @@ class Strategy:
         A = segments[maxId + 1]
         B = ball_pos
         C = segments[maxId]
-        # print(A, C)
 
         tmp1 = (C - B).mag()
         tmp2 = (A - B).mag()
         CA = A - C
-        pnt = C + CA * 0.5 * (tmp1 / tmp2)
+        pnt = A
+        if tmp2 != 0:
+            pnt = C + CA * 0.5 * (tmp1 / tmp2)
         self.image.draw_dot(pnt, 10, (255, 0, 0))
 
-        max_ = abs(aux.wind_down_angle(max_))
-        # print(57.3 * max_)
 
-        (ball_pos - pnt).mag() / 1000
-
-        # print(max_, max_ang, max_ / max_ang)
         return pnt
 
     def goalk(
@@ -737,7 +730,7 @@ class Strategy:
         ):
             tmp_pos = aux.get_line_intersection(self.ball_start_point, ball, field.ally_goal.down, field.ally_goal.up, "RS")
             if tmp_pos is not None:
-                gk_pos = aux.closest_point_on_line(ball, tmp_pos, field.allies[const.GK].get_pos())
+                gk_pos = aux.closest_point_on_line(ball, tmp_pos, field.allies[field.gk_id].get_pos())
 
         if gk_pos is None:
             radius = (const.GK_FORW ** 2 + (const.GOAL_DY / 2) ** 2) / 2 / const.GK_FORW
@@ -752,7 +745,7 @@ class Strategy:
         gk_angle = math.pi / 2
         gk_wp = wp.Waypoint(gk_pos, gk_angle, wp.WType.S_IGNOREOBSTACLES)
 
-        if field.is_ball_stop_near_goal() or field.ally_with_ball == field.allies[const.GK]:
+        if field.is_ball_stop_near_goal() or field.ally_with_ball == field.allies[field.gk_id]:
             gk_wp = wp.Waypoint(ball, field.ally_goal.eye_forw.arg(), wp.WType.S_BALL_KICK_UP)
 
         return gk_wp
