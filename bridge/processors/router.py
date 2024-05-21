@@ -122,18 +122,20 @@ class Router:
         nMax = float('inf')
         nSteps = 0
         finish = None
-        ###print(queue[nSteps].x, queue[nSteps].y)
         tree = []
         pointGoNow = None
-        for i in range(nRobots):
-            allRobots.append(fld.allies[i])
-            allRobots.append(fld.allies[i])
-            ###print(allies.robot(i).x, allies.robot(i).y, enemies.robot(i).x, enemies.robot(i).y)
-        allRobots.pop(self.rId * 2)
+        for i in range(12):
+            if fld.allies[i].is_used() and i != idx:
+                allRobots.append(fld.allies[i])
+                #print(i)
+            if fld.enemies[i].is_used():
+                allRobots.append(fld.enemies[i])
+                #print(i, '222')
+        allRobots.append(fld.ball)
         while nSteps < nMax:
             onWay = []
             for i in range(len(allRobots)):
-                if hLine(queue[nSteps], endP, allRobots[i]) < rRobots * 2 and queue[nSteps].myRobot != i:
+                if hLine(queue[nSteps], endP, allRobots[i].get_pos()) < allRobots[i].get_radius() + allRobots[0].get_radius() and queue[nSteps].myRobot != i and aux.dist(queue[nSteps], allRobots[i].get_pos()) > allRobots[i].get_radius() + allRobots[0].get_radius():
                     onWay.append(i)
             if(len(onWay) == 0):
                 flag = 1
@@ -141,12 +143,12 @@ class Router:
                     oldWayL = 0
                     pointMas = endP
                     while pointMas.father != None:
-                        oldWayL += auxiliary.dist(pointMas, pointMas.father)
+                        oldWayL += aux.dist(pointMas, pointMas.father)
                         pointMas = pointMas.father
-                    newWayL = auxiliary.dist(endP, queue[nSteps])
+                    newWayL = aux.dist(endP, queue[nSteps])
                     pointMas = queue[nSteps]
                     while pointMas.father != None:
-                        newWayL += auxiliary.dist(pointMas, pointMas.father)
+                        newWayL += aux.dist(pointMas, pointMas.father)
                         pointMas = pointMas.father
                     if oldWayL < newWayL:
                         flag = 0
@@ -165,15 +167,20 @@ class Router:
                 minNumOnWay = -1
                 minDistOnWay = float('inf')
                 for i in range(len(onWay)):
-                    if auxiliary.dist(allRobots[onWay[i]], queue[nSteps]) < minDistOnWay:
-                        minDistOnWay = auxiliary.dist(allRobots[onWay[i]], queue[nSteps])
+                    if aux.dist(allRobots[onWay[i]].get_pos(), queue[nSteps]) < minDistOnWay:
+                        minDistOnWay = aux.dist(allRobots[onWay[i]].get_pos(), queue[nSteps])
                         minNumOnWay = i
-                mas2 = [onWay[minNumOnWay]]
+                allNew = allRobots.copy()
+                mas2 = [allNew[onWay[minNumOnWay]]]
                 i2 = 0
                 while i2 < len(mas2):
-                    for another in range(len(allRobots)):
-                        if auxiliary.dist(allRobots[mas2[i2]], allRobots[another]) < rRobots * 4 and another not in mas2:
-                            mas2.append(another)
+                    another = 0
+                    while another < len(allNew):
+                        if aux.dist(mas2[i2].get_pos(), allNew[another].get_pos()) < mas2[i2].get_radius() + allNew[another].get_radius() + allRobots[0].get_radius() * 2 and another not in mas2:
+                            mas2.append(allNew[another])
+                            allNew.pop(another)
+                            another -= 1
+                        another += 1
                     i2 += 1
                 angle1 = 0
                 dist1 = 0
@@ -181,14 +188,14 @@ class Router:
                 dist2 = 0
                 gamma = math.atan2(endP.y - queue[nSteps].y, endP.x - queue[nSteps].x)
                 for wall in mas2:
-                    a = auxiliary.dist(allRobots[wall], queue[nSteps])
-                    b = rRobots * 2
+                    a = aux.dist(wall.get_pos(), queue[nSteps])
+                    b = wall.get_radius() + allRobots[0].get_radius()
                     c = math.sqrt(abs(a ** 2 - b ** 2))
                     alpha = math.atan2(b, c)
-                    beta = math.atan2(allRobots[wall].y - queue[nSteps].y, allRobots[wall].x - queue[nSteps].x)
+                    beta = math.atan2(wall.get_pos().y - queue[nSteps].y, wall.get_pos().x - queue[nSteps].x)
                     tetta = beta + alpha - gamma
                     if abs(tetta) > math.pi:
-                        tetta = math.pi*2 * -auxiliary.sgn(tetta) - tetta
+                        tetta = math.pi*2 * -aux.sign(tetta) - tetta
                     if tetta > 0:
                         if abs(angle1) < abs(tetta):
                             angle1 = tetta
@@ -199,7 +206,7 @@ class Router:
                             dist2 = c + 100
                     tetta = beta - alpha - gamma
                     if abs(tetta) > math.pi:
-                        tetta = math.pi*2 * -auxiliary.sgn(tetta) + tetta
+                        tetta = math.pi*2 * -aux.sign(tetta) + tetta
                     if tetta > 0:
                         if abs(angle1) < abs(tetta):
                             angle1 = tetta
@@ -211,11 +218,13 @@ class Router:
                 queue.append(PointTree(queue[nSteps].x + math.cos(angle2 + gamma) * dist2, queue[nSteps].y + math.sin(angle2 + gamma) * dist2, queue[nSteps], onWay[minNumOnWay]))
                 queue.append(PointTree(queue[nSteps].x + math.cos(angle1 + gamma) * dist1, queue[nSteps].y + math.sin(angle1 + gamma) * dist1, queue[nSteps], onWay[minNumOnWay]))
             nSteps += 1
-        self.go_to_point(pointGoNow, finish)
-        self.rotate_to_point(pointGoNow)
+        #self.go_to_point(pointGoNow, finish)
+        #self.rotate_to_point(pointGoNow)
         #print(pointGoNow.x, pointGoNow.y)
 
-        return passthrough_wp
+        angle = self.routes[idx].get_next_wp().angle
+
+        return wp.Waypoint(pointGoNow.point(), angle, wp.WType.R_PASSTHROUGH)
 
     def calc_kick_wp(self, idx: int) -> wp.Waypoint:
         """
@@ -273,7 +282,10 @@ def hLine(edge1: aux.Point, edge2: aux.Point, rPoint: aux.Point, onLine: bool = 
     c = aux.dist(edge2, rPoint)
     p = (a + b + c) / 2
     sTr = math.sqrt(p * (p - a) * (p - b) * (p - c))
-    hTr = sTr * 2 / a
+    try:
+        hTr = sTr * 2 / a
+    except:
+        hTr = b
     if onLine:
         if not withLine(edge1, edge2, rPoint, maxAngle):
             hTr = float('inf')
@@ -285,3 +297,6 @@ class PointTree:
         self.y = y
         self.father = father
         self.myRobot = myRobot
+
+    def point(self):
+        return aux.Point(self.x, self.y)

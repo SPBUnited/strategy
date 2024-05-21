@@ -140,6 +140,7 @@ class Strategy:
         self.image.update_window()
         self.image.draw_field()
 
+        # waypoints[idx] = wp.Waypoint(pos, angle, wp.WType.S_ENDPOINT)
         return waypoints
 
     def run(self, field: fld.Field, waypoints: list[wp.Waypoint]) -> None:
@@ -147,6 +148,7 @@ class Strategy:
         Определение глобального состояния игры
         """
         x = 0
+        waypoints[0] = wp.Waypoint(aux.Point(1000, 0), 0, wp.WType.S_ENDPOINT)
 
     def go_to_ball(self, waypoints: list[wp.Waypoint], field: fld.Field, robot: aux.Point, ball: aux.Point) -> None:
         robot_r = const.ROBOT_R

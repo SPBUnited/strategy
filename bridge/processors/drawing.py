@@ -23,7 +23,7 @@ class Image:
     """
 
     def __init__(self) -> None:
-        self.disable = False
+        self.disable = True
 
         width, heigh = 1200, 900
         goal_dx, goal_dy = abs(const.GOAL_DX), abs(3000)

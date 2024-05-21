@@ -446,7 +446,7 @@ def circles_inter(p0: Point, p1: Point, r0: float, r1: float) -> tuple[Point, Po
     return Point(x3, y3), Point(x4, y4)
 
 
-def get_tangent_points(point0: Point, point1: Point, r: float) -> None | Point | tuple[Point, Point]:
+def get_tangent_points(point0: Point, point1: Point, r: float):
     """
     Get tangents
     """
