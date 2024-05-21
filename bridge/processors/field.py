@@ -186,7 +186,7 @@ class Field:
         vec_to_point = point - self.ball.get_pos()
         return (
             self.ball.get_vel().mag() * (cos(vec_to_point.arg() - self.ball.get_vel().arg()) ** 3)
-            > const.INTERCEPT_SPEED * 2
+            > const.INTERCEPT_SPEED * 2 and self.ally_with_ball is None
         )
 
     def is_ball_moves_to_goal(self) -> bool:

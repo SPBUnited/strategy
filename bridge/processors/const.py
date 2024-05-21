@@ -6,12 +6,12 @@
 # GAME SETTING CONSTS
 DIV = 'C'
 COLOR = "b"
-POLARITY = 1  # 1 если ворота синих на +x; -1 если ворота синих на -x
+POLARITY = -1  # 1 если ворота синих на +x; -1 если ворота синих на -x
 
 IS_SIMULATOR_USED = False
 SELF_PLAY = True
 
-GK = 9
+GK = 11
 PENALTY_KICKER = 1
 ENEMY_GK = 5
 
@@ -33,9 +33,9 @@ DEBUG_ID = 14
 DEBUG_CTRL = 14
 CONTROL_MAPPING: dict[int, int] = {
     # DEBUG_ID: DEBUG_CTRL
-    0: 0,
-    1: 1,
-    2: 2,
+    0: 13,
+    1: 14,
+    2: 15,
     3: 3,
     4: 4,
     5: 5,
@@ -46,9 +46,9 @@ CONTROL_MAPPING: dict[int, int] = {
     10: 10,
     11: 11,
     12: 12,
-    13: 13,
-    14: 14,
-    15: 15,
+    13: 0,
+    14: 1,
+    15: 2,
 }
 
 for i in range(TEAM_ROBOTS_MAX_COUNT):
