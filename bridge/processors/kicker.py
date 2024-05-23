@@ -18,19 +18,45 @@ class KickerAux:
         self.twist_w = 0.5
         self.wait_kick_timer = None
 
-    def kick_to_point(self, field: fld.Field, kicker_id: int, kick_point: aux.Point) -> wp.Waypoint:
-        "Удар в точку с выбором типа удара"
+    def kick_to_point(self, field: fld.Field, kicker_id: int, kick_point: aux.Point, type: str = "SHOOT") -> wp.Waypoint:
+        "Удар в точку с выбором типа удара (PASS/SHOOT)"
         if kicker_id < 9:
             angle  = aux.angle_to_point(field.ball.get_pos(), kick_point)
             self.reset_kick_consts()
             return wp.Waypoint(field.ball.get_pos(), angle, wp.WType.S_BALL_KICK)
+
+        angle_to_target = aux.angle_to_point(field.allies[kicker_id].get_pos(), kick_point)
+        if not field.is_ball_in(field.allies[kicker_id]) or abs(field.allies[kicker_id].get_angle() - angle_to_target) > 1:
+            field.allies[kicker_id].kicker_voltage_ = const.VOLTAGE_ZERO
+        elif type == "PASS":
+            field.allies[kicker_id].kicker_voltage_ = const.VOLTAGE_PASS
+        elif type == "SHOOT":
+            field.allies[kicker_id].kicker_voltage_ = const.VOLTAGE_SHOOT
+
+        return self.twisted(field, kicker_id, kick_point)
+
+    def safe(
+            self, field: fld.Field, kicker_id: int, kick_point: aux.Point
+    ) -> wp.Waypoint:
+        kicker_pos = field.allies[kicker_id].get_pos()
+        # angle  =aux.angle_to_point(kicker_pos, field.ball.get_pos())
+        # if not field.is_ball_in(field.allies[kicker_id]):
+        #     self.reset_kick_consts()
+        #     target = field.ball.get_pos() + (field.ball.get_pos() - kick_point).unity() * const.ROBOT_R
+        #     dist = aux.dist(field.ball.get_pos(), kicker_pos) 
+        #     if dist > const.ROBOT_R + const.BALL_R:
+        #         tangents = aux.get_tangent_points(field.ball.get_pos(), kicker_pos, const.ROBOT_R + const.BALL_R)
+        #         passthrough = aux.find_nearest_point(target, tangents) 
+        #         return wp.Waypoint(passthrough, angle, wp.WType.R_PASSTHROUGH)
+        #     else:
+        #         direction = aux.rotate(target - kicker_pos, field.allies[kicker_id].get_angle())
+        #         w = 1
+        #         if direction.x > 0:
+        #             w *= -1
+        #         return wp.Waypoint(aux.Point(0, dist), w, wp.WType.S_VELOCITY)
+        angle = aux.angle_to_point(field.ball.get_pos(), kick_point)
+        return wp.Waypoint(field.ball.get_pos(), angle, wp.WType.S_BALL_KICK)
         
-        if not field.is_ball_in(field.allies[kicker_id]):
-            angle  =aux.angle_to_point(field.allies[kicker_id].get_pos(), field.ball.get_pos())
-            self.reset_kick_consts()
-            return wp.Waypoint(field.ball.get_pos(), angle, wp.WType.S_BALL_GRAB)
-        else:
-            return self.twisted(field, kicker_id, kick_point)
 
     def twisted(
             self, field: fld.Field, kicker_id: int, kick_point: aux.Point
@@ -38,7 +64,11 @@ class KickerAux:
         """
         Прицеливание и удар в точку при условии, что мяч находится в захвате у робота
         """
-
+        if not field.is_ball_in(field.allies[kicker_id]):
+            angle  =aux.angle_to_point(field.allies[kicker_id].get_pos(), field.ball.get_pos())
+            self.reset_kick_consts()
+            return wp.Waypoint(field.ball.get_pos(), angle, wp.WType.S_BALL_GRAB)
+        
         kicker = field.allies[kicker_id]
 
         # signed_A = aux.wind_down_angle(aux.angle_to_point(kicker.get_pos(), kick_point) - self.start_rotating_ang)

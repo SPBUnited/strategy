@@ -143,7 +143,7 @@ class Strategy:
         ]
 
         atk_min = 1
-        def_min = 0
+        def_min = 1
         # atk_min = 0
         # def_min = 0
 
@@ -153,7 +153,8 @@ class Strategy:
             if ally.is_used() and ally.r_id != field.gk_id:
                 free_allies += 1
 
-        free_allies = max(0, free_allies)
+        # free_allies = max(0, free_allies)
+
         ball_pos = aux.minmax(field.ball.get_pos().x, -const.GOAL_DX, const.GOAL_DX)
         atks = round(free_allies / (2 * const.GOAL_DX) * (-ball_pos * field.polarity + const.GOAL_DX)) + atk_min
         defs = free_allies - (atks - atk_min) + def_min
@@ -173,12 +174,9 @@ class Strategy:
                 robot_roles[robot_id] = role
                 delete_role(roles, role)
 
-        # if const.SELF_PLAY:
-        #     for robot_id, role in enumerate(self.prev_roles):
-        #         if role in [Role.WALLLINER]:
-        #             used_ids.append(robot_id)
-        #             robot_roles[robot_id] = role
-        #             delete_role(roles, role)
+        used_ids.append(0)
+        robot_roles[0] = Role.WALLLINER
+        delete_role(roles, Role.WALLLINER)
 
         for role in roles:
             robot_id = -1
@@ -286,7 +284,7 @@ class Strategy:
         roles - роли роботов, отсортированные по приоритету
         robot_roles - список соответствия id робота и его роли
         """
-        # waypoints[1] = wp.Waypoint(aux.Point(2000, 0), self.square_ang.get(), wp.WType.S_ENDPOINT)
+        # waypoints[11] = wp.Waypoint(aux.Point(0, 100), 1, wp.WType.S_VELOCITY)
         # return
 
         "Определение набора ролей для роботов"
@@ -341,13 +339,6 @@ class Strategy:
         """Логика действий для робота с мячом"""
         tmp = self.choose_kick_point(field, attacker_id)
         est = self.estimate_pass_point(field, field.ball.get_pos(), tmp)
-
-        attack_wp = wp.Waypoint(
-                field.ball.get_pos(), aux.angle_to_point(field.allies[attacker_id].get_pos(), tmp), wp.WType.S_BALL_KICK
-            )
-
-
-        # print(est, attacker_id)
 
         if est < self.desision_border and len(self.forwards) > 0:
             receiver_id = self.choose_receiver(field)
@@ -492,11 +483,13 @@ class Strategy:
         """
         receiver = field.allies[receiver_id]
         if not field.is_ball_moves_to_point(receiver.get_pos()):
-            waypoints[kicker_id] = wp.Waypoint(
-                field.ball.get_pos(),
-                aux.angle_to_point(field.ball.get_pos(), receiver.get_pos()),
-                wp.WType.S_BALL_PASS,
-            )
+            # waypoints[kicker_id] = wp.Waypoint(
+            #     field.ball.get_pos(),
+            #     aux.angle_to_point(field.ball.get_pos(), receiver.get_pos()),
+            #     wp.WType.S_BALL_PASS,
+            # )
+            print("pass to", receiver_id)
+            waypoints[kicker_id] = self.kick.kick_to_point(field, kicker_id, receiver.get_pos(), "PASS")
             self.image.draw_dot(
                 field.ball.get_pos() + aux.rotate(aux.RIGHT, aux.angle_to_point(field.ball.get_pos(), receiver.get_pos())),
                 5,
@@ -694,13 +687,20 @@ class Strategy:
         goal_down = field.ally_goal.down
         goal_up = field.ally_goal.up
 
-        # if len(wallliners) != 0:
-        #     gk_pos, score = self.choose_kick_point(field, -1, field.ally_goal, ball, wallliners)
+        if abs(ball.y) > const.GOAL_DX:
+            return wp.Waypoint(field.ally_goal.center, math.pi / 2, wp.WType.S_ENDPOINT)
 
-        #     if score > 0.1:
-        #         gk_pos =
+        if len(wallliners) != 0:
+            kick_point = self.choose_kick_point(field, -1, field.ally_goal, ball, wallliners)
+            score = self.estimate_pass_point(field, ball, kick_point)
 
-        if robot_with_ball is not None:
+            if score > 0.02 and abs(kick_point.y) < const.GOAL_DY / 2:
+                radius = (const.GK_FORW ** 2 + (const.GOAL_DY / 2) ** 2) / 2 / const.GK_FORW
+                gk_pos_x = field.ally_goal.center.x + (const.GK_FORW - radius) * field.ally_goal.eye_forw.x - math.sqrt(radius ** 2 - kick_point.y ** 2)
+                # print(radius, gk_pos_x, kick_point.y)
+                gk_pos = aux.Point(gk_pos_x, kick_point.y)
+
+        if robot_with_ball is not None and gk_pos is None:
             predict = aux.get_line_intersection(
                 robot_with_ball.get_pos(),
                 robot_with_ball.get_pos() + aux.rotate(aux.RIGHT, robot_with_ball.get_angle()),
