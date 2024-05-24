@@ -5,7 +5,8 @@
 import math
 import typing
 
-import bridge.processors.const as const
+from bridge.processors import const
+from typing import Optional
 
 
 class Graph:
@@ -359,10 +360,13 @@ def lerp(p1: typing.Any, p2: typing.Any, t: float) -> typing.Any:
     return p1 * (1 - t) + p2 * t
 
 
-def minmax(x: float, a: float, b: float) -> float:
+def minmax(x: float, a: float, b: Optional[float] = None) -> float:
     """
-    Получить ближайшее к x число из диапазона [a, b]
+    Получить ближайшее к x число из диапазона [a, b] или [b, a]
     """
+    if b is None:
+        b = -a
+    a, b = min(a, b), max(a, b)
     return min(max(x, a), b)
 
 

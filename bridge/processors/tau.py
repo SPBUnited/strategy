@@ -201,7 +201,7 @@ class PISD:
         s = xerr + k_d * x_i + k_i * self.__int.get_val()
         u = gain * s
 
-        u_clipped = aux.minmax(u, -max_out, max_out)
+        u_clipped = aux.minmax(u, max_out)
 
         if u != u_clipped:
             self.__int.process(xerr + k_d * x_i)
@@ -234,7 +234,7 @@ class RateLimiter:
         """
         Рассчитать следующий тик звена
         """
-        u = aux.minmax(self.__k * (x - self.__out), -self.__max_der, self.__max_der)
+        u = aux.minmax(self.__k * (x - self.__out), self.__max_der)
         self.__out = self.__int.process(u)
         return self.__out
 

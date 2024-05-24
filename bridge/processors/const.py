@@ -11,9 +11,9 @@ POLARITY = -1  # -1 если ворота синих на +x; 1 если вор�
 IS_SIMULATOR_USED = False
 SELF_PLAY = True
 
-GK = 1
+GK = 11
 PENALTY_KICKER = 1
-ENEMY_GK = 9
+ENEMY_GK = 0
 
 CAMERAS_COUNT: int = 4
 MAX_BALLS_IN_CAMERA: int = 64
@@ -47,6 +47,7 @@ CONTROL_MAPPING: dict[int, int] = {
     14: 1,
     15: 2,
 }
+REVERSED_KICK: list[int] = [9]
 
 for i in range(TEAM_ROBOTS_MAX_COUNT):
     try:
@@ -118,6 +119,6 @@ FULL_DELAY = 0.16
 
 #VOLTAGES
 VOLTAGE_PASS = 10
-VOLTAGE_SHOOT = 15
+VOLTAGE_SHOOT = 10
 VOLTAGE_UP = 15
 VOLTAGE_ZERO = 0

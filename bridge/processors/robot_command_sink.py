@@ -48,13 +48,20 @@ class CommandSink(BaseProcessor):
         cmds = self.commands_sink_reader.read_new()
 
         for cmd in cmds:
-            r = cmd.content
+            r: robot.Robot = cmd.content
             if not r.is_used():
                 continue
             ctrl_id = r.ctrl_id
 
             if ctrl_id is None:
                 continue
+
+            if ctrl_id in const.REVERSED_KICK:
+                r.kick_forward_, r.kick_up_ = r.kick_up_, r.kick_forward_
+                if r.auto_kick_ == 2:
+                    r.auto_kick_ = 1
+                elif r.auto_kick_ == 1:
+                    r.auto_kick_ = 2
 
             if r.color == "b":
                 self.b_control_team[ctrl_id].copy_control_fields(r)
