@@ -13,6 +13,7 @@ from strategy_bridge.processors import BaseProcessor
 from strategy_bridge.utils.debugger import debugger
 
 import bridge.processors.auxiliary as aux
+import bridge.processors.referee_state_processor as state_machine
 from bridge.processors import const, field, router, signal, strategy
 
 
@@ -40,6 +41,10 @@ class SSLController(BaseProcessor):
     ctrl_mapping = const.CONTROL_MAPPING
     count_halt_cmd = 0
 
+    def __init__(self):
+        pass
+
+
     def initialize(self, data_bus: DataBus) -> None:
         """
         Инициализировать контроллер
@@ -52,9 +57,17 @@ class SSLController(BaseProcessor):
 
         self.field = field.Field(self.ctrl_mapping, self.ally_color)
         self.router = router.Router(self.field)
-        
+
         self.strategy = strategy.Strategy()
-        self.state_machine = self.StateMachine()
+
+        # Referee fields
+        self.state_machine = state_machine.StateMachine()
+        self.cur_cmd_state = None
+        self.wait_10_sec_flag = False
+        self.wait_10_sec = 0
+        self.wait_ball_moved_flag = False
+        self.wait_ball_moved = aux.Point(0, 0)
+        self.tmp = 0
 
     def get_last_referee_command(self) -> RefereeCommand:
         """
@@ -217,6 +230,49 @@ class SSLController(BaseProcessor):
             # self.field.allies[i].speed_r = self.square.get()
             self.commands_sink_writer.write(self.field.allies[i])
 
+    def process_referee_cmd(self) -> None:
+        cur_cmd = self.get_last_referee_command()
+        # self.state_machine.make_transition_(state_machine.Command.HALT)
+        # self.cur_cmd_state = None
+        # print(self.state_machine)
+        # cur_cmd = RefereeCommand(0, 0, False)
+        # cur_cmd.state = self.cur_cmd_state if self.cur_cmd_state is not None else 0
+        #
+        # if self.tmp == 3:
+        #     cur_cmd = RefereeCommand(1, 0, False)
+        # elif self.tmp == 9:
+        #     cur_cmd = RefereeCommand(5, 1, False)
+        # elif self.tmp == 26:
+        #     cur_cmd = RefereeCommand(6, 1, False)
+        # elif self.tmp == 220:
+        #     cur_cmd = RefereeCommand(1, 0, False)
+        # elif self.tmp == 235:
+        #     cur_cmd = RefereeCommand(9, 2, False)
+        if cur_cmd.state != self.cur_cmd_state:
+            self.state_machine.make_transition(cur_cmd.state)
+            self.state_machine.active_team(cur_cmd.commandForTeam)
+            self.cur_cmd_state = cur_cmd.state
+            cur_state, _ = self.state_machine.get_state()
+            if cur_state in [state_machine.State.KICKOFF, state_machine.State.FREE_KICK, state_machine.State.PENALTY]:
+                self.wait_10_sec_flag = True
+                self.wait_10_sec = time.time()
+            if cur_state in [state_machine.State.KICKOFF, state_machine.State.FREE_KICK]:
+                self.wait_ball_moved_flag = True
+                self.wait_ball_moved = self.field.ball.get_pos()
+        else:
+            if self.wait_10_sec_flag and time.time() - self.wait_10_sec > 10:
+                self.state_machine.make_transition_(state_machine.Command.PASS_10_SECONDS)
+                self.state_machine.active_team(0)
+                self.wait_10_sec_flag = False
+            if self.wait_ball_moved_flag and self.field.is_ball_moves():
+                self.state_machine.make_transition_(state_machine.Command.BALL_MOVED)
+                self.state_machine.active_team(0)
+                self.wait_10_sec_flag = False
+        print(self.state_machine)
+        print('-' * 30)
+        self.tmp += 1
+
+
 
     @debugger
     def process(self) -> None:
@@ -229,7 +285,8 @@ class SSLController(BaseProcessor):
         self.cur_time = time.time()
 
         # print(self.ally_color)
-        # self.read_vision()
+        self.read_vision()
+        self.process_referee_cmd()
         self.control_loop()
 
         # print(self.router.getRoute(const.DEBUG_ID))
