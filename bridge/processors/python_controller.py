@@ -54,6 +54,7 @@ class SSLController(BaseProcessor):
         self.router = router.Router(self.field)
         
         self.strategy = strategy.Strategy()
+        self.state_machine = self.StateMachine()
 
     def get_last_referee_command(self) -> RefereeCommand:
         """
@@ -215,6 +216,7 @@ class SSLController(BaseProcessor):
                 self.field.allies[i].color = self.ally_color
             # self.field.allies[i].speed_r = self.square.get()
             self.commands_sink_writer.write(self.field.allies[i])
+
 
     @debugger
     def process(self) -> None:

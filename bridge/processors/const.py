@@ -54,10 +54,11 @@ for i in range(TEAM_ROBOTS_MAX_COUNT):
         CONTROL_MAPPING[i]
     except KeyError:
         CONTROL_MAPPING[i] = -1
-
+s
 TOPIC_SINK = "control-sink"
+TOPIC_VISION_READER = "vision-reader"
 ##################################################
-
+s
 ##################################################
 # CONTROL CONSTS
 Ts = 0.05  # s

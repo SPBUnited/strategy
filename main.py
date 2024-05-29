@@ -22,7 +22,7 @@ if __name__ == "__main__":
     # TODO: Move list of processors to config
     PROCESSORS = [
         VisionDetectionsCollector(processing_pause=0.001, should_debug=True),
-        TmpRefereeCommandsCollector(processing_pause=0.001, should_debug=True),
+        RefereeCommandsCollector(processing_pause=0.001, should_debug=True),
         # SSLController(
         #     ally_color="y",
         #     # should_debug=True,
