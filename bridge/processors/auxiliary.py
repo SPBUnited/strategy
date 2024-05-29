@@ -1,6 +1,7 @@
 """
 Модуль вспомогательной математики и утилит
 """
+from __future__ import annotations
 
 import math
 import typing

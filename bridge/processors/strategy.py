@@ -103,7 +103,7 @@ class Strategy:
         self.steal_flag = 0
 
         # ATTACK
-        self.forwards: list[robot.Robot] | None = []
+        self.forwards: Optional[list[robot.Robot]] = []
         self.prev_roles: list[Role] = [Role.UNAVAILABLE for _ in range(const.TEAM_ROBOTS_MAX_COUNT)]
         self.connector: list[int] = []
         # self.popusk: list[int] = []
@@ -715,7 +715,7 @@ class Strategy:
         Управление вратарём и стенкой
         Возвращает массив с элементами класса Waypoint, где 0й элемент - вратарь, а остальные - стенка
         """
-        gk_pos: aux.Point | None = None
+        gk_pos: Optional[aux.Point] = None
         gk_angle: float
         if field.gk_id < 9:
             gk_angle = field.ally_goal.eye_forw.arg()

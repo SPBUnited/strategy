@@ -13,6 +13,7 @@ import bridge.processors.const as const
 import bridge.processors.strategy as strategy
 from bridge.processors.python_controller import SSLController
 from bridge.processors.robot_command_sink import CommandSink
+from bridge.processors.TmpRefereeCommandsCollector import TmpRefereeCommandsCollector
 
 if __name__ == "__main__":
 
@@ -21,7 +22,7 @@ if __name__ == "__main__":
     # TODO: Move list of processors to config
     PROCESSORS = [
         VisionDetectionsCollector(processing_pause=0.001, should_debug=True),
-        RefereeCommandsCollector(processing_pause=0.001, should_debug=True),
+        TmpRefereeCommandsCollector(processing_pause=0.001, should_debug=True),
         # SSLController(
         #     ally_color="y",
         #     # should_debug=True,

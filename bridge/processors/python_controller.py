@@ -227,7 +227,7 @@ class SSLController(BaseProcessor):
         self.cur_time = time.time()
 
         # print(self.ally_color)
-        self.read_vision()
+        # self.read_vision()
         self.control_loop()
 
         # print(self.router.getRoute(const.DEBUG_ID))
