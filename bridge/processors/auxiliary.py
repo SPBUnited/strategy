@@ -66,7 +66,7 @@ class Point:
     Класс, описывающий точку (вектор)
     """
 
-    def __init__(self, x: float, y: float):
+    def __init__(self, x: float = 0, y: float = 0):
         self.x = x
         self.y = y
 
@@ -93,7 +93,7 @@ class Point:
     def __eq__(self, p: typing.Any) -> bool:
         if not isinstance(p, Point):
             return False
-        return self.x == p.x and self.y == p.y
+        return abs(self.x - p.x) < 0.001 and abs(self.y - p.y) < 0.001
 
     def __str__(self) -> str:
         return f"x = {self.x:.2f}, y = {self.y:.2f}"
@@ -451,7 +451,7 @@ def circles_inter(p0: Point, p1: Point, r0: float, r1: float) -> tuple[Point, Po
     return Point(x3, y3), Point(x4, y4)
 
 
-def get_tangent_points(point0: Point, point1: Point, r: float) -> None | Point | tuple[Point, Point]:
+def get_tangent_points(point0: Point, point1: Point, r: float) -> Optional[list[Point]]:
     """
     Get tangents (point0 - center of circle)
     """
@@ -459,11 +459,11 @@ def get_tangent_points(point0: Point, point1: Point, r: float) -> None | Point |
     if d < r:
         return None
     elif d == r:
-        return point1
+        return [point1]
     else:
         midx, midy = (point0.x + point1.x) / 2, (point0.y + point1.y) / 2
         p2, p3 = circles_inter(point0, Point(midx, midy), r, d / 2)
-        return p2, p3
+        return [p2, p3]
 
 
 def get_angle_between_points(a: Point, b: Point, c: Point) -> float:
@@ -477,3 +477,35 @@ def get_angle_between_points(a: Point, b: Point, c: Point) -> float:
 def cosine_theorem(a: float, b: float, angle: float) -> float:
     """Теорема косинусов"""
     return math.sqrt(a * a + b * b - 2 * a * b * math.cos(angle))
+
+def line_circle_intersect(x1: Point, x2: Point, c: Point, radius: float) -> Optional[list[Point]]:
+    """TODO"""
+    h = closest_point_on_line(x1, x2, c, "L")
+    if radius < dist(c, h):
+        return None
+    elif radius == dist(c, h):
+        return [h]
+
+    d = math.sqrt(radius ** 2 -  dist(c, h) ** 2)
+    vec = (x2 - x1).unity() * d
+    p1 = h + vec
+    p2 = h - vec
+
+    c1 = closest_point_on_line(x1, x2, p1)
+    c2 = closest_point_on_line(x1, x2, p2)
+
+    if p1 != c2 and p2 != c2:
+        return None
+    elif p1 != c1:
+        return [p2]
+    elif p2 != c2:
+        return [p1]
+    return [p1, p2]
+
+def is_point_inside_circle(a: Point, c: Point, radius: float) -> bool:
+    """Return TRUE if point inside circle"""
+    return dist(a, c) < radius
+
+def nearest_point_on_circle(a: Point, c: Point, radius: float) -> Point:
+    """Return nearest point in circle"""
+    return c + (a - c).unity() * radius

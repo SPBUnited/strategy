@@ -36,7 +36,6 @@ class FOD:
         """
         err = x - self._int
         if self._is_angle:
-            # print(err, x, self.I)
             if err > math.pi:
                 err -= 2 * math.pi
                 self._int += 2 * math.pi
@@ -196,7 +195,6 @@ class PISD:
         Рассчитать следующий тик регулятора
         """
         gain, k_d, k_i, max_out = self.__get_gains()
-        # print(gain, kd, ki, max_out)
 
         s = xerr + k_d * x_i + k_i * self.__int.get_val()
         u = gain * s

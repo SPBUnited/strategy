@@ -70,7 +70,6 @@ class Field:
 
         self.gk_id = const.GK if ally_color == const.COLOR else const.ENEMY_GK
 
-        print(self.gk_id)
         self.ally_color = ally_color
         if self.ally_color == "b":
             self.polarity = const.POLARITY * -1
@@ -128,7 +127,6 @@ class Field:
         """
         Определить, находится ли мяч внутри дриблера
         """
-        # print(self.ally_with_ball)
         return robo == self.ally_with_ball
 
     def update_blu_robot(self, idx: int, pos: aux.Point, angle: float, t: float) -> None:

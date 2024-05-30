@@ -74,19 +74,6 @@ class RefStates:
                 waypoints[i] = waypoint
                 rC += 1
 
-    def keep_distance(self, field: fld.Field, waypoints: list[wp.Waypoint]) -> None:
-        # TODO: вшить в waypoint или в стратегию удержание расстояния до мяча
-        """Удержание расстояния до мяча по команде судей"""
-        for i in range(const.TEAM_ROBOTS_MAX_COUNT):
-            if field.allies[i].is_used():
-                if aux.dist(field.allies[i].get_pos(), field.ball.get_pos()) < const.KEEP_BALL_DIST:
-                    waypoint = wp.Waypoint(
-                        aux.point_on_line(field.ball.get_pos(), aux.Point(0, 0), const.KEEP_BALL_DIST),
-                        field.allies[i].get_angle(),
-                        wp.WType.S_ENDPOINT,
-                    )
-                    waypoints[i] = waypoint
-
     def penalty_kick(self, field: fld.Field, waypoints: list[wp.Waypoint]) -> None:
         """Пенальти (атака)"""
         self.is_started += 1
@@ -117,7 +104,6 @@ class RefStates:
         else:
             target = aux.Point(field.enemy_goal.center.x, -kick_delta)
 
-        # print(field.ball.get_pos().x)
         if abs(field.enemy_goal.center.x - field.ball.get_pos().x) > 1000:
             field.allies[const.PENALTY_KICKER].kicker_voltage_ = 5
             waypoint = wp.Waypoint(

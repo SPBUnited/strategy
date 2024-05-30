@@ -11,6 +11,7 @@ from strategy_bridge.model.referee import RefereeCommand
 from strategy_bridge.pb.messages_robocup_ssl_wrapper_pb2 import SSL_WrapperPacket
 from strategy_bridge.processors import BaseProcessor
 from strategy_bridge.utils.debugger import debugger
+import bridge.processors.referee_state_processor as state_machine
 
 import bridge.processors.auxiliary as aux
 from bridge.processors import const, field, router, signal, strategy
@@ -52,8 +53,17 @@ class SSLController(BaseProcessor):
 
         self.field = field.Field(self.ctrl_mapping, self.ally_color)
         self.router = router.Router(self.field)
-        
+
         self.strategy = strategy.Strategy()
+
+        # Referee fields
+        self.state_machine = state_machine.StateMachine()
+        self.cur_cmd_state = None
+        self.wait_10_sec_flag = False
+        self.wait_10_sec = 0
+        self.wait_ball_moved_flag = False
+        self.wait_ball_moved = aux.Point(0, 0)
+        self.tmp = 0
 
     def get_last_referee_command(self) -> RefereeCommand:
         """
@@ -61,6 +71,7 @@ class SSLController(BaseProcessor):
         """
         referee_commands = self.referee_reader.read_new()
         if referee_commands:
+            print(referee_commands)
             return referee_commands[-1].content
         return RefereeCommand(0, 0, False)
 
@@ -98,7 +109,6 @@ class SSLController(BaseProcessor):
             if geometry:
                 field_info[0] = geometry.field.field_length
                 field_info[1] = geometry.field.field_width
-                # print(field_info)
                 if geometry.field.field_length != 0 and geometry.field.goal_width != 0:
                     const.GOAL_DX = geometry.field.field_length / 2
                     const.GOAL_DY = geometry.field.goal_width
@@ -111,22 +121,59 @@ class SSLController(BaseProcessor):
             # self.strategy.change_game_state(strategy.GameStates.RUN, 0)
 
             # TODO Вынести в константы
-            """
-            cur_cmd = self.get_last_referee_command()
-            if cur_cmd.state == 0:
+            
+            curCmd = self.get_last_referee_command()
+            if curCmd.state == 0:
                 self.count_halt_cmd += 1
             else:
                 self.count_halt_cmd = 0
-                self.strategy.change_game_state(game_controller_mapping[cur_cmd.state], cur_cmd.commandForTeam)
-                if cur_cmd.state == 4:
-                    print("End game")
-                elif cur_cmd.state == 10:
-                    print("Unknown command 10")
-            """
-            # if self.count_halt_cmd > 10:
-            #     self.strategy.change_game_state(strategy.GameStates.HALT, cur_cmd.commandForTeam)
+                self.router.avoid_ball(False)
+                # print(curCmd.state)
 
-            self.strategy.change_game_state(strategy.GameStates.RUN, 0)
+                if curCmd.state == 1:
+                    self.strategy.change_game_state(strategy.GameStates.STOP, curCmd.commandForTeam)
+                    self.router.avoid_ball(True)
+                elif curCmd.state == 2:
+                    self.strategy.change_game_state(strategy.GameStates.RUN, curCmd.commandForTeam)
+                elif curCmd.state == 3:
+                    self.strategy.change_game_state(strategy.GameStates.TIMEOUT, curCmd.commandForTeam)
+                elif curCmd.state == 4:
+                    self.strategy.change_game_state(strategy.GameStates.HALT, curCmd.commandForTeam)
+                    print("End game")
+                elif curCmd.state == 5:
+                    self.strategy.change_game_state(strategy.GameStates.PREPARE_KICKOFF, curCmd.commandForTeam)
+                    if curCmd.commandForTeam == 1 and self.field.ally_color == "y":
+                        self.router.avoid_ball(True)
+                    elif  curCmd.commandForTeam == 2 and self.field.ally_color == "b":
+                        self.router.avoid_ball(True)
+                elif curCmd.state == 6:
+                    # print(curCmd.commandForTeam, self.field.ally_color)
+                    self.strategy.change_game_state(strategy.GameStates.KICKOFF, curCmd.commandForTeam)
+                    if curCmd.commandForTeam == 1 and self.field.ally_color == "y":
+                        self.router.avoid_ball(True)
+                    elif  curCmd.commandForTeam == 2 and self.field.ally_color == "b":
+                        self.router.avoid_ball(True)
+                elif curCmd.state == 7:
+                    self.strategy.change_game_state(strategy.GameStates.PREPARE_PENALTY, curCmd.commandForTeam)
+                elif curCmd.state == 8:
+                    self.strategy.change_game_state(strategy.GameStates.PENALTY, curCmd.commandForTeam)
+                elif curCmd.state == 9:
+                    if curCmd.commandForTeam == 1 and self.field.ally_color == "y":
+                        self.router.avoid_ball(True)
+                    elif  curCmd.commandForTeam == 2 and self.field.ally_color == "b":
+                        self.router.avoid_ball(True)
+                    self.strategy.change_game_state(strategy.GameStates.FREE_KICK, curCmd.commandForTeam)
+                elif curCmd.state == 10:
+                    self.strategy.change_game_state(strategy.GameStates.HALT, curCmd.commandForTeam)
+                    print("Unknown command 10")
+                elif curCmd.state == 11:
+                    self.strategy.change_game_state(strategy.GameStates.BALL_PLACEMENT, curCmd.commandForTeam)
+                
+            if self.count_halt_cmd > 10:
+                self.router.avoid_ball(False)
+                self.strategy.change_game_state(strategy.GameStates.HALT, curCmd.commandForTeam)
+
+            # self.strategy.change_game_state(strategy.GameStates.RUN, 0)
 
             # TODO: Barrier states
             for robot_det in detection.robots_blue:
@@ -194,11 +241,6 @@ class SSLController(BaseProcessor):
         for i in range(const.TEAM_ROBOTS_MAX_COUNT):
             self.router.get_route(i).go_route(self.field.allies[i], self.field)
 
-        # for i in range(const.TEAM_ROBOTS_MAX_COUNT):
-        #     print(self.field.y_team[i])
-        # for i in range(const.TEAM_ROBOTS_MAX_COUNT):
-        #     print(self.field.b_team[i])
-
     square = signal.Signal(2, "SQUARE", lohi=(-20, 20))
     sine = signal.Signal(2, "SINE", ampoffset=(1000, 0))
     cosine = signal.Signal(2, "COSINE", ampoffset=(1000, 0))
@@ -209,12 +251,55 @@ class SSLController(BaseProcessor):
         """
         # self.field.allies[const.DEBUG_ID].speed_x = 0
         # self.field.allies[const.DEBUG_ID].speed_y = 0
-        # print(self.square.get())
         for i in range(const.TEAM_ROBOTS_MAX_COUNT):
             if self.field.allies[i].is_used():
                 self.field.allies[i].color = self.ally_color
             # self.field.allies[i].speed_r = self.square.get()
             self.commands_sink_writer.write(self.field.allies[i])
+
+    def process_referee_cmd(self) -> None:
+        cur_cmd = self.get_last_referee_command()
+        # self.state_machine.make_transition_(state_machine.Command.HALT)
+        # self.cur_cmd_state = None
+        # print(self.state_machine)
+        # cur_cmd = RefereeCommand(0, 0, False)
+        # cur_cmd.state = self.cur_cmd_state if self.cur_cmd_state is not None else 0
+        #
+        # if self.tmp == 3:
+        #     cur_cmd = RefereeCommand(1, 0, False)
+        # elif self.tmp == 9:
+        #     cur_cmd = RefereeCommand(5, 1, False)
+        # elif self.tmp == 26:
+        #     cur_cmd = RefereeCommand(6, 1, False)
+        # elif self.tmp == 220:
+        #     cur_cmd = RefereeCommand(1, 0, False)
+        # elif self.tmp == 235:
+        #     cur_cmd = RefereeCommand(9, 2, False)
+        if cur_cmd.state != self.cur_cmd_state:
+            print("a" * 128)
+            self.state_machine.make_transition(cur_cmd.state)
+            self.state_machine.active_team(cur_cmd.commandForTeam)
+            self.cur_cmd_state = cur_cmd.state
+            cur_state, _ = self.state_machine.get_state()
+            if cur_state in [state_machine.State.KICKOFF, state_machine.State.FREE_KICK, state_machine.State.PENALTY]:
+                self.wait_10_sec_flag = True
+                self.wait_10_sec = time.time()
+            if cur_state in [state_machine.State.KICKOFF, state_machine.State.FREE_KICK]:
+                self.wait_ball_moved_flag = True
+                self.wait_ball_moved = self.field.ball.get_pos()
+        else:
+            if self.wait_10_sec_flag and time.time() - self.wait_10_sec > 10:
+                self.state_machine.make_transition_(state_machine.Command.PASS_10_SECONDS)
+                self.state_machine.active_team(0)
+                self.wait_10_sec_flag = False
+            if self.wait_ball_moved_flag and self.field.is_ball_moves():
+                self.state_machine.make_transition_(state_machine.Command.BALL_MOVED)
+                self.state_machine.active_team(0)
+                self.wait_10_sec_flag = False
+        print(self.state_machine)
+        print('-' * 30)
+        self.tmp += 1
+
 
     @debugger
     def process(self) -> None:
@@ -223,13 +308,11 @@ class SSLController(BaseProcessor):
         """
 
         self.delta_t = time.time() - self.cur_time
-        # print(self.delta_t)
         self.cur_time = time.time()
 
-        # print(self.ally_color)
         self.read_vision()
+        self.process_referee_cmd()
         self.control_loop()
 
-        # print(self.router.getRoute(const.DEBUG_ID))
 
         self.control_assign()

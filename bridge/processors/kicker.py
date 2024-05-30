@@ -95,7 +95,6 @@ class KickerAux:
 
 
         self.twist_w = w
-        print(abs(w), signed_x)
         waypoint = spin_with_ball(w)
 
         if x > const.KICK_ALIGN_ANGLE:
@@ -110,7 +109,6 @@ class KickerAux:
             field.allies[kicker_id].kick_forward()
 
             # else:
-            #     print(field.allies[kicker_id].dribbler_speed_)
             #     field.allies[kicker_id].set_dribbler_speed(max(5, 15 - (15 / wt) * (time() - self.wait_kick_timer)))
         return waypoint
 
@@ -129,5 +127,4 @@ def spin_with_ball(w: float) -> wp.Waypoint:
 
     k_w = 1.65  # костыль для приближения значений угловой скорости к рад/с
     k_vel = 0.4 * k_w
-    # print("target radius: ", delta_r.mag())
     return wp.Waypoint(vel * k_vel, w * k_w, wp.WType.S_VELOCITY)

@@ -33,9 +33,6 @@ class Route:
         Обновляет текущее положение робота в маршрутной карте
         """
         self._robot = [wp.Waypoint(rbt.get_pos(), rbt.get_angle(), wp.WType.T_ROBOT)]
-        # if self.getNextVec().mag() < const.VANISH_DIST and \
-        #     len(self._routewp) >= 1:
-        #     del self._routewp[0]
 
     def clear(self) -> None:
         """
@@ -188,9 +185,6 @@ class Route:
                 wp.WType.S_BALL_PASS,
             ]
         ) and dist < 500:
-
-            # print("IS KICK ALIGNED: ", rbt.is_kick_aligned(end_point), ",\tIS BALL GRABBED: ", fld.is_ball_in(rbt))
-
             rbt.pos_reg_x.select_mode(tau.Mode.SOFT)
             rbt.pos_reg_y.select_mode(tau.Mode.SOFT)
 
@@ -246,7 +240,6 @@ class Route:
         ang_vel = rbt.angle_reg.process(aerr, -rbt.get_anglevel())
 
         # if self.go_flag == 1:  #NOTE: kostil
-        #     print(time.time() - self.go_time)
         #     if time.time() - self.go_time < 1:
         #         vel0 = -aux.rotate(aux.RIGHT, rbt.get_angle())
         #         transl_vel = vel0 * 200
