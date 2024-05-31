@@ -2,16 +2,24 @@
 Определение необходимых констант
 """
 
+from enum import Enum
+
+class Color(Enum):
+    """Класс с цветами"""
+    ALL = 0
+    BLUE = 1
+    YELLOW = 2
+
 ##################################################
 # GAME SETTING CONSTS
 DIV = 'C'
-COLOR = "b"
-POLARITY = 1  # -1 если ворота синих на +x; 1 если ворота синих на -x
+COLOR = Color.BLUE
+POLARITY = -1  # -1 если ворота синих на +x; 1 если ворота синих на -x
 
 IS_SIMULATOR_USED = False
 SELF_PLAY = False
 
-GK = 11
+GK = 9
 PENALTY_KICKER = 1
 ENEMY_GK = 0
 
@@ -28,9 +36,9 @@ ROBOT_TEAM_PACKET_SIZE: int = SINGLE_ROBOT_PACKET_SIZE * TEAM_ROBOTS_MAX_COUNT
 GEOMETRY_PACKET_SIZE: int = 2
 
 CONTROL_MAPPING: dict[int, int] = {
-    0: 13,
-    1: 14,
-    2: 15,
+    0: 0,
+    1: 1,
+    2: 2,
     3: 3,
     4: 4,
     5: 5,
@@ -41,11 +49,11 @@ CONTROL_MAPPING: dict[int, int] = {
     10: 10,
     11: 11,
     12: 12,
-    13: 0,
-    14: 1,
-    15: 2,
+    13: 13,
+    14: 14,
+    15: 15,
 }
-REVERSED_KICK: list[int] = [9]
+REVERSED_KICK: list[int] = [9, 13]
 
 for i in range(TEAM_ROBOTS_MAX_COUNT):
     try:
@@ -96,7 +104,7 @@ if DIV == 'C':
     GOAL_PEN_DX = 500
     GOAL_PEN_DY = 1350
 
-GK_FORW = 300
+GK_FORW = 200 + ROBOT_R
 KICK_ALIGN_DIST = 200
 GRAB_ALIGN_DIST = 130
 KICK_ALIGN_DIST_MULT = 1.5
@@ -116,6 +124,6 @@ FULL_DELAY = 0.16
 
 #VOLTAGES
 VOLTAGE_PASS = 10
-VOLTAGE_SHOOT = 10
+VOLTAGE_SHOOT = 15
 VOLTAGE_UP = 15
-VOLTAGE_ZERO = 0
+VOLTAGE_ZERO = min(VOLTAGE_PASS, VOLTAGE_SHOOT, VOLTAGE_UP)

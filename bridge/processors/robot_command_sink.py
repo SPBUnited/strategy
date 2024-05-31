@@ -63,9 +63,9 @@ class CommandSink(BaseProcessor):
                 elif r.auto_kick_ == 1:
                     r.auto_kick_ = 2
 
-            if r.color == "b":
+            if r.color == const.Color.BLUE:
                 self.b_control_team[ctrl_id].copy_control_fields(r)
-            elif r.color == "y":
+            elif r.color == const.Color.YELLOW:
                 self.y_control_team[ctrl_id].copy_control_fields(r)
                 #self.y_control_team[ctrl_id].used(1)
 

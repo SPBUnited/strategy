@@ -1,30 +1,5 @@
 from enum import Enum
-
-'''
-    if curCmd.state == 1:
-        self.strategy.changeGameState(strategy.GameStates.STOP, curCmd.commandForTeam)
-    elif curCmd.state == 2:
-        self.strategy.changeGameState(strategy.GameStates.RUN, curCmd.commandForTeam)
-    elif curCmd.state == 3:
-        self.strategy.changeGameState(strategy.GameStates.TIMEOUT, curCmd.commandForTeam)
-    elif curCmd.state == 4:
-        self.strategy.changeGameState(strategy.GameStates.HALT, curCmd.commandForTeam)
-        print("End game")
-    elif curCmd.state == 5:
-        self.strategy.changeGameState(strategy.GameStates.PREPARE_KICKOFF, curCmd.commandForTeam)
-    elif curCmd.state == 6:
-        self.strategy.changeGameState(strategy.GameStates.KICKOFF, curCmd.commandForTeam)
-    elif curCmd.state == 7:
-        self.strategy.changeGameState(strategy.GameStates.PREPARE_PENALTY, curCmd.commandForTeam)
-    elif curCmd.state == 8:
-        self.strategy.changeGameState(strategy.GameStates.PENALTY, curCmd.commandForTeam)
-    elif curCmd.state == 9:
-        self.strategy.changeGameState(strategy.GameStates.FREE_KICK, curCmd.commandForTeam)
-    elif curCmd.state == 10:
-        self.strategy.changeGameState(strategy.GameStates.HALT, curCmd.commandForTeam)
-        print("Uknown command 10")
-    elif curCmd.state == 11:
-        self.strategy.changeGameState(strategy.GameStates.BALL_PLACMENT, curCmd.commandForTeam)'''
+from bridge.processors.const import Color
 
 
 class State(Enum):
@@ -39,13 +14,6 @@ class State(Enum):
     FREE_KICK = 7
     PENALTY = 8
     RUN = 9
-
-
-class Color(Enum):
-    """Класс с цветами"""
-    ALL = 0
-    BLUE = 1
-    YELLOW = 2
 
 
 class Command(Enum):
@@ -80,9 +48,11 @@ class StateMachine:
         self.add_transition(State.HALT, State.RUN, Command.FORCE_START)
         self.add_transition(State.HALT, State.FREE_KICK, Command.FREE_KICK)
         self.add_transition(State.HALT, State.PREPARE_KICKOFF, Command.PREPARE_KICKOFF)
+        self.add_transition(State.HALT, State.KICKOFF, Command.NORMAL_START)
 
         for state in State:
             self.add_transition(state, State.HALT, Command.HALT)
+            self.add_transition(state, State.STOP, Command.STOP)
 
         self.add_transition(State.TIMEOUT, State.STOP, Command.STOP)
 

@@ -25,7 +25,7 @@ class SSLController(BaseProcessor):
     """
 
     max_commands_to_persist: int = 20
-    ally_color: str = "y"
+    ally_color: const.Color = const.Color.BLUE
 
     vision_reader: DataReader = attr.ib(init=False)
     referee_reader: DataReader = attr.ib(init=False)
@@ -71,9 +71,8 @@ class SSLController(BaseProcessor):
         """
         referee_commands = self.referee_reader.read_new()
         if referee_commands:
-            print(referee_commands)
             return referee_commands[-1].content
-        return RefereeCommand(0, 0, False)
+        return RefereeCommand(-1, 0, False)
 
     def read_vision(self) -> bool:
         """
@@ -117,63 +116,12 @@ class SSLController(BaseProcessor):
             # camera_id = detection.camera_id
             for ball in detection.balls:
                 balls.append(aux.Point(ball.x, ball.y))
-
-            # self.strategy.change_game_state(strategy.GameStates.RUN, 0)
-
-            # TODO Вынести в константы
             
-            curCmd = self.get_last_referee_command()
-            if curCmd.state == 0:
-                self.count_halt_cmd += 1
-            else:
-                self.count_halt_cmd = 0
-                self.router.avoid_ball(False)
-                # print(curCmd.state)
-
-                if curCmd.state == 1:
-                    self.strategy.change_game_state(strategy.GameStates.STOP, curCmd.commandForTeam)
-                    self.router.avoid_ball(True)
-                elif curCmd.state == 2:
-                    self.strategy.change_game_state(strategy.GameStates.RUN, curCmd.commandForTeam)
-                elif curCmd.state == 3:
-                    self.strategy.change_game_state(strategy.GameStates.TIMEOUT, curCmd.commandForTeam)
-                elif curCmd.state == 4:
-                    self.strategy.change_game_state(strategy.GameStates.HALT, curCmd.commandForTeam)
-                    print("End game")
-                elif curCmd.state == 5:
-                    self.strategy.change_game_state(strategy.GameStates.PREPARE_KICKOFF, curCmd.commandForTeam)
-                    if curCmd.commandForTeam == 1 and self.field.ally_color == "y":
-                        self.router.avoid_ball(True)
-                    elif  curCmd.commandForTeam == 2 and self.field.ally_color == "b":
-                        self.router.avoid_ball(True)
-                elif curCmd.state == 6:
-                    # print(curCmd.commandForTeam, self.field.ally_color)
-                    self.strategy.change_game_state(strategy.GameStates.KICKOFF, curCmd.commandForTeam)
-                    if curCmd.commandForTeam == 1 and self.field.ally_color == "y":
-                        self.router.avoid_ball(True)
-                    elif  curCmd.commandForTeam == 2 and self.field.ally_color == "b":
-                        self.router.avoid_ball(True)
-                elif curCmd.state == 7:
-                    self.strategy.change_game_state(strategy.GameStates.PREPARE_PENALTY, curCmd.commandForTeam)
-                elif curCmd.state == 8:
-                    self.strategy.change_game_state(strategy.GameStates.PENALTY, curCmd.commandForTeam)
-                elif curCmd.state == 9:
-                    if curCmd.commandForTeam == 1 and self.field.ally_color == "y":
-                        self.router.avoid_ball(True)
-                    elif  curCmd.commandForTeam == 2 and self.field.ally_color == "b":
-                        self.router.avoid_ball(True)
-                    self.strategy.change_game_state(strategy.GameStates.FREE_KICK, curCmd.commandForTeam)
-                elif curCmd.state == 10:
-                    self.strategy.change_game_state(strategy.GameStates.HALT, curCmd.commandForTeam)
-                    print("Unknown command 10")
-                elif curCmd.state == 11:
-                    self.strategy.change_game_state(strategy.GameStates.BALL_PLACEMENT, curCmd.commandForTeam)
-                
-            if self.count_halt_cmd > 10:
-                self.router.avoid_ball(False)
-                self.strategy.change_game_state(strategy.GameStates.HALT, curCmd.commandForTeam)
-
-            # self.strategy.change_game_state(strategy.GameStates.RUN, 0)
+            cur_state, cur_active = self.state_machine.get_state()
+            self.strategy.change_game_state(cur_state, cur_active)
+            self.router.avoid_ball(False)
+            if cur_state in [state_machine.State.STOP] or (cur_active != const.Color.ALL and cur_active != self.field.ally_color):
+                self.router.avoid_ball(True)
 
             # TODO: Barrier states
             for robot_det in detection.robots_blue:
@@ -259,6 +207,9 @@ class SSLController(BaseProcessor):
 
     def process_referee_cmd(self) -> None:
         cur_cmd = self.get_last_referee_command()
+        if cur_cmd.state == -1:
+            return
+
         # self.state_machine.make_transition_(state_machine.Command.HALT)
         # self.cur_cmd_state = None
         # print(self.state_machine)
@@ -276,11 +227,14 @@ class SSLController(BaseProcessor):
         # elif self.tmp == 235:
         #     cur_cmd = RefereeCommand(9, 2, False)
         if cur_cmd.state != self.cur_cmd_state:
-            print("a" * 128)
             self.state_machine.make_transition(cur_cmd.state)
             self.state_machine.active_team(cur_cmd.commandForTeam)
             self.cur_cmd_state = cur_cmd.state
             cur_state, _ = self.state_machine.get_state()
+
+            self.wait_10_sec_flag = False
+            self.wait_ball_moved_flag = False
+
             if cur_state in [state_machine.State.KICKOFF, state_machine.State.FREE_KICK, state_machine.State.PENALTY]:
                 self.wait_10_sec_flag = True
                 self.wait_10_sec = time.time()
@@ -292,12 +246,12 @@ class SSLController(BaseProcessor):
                 self.state_machine.make_transition_(state_machine.Command.PASS_10_SECONDS)
                 self.state_machine.active_team(0)
                 self.wait_10_sec_flag = False
+                self.wait_ball_moved_flag = False
             if self.wait_ball_moved_flag and self.field.is_ball_moves():
                 self.state_machine.make_transition_(state_machine.Command.BALL_MOVED)
                 self.state_machine.active_team(0)
                 self.wait_10_sec_flag = False
-        print(self.state_machine)
-        print('-' * 30)
+                self.wait_ball_moved_flag = False
         self.tmp += 1
 
 

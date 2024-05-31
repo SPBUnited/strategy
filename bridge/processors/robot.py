@@ -16,7 +16,7 @@ class Robot(entity.Entity):
     Описание робота
     """
 
-    def __init__(self, pos: aux.Point, angle: float, R: float, color: str, r_id: int, ctrl_id: int) -> None:
+    def __init__(self, pos: aux.Point, angle: float, R: float, color: const.Color, r_id: int, ctrl_id: int) -> None:
         super().__init__(pos, angle, R)
 
         self.r_id = r_id

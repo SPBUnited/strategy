@@ -20,6 +20,8 @@ import bridge.processors.robot as robot
 import bridge.processors.signal as signal
 import bridge.processors.kicker as kicker
 import bridge.processors.waypoint as wp
+from bridge.processors.referee_state_processor import State as GameStates
+from bridge.processors.referee_state_processor import Color as ActiveTeam
 
 
 class States(Enum):
@@ -28,29 +30,6 @@ class States(Enum):
     DEBUG = 0
     DEFENSE = 1
     ATTACK = 2
-
-
-class GameStates(Enum):
-    """Класс с командами от судей"""
-
-    HALT = 0
-    STOP = 1
-    RUN = 2
-    TIMEOUT = 3
-    PREPARE_KICKOFF = 5
-    KICKOFF = 6
-    PREPARE_PENALTY = 7
-    PENALTY = 8
-    FREE_KICK = 9
-    BALL_PLACEMENT = 11
-
-
-class ActiveTeam(Enum):
-    """Класс с командами"""
-
-    ALL = 0
-    YELLOW = 1
-    BLUE = 2
 
 
 class Role(Enum):
@@ -65,6 +44,7 @@ class Role(Enum):
     UNAVAILABLE = 100
 
 class FloatingBorder():
+    """TODO"""
     def __init__(self, low: float, high: float) -> None:
         self.__low = low
         self.__high = high
@@ -131,17 +111,10 @@ class Strategy:
         self.ball_history_idx = 0
         self.old_ball_pos = None
 
-    def change_game_state(self, new_state: GameStates, upd_active_team: int) -> None:
+    def change_game_state(self, new_state: GameStates, upd_active_team: ActiveTeam) -> None:
         """Изменение состояния игры и цвета команды"""
         self.game_status = new_state
-        if self.game_status == GameStates.STOP:
-            self.game_status = GameStates.RUN
-        if upd_active_team == 0:
-            self.active_team = ActiveTeam.ALL
-        elif upd_active_team == 2:
-            self.active_team = ActiveTeam.YELLOW
-        elif upd_active_team == 1:
-            self.active_team = ActiveTeam.BLUE
+        self.active_team = upd_active_team
 
     def choose_roles(self, field: fld.Field) -> list[Role]:
         """
@@ -166,8 +139,8 @@ class Strategy:
             Role.WALLLINER,
         ]
 
-        atk_min = 1
-        def_min = 0
+        atk_min = 0
+        def_min = 1
         # atk_min = 0
         # def_min = 0
 
@@ -196,6 +169,10 @@ class Strategy:
                 robot_roles[robot_id] = role
                 delete_role(roles, role)
 
+        used_ids.append(13)
+        robot_roles[13] = Role.WALLLINER
+        delete_role(roles, Role.WALLLINER)
+
         for role in roles:
             robot_id = -1
             if role == Role.GOALKEEPER:
@@ -222,10 +199,7 @@ class Strategy:
         """
         if (
             self.active_team == ActiveTeam.ALL
-            or field.ally_color == "b"
-            and self.active_team == ActiveTeam.BLUE
-            or field.ally_color == "y"
-            and self.active_team == ActiveTeam.YELLOW
+            or field.ally_color == self.active_team
         ):
             self.we_active = True
         else:
@@ -252,7 +226,8 @@ class Strategy:
         if self.game_status != GameStates.PENALTY:
             self.refs.is_started = 0
 
-        if self.game_status == GameStates.RUN:
+        print(self.game_status, self.we_active)
+        if self.game_status == GameStates.RUN: ############################################NOTE
             self.run(field, waypoints)
         else:
             if self.game_status == GameStates.TIMEOUT:
@@ -273,6 +248,8 @@ class Strategy:
             elif self.game_status == GameStates.KICKOFF:
                 self.kickoff(field, waypoints)
             elif self.game_status == GameStates.FREE_KICK:
+                self.run(field, waypoints)
+            elif self.game_status == GameStates.STOP:
                 self.run(field, waypoints)
 
 
@@ -322,12 +299,16 @@ class Strategy:
             self.attacker(field, waypoints, attacker_id)
 
         wallliners = find_role(field, robot_roles, Role.WALLLINER)
+        for waller in wallliners:
+            # print("waller:", waller.r_id)
+            pass
         if Role.WALLLINER in robot_roles:
             self.set_wallliners_wps(field, waypoints, wallliners, wall_enemy)
 
         if Role.GOALKEEPER in robot_roles:
             robot_with_ball = fld.find_nearest_robot(field.ball.get_pos(), field.allies)
             waypoints[field.gk_id] = self.goalk(field, wallliners, robot_with_ball)
+
 
 
     square = signal.Signal(15, "SQUARE", lohi=(-500, 500))
@@ -366,7 +347,7 @@ class Strategy:
                 self.pass_kicker(field, waypoints, attacker_id, receiver_id)
                 return
         self.pass_or_kick_decision_border.set_low()
-        waypoints[attacker_id] = self.kick.kick_to_point(field, attacker_id, kick_point)
+        waypoints[attacker_id] = self.kick.shoot_to_goal(field, field.allies[attacker_id], kick_point)
 
     def calc_wall_pos(self, field: fld.Field, ball: aux.Point) -> aux.Point:
         """Рассчитывает точку, по которой будут выбираться роботы для стенки"""
@@ -448,6 +429,7 @@ class Strategy:
             idx = projections[i][1]
             angle = (field.ball.get_pos() - field.ally_goal.center).arg()
             waypoints[idx] = wp.Waypoint(pos, angle, wp.WType.R_IGNORE_GOAl_HULL)  # NOTE: совсем не тестировалось
+            # print(idx)
 
     def choose_receiver(self, field: fld.Field) -> tuple[int, float]:
         """Выбирает робота для получения паса"""
@@ -501,7 +483,7 @@ class Strategy:
             #     wp.WType.S_BALL_PASS,
             # )
             # print("pass to", receiver_id)
-            waypoints[kicker_id] = self.kick.kick_to_point(field, kicker_id, receiver.get_pos(), "PASS")
+            waypoints[kicker_id] = self.kick.pass_to_point(field, field.allies[kicker_id], receiver.get_pos())
             self.image.draw_dot(
                 field.ball.get_pos() + aux.rotate(aux.RIGHT, aux.angle_to_point(field.ball.get_pos(), receiver.get_pos())),
                 5,
@@ -761,16 +743,20 @@ class Strategy:
         tmp2 = (goal_down - ball).mag()
         seg = goal_down - goal_up
         if tmp2 != 0:
-            gk_pos = goal_up + seg * 0.5 * (tmp1 / tmp2)
+            kick_point = goal_up + seg * 0.5 * (tmp1 / tmp2)
         else:
-            gk_pos = goal_down
+            kick_point = goal_down
 
-        self.image.draw_dot(gk_pos, 10, (255, 0, 255))
-        gk_forw = (ball - gk_pos).unity()
-        gk_forw *= aux.lerp(const.GK_FORW, const.GOAL_DY / 2, abs(math.sin(gk_forw.arg())))
-        if abs(gk_pos.y + gk_forw.y) > const.GOAL_DY / 2:
-            gk_forw = gk_forw.unity() * (const.GOAL_DY / 2 - abs(gk_pos.y)) 
-        gk_pos += gk_forw
+        radius = (const.GK_FORW ** 2 + (const.GOAL_DY / 2) ** 2) / 2 / const.GK_FORW
+        circle_center = field.ally_goal.center - field.ally_goal.eye_forw * (radius - const.GK_FORW - const.ROBOT_R)
+        intersects = aux.line_circle_intersect(kick_point, ball, circle_center, radius)
+        
+        if intersects is None:
+            gk_pos = field.ally_goal.center + field.ally_goal.eye_forw * const.ROBOT_R
+        else:
+            gk_pos = intersects[0]
+
+        gk_pos.x = aux.minmax(gk_pos.x, const.GOAL_DX - const.ROBOT_R)
 
         return wp.Waypoint(gk_pos, gk_angle, wp.WType.S_IGNOREOBSTACLES)
 
@@ -842,15 +828,10 @@ class Strategy:
     def kickoff(self, field: fld.Field, waypoints: list[wp.Waypoint]) -> None:
         """Удар мяча из аута"""
         self.put_kickoff_waypoints(field, waypoints)
-        # self.we_kick = 0
+        # self.we_kick = 1
         if self.we_kick:
             go_kick = fld.find_nearest_robot(field.ball.get_pos(), field.allies)
-            target = field.enemy_goal.center
-            target.y = 300
-            waypoint = wp.Waypoint(
-                field.ball.get_pos(), (target - field.allies[go_kick.r_id].get_pos()).arg(), wp.WType.S_BALL_KICK
-            )
-            waypoints[go_kick.r_id] = waypoint
+            self.attacker(field, waypoints, go_kick.r_id)
         else:
             go_kick = fld.find_nearest_robot(field.ball.get_pos(), field.allies)
             target = aux.point_on_line(field.ball.get_pos(), aux.Point(field.polarity * const.GOAL_DX, 0), 200)

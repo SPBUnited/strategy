@@ -58,7 +58,7 @@ class Field:
     Класс, хранящий информацию о всех объектах на поле и ключевых точках
     """
 
-    def __init__(self, ctrl_mapping: dict[int, int], ally_color: str) -> None:
+    def __init__(self, ctrl_mapping: dict[int, int], ally_color: const.Color) -> None:
         """
         Конструктор
         Инициализирует все нулями
@@ -71,7 +71,7 @@ class Field:
         self.gk_id = const.GK if ally_color == const.COLOR else const.ENEMY_GK
 
         self.ally_color = ally_color
-        if self.ally_color == "b":
+        if self.ally_color == const.Color.BLUE:
             self.polarity = const.POLARITY * -1
         else:
             self.polarity = const.POLARITY
@@ -101,10 +101,10 @@ class Field:
         if const.SELF_PLAY:
             self.enemy_goal = self.ally_goal
 
-        if self.ally_color == "b":
+        if self.ally_color == const.Color.BLUE:
             self.allies = [*self.b_team]
             self.enemies = [*self.y_team]
-        elif self.ally_color == "y":
+        elif self.ally_color == const.Color.YELLOW:
             self.allies = [*self.y_team]
             self.enemies = [*self.b_team]
 

@@ -93,7 +93,7 @@ class Point:
     def __eq__(self, p: typing.Any) -> bool:
         if not isinstance(p, Point):
             return False
-        return abs(self.x - p.x) < 0.001 and abs(self.y - p.y) < 0.001
+        return abs(self.x - p.x) < 0.1 and abs(self.y - p.y) < 0.1
 
     def __str__(self) -> str:
         return f"x = {self.x:.2f}, y = {self.y:.2f}"
@@ -494,7 +494,7 @@ def line_circle_intersect(x1: Point, x2: Point, c: Point, radius: float) -> Opti
     c1 = closest_point_on_line(x1, x2, p1)
     c2 = closest_point_on_line(x1, x2, p2)
 
-    if p1 != c2 and p2 != c2:
+    if p1 != c1 and p2 != c2:
         return None
     elif p1 != c1:
         return [p2]
