@@ -16,6 +16,9 @@ class KickerAux:
         self.twist_w: float = 0.5
         self.wait_kick_timer: Optional[float] = None
 
+        self.last_kicker = -1
+        self.voltage = 0
+
     def reset_kick_consts(self) -> None:
         "Обнулить константы для ударов"
         self.twist_w = 0.5
@@ -25,12 +28,10 @@ class KickerAux:
         "Пасс"
         self.set_voltage(field, kicker.r_id, receive_pos, "PASS")
 
-        # if kicker.r_id < 9: ####NOTE
-        #     angle  = aux.angle_to_point(field.ball.get_pos(), receive_pos)
-        #     self.reset_kick_consts()
-        #     return wp.Waypoint(field.ball.get_pos(), angle, wp.WType.S_BALL_KICK)
-
-        # if not (field.allies[kicker_id]) or abs(field.allies[kicker_id].get_angle() - angle_to_target) > 1:
+        if kicker.r_id < 9: ####NOTE
+            angle  = aux.angle_to_point(field.ball.get_pos(), receive_pos)
+            self.reset_kick_consts()
+            return wp.Waypoint(field.ball.get_pos(), angle, wp.WType.S_BALL_KICK)
 
         nearest_enemy = fld.find_nearest_robot(field.ball.get_pos(), field.enemies)
         if aux.dist(field.ball.get_pos(), nearest_enemy.get_pos()) < 500 or field.is_ball_in(kicker):
@@ -43,6 +44,12 @@ class KickerAux:
         "Удар по воротам"
         self.set_voltage(field, kicker.r_id, shoot_point, "SHOOT")
 
+
+        if kicker.r_id < 9: ####NOTE
+            angle  = aux.angle_to_point(field.ball.get_pos(), shoot_point)
+            self.reset_kick_consts()
+            return wp.Waypoint(field.ball.get_pos(), angle, wp.WType.S_BALL_KICK)
+        
         nearest_enemy = fld.find_nearest_robot(field.ball.get_pos(), field.enemies)
         if aux.dist(field.ball.get_pos(), nearest_enemy.get_pos()) < 500:
             return self.twisted(field, kicker, shoot_point)
@@ -59,7 +66,7 @@ class KickerAux:
     def set_voltage(self, field: fld.Field, kicker_id: int, kick_point: aux.Point, style: str) -> None:
         "Set voltage for robot's kicker"
         angle_to_target = aux.angle_to_point(field.allies[kicker_id].get_pos(), kick_point)
-        if aux.dist(field.allies[kicker_id].get_pos(), field.ball.get_pos()) > 500 or abs(aux.wind_down_angle(field.allies[kicker_id].get_angle() - angle_to_target)) > 1:
+        if aux.dist(field.allies[kicker_id].get_pos(), field.ball.get_pos()) > 200 or abs(aux.wind_down_angle(field.allies[kicker_id].get_angle() - angle_to_target)) > 1:
             # print(aux.dist(field.allies[kicker_id].get_pos(), field.ball.get_pos()), aux.wind_down_angle(field.allies[kicker_id].get_angle() - angle_to_target))
             field.allies[kicker_id].kicker_voltage_ = const.VOLTAGE_ZERO
         elif style == "PASS":
@@ -68,6 +75,15 @@ class KickerAux:
             field.allies[kicker_id].kicker_voltage_ = const.VOLTAGE_SHOOT
         elif style == "UP":
             field.allies[kicker_id].kicker_voltage_ = const.VOLTAGE_UP
+        else:
+            1/0
+
+        print(kicker_id, self.voltage)
+        if field.allies[kicker_id].kicker_voltage_ < self.voltage or self.last_kicker != kicker_id:
+            print("a" * 512, field.allies[kicker_id].kicker_voltage_, self.voltage)
+            field.allies[kicker_id].kick_forward()
+        self.voltage = field.allies[kicker_id].kicker_voltage_
+        self.last_kicker = kicker_id
 
     def twisted(
             self, field: fld.Field, kicker: rbt.Robot, kick_point: aux.Point, style: str = "SAFE"

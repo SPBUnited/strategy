@@ -140,7 +140,7 @@ class Strategy:
         ]
 
         atk_min = 0
-        def_min = 1
+        def_min = 0
         # atk_min = 0
         # def_min = 0
 
@@ -177,14 +177,13 @@ class Strategy:
             robot_id = -1
             if role == Role.GOALKEEPER:
                 robot_id = field.gk_id
-            elif role == Role.WALLLINER:
-                # robot_id = 11
-                robot_id = fld.find_nearest_robot(wall_pos, field.allies, used_ids).r_id
             elif role == Role.ATTACKER:
-                if field.ally_with_ball is None:
+                if field.ally_with_ball is None and field.ally_with_ball != field.gk_id:
                     robot_id = fld.find_nearest_robot(field.ball.get_pos(), field.allies, used_ids).r_id
                 else:
                     robot_id = field.ally_with_ball.r_id
+            elif role == Role.WALLLINER:
+                robot_id = fld.find_nearest_robot(wall_pos, field.allies, used_ids).r_id
             elif role == Role.FORWARD:
                 robot_id = fld.find_nearest_robot(field.enemy_goal.center, field.allies, used_ids).r_id
             robot_roles[robot_id] = role
@@ -289,6 +288,10 @@ class Strategy:
         "Выбор роботов для всех ролей, с учетом вычесленных выше точек"
         robot_roles = self.choose_robots_for_roles(field, roles, wall_pos)
 
+        for idx, role in enumerate(robot_roles):
+            if role != Role.UNAVAILABLE:
+                print(idx, role)
+
         "Вычисление конечных точек, которые зависят от положения робота и создание путевых точек"
         self.forwards = find_role(field, robot_roles, Role.FORWARD)
         if self.forwards is not None:
@@ -344,10 +347,13 @@ class Strategy:
             self.pass_or_kick_decision_border.set_high()
             receiver_id, pass_est = self.choose_receiver(field)
             if pass_est > kick_est:
-                self.pass_kicker(field, waypoints, attacker_id, receiver_id)
+                waypoints[attacker_id] = self.pass_kicker(field, attacker_id, receiver_id)
+                print("attacker: pass to", receiver_id)
                 return
+            
         self.pass_or_kick_decision_border.set_low()
         waypoints[attacker_id] = self.kick.shoot_to_goal(field, field.allies[attacker_id], kick_point)
+        print("attacker: shoot to goal")
 
     def calc_wall_pos(self, field: fld.Field, ball: aux.Point) -> aux.Point:
         """Рассчитывает точку, по которой будут выбираться роботы для стенки"""
@@ -470,7 +476,7 @@ class Strategy:
             used_forwards.append(pop.r_id)
             self.pass_receiver(field, waypoints, pop.r_id, pos)
 
-    def pass_kicker(self, field: fld.Field, waypoints: list[wp.Waypoint], kicker_id: int, receiver_id: int) -> None:
+    def pass_kicker(self, field: fld.Field, kicker_id: int, receiver_id: int) -> wp.Waypoint:
         """
         Отдает пас от робота kicker_id роботу receiver_id
         Должна вызываться в конечном автомате постоянно, пока первый робот не даст пас
@@ -483,14 +489,16 @@ class Strategy:
             #     wp.WType.S_BALL_PASS,
             # )
             # print("pass to", receiver_id)
-            waypoints[kicker_id] = self.kick.pass_to_point(field, field.allies[kicker_id], receiver.get_pos())
+            waypoint = self.kick.pass_to_point(field, field.allies[kicker_id], receiver.get_pos())
             self.image.draw_dot(
                 field.ball.get_pos() + aux.rotate(aux.RIGHT, aux.angle_to_point(field.ball.get_pos(), receiver.get_pos())),
                 5,
                 (255, 0, 255),
             )
         else:
-            waypoints[kicker_id].type = wp.WType.S_STOP
+            waypoint = wp.Waypoint(aux.Point(0, 0), 0, wp.WType.S_STOP)
+
+        return waypoint
 
     def pass_receiver(
         self, field: fld.Field, waypoints: list[wp.Waypoint], receiver_id: int, receive_point: aux.Point
@@ -712,7 +720,7 @@ class Strategy:
             else:
                 tmp_pos = aux.get_line_intersection(self.ball_start_point, ball, field.ally_goal.center_down, field.ally_goal.center_up, "RS")
                 if tmp_pos is not None:
-                    poses = [goal_up + const.ROBOT_R * (field.ally_goal.eye_forw - field.ally_goal.eye_up), goal_down + const.ROBOT_R * (field.ally_goal.eye_forw + field.ally_goal.eye_up)]
+                    poses = [goal_up + (field.ally_goal.eye_forw - field.ally_goal.eye_up) * const.ROBOT_R, goal_down + (field.ally_goal.eye_forw + field.ally_goal.eye_up) * const.ROBOT_R]
                     gk_pos = aux.find_nearest_point(tmp_pos, poses)
                     return wp.Waypoint(gk_pos, gk_angle, wp.WType.S_IGNOREOBSTACLES)
 

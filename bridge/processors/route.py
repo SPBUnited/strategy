@@ -138,8 +138,6 @@ class Route:
         if target_point.type == wp.WType.S_VELOCITY:  # and self.go_flag == 0:
             wvel = target_point.angle
             vel = target_point.pos
-            # rbt.set_dribbler_speed(7)
-            # rbt.kicker_voltage_ = const.VOLTAGE_SHOOT
             rbt.speed_x = rbt.xx_flp.process(1 / rbt.k_xx * vel.x)
             rbt.speed_y = rbt.yy_flp.process(1 / rbt.k_yy * vel.y)
             rbt.speed_r = 1 / rbt.k_ww * wvel
