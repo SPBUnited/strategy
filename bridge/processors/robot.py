@@ -69,7 +69,7 @@ class Robot(entity.Entity):
         # self.a0Flp = tau.FOLP(self.a0TF, const.Ts)
 
         # !v REAL
-        gains_full = [3, 0.35, 0, const.MAX_SPEED]
+        gains_full = [3, 0.2, 0, const.MAX_SPEED]
         gains_soft = [3, 0.35, 0.1, const.SOFT_MAX_SPEED]
         a_gains_full = [8, 0.1, 0, const.MAX_SPEED_R]
         if self.r_id < 9:

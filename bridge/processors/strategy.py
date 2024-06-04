@@ -169,9 +169,9 @@ class Strategy:
                 robot_roles[robot_id] = role
                 delete_role(roles, role)
 
-        used_ids.append(13)
-        robot_roles[13] = Role.WALLLINER
-        delete_role(roles, Role.WALLLINER)
+        # used_ids.append(13)
+        # robot_roles[13] = Role.WALLLINER
+        # delete_role(roles, Role.WALLLINER)
 
         for role in roles:
             robot_id = -1
@@ -273,7 +273,7 @@ class Strategy:
         roles - роли роботов, отсортированные по приоритету
         robot_roles - список соответствия id робота и его роли
         """
-        # waypoints[12] = self.kick.kick_to_point(field, 12, field.ally_goal.center)
+        # waypoints[12] = wp.Waypoint(aux.Point(self.square.get(), self.square.get()), math.pi / 4, wp.WType.S_ENDPOINT)
         # return
 
         "Определение набора ролей для роботов"
@@ -332,10 +332,10 @@ class Strategy:
         kick_point = self.choose_kick_point(field, attacker_id)
         kick_est = self.estimate_pass_point(field, field.ball.get_pos(), kick_point)
 
-        old_kick_point_est = self.estimate_pass_point(field, field.ball.get_pos(), self.old_kick_decision)
-        if self.old_kick_decision is not None and (kick_est / 5 < old_kick_point_est or old_kick_point_est < 0.05):
-            kick_point = self.old_kick_decision
-            kick_est = old_kick_point_est
+        # old_kick_point_est = self.estimate_pass_point(field, field.ball.get_pos(), self.old_kick_decision)
+        # if self.old_kick_decision is not None and (kick_est / 5 < old_kick_point_est or old_kick_point_est > 0.05):
+        #     kick_point = self.old_kick_decision
+        #     kick_est = old_kick_point_est
 
         self.old_kick_decision = kick_point
 
@@ -709,6 +709,12 @@ class Strategy:
             if tmp_pos is not None:
                 gk_pos = aux.closest_point_on_line(ball, tmp_pos, field.allies[field.gk_id].get_pos())
                 return wp.Waypoint(gk_pos, gk_angle, wp.WType.S_IGNOREOBSTACLES)
+            else:
+                tmp_pos = aux.get_line_intersection(self.ball_start_point, ball, field.ally_goal.center_down, field.ally_goal.center_up, "RS")
+                if tmp_pos is not None:
+                    poses = [goal_up + const.ROBOT_R * (field.ally_goal.eye_forw - field.ally_goal.eye_up), goal_down + const.ROBOT_R * (field.ally_goal.eye_forw + field.ally_goal.eye_up)]
+                    gk_pos = aux.find_nearest_point(tmp_pos, poses)
+                    return wp.Waypoint(gk_pos, gk_angle, wp.WType.S_IGNOREOBSTACLES)
 
         if len(wallliners) != 0:
             segment = self.choose_segment_in_goal(field, -1, field.ally_goal, ball, wallliners)

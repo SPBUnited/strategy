@@ -36,21 +36,24 @@ class Goal:
         self.frw_up = self.frw + self.vec_pen_up
         self.frw_down = self.frw - self.vec_pen_up
 
+        self.center_up = self.center + self.vec_pen_up
+        self.center_down = self.center - self.vec_pen_up
+
         # Оболочка штрафной зоны
         self.hull = [
             aux.FIELD_INF * self.eye_forw.x,
-            self.center + self.vec_pen_up,
+            self.center_up,
             self.frw_up,
             self.frw_down,
-            self.center - self.vec_pen_up,
+            self.center_down,
         ]
 
         self.big_hull = [
             aux.FIELD_INF * self.eye_forw.x,
-            self.center + self.vec_pen_up + self.eye_up * const.ROBOT_R,
+            self.center_up + self.eye_up * const.ROBOT_R,
             self.frw_up + (self.eye_forw + self.eye_up) * const.ROBOT_R,
             self.frw_down + (self.eye_forw - self.eye_up) * const.ROBOT_R,
-            self.center - self.vec_pen_up - self.eye_up * const.ROBOT_R,
+            self.center_down - self.eye_up * const.ROBOT_R,
         ]
 
 class Field:

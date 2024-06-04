@@ -13,15 +13,15 @@ class Color(Enum):
 ##################################################
 # GAME SETTING CONSTS
 DIV = 'C'
-COLOR = Color.BLUE
+COLOR = Color.YELLOW
 POLARITY = -1  # -1 если ворота синих на +x; 1 если ворота синих на -x
 
 IS_SIMULATOR_USED = False
 SELF_PLAY = False
 
-GK = 9
+GK = 11
 PENALTY_KICKER = 1
-ENEMY_GK = 0
+ENEMY_GK = 9
 
 CAMERAS_COUNT: int = 4
 MAX_BALLS_IN_CAMERA: int = 64
