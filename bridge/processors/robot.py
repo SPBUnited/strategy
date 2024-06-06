@@ -50,9 +50,9 @@ class Robot(entity.Entity):
 
         # v! REAL
         else:
-            self.k_xx = -250 / 20
-            self.k_yy = 0.5 * 250 / 20
-            self.k_ww = 6 / 20
+            self.k_xx = -10
+            self.k_yy = 10
+            self.k_ww = 0.08
             self.k_wy = 0
             self.t_wy = 0.15
             self.r_comp_f_dy = tau.FOD(self.t_wy, const.Ts)
@@ -70,8 +70,8 @@ class Robot(entity.Entity):
 
         # !v REAL
         # if self.r_id != const.GK:
-        gains_full = [3, 0.35, 0, const.MAX_SPEED]
-        gains_soft = [3, 0.35, 0.1, const.SOFT_MAX_SPEED]
+        gains_full = [3, 0.25, 0, const.MAX_SPEED]
+        gains_soft = [3, 0.18, 0.1, const.SOFT_MAX_SPEED]
         # gains_soft = [10, 0.32, 0, const.SOFT_MAX_SPEED]
         # gains_soft = gains_full
         a_gains_full = [8, 0.1, 0, const.MAX_SPEED_R]
@@ -259,7 +259,7 @@ class Robot(entity.Entity):
         vec_speed = math.sqrt(self.speed_x**2 + self.speed_y**2)
         r_speed = abs(self.speed_r)
 
-        vec_speed *= ((const.MAX_SPEED_R - r_speed) / const.MAX_SPEED_R) ** 4
+        vec_speed *= ((const.MAX_SPEED_R - r_speed) / const.MAX_SPEED_R) ** 2
 
         ang = math.atan2(self.speed_y, self.speed_x)
         self.speed_x = vec_speed * math.cos(ang)

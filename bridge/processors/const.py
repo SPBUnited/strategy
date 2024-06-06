@@ -5,14 +5,14 @@
 ##################################################
 # GAME SETTING CONSTS
 COLOR = "b"
-POLARITY = 1  # 1 если ворота синих на +x; -1 если ворота синих на -x
+POLARITY = -1  # 1 если ворота синих на +x; -1 если ворота синих на -x
 
 IS_SIMULATOR_USED = True
 SELF_PLAY = False
 
 GK = 0
 PENALTY_KICKER = 1
-ENEMY_GK = 5
+ENEMY_GK = 12
 
 CAMERAS_COUNT: int = 4
 MAX_BALLS_IN_CAMERA: int = 64
@@ -88,10 +88,10 @@ BALL_R = 50
 ROBOT_R = 100
 GRAVEYARD_POS_X = -10000
 
-GOAL_DX = 4000  # width / 2
-GOAL_DY = 1000
-GOAL_PEN_DX = 1000
-GOAL_PEN_DY = 2000
+GOAL_DX = 2250  # width / 2
+GOAL_DY = 800
+GOAL_PEN_DX = 500
+GOAL_PEN_DY = 1350
 GOAL_WALLLINE_OFFSET = GOAL_PEN_DX + 500
 GOAL_WALL_ROBOT_SEPARATION = 150  # расстояние между роботами в стенке
 

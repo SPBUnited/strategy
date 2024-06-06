@@ -142,6 +142,12 @@ def dist2line(p1: Point, p2: Point, p: Point) -> float:
     """
     return abs(vec_mult((p2 - p1).unity(), p - p1))
 
+def is_on_line(p1: Point, p2: Point, p: Point) -> float:
+    """
+    Определить, лежит ли высота из p на отрезок p1 - p2 в пределах этого отрезка
+    """
+    return abs(get_angle_between_points(p, p1, p2)) <= math.pi / 2 and abs(get_angle_between_points(p, p2, p1)) <= math.pi / 2
+
 
 def line_poly_intersect(p1: Point, p2: Point, points: list[Point]) -> bool:
     """
@@ -309,7 +315,7 @@ def wind_down_angle(angle: float) -> float:
 
 def closest_point_on_line(point1: Point, point2: Point, point: Point, is_inf: str = "S") -> Point:
     """
-    Получить ближайшую к точке point току на линии point1-point2
+    Получить ближайшую к точке point точку на линии point1-point2
 
     is_inf задает ограничения на точку пересечения.
 
@@ -365,6 +371,12 @@ def minmax(x: float, a: float, b: float) -> float:
     """
     return min(max(x, a), b)
 
+
+def is_in_range(x: float, a: float, b: float) -> bool:
+    """
+    проверяет, лежит ли x в диапазоне [a, b]
+    """
+    return x == minmax(x, a, b)
 
 def angle_to_point(point1: Point, point2: Point) -> float:
     """
@@ -470,3 +482,30 @@ def get_angle_between_points(a: Point, b: Point, c: Point) -> float:
 def cosine_theorem(a: float, b: float, angle: float) -> float:
     """Теорема косинусов"""
     return math.sqrt(a*a + b*b - 2*a*b*math.cos(angle))
+
+
+def range_minus(mns0: list, mns1: list, may_be_smaller: bool = True) -> list:
+    """
+    вычитает из списка множеств mns0 список множеств mns1. множества задаются как (min, max) - где min, max - крайние значения. 
+    не вычитает из mns0[x] mns1[y], если включено may_be_smaller и вычитаемый диапазон меньше
+    """
+    i = 0
+    while i < len(mns1):
+        j = 0
+        while j < len(mns0):
+            bigger = mns1[i][1] - mns1[i][0] >= mns0[j][1] - mns0[j][0]
+            if is_in_range(mns1[i][0], mns0[j][0], mns0[j][1]) and not is_in_range(mns1[i][1], mns0[j][0], mns0[j][1]) and (may_be_smaller or bigger):
+                mns0[j] = (mns0[j][0], mns1[i][0])
+            elif not is_in_range(mns1[i][0], mns0[j][0], mns0[j][1]) and is_in_range(mns1[i][1], mns0[j][0], mns0[j][1]) and (may_be_smaller or bigger):
+                mns0[j] = (mns1[i][1], mns0[j][1])
+            elif is_in_range(mns1[i][0], mns0[j][0], mns0[j][1]) and is_in_range(mns1[i][1], mns0[j][0], mns0[j][1]) and (may_be_smaller or bigger):
+                mns0.insert(j + 1, (mns1[i][1], mns0[j][1]))
+                mns0[j] = (mns0[j][0], mns1[i][0])
+                j += 1
+            elif is_in_range(mns0[j][0], mns1[i][0], mns1[i][1]) and is_in_range(mns0[j][1], mns1[i][0], mns1[i][1]) and (may_be_smaller or bigger):
+                mns0.pop(j)
+                j -= 1
+            j += 1
+        i += 1
+    return mns0
+

@@ -221,6 +221,40 @@ class Field:
             avoid.append(robo.r_id)
         return robots
 
+    def find_nearest_enemies(self, point: aux.Point, num: int, avoid: Optional[list[int]] = None) -> list[robot.Robot]:
+        """
+        Найти num роботов из field.allies, ближайших к точке point
+        """
+        if avoid is None:
+            avoid = []
+        avoid += [const.GK]
+        robots: list[robot.Robot] = []
+        # if len(self.allies) < num:
+        #     return None  # сам виноват
+
+        while len(robots) < num:
+            robo = find_nearest_robot(point, self.enemies, avoid)
+            robots.append(robo)
+            avoid.append(robo.r_id)
+        return robots
+
+    def find_nearest_robots(self, point: aux.Point, team: list[robot.Robot], num: int, avoid: Optional[list[int]] = None) -> list[robot.Robot]:
+        """
+        Найти num роботов из field.allies, ближайших к точке point
+        """
+        if avoid is None:
+            avoid = []
+        avoid += [const.GK]
+        robots: list[robot.Robot] = []
+        # if len(self.allies) < num:
+        #     return None  # сам виноват
+
+        while len(robots) < num:
+            robo = find_nearest_robot(point, team, avoid)
+            robots.append(robo)
+            avoid.append(robo.r_id)
+        return robots
+
 
 def find_nearest_robot(point: aux.Point, team: list[robot.Robot], avoid: Optional[list[int]] = None) -> robot.Robot:
     """

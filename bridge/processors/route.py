@@ -235,7 +235,7 @@ class Route:
             transl_vel = aux.Point(u_x, u_y)
             angle0 = end_point.angle
 
-            if end_point.type == wp.WType.R_PASSTHROUGH:
+            if target_point.type == wp.WType.R_PASSTHROUGH:
                 transl_vel = transl_vel.unity() * const.MAX_SPEED
 
         aerr = aux.wind_down_angle(angle0 - rbt.get_angle())
