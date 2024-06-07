@@ -190,14 +190,16 @@ class Route:
                 angle0 = end_point.angle
 
             rbt.dribbler_enable_ = True
+            print("asd",rbt.r_id, rbt.kicker_voltage_)
             rbt.dribbler_speed_ = 15
-            rbt.kicker_voltage_ = const.VOLTAGE_SHOOT
-            if end_point.type in [wp.WType.S_BALL_GRAB, wp.WType.S_BALL_GO]:
-                rbt.kicker_voltage_ = const.VOLTAGE_ZERO
-            elif end_point.type == wp.WType.S_BALL_PASS:
-                rbt.kicker_voltage_ = const.VOLTAGE_PASS
-            elif end_point.type == wp.WType.S_BALL_KICK_UP:
-                rbt.kicker_voltage_ = const.VOLTAGE_UP
+            if rbt.kicker_voltage_ == 0:
+                rbt.kicker_voltage_ = const.VOLTAGE_SHOOT
+                if end_point.type in [wp.WType.S_BALL_GRAB, wp.WType.S_BALL_GO]:
+                    rbt.kicker_voltage_ = const.VOLTAGE_ZERO
+                elif end_point.type == wp.WType.S_BALL_PASS:
+                    rbt.kicker_voltage_ = const.VOLTAGE_PASS
+                elif end_point.type == wp.WType.S_BALL_KICK_UP:
+                    rbt.kicker_voltage_ = const.VOLTAGE_UP
         else:
             pass
 
@@ -255,11 +257,11 @@ class Route:
 
         if (
             end_point.type in [wp.WType.S_BALL_KICK, wp.WType.S_BALL_PASS]
-        ) and rbt.is_kick_aligned_by_angle(end_point):
+        ) and rbt.is_kick_aligned_by_angle(end_point.angle):
             rbt.auto_kick_ = 1
             if rbt.r_id < 9:
                 rbt.auto_kick_ = 2
-        elif end_point.type == wp.WType.S_BALL_KICK_UP and rbt.is_kick_aligned_by_angle(end_point):
+        elif end_point.type == wp.WType.S_BALL_KICK_UP and rbt.is_kick_aligned_by_angle(end_point.angle):
             rbt.auto_kick_ = 2
         else:
             rbt.auto_kick_ = 0

@@ -14,14 +14,15 @@ class Color(Enum):
 # GAME SETTING CONSTS
 DIV = 'C'
 COLOR = Color.YELLOW
-POLARITY = -1  # -1 если ворота синих на +x; 1 если ворота синих на -x
+POLARITY = 1  # -1 если ворота синих на +x; 1 если ворота синих на -x
 
 IS_SIMULATOR_USED = False
-SELF_PLAY = False
+IS_DRIBLER_USED = False #dribler and upper_kick
+SELF_PLAY = True
 
 GK = 14
-PENALTY_KICKER = 1
-ENEMY_GK = 9
+PENALTY_KICKER = 13
+ENEMY_GK = 1
 
 CAMERAS_COUNT: int = 4
 MAX_BALLS_IN_CAMERA: int = 64
@@ -123,7 +124,7 @@ FULL_DELAY = 0.16
 
 
 #VOLTAGES
-VOLTAGE_PASS = 8
+VOLTAGE_PASS = 6
 VOLTAGE_SHOOT = 15
 VOLTAGE_UP = 15
 VOLTAGE_ZERO = min(VOLTAGE_PASS, VOLTAGE_SHOOT, VOLTAGE_UP)

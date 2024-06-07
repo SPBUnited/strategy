@@ -211,7 +211,7 @@ class Robot(entity.Entity):
 
         commit_scale = 1.2 if self.is_kick_committed else 1
         is_dist = (self.get_pos() - target.pos).mag() < const.KICK_ALIGN_DIST * const.KICK_ALIGN_DIST_MULT * commit_scale
-        is_angle = self.is_kick_aligned_by_angle(target)
+        is_angle = self.is_kick_aligned_by_angle(target.angle)
         is_offset = (
             aux.dist(
                 aux.closest_point_on_line(
@@ -230,12 +230,12 @@ class Robot(entity.Entity):
 
         return is_aligned
 
-    def is_kick_aligned_by_angle(self, target: wp.Waypoint) -> bool:
+    def is_kick_aligned_by_angle(self, angle: float) -> bool:
         """
         Определить, выровнен ли робот относительно путевой точки target
         """
         commit_scale = 1.2 if self.is_kick_committed else 1
-        return abs(aux.wind_down_angle(self._angle - target.angle)) < const.KICK_ALIGN_ANGLE * commit_scale
+        return abs(aux.wind_down_angle(self._angle - angle)) < const.KICK_ALIGN_ANGLE * commit_scale
 
     def update_vel_xyw(self, vel: aux.Point, wvel: float) -> None:
         """

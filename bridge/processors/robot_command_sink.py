@@ -13,6 +13,8 @@ import bridge.processors.auxiliary as aux
 import bridge.processors.const as const
 import bridge.processors.robot as robot
 
+from time import time
+
 
 @attr.s(auto_attribs=True)
 class CommandSink(BaseProcessor):
@@ -134,6 +136,15 @@ class CommandSink(BaseProcessor):
                     for _ in range(13):
                         rules.append(0)
                     continue
+
+                if not const.IS_DRIBLER_USED:
+                    if round(time()*2) % 10 == 0:
+                        control_team[i].dribbler_enable_ = 1
+                        control_team[i].dribbler_speed_ = 1
+                    else:
+                        control_team[i].dribbler_enable_ = 0
+                        control_team[i].dribbler_speed_ = 0
+
                 if abs(control_team[i].speed_x) < 1.5:
                     control_team[i].speed_x = 0
                 if abs(control_team[i].speed_y) < 1.5:

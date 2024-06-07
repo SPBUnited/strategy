@@ -55,15 +55,15 @@ class Router:
             dest_pos = target.pos
             if aux.is_point_inside_circle(dest_pos, fld.ball.get_pos(), const.KEEP_BALL_DIST):
                 delta = -aux.rotate(aux.RIGHT, target.angle)
-                closest_out = aux.nearest_point_on_circle(dest_pos + delta, fld.ball.get_pos(), const.KEEP_BALL_DIST)
+                closest_out = aux.nearest_point_on_circle(dest_pos + delta, fld.ball.get_pos(), const.KEEP_BALL_DIST + const.ROBOT_R)
                 angle0 = target.angle
                 self.routes[idx].set_dest_wp(wp.Waypoint(closest_out, angle0, wp.WType.S_ENDPOINT))
                 return
 
-        if abs(target.pos.x) > 2250:
-            target.pos.x = 2250 * aux.sign(target.pos.x)
-        if abs(target.pos.y) > 1600:
-            target.pos.y = 1600 * aux.sign(target.pos.y)
+        if abs(target.pos.x) > const.GOAL_DX:
+            target.pos.x = const.GOAL_DX * aux.sign(target.pos.x)
+        if abs(target.pos.y) > 1500:
+            target.pos.y = 1500 * aux.sign(target.pos.y)
         self.routes[idx].set_dest_wp(target)
 
     def reroute(self, fld: field.Field) -> None:
@@ -124,11 +124,11 @@ class Router:
                     closest_out = aux.nearest_point_on_circle(self_pos, fld.ball.get_pos(), const.KEEP_BALL_DIST)
                     self.routes[idx].insert_wp(wp.Waypoint(closest_out, angle0, wp.WType.R_PASSTHROUGH))
                     continue
-                points = aux.line_circle_intersect(self_pos, dest_pos, fld.ball.get_pos(), 500 + const.ROBOT_R) 
+                points = aux.line_circle_intersect(self_pos, dest_pos, fld.ball.get_pos(), const.KEEP_BALL_DIST) 
                 if points is None:
                     continue
                 if len(points) == 2:
-                    points = aux.get_tangent_points(fld.ball.get_pos(), self_pos, 500 + const.ROBOT_R)
+                    points = aux.get_tangent_points(fld.ball.get_pos(), self_pos, const.KEEP_BALL_DIST)
                     p = aux.Point(0, 0)
                     if points is None:
                         continue

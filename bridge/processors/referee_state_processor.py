@@ -48,6 +48,7 @@ class StateMachine:
         self.add_transition(State.HALT, State.RUN, Command.FORCE_START)
         self.add_transition(State.HALT, State.FREE_KICK, Command.FREE_KICK)
         self.add_transition(State.HALT, State.PREPARE_KICKOFF, Command.PREPARE_KICKOFF)
+        self.add_transition(State.HALT, State.PREPARE_PENALTY, Command.PREPARE_PENALTY)
         self.add_transition(State.HALT, State.KICKOFF, Command.NORMAL_START)
 
         for state in State:

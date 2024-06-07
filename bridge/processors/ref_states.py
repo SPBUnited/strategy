@@ -30,29 +30,30 @@ class RefStates:
                     and field.allies[i].r_id != field.gk_id
                 ):
                     waypoint = wp.Waypoint(
-                        aux.Point(3000 * field.polarity, 2500 - 1000 * rC), field.allies[i].get_angle(), wp.WType.S_ENDPOINT
+                        aux.Point(1000 * field.polarity, 250 - 500 * rC), field.allies[i].get_angle(), wp.WType.S_ENDPOINT
                     )
                     waypoints[i] = waypoint
                     rC += 1
             waypoint = wp.Waypoint(
-                aux.Point(1700 * field.polarity, 0),
-                aux.angle_to_point(aux.Point(1700 * field.polarity, 0), field.ball.get_pos()),
+                aux.Point(550 * field.polarity, 0),
+                aux.angle_to_point(aux.Point(550 * field.polarity, 0), field.ball.get_pos()),
                 wp.WType.S_ENDPOINT,
             )
             waypoints[field.allies[const.PENALTY_KICKER].r_id] = waypoint
+
             waypoint = wp.Waypoint(
-                field.ally_goal.center, aux.angle_to_point(field.ally_goal.center, field.ball.get_pos()), wp.WType.S_ENDPOINT
+                field.ally_goal.center, 0, wp.WType.S_ENDPOINT
             )
             waypoints[field.allies[field.gk_id].r_id] = waypoint
         else:
             rC = 0
             for i in range(const.TEAM_ROBOTS_MAX_COUNT):
                 if field.allies[i].is_used() and field.allies[i].r_id != field.gk_id:
-                    waypoint = wp.Waypoint(aux.Point(3000 * -field.polarity, 2500 - 1000 * rC), 0, wp.WType.S_ENDPOINT)
+                    waypoint = wp.Waypoint(aux.Point(1000 * -field.polarity, 250 - 500 * rC), 0, wp.WType.S_ENDPOINT)
                     waypoints[i] = waypoint
                     rC += 1
             waypoint = wp.Waypoint(
-                field.ally_goal.center, aux.angle_to_point(field.ally_goal.center, field.ball.get_pos()), wp.WType.S_ENDPOINT
+                field.ally_goal.center, 0, wp.WType.S_ENDPOINT
             )
             waypoints[field.allies[field.gk_id].r_id] = waypoint
 
@@ -76,46 +77,19 @@ class RefStates:
 
     def penalty_kick(self, field: fld.Field, waypoints: list[wp.Waypoint]) -> None:
         """Пенальти (атака)"""
-        self.is_started += 1
-        if self.is_started < 5:
-            field.allies[const.PENALTY_KICKER].kick_up_ = 1
-
         field.allies[const.PENALTY_KICKER].dribbler_enable_ = 1
         field.allies[const.PENALTY_KICKER].dribbler_speed_ = 10
-        field.allies[const.PENALTY_KICKER].kicker_charge_enable_ = 2
-        field.allies[const.PENALTY_KICKER].auto_kick_ = 2
-        kick_delta = 400
+        kick_delta = 350
 
-        angle_to_keeper = math.atan2(
-            field.enemies[const.ENEMY_GK].get_pos().y - field.allies[const.PENALTY_KICKER].get_pos().y,
-            field.enemies[const.ENEMY_GK].get_pos().x - field.allies[const.PENALTY_KICKER].get_pos().x,
-        )
-        angle_to_right_corner = math.atan2(
-            kick_delta - field.allies[const.PENALTY_KICKER].get_pos().y,
-            field.enemy_goal.center.x - field.allies[const.PENALTY_KICKER].get_pos().x,
-        )
-        angle_to_left_corner = math.atan2(
-            -kick_delta - field.allies[const.PENALTY_KICKER].get_pos().y,
-            field.enemy_goal.center.x - field.allies[const.PENALTY_KICKER].get_pos().x,
-        )
+        ball = field.ball.get_pos()
+        enemy_gk = field.enemies[const.ENEMY_GK].get_pos()
 
-        if abs(angle_to_keeper - angle_to_right_corner) > abs(angle_to_keeper - angle_to_left_corner):
+        if abs(aux.get_angle_between_points(enemy_gk, ball, field.enemy_goal.up)) > abs(aux.get_angle_between_points(enemy_gk, ball, field.enemy_goal.down)):
             target = aux.Point(field.enemy_goal.center.x, kick_delta)
         else:
             target = aux.Point(field.enemy_goal.center.x, -kick_delta)
 
-        if abs(field.enemy_goal.center.x - field.ball.get_pos().x) > 1000:
-            field.allies[const.PENALTY_KICKER].kicker_voltage_ = 5
-            waypoint = wp.Waypoint(
-                field.ball.get_pos(), (target - field.allies[const.PENALTY_KICKER].get_pos()).arg(), wp.WType.S_BALL_KICK
-            )
-        else:
-            field.allies[const.PENALTY_KICKER].kicker_voltage_ = 15
-            waypoint = wp.Waypoint(
-                field.ball.get_pos(), (target - field.allies[const.PENALTY_KICKER].get_pos()).arg(), wp.WType.S_BALL_KICK
-            )
-
-        waypoints[const.PENALTY_KICKER] = waypoint
+        waypoints[const.PENALTY_KICKER] = wp.Waypoint(ball, aux.angle_to_point(ball, target), wp.WType.S_BALL_KICK)
 
     def prepare_kickoff(self, field: fld.Field, waypoints: list[wp.Waypoint]) -> None:
         """Настройка перед состоянием kickoff по команде судей"""
