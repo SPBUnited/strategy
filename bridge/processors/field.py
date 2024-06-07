@@ -36,39 +36,32 @@ class Goal:
         self.frw_up = self.frw + self.vec_pen_up
         self.frw_down = self.frw - self.vec_pen_up
 
+        self.center_up = self.center + self.vec_pen_up
+        self.center_down = self.center - self.vec_pen_up
+
         # Оболочка штрафной зоны
         self.hull = [
             aux.FIELD_INF * self.eye_forw.x,
-            self.center + self.vec_pen_up,
+            self.center_up,
             self.frw_up,
             self.frw_down,
-            self.center - self.vec_pen_up,
+            self.center_down,
         ]
 
         self.big_hull = [
             aux.FIELD_INF * self.eye_forw.x,
-            self.center + self.vec_pen_up + self.eye_up * const.ROBOT_R,
+            self.center_up + self.eye_up * const.ROBOT_R,
             self.frw_up + (self.eye_forw + self.eye_up) * const.ROBOT_R,
             self.frw_down + (self.eye_forw - self.eye_up) * const.ROBOT_R,
-            self.center - self.vec_pen_up - self.eye_up * const.ROBOT_R,
+            self.center_down - self.eye_up * const.ROBOT_R,
         ]
-
-        # Попуск
-        self.popusk_positions = [
-            aux.Point(0, 2000),
-            aux.Point(0, -2000),
-            aux.Point(0, 0),
-            aux.Point(aux.sign(goal_dx) * 2000, 2000),
-            aux.Point(aux.sign(goal_dx) * 2000, -2000),
-        ]
-
 
 class Field:
     """
     Класс, хранящий информацию о всех объектах на поле и ключевых точках
     """
 
-    def __init__(self, ctrl_mapping: dict[int, int], ally_color: str) -> None:
+    def __init__(self, ctrl_mapping: dict[int, int], ally_color: const.Color) -> None:
         """
         Конструктор
         Инициализирует все нулями
@@ -78,8 +71,10 @@ class Field:
         """
         self.ally_with_ball: Optional[robot.Robot] = None
 
+        self.gk_id = const.GK if ally_color == const.COLOR else const.ENEMY_GK
+
         self.ally_color = ally_color
-        if self.ally_color == "b":
+        if self.ally_color == const.Color.BLUE:
             self.polarity = const.POLARITY * -1
         else:
             self.polarity = const.POLARITY
@@ -109,10 +104,10 @@ class Field:
         if const.SELF_PLAY:
             self.enemy_goal = self.ally_goal
 
-        if self.ally_color == "b":
+        if self.ally_color == const.Color.BLUE:
             self.allies = [*self.b_team]
             self.enemies = [*self.y_team]
-        elif self.ally_color == "y":
+        elif self.ally_color == const.Color.YELLOW:
             self.allies = [*self.y_team]
             self.enemies = [*self.b_team]
 
@@ -135,7 +130,6 @@ class Field:
         """
         Определить, находится ли мяч внутри дриблера
         """
-        # print(self.ally_with_ball)
         return robo == self.ally_with_ball
 
     def update_blu_robot(self, idx: int, pos: aux.Point, angle: float, t: float) -> None:
@@ -195,7 +189,7 @@ class Field:
         vec_to_point = point - self.ball.get_pos()
         return (
             self.ball.get_vel().mag() * (cos(vec_to_point.arg() - self.ball.get_vel().arg()) ** 3)
-            > const.INTERCEPT_SPEED * 2
+            > const.INTERCEPT_SPEED * 2 and self.ally_with_ball is None
         )
 
     def is_ball_moves_to_goal(self) -> bool:
@@ -203,40 +197,6 @@ class Field:
         Определить, движется ли мяч в сторону ворот
         """
         return self.is_ball_moves_to_point(self.ally_goal.center)
-
-    def find_nearest_allies(self, point: aux.Point, num: int, avoid: Optional[list[int]] = None) -> list[robot.Robot]:
-        """
-        Найти num роботов из field.allies, ближайших к точке point
-        """
-        if avoid is None:
-            avoid = []
-        avoid += [const.GK]
-        robots: list[robot.Robot] = []
-        # if len(self.allies) < num:
-        #     return None  # сам виноват
-
-        while len(robots) < num:
-            robo = find_nearest_robot(point, self.allies, avoid)
-            robots.append(robo)
-            avoid.append(robo.r_id)
-        return robots
-
-    def find_nearest_enemies(self, point: aux.Point, num: int, avoid: Optional[list[int]] = None) -> list[robot.Robot]:
-        """
-        Найти num роботов из field.allies, ближайших к точке point
-        """
-        if avoid is None:
-            avoid = []
-        avoid += [const.GK]
-        robots: list[robot.Robot] = []
-        # if len(self.allies) < num:
-        #     return None  # сам виноват
-
-        while len(robots) < num:
-            robo = find_nearest_robot(point, self.enemies, avoid)
-            robots.append(robo)
-            avoid.append(robo.r_id)
-        return robots
 
     def find_nearest_robots(self, point: aux.Point, team: list[robot.Robot], num: int, avoid: Optional[list[int]] = None) -> list[robot.Robot]:
         """

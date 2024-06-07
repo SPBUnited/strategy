@@ -5,7 +5,8 @@
 import math
 import typing
 
-import bridge.processors.const as const
+from bridge.processors import const
+from typing import Optional
 
 
 class Graph:
@@ -65,7 +66,7 @@ class Point:
     Класс, описывающий точку (вектор)
     """
 
-    def __init__(self, x: float, y: float):
+    def __init__(self, x: float = 0, y: float = 0):
         self.x = x
         self.y = y
 
@@ -92,7 +93,7 @@ class Point:
     def __eq__(self, p: typing.Any) -> bool:
         if not isinstance(p, Point):
             return False
-        return self.x == p.x and self.y == p.y
+        return abs(self.x - p.x) < 0.1 and abs(self.y - p.y) < 0.1
 
     def __str__(self) -> str:
         return f"x = {self.x:.2f}, y = {self.y:.2f}"
@@ -365,10 +366,13 @@ def lerp(p1: typing.Any, p2: typing.Any, t: float) -> typing.Any:
     return p1 * (1 - t) + p2 * t
 
 
-def minmax(x: float, a: float, b: float) -> float:
+def minmax(x: float, a: float, b: Optional[float] = None) -> float:
     """
-    Получить ближайшее к x число из диапазона [a, b]
+    Получить ближайшее к x число из диапазона [a, b] или [b, a]
     """
+    if b is None:
+        b = -a
+    a, b = min(a, b), max(a, b)
     return min(max(x, a), b)
 
 
@@ -418,6 +422,7 @@ def line_intersect(m: BobLine, bots: list[BobLine]) -> list[Point]:
         result.append(res)
     return result
 
+
 def nearest_point_on_poly(p: Point, poly: list[Point]) -> Point:
     """
     TODO
@@ -458,19 +463,20 @@ def circles_inter(p0: Point, p1: Point, r0: float, r1: float) -> tuple[Point, Po
     return Point(x3, y3), Point(x4, y4)
 
 
-def get_tangent_points(point0: Point, point1: Point, r: float):
+def get_tangent_points(point0: Point, point1: Point, r: float) -> Optional[list[Point]]:
     """
-    Get tangents
+    Get tangents (point0 - center of circle)
     """
     d = dist(point0, point1)
     if d < r:
         return None
     elif d == r:
-        return point1
+        return [point1]
     else:
         midx, midy = (point0.x + point1.x) / 2, (point0.y + point1.y) / 2
         p2, p3 = circles_inter(point0, Point(midx, midy), r, d / 2)
-        return p2, p3
+        return [p2, p3]
+
 
 def get_angle_between_points(a: Point, b: Point, c: Point) -> float:
     """
@@ -479,10 +485,42 @@ def get_angle_between_points(a: Point, b: Point, c: Point) -> float:
     ang = math.atan2(c.y - b.y, c.x - b.x) - math.atan2(a.y - b.y, a.x - b.x)
     return wind_down_angle(ang)
 
+
 def cosine_theorem(a: float, b: float, angle: float) -> float:
     """Теорема косинусов"""
-    return math.sqrt(a*a + b*b - 2*a*b*math.cos(angle))
+    return math.sqrt(a * a + b * b - 2 * a * b * math.cos(angle))
 
+def line_circle_intersect(x1: Point, x2: Point, c: Point, radius: float) -> Optional[list[Point]]:
+    """TODO"""
+    h = closest_point_on_line(x1, x2, c, "L")
+    if radius < dist(c, h):
+        return None
+    elif radius == dist(c, h):
+        return [h]
+
+    d = math.sqrt(radius ** 2 -  dist(c, h) ** 2)
+    vec = (x2 - x1).unity() * d
+    p1 = h + vec
+    p2 = h - vec
+
+    c1 = closest_point_on_line(x1, x2, p1)
+    c2 = closest_point_on_line(x1, x2, p2)
+
+    if p1 != c1 and p2 != c2:
+        return None
+    elif p1 != c1:
+        return [p2]
+    elif p2 != c2:
+        return [p1]
+    return [p1, p2]
+
+def is_point_inside_circle(a: Point, c: Point, radius: float) -> bool:
+    """Return TRUE if point inside circle"""
+    return dist(a, c) < radius
+
+def nearest_point_on_circle(a: Point, c: Point, radius: float) -> Point:
+    """Return nearest point in circle"""
+    return c + (a - c).unity() * radius
 
 def range_minus(mns0: list, mns1: list, may_be_smaller: bool = True) -> list:
     """

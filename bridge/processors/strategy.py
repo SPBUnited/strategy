@@ -7,7 +7,6 @@
 import math
 
 # !v DEBUG ONLY
-import typing
 from enum import Enum
 from time import time
 from typing import Optional
@@ -16,83 +15,45 @@ import bridge.processors.auxiliary as aux
 import bridge.processors.const as const
 import bridge.processors.drawing as draw
 import bridge.processors.field as fld
+import bridge.processors.ref_states as refs
 import bridge.processors.robot as robot
 import bridge.processors.signal as signal
 import bridge.processors.waypoint as wp
-
-
-class States(Enum):
-    """Класс с глобальными состояниями игры"""
-
-    DEBUG = 0
-    DEFENSE = 1
-    ATTACK = 2
-
-
-class GameStates(Enum):
-    """Класс с командами от судей"""
-
-    HALT = 0
-    STOP = 1
-    RUN = 2
-    TIMEOUT = 3
-    PREPARE_KICKOFF = 5
-    KICKOFF = 6
-    PREPARE_PENALTY = 7
-    PENALTY = 8
-    FREE_KICK = 9
-    BALL_PLACEMENT = 11
-
-
-class ActiveTeam(Enum):
-    """Класс с командами"""
-
-    ALL = 0
-    YELLOW = 1
-    BLUE = 2
-
-
-class Role(Enum):
-    """Класс с ролями"""
-
-    GOALKEEPER = 0
-    ATTACKER = 1
-
-    WALLLINER = 3
-    FORWARD = 11
-
-    UNAVAILABLE = 100
+from bridge.processors.referee_state_processor import State as GameStates
+from bridge.processors.referee_state_processor import Color as ActiveTeam
 
 
 class Strategy:
     """Основной класс с кодом стратегии"""
 
     def __init__(self, dbg_game_status: GameStates = GameStates.RUN, dbg_state: States = States.ATTACK) -> None:
+        self.refs = refs.RefStates()
 
         self.game_status = dbg_game_status
         self.active_team: ActiveTeam = ActiveTeam.ALL
+        self.we_kick = False
+        self.we_active = False
         self.state = dbg_state
         self.action = 0
         self.image = draw.Image()
 
-    def change_game_state(self, new_state: GameStates, upd_active_team: int) -> None:
+    def change_game_state(self, new_state: GameStates, upd_active_team: ActiveTeam) -> None:
         """Изменение состояния игры и цвета команды"""
         self.game_status = new_state
-        if upd_active_team == 0:
-            self.active_team = ActiveTeam.ALL
-        elif upd_active_team == 2:
-            self.active_team = ActiveTeam.YELLOW
-        elif upd_active_team == 1:
-            self.active_team = ActiveTeam.BLUE
+        self.active_team = upd_active_team
 
     def process(self, field: fld.Field) -> list[wp.Waypoint]:
         """
         Рассчитать конечные точки для каждого робота
         """
-        # if      self.active_team == ActiveTeam.ALL or \
-        #         field.ally_color == "b" and self.active_team == ActiveTeam.BLUE or \
-        #         field.ally_color == "y" and self.active_team == ActiveTeam.YELLOW:
-        #     self.we_active = 1
+        if (
+            self.active_team == ActiveTeam.ALL
+            or field.ally_color == self.active_team
+        ):
+            self.we_active = True
+        else:
+            self.we_active = False
+
 
         waypoints: list[wp.Waypoint] = []
         for i in range(const.TEAM_ROBOTS_MAX_COUNT):
@@ -100,33 +61,28 @@ class Strategy:
 
         if self.game_status == GameStates.RUN:
             self.run(field, waypoints)
-        # else:
-        #     if self.game_status == GameStates.TIMEOUT:
-        #         self.refs.timeout(field, waypoints)
-        #     elif self.game_status == GameStates.HALT:
-        #         pass
-        #         # self.halt(field, waypoints)
-        #     elif self.game_status == GameStates.PREPARE_PENALTY:
-        #         self.refs.prepare_penalty(field, waypoints)
-        #     elif self.game_status == GameStates.PENALTY:
-        #         if self.refs.we_kick or 1:
-        #             self.refs.penalty_kick(field, waypoints)
-        #         else:
-        #             robot_with_ball = fld.find_nearest_robot(field.ball.get_pos(), field.enemies)
-        #             waypoints[const.GK] = self.goalk(field, 0, robot_with_ball)[0]
-        #     elif self.game_status == GameStates.BALL_PLACEMENT:
-        #         self.refs.keep_distance(field, waypoints)
-        #     elif self.game_status == GameStates.PREPARE_KICKOFF:
-        #         self.refs.prepare_kickoff(field, waypoints)
-        #     elif self.game_status == GameStates.KICKOFF:
-        #         self.refs.kickoff(field, waypoints)
-        #         robot_with_ball = fld.find_nearest_robot(field.ball.get_pos(), field.enemies)
-        #         waypoints[const.GK] = self.goalk(field, 0, robot_with_ball)[0]
-        #     # elif self.game_status == GameStates.FREE_KICK:
-        #     #     self.free_kick(field, waypoints)
-        #     elif self.game_status == GameStates.STOP:
-        #         self.refs.keep_distance(field, waypoints)
-        # # print(self.game_status, self.state)
+        else:
+            if self.game_status == GameStates.TIMEOUT:
+                self.refs.timeout(field, waypoints)
+            elif self.game_status == GameStates.HALT:
+                pass
+                # self.halt(field, waypoints)
+            elif self.game_status == GameStates.PREPARE_PENALTY:
+                self.refs.prepare_penalty(field, waypoints)
+            elif self.game_status == GameStates.PENALTY:
+                if self.refs.we_kick or 1:
+                    self.refs.penalty_kick(field, waypoints)
+                else:
+                    robot_with_ball = fld.find_nearest_robot(field.ball.get_pos(), field.enemies)
+                    waypoints[field.gk_id] = self.goalk(field, 0, robot_with_ball)[0]
+            elif self.game_status == GameStates.PREPARE_KICKOFF:
+                self.prepare_kickoff(field, waypoints)
+            elif self.game_status == GameStates.KICKOFF:
+                self.kickoff(field, waypoints)
+            elif self.game_status == GameStates.FREE_KICK:
+                self.run(field, waypoints)
+            elif self.game_status == GameStates.STOP:
+                self.run(field, waypoints)
 
         for rbt in field.allies:
             if rbt.is_used():
@@ -140,7 +96,6 @@ class Strategy:
         self.image.update_window()
         self.image.draw_field()
 
-        # waypoints[idx] = wp.Waypoint(pos, angle, wp.WType.S_ENDPOINT)
         return waypoints
 
     def run(self, field: fld.Field, waypoints: list[wp.Waypoint]) -> None:

@@ -3,11 +3,7 @@ draw field with robots and trajectory
 """
 
 import math
-import time
-from typing import Optional
 
-import matplotlib.pyplot as plt
-import numpy as np
 import pygame
 
 import bridge.processors.auxiliary as aux
@@ -26,7 +22,7 @@ class Image:
         self.disable = True
 
         width, heigh = 1200, 900
-        goal_dx, goal_dy = abs(const.GOAL_DX), abs(3000)
+        goal_dx, goal_dy = abs(const.GOAL_DX), abs(1500)
         self.scale = min(width / 2 / goal_dx, heigh / 2 / goal_dy)
         self.size_x = goal_dx * self.scale * 2
         self.size_y = goal_dy * self.scale * 2
@@ -109,15 +105,15 @@ class Image:
             self.screen, color, (pos.x * self.scale + self.middle_x, -pos.y * self.scale + self.middle_y), size
         )
 
-    def draw_line(self, dot1: aux.Point, dot2:aux.Point, size: int = 2, color: tuple[int, int, int] = (255, 255, 0)) -> None:
+    def draw_line(
+        self, dot1: aux.Point, dot2: aux.Point, size: int = 2, color: tuple[int, int, int] = (255, 255, 0)
+    ) -> None:
         """
         draw line
         """
         if self.disable:
             return
-        pygame.draw.line(
-            self.screen, color, (dot1.x, dot1.y), (dot2.x, dot2.y), size
-        )
+        pygame.draw.line(self.screen, color, (dot1.x, dot1.y), (dot2.x, dot2.y), size)
 
     def update_window(self) -> None:
 

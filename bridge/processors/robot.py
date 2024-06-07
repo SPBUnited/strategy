@@ -16,7 +16,7 @@ class Robot(entity.Entity):
     Описание робота
     """
 
-    def __init__(self, pos: aux.Point, angle: float, R: float, color: str, r_id: int, ctrl_id: int) -> None:
+    def __init__(self, pos: aux.Point, angle: float, R: float, color: const.Color, r_id: int, ctrl_id: int) -> None:
         super().__init__(pos, angle, R)
 
         self.r_id = r_id
@@ -69,12 +69,11 @@ class Robot(entity.Entity):
         # self.a0Flp = tau.FOLP(self.a0TF, const.Ts)
 
         # !v REAL
-        # if self.r_id != const.GK:
-        gains_full = [3, 0.25, 0, const.MAX_SPEED]
+        gains_full = [3, 0.18, 0, const.MAX_SPEED]
         gains_soft = [3, 0.18, 0.1, const.SOFT_MAX_SPEED]
+        a_gains_full = [20, 0, 0, const.MAX_SPEED_R]
         # gains_soft = [10, 0.32, 0, const.SOFT_MAX_SPEED]
         # gains_soft = gains_full
-        a_gains_full = [8, 0.1, 0, const.MAX_SPEED_R]
         if const.IS_SIMULATOR_USED:
             gains_full = [3, 0.35, 0, const.MAX_SPEED]
             gains_soft = [5, 0.35, 0, const.SOFT_MAX_SPEED]
@@ -183,6 +182,7 @@ class Robot(entity.Entity):
         self.dribbler_speed_ = robot.dribbler_speed_
         self.kicker_charge_enable_ = robot.kicker_charge_enable_
         self.beep = robot.beep
+        self.__is_used = robot.is_used()
 
     def clear_fields(self) -> None:
         """
@@ -207,7 +207,7 @@ class Robot(entity.Entity):
 
         commit_scale = 1.2 if self.is_kick_committed else 1
         is_dist = (self.get_pos() - target.pos).mag() < const.KICK_ALIGN_DIST * const.KICK_ALIGN_DIST_MULT * commit_scale
-        is_angle = self.is_kick_aligned_by_angle(target)
+        is_angle = self.is_kick_aligned_by_angle(target.angle)
         is_offset = (
             aux.dist(
                 aux.closest_point_on_line(
@@ -219,9 +219,6 @@ class Robot(entity.Entity):
         )
         is_aligned = is_dist and is_angle and is_offset
 
-        if self.r_id == 11:
-            print("is_dist: ", is_dist, ",\tis_angle: ", is_angle, ",\tis_offset: ", is_offset)
-
         if is_aligned:
             self.is_kick_committed = True
         else:
@@ -229,12 +226,12 @@ class Robot(entity.Entity):
 
         return is_aligned
 
-    def is_kick_aligned_by_angle(self, target: wp.Waypoint) -> bool:
+    def is_kick_aligned_by_angle(self, angle: float) -> bool:
         """
         Определить, выровнен ли робот относительно путевой точки target
         """
         commit_scale = 1.2 if self.is_kick_committed else 1
-        return abs(aux.wind_down_angle(self._angle - target.angle)) < const.KICK_ALIGN_ANGLE * commit_scale
+        return abs(aux.wind_down_angle(self._angle - angle)) < const.KICK_ALIGN_ANGLE * commit_scale
 
     def update_vel_xyw(self, vel: aux.Point, wvel: float) -> None:
         """
@@ -259,7 +256,10 @@ class Robot(entity.Entity):
         vec_speed = math.sqrt(self.speed_x**2 + self.speed_y**2)
         r_speed = abs(self.speed_r)
 
-        vec_speed *= ((const.MAX_SPEED_R - r_speed) / const.MAX_SPEED_R) ** 2
+        if const.IS_SIMULATOR_USED:
+            vec_speed *= (const.MAX_SPEED_R - r_speed) / const.MAX_SPEED_R
+        else:
+            vec_speed *= ((const.MAX_SPEED_R - r_speed) / const.MAX_SPEED_R) ** 4
 
         ang = math.atan2(self.speed_y, self.speed_x)
         self.speed_x = vec_speed * math.cos(ang)
@@ -287,109 +287,3 @@ class Robot(entity.Entity):
             + " "
             + str(self.speed_r)
         )
-
-
-def probability(inter: list[aux.Point], bots: list[Robot], pos: aux.Point) -> float:
-    """
-    TODO написать доку
-    """
-    res = 1.0
-    # print(len(inter), end = ' ')
-    for i, intr in enumerate(inter):
-        # koef = 1
-        # print([inter[i].x, inter[i].y, bots[i].get_pos().x, bots[i].get_pos().y])
-        tmp_res_x = aux.dist(intr, bots[i].get_pos())
-        tmp_res_y = math.sqrt(aux.dist(pos, bots[i].get_pos()) ** 2 - tmp_res_x**2)
-        ang = math.atan2(tmp_res_y, tmp_res_x)
-        # abs(ang) < math.pi / 4
-        if abs(ang) > math.pi / 2:
-            continue
-        # print(tmpRes)
-        # if tmpResX < 0:
-        #     koef = 0
-        # elif tmpResX > const.ROBOT_R * 15:
-        #     koef = 1
-        # else:
-        #     koef = tmpResX / (const.ROBOT_R * 15)
-        # res *= (2 * abs(ang) / math.pi) * (dist(st, bots[i].get_pos()) / 54e6)
-        res *= 1 / (2 * abs(ang) / math.pi)
-    return res
-
-
-def bot_position(pos: aux.Point, vecx: float, vecy: float) -> aux.Point:
-    """
-    TODO написать доку
-    """
-    modul = (vecx**2 + vecy**2) ** (0.5)
-    vecx = (vecx / modul) * const.ROBOT_R * 2
-    vecy = (vecy / modul) * const.ROBOT_R * 2
-    return aux.Point(pos.x - vecx, pos.y - vecy)
-
-
-def shot_decision(pos: aux.Point, end: list[aux.Point], tobj: list[Robot]) -> aux.Point:
-    """
-    TODO написать доку
-    """
-    objs = tobj.copy()
-    tmp_counter = 0
-    for obj in range(len(objs)):
-        if not objs[obj - tmp_counter].is_used():
-            objs.pop(obj - tmp_counter)
-            tmp_counter += 1
-    # mx_shot_prob = 0
-    # shot_point = pos
-    mx = 0.0
-    # tmp_sum = Point(0, 0)
-    # n = 0
-    # print(st)
-    # for bot in obj:
-    #     # print([bot.get_pos().x, bot.get_pos().y], end = " ")
-    #     plt.plot(bot.get_pos().x, bot.get_pos().y, 'bo')
-    # t = np.arange(-4500*1.0, 1000*1.0, 10)
-    for point in end:  # checkai
-        A = -(point.y - pos.y)
-        B = point.x - pos.x
-        C = pos.x * (point.y - pos.y) - pos.y * (point.x - pos.x)
-        tmp_line = aux.BobLine(A, B, C)
-        # plt.plot(t, (tmpLine.A*t + tmpLine.C)/tmpLine.B, 'g--')
-        lines = []
-        for bot in objs:
-            tmp_c = -(B * bot.get_pos().x - A * bot.get_pos().y)
-            line2 = aux.BobLine(B, -A, tmp_c)
-            lines.append(line2)
-        inter = aux.line_intersect(tmp_line, lines)
-        # plt.plot(inter[0].x, inter[0].y, 'bx')
-        # plt.plot(inter[1].x, inter[1].y, 'gx')
-        tmp_prob = probability(inter, objs, pos)
-        # print(tmp_prob, end = " ")
-        if tmp_prob > mx:
-            mx = tmp_prob
-            point_res = point
-            # shot_point = bot_position(pos, point.x - pos.x, point.y - pos.y)
-        # if tmp_prob > mx:
-        #     mx = tmp_prob
-        #     shot_point = botPosition(st, point.x - st.x, point.y - st.y)
-        #     point_res = point
-        #     n = 1
-        #     sum = point
-        # elif tmp_prob == mx:
-        #     sum += point
-        #     n += 1
-        # else:
-        #     point_res = sum / n
-        #     shot_point = botPosition(st, point_res.x - st.x, point_res.y - st.y)
-        #     sum = Point(0, 0)
-        #     n = 0
-    # plt.plot(t, -(point_res.A*t + point_res.C)/point_res.B, 'r-')
-    # plt.plot(shot_point.x, shot_point.y, 'r^')
-    # plt.axis('equal')
-    # plt.grid(True)
-    # plt.show()
-    return point_res
-
-
-def robots_ids(robots: list[Robot]) -> list[int]:
-    ids = []
-    for robot in robots:
-        ids.append(robot.r_id)
-    return ids
