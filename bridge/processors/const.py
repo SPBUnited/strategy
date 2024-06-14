@@ -4,21 +4,24 @@
 
 from enum import Enum
 
+
 class Color(Enum):
     """Класс с цветами"""
+
     ALL = 0
     BLUE = 1
     YELLOW = 2
 
+
 ##################################################
 # GAME SETTING CONSTS
-DIV = 'C'
-COLOR = Color.YELLOW
+DIV = "B"
+COLOR = Color.BLUE
 POLARITY = 1  # -1 если ворота синих на +x; 1 если ворота синих на -x
 
-IS_SIMULATOR_USED = False
-IS_DRIBLER_USED = False #dribler and upper_kick
-SELF_PLAY = True
+IS_SIMULATOR_USED = True
+IS_DRIBLER_USED = True  # dribler and upper_kick
+SELF_PLAY = False
 
 GK = 14
 PENALTY_KICKER = 13
@@ -54,7 +57,7 @@ CONTROL_MAPPING: dict[int, int] = {
     14: 14,
     15: 15,
 }
-REVERSED_KICK: list[int] = [13]
+REVERSED_KICK: list[int] = []
 
 for i in range(TEAM_ROBOTS_MAX_COUNT):
     try:
@@ -99,7 +102,7 @@ GOAL_DX = 4000
 GOAL_DY = 1000
 GOAL_PEN_DX = 1000
 GOAL_PEN_DY = 2000
-if DIV == 'C':
+if DIV == "C":
     GOAL_DX = 2250
     GOAL_DY = 800
     GOAL_PEN_DX = 500
@@ -123,7 +126,7 @@ ROBOT_SPEED = 1.5
 FULL_DELAY = 0.16
 
 
-#VOLTAGES
+# VOLTAGES
 VOLTAGE_PASS = 6
 VOLTAGE_SHOOT = 15
 VOLTAGE_UP = 15

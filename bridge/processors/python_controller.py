@@ -1,6 +1,7 @@
 """
 Модуль стратегии игры
 """
+
 import time
 
 import attr
@@ -116,22 +117,28 @@ class SSLController(BaseProcessor):
             # camera_id = detection.camera_id
             for ball in detection.balls:
                 balls.append(aux.Point(ball.x, ball.y))
-            
+
             cur_state, cur_active = self.state_machine.get_state()
             self.strategy.change_game_state(cur_state, cur_active)
             self.router.avoid_ball(False)
-            if cur_state in [state_machine.State.STOP] or (cur_active != const.Color.ALL and cur_active != self.field.ally_color):
+            if cur_state in [state_machine.State.STOP] or (
+                cur_active != const.Color.ALL and cur_active != self.field.ally_color
+            ):
                 self.router.avoid_ball(True)
 
             # TODO: Barrier states
             for robot_det in detection.robots_blue:
                 b_bots_id.append(robot_det.robot_id)
-                b_bots_pos[robot_det.robot_id].append(aux.Point(robot_det.x, robot_det.y))
+                b_bots_pos[robot_det.robot_id].append(
+                    aux.Point(robot_det.x, robot_det.y)
+                )
                 b_bots_ang[robot_det.robot_id].append(robot_det.orientation)
 
             for robot_det in detection.robots_yellow:
                 y_bots_id.append(robot_det.robot_id)
-                y_bots_pos[robot_det.robot_id].append(aux.Point(robot_det.x, robot_det.y))
+                y_bots_pos[robot_det.robot_id].append(
+                    aux.Point(robot_det.x, robot_det.y)
+                )
                 y_bots_ang[robot_det.robot_id].append(robot_det.orientation)
 
         if len(balls) != 0:
@@ -142,7 +149,10 @@ class SSLController(BaseProcessor):
             self.field.update_ball(ball, time.time())
         elif self.field.ally_with_ball is not None:
             ally = self.field.ally_with_ball
-            ball = ally.get_pos() + aux.rotate(aux.RIGHT, ally.get_angle()) * ally.get_radius() / 2
+            ball = (
+                ally.get_pos()
+                + aux.rotate(aux.RIGHT, ally.get_angle()) * ally.get_radius() / 2
+            )
             self.field.update_ball(ball, time.time())
 
         self.field.ally_with_ball = None
@@ -235,15 +245,24 @@ class SSLController(BaseProcessor):
             self.wait_10_sec_flag = False
             self.wait_ball_moved_flag = False
 
-            if cur_state in [state_machine.State.KICKOFF, state_machine.State.FREE_KICK, state_machine.State.PENALTY]:
+            if cur_state in [
+                state_machine.State.KICKOFF,
+                state_machine.State.FREE_KICK,
+                state_machine.State.PENALTY,
+            ]:
                 self.wait_10_sec_flag = True
                 self.wait_10_sec = time.time()
-            if cur_state in [state_machine.State.KICKOFF, state_machine.State.FREE_KICK]:
+            if cur_state in [
+                state_machine.State.KICKOFF,
+                state_machine.State.FREE_KICK,
+            ]:
                 self.wait_ball_moved_flag = True
                 self.wait_ball_moved = self.field.ball.get_pos()
         else:
             if self.wait_10_sec_flag and time.time() - self.wait_10_sec > 10:
-                self.state_machine.make_transition_(state_machine.Command.PASS_10_SECONDS)
+                self.state_machine.make_transition_(
+                    state_machine.Command.PASS_10_SECONDS
+                )
                 self.state_machine.active_team(0)
                 self.wait_10_sec_flag = False
                 self.wait_ball_moved_flag = False
@@ -253,7 +272,6 @@ class SSLController(BaseProcessor):
                 self.wait_10_sec_flag = False
                 self.wait_ball_moved_flag = False
         self.tmp += 1
-
 
     @debugger
     def process(self) -> None:
@@ -267,6 +285,5 @@ class SSLController(BaseProcessor):
         self.read_vision()
         self.process_referee_cmd()
         self.control_loop()
-
 
         self.control_assign()

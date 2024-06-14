@@ -5,12 +5,15 @@
 """
 
 import math
-import typing
+from typing import Optional
 
 import bridge.processors.auxiliary as aux
 from bridge.processors import const, field, route
 import bridge.processors.quickhull as qh
 import bridge.processors.waypoint as wp
+
+from bridge.processors.entity import Entity
+from bridge.processors.drawing import Image
 
 
 class Router:
@@ -22,8 +25,13 @@ class Router:
         """
         Конструктор
         """
-        self.routes = [route.Route(fld.allies[i]) for i in range(const.TEAM_ROBOTS_MAX_COUNT)]
+        self.routes = [
+            route.Route(fld.allies[i]) for i in range(const.TEAM_ROBOTS_MAX_COUNT)
+        ]
         self.__avoid_ball = False
+
+        self.image = Image()
+        self.image.draw_field()
 
     def avoid_ball(self, state: bool = True) -> None:
         """
@@ -38,6 +46,12 @@ class Router:
         for i in range(const.TEAM_ROBOTS_MAX_COUNT):
             self.routes[i].update(fld.allies[i])
 
+    def get_route(self, idx: int) -> route.Route:
+        """
+        Получить маршрут для робота с индексом idx
+        """
+        return self.routes[idx]
+
     def set_dest(self, idx: int, target: wp.Waypoint, fld: field.Field) -> None:
         """
         Установить единственную путевую точку для робота с индексом idx
@@ -48,29 +62,52 @@ class Router:
                 if aux.is_point_inside_poly(dest_pos, goal.big_hull):
                     closest_out = aux.nearest_point_on_poly(dest_pos, goal.big_hull)
                     angle0 = target.angle
-                    self.routes[idx].set_dest_wp(wp.Waypoint(closest_out, angle0, wp.WType.S_ENDPOINT))
+                    self.routes[idx].set_dest_wp(
+                        wp.Waypoint(closest_out, angle0, wp.WType.S_ENDPOINT)
+                    )
                     return
 
         if self.__avoid_ball:
             dest_pos = target.pos
-            if aux.is_point_inside_circle(dest_pos, fld.ball.get_pos(), const.KEEP_BALL_DIST):
+            if aux.is_point_inside_circle(
+                dest_pos, fld.ball.get_pos(), const.KEEP_BALL_DIST
+            ):
                 delta = -aux.rotate(aux.RIGHT, target.angle)
-                closest_out = aux.nearest_point_on_circle(dest_pos + delta, fld.ball.get_pos(), const.KEEP_BALL_DIST + const.ROBOT_R)
+                closest_out = aux.nearest_point_on_circle(
+                    dest_pos + delta,
+                    fld.ball.get_pos(),
+                    const.KEEP_BALL_DIST + const.ROBOT_R,
+                )
                 angle0 = target.angle
-                self.routes[idx].set_dest_wp(wp.Waypoint(closest_out, angle0, wp.WType.S_ENDPOINT))
+                self.routes[idx].set_dest_wp(
+                    wp.Waypoint(closest_out, angle0, wp.WType.S_ENDPOINT)
+                )
                 return
 
         if abs(target.pos.x) > const.GOAL_DX:
             target.pos.x = const.GOAL_DX * aux.sign(target.pos.x)
-        if abs(target.pos.y) > 1500:
-            target.pos.y = 1500 * aux.sign(target.pos.y)
+        if abs(target.pos.y) > 3000:
+            target.pos.y = 3000 * aux.sign(target.pos.y)
         self.routes[idx].set_dest_wp(target)
 
     def reroute(self, fld: field.Field) -> None:
         """
         Рассчитать маршруты по актуальным путевым точкам
         """
-        for idx in range(const.TEAM_ROBOTS_MAX_COUNT):
+        self.image.draw_field()
+        for rbt in fld.allies:
+            if rbt.is_used():
+                self.image.draw_robot(rbt.get_pos(), rbt.get_angle())
+        for rbt in fld.enemies:
+            if rbt.is_used():
+                self.image.draw_robot(rbt.get_pos(), rbt.get_angle(), (255, 255, 0))
+        self.image.draw_dot(fld.ball.get_pos(), 5)
+        self.image.draw_poly(fld.ally_goal.hull)
+        self.image.draw_poly(fld.enemy_goal.hull)
+
+        self.image.draw_dot(self.routes[0].get_next_wp().pos, 8)
+
+        for idx in [0]:  # NOTE
 
             self_pos = fld.allies[idx].get_pos()
 
@@ -92,53 +129,95 @@ class Router:
                 align_wp = self.calc_grab_wp(idx)
                 self.routes[idx].insert_wp(align_wp)
 
-            if idx == fld.gk_id or self.routes[idx].get_dest_wp().type == wp.WType.R_IGNORE_GOAl_HULL:
-                pth_wp = self.calc_vector_field(idx, fld)
+            if (
+                idx == fld.gk_id
+                or self.routes[idx].get_dest_wp().type == wp.WType.R_IGNORE_GOAl_HULL
+            ):
+                pth_wp = self.calc_passthrough_wp(fld, idx)
                 if pth_wp is not None:
                     self.routes[idx].insert_wp(pth_wp)
                 continue
 
             for goal in [fld.ally_goal, fld.enemy_goal]:
                 if aux.is_point_inside_poly(self_pos, goal.hull):
-                    closest_out = aux.find_nearest_point(self_pos, goal.big_hull, [goal.up, aux.GRAVEYARD_POS, goal.down])
+                    closest_out = aux.find_nearest_point(
+                        self_pos, goal.big_hull, [goal.up, aux.GRAVEYARD_POS, goal.down]
+                    )
                     angle0 = self.routes[idx].get_dest_wp().angle
                     self.routes[idx].set_dest_wp(
-                        wp.Waypoint(goal.center + (closest_out - goal.center) * 1.2, angle0, wp.WType.S_ENDPOINT)
+                        wp.Waypoint(
+                            goal.center + (closest_out - goal.center) * 1.2,
+                            angle0,
+                            wp.WType.S_ENDPOINT,
+                        )
                     )
                     continue
-                pint = aux.segment_poly_intersect(self_pos, self.routes[idx].get_next_wp().pos, goal.hull)
+                pint = aux.segment_poly_intersect(
+                    self_pos, self.routes[idx].get_next_wp().pos, goal.hull
+                )
                 if pint is not None:
                     angle0 = self.routes[idx].get_dest_wp().angle
-                    if aux.is_point_inside_poly(self.routes[idx].get_dest_wp().pos, goal.big_hull):
-                        self.routes[idx].set_dest_wp(wp.Waypoint(pint, angle0, wp.WType.S_ENDPOINT))
+                    if aux.is_point_inside_poly(
+                        self.routes[idx].get_dest_wp().pos, goal.big_hull
+                    ):
+                        self.routes[idx].set_dest_wp(
+                            wp.Waypoint(pint, angle0, wp.WType.S_ENDPOINT)
+                        )
                         break
-                    convex_hull = qh.shortesthull(self_pos, self_pos + self.routes[idx].get_next_vec(), goal.big_hull)
+                    convex_hull = qh.shortesthull(
+                        self_pos,
+                        self_pos + self.routes[idx].get_next_vec(),
+                        goal.big_hull,
+                    )
                     for j in range(len(convex_hull) - 2, 0, -1):
-                        self.routes[idx].insert_wp(wp.Waypoint(convex_hull[j], angle0, wp.WType.R_PASSTHROUGH))
+                        self.routes[idx].insert_wp(
+                            wp.Waypoint(convex_hull[j], angle0, wp.WType.R_PASSTHROUGH)
+                        )
 
             if self.__avoid_ball:
                 dest_pos = self.routes[idx].get_dest_wp().pos
                 self_pos = fld.allies[idx].get_pos()
                 angle0 = self.routes[idx].get_dest_wp().angle
-                if aux.is_point_inside_circle(self_pos, fld.ball.get_pos(), const.KEEP_BALL_DIST):
-                    closest_out = aux.nearest_point_on_circle(self_pos, fld.ball.get_pos(), const.KEEP_BALL_DIST)
-                    self.routes[idx].insert_wp(wp.Waypoint(closest_out, angle0, wp.WType.R_PASSTHROUGH))
+                if aux.is_point_inside_circle(
+                    self_pos, fld.ball.get_pos(), const.KEEP_BALL_DIST
+                ):
+                    closest_out = aux.nearest_point_on_circle(
+                        self_pos, fld.ball.get_pos(), const.KEEP_BALL_DIST
+                    )
+                    self.routes[idx].insert_wp(
+                        wp.Waypoint(closest_out, angle0, wp.WType.R_PASSTHROUGH)
+                    )
                     continue
-                points = aux.line_circle_intersect(self_pos, dest_pos, fld.ball.get_pos(), const.KEEP_BALL_DIST) 
+                points = aux.line_circle_intersect(
+                    self_pos, dest_pos, fld.ball.get_pos(), const.KEEP_BALL_DIST
+                )
                 if points is None:
                     continue
                 if len(points) == 2:
-                    points = aux.get_tangent_points(fld.ball.get_pos(), self_pos, const.KEEP_BALL_DIST)
+                    points = aux.get_tangent_points(
+                        fld.ball.get_pos(), self_pos, const.KEEP_BALL_DIST
+                    )
                     p = aux.Point(0, 0)
                     if points is None:
                         continue
                     if len(points) == 2:
-                        p = points[0] if aux.dist(points[0], dest_pos) < aux.dist(points[1], dest_pos) else points[1]
+                        p = (
+                            points[0]
+                            if aux.dist(points[0], dest_pos)
+                            < aux.dist(points[1], dest_pos)
+                            else points[1]
+                        )
                     else:
                         p = points[0]
-                    self.routes[idx].insert_wp(wp.Waypoint(p + (p - fld.ball.get_pos()).unity() * const.ROBOT_R, angle0, wp.WType.R_PASSTHROUGH))
-                        
-            pth_wp = self.calc_vector_field(idx, fld)
+                    self.routes[idx].insert_wp(
+                        wp.Waypoint(
+                            p + (p - fld.ball.get_pos()).unity() * const.ROBOT_R,
+                            angle0,
+                            wp.WType.R_PASSTHROUGH,
+                        )
+                    )
+
+            pth_wp = self.calc_passthrough_wp(fld, idx)
             if pth_wp is not None:
                 is_inside = False
                 for goal in [fld.ally_goal, fld.enemy_goal]:
@@ -148,71 +227,7 @@ class Router:
                 if not is_inside:
                     self.routes[idx].insert_wp(pth_wp)
 
-    def calc_vector_field(self, idx: int, fld: field.Field) -> typing.Optional[wp.Waypoint]:
-        """
-        Рассчитать ближайшую промежуточную путевую точку
-        согласно первому приближению векторного поля
-        """
-        self_pos = fld.allies[idx].get_pos()
-        target_point = self.routes[idx].get_next_wp()
-        dist = (self_pos - target_point.pos).mag()
-
-        vector_field_threshold = 200
-        if dist < vector_field_threshold:
-            return None
-
-        if (
-            self.routes[idx].get_dest_wp().type
-            in [
-                wp.WType.S_IGNOREOBSTACLES,
-                wp.WType.S_BALL_GO,
-                wp.WType.R_IGNORE_GOAl_HULL
-            ]
-        ):
-            return None
-
-        sep_dist = 500
-        ball_sep_dist = 150
-
-        closest_robot: typing.Any = None
-        closest_dist = dist
-
-        # Расчет теней роботов для векторного поля
-        for r in fld.all_bots:
-            if r.r_id == idx or r.is_used() == 0:
-                continue
-            robot_separation = aux.dist(aux.closest_point_on_line(self_pos, target_point.pos, r.get_pos()), r.get_pos())
-            robot_dist = aux.dist(self_pos, r.get_pos())
-            if robot_dist == 0:
-                continue
-            if robot_separation < sep_dist and robot_dist < closest_dist:
-                closest_robot = r
-                closest_dist = robot_dist
-                closest_separation = robot_separation
-        ball_separation = aux.dist(
-            aux.closest_point_on_line(self_pos, target_point.pos, fld.ball.get_pos()), fld.ball.get_pos()
-        )
-        ball_dist = aux.dist(self_pos, fld.ball.get_pos())
-        if ball_separation < ball_sep_dist and ball_dist < closest_dist:
-            closest_robot = fld.ball
-            closest_dist = ball_dist
-            closest_separation = ball_separation
-
-        passthrough_wp_pos = target_point.pos - self_pos
-        # angle_cos = aux.scal_mult((closest_robot.get_pos() - self_pos).unity(),
-        # (target_point.pos - self_pos).unity())
-        if closest_robot is not None and closest_dist != 0:
-            side = aux.vec_mult(closest_robot.get_pos() - self_pos, target_point.pos - self_pos)
-            # offset_angle_val = 200*math.pi/6 * closest_dist**(-2)
-            offset_angle_val = -2 * math.atan((sep_dist - closest_separation) / (2 * (closest_dist)))
-            offset_angle = offset_angle_val if side < 0 else -offset_angle_val
-            passthrough_wp_pos = self_pos + aux.rotate(target_point.pos - self_pos, offset_angle)
-
-            passthrough_wp = wp.Waypoint(passthrough_wp_pos, 0, wp.WType.R_PASSTHROUGH)
-        else:
-            passthrough_wp = None
-
-        return passthrough_wp
+        self.image.update_window()
 
     def calc_kick_wp(self, idx: int) -> wp.Waypoint:
         """
@@ -222,7 +237,9 @@ class Router:
         target_pos = target_point.pos
         target_angle = target_point.angle
 
-        align_pos = target_pos - aux.rotate(aux.RIGHT, target_angle) * const.KICK_ALIGN_DIST
+        align_pos = (
+            target_pos - aux.rotate(aux.RIGHT, target_angle) * const.KICK_ALIGN_DIST
+        )
         align_angle = target_angle
         align_type = wp.WType.R_BALL_ALIGN
         # align_type = wp.WType.S_ENDPOINT
@@ -237,15 +254,116 @@ class Router:
         target_pos = target_point.pos
         target_angle = target_point.angle
 
-        align_pos = target_pos - aux.rotate(aux.RIGHT, target_angle) * const.GRAB_ALIGN_DIST
+        align_pos = (
+            target_pos - aux.rotate(aux.RIGHT, target_angle) * const.GRAB_ALIGN_DIST
+        )
         align_angle = target_angle
         align_type = wp.WType.R_BALL_ALIGN
         # align_type = wp.WType.S_ENDPOINT
         align_wp = wp.Waypoint(align_pos, align_angle, align_type)
         return align_wp
 
-    def get_route(self, idx: int) -> route.Route:
+    def calc_passthrough_wp(
+        self, fld: field.Field, idx: int, obstacles: Optional[list[Entity]] = None
+    ) -> Optional[wp.Waypoint]:
         """
-        Получить маршрут для робота с индексом idx
+        Рассчитать ближайшую промежуточную путевую точку
+        согласно первому приближению векторного поля
         """
-        return self.routes[idx]
+        robot = fld.allies[idx]
+        target = self.routes[idx].get_next_wp().pos
+        # self.image.draw_dot(target)
+
+        if obstacles is None:
+            obstacles_dist: list[tuple[Entity, float]] = []
+
+            # for obstacle in fld.allies:
+            #     dist = (obstacle.get_pos() - robot.get_pos()).mag()
+            #     if dist > obstacle.get_radius() + robot.get_radius():
+            #         obstacles_dist.append((obstacle.to_entity(), dist))
+
+            for obstacle in fld.enemies:
+                dist = (obstacle.get_pos() - robot.get_pos()).mag()
+                if dist > obstacle.get_radius() + robot.get_radius():
+                    obstacles_dist.append((obstacle.to_entity(), dist))
+
+            sorted_obstacles = sorted(obstacles_dist, key=lambda x: x[1])
+
+            obstacles = []
+            for obst in sorted_obstacles:
+                obstacles.append(obst[0])
+
+        pth_point, length = self.calc_next_point(robot.get_pos(), target, obstacles)
+        self.image.draw_line(robot.get_pos(), pth_point, color=(0, 0, 0))
+        if pth_point == target:
+            return None
+        angle = self.routes[idx].get_next_angle()
+        return wp.Waypoint(pth_point, angle, wp.WType.R_PASSTHROUGH)
+
+    def calc_next_point(
+        self, position: aux.Point, target: aux.Point, obstacles: list[Entity]
+    ) -> tuple[aux.Point, float]:
+        remaining_obstacles: list[Entity] = obstacles
+        skipped_obstacles: list[Entity] = []
+        while len(remaining_obstacles) > 1:
+            obstacle = remaining_obstacles.pop(0)
+            skipped_obstacles.append(obstacle)
+            if (
+                aux.line_circle_intersect(
+                    position,
+                    target,
+                    obstacle.get_pos(),
+                    obstacle.get_radius() + const.ROBOT_R,
+                )
+                is not None
+            ):
+                tangents = aux.get_tangent_points(
+                    obstacle.get_pos(), position, obstacle.get_radius() + const.ROBOT_R
+                )
+                if tangents is None or len(tangents) < 2:
+                    continue
+
+                tangents[0] = aux.point_on_line(
+                    obstacle.get_pos(),
+                    tangents[0],
+                    obstacle.get_radius() + const.ROBOT_R * 1.5,
+                )
+                tangents[1] = aux.point_on_line(
+                    obstacle.get_pos(),
+                    tangents[1],
+                    obstacle.get_radius() + const.ROBOT_R * 1.5,
+                )
+
+                point_before: list[aux.Point] = [aux.Point(0, 0) for _ in range(2)]
+                length_before: list[float] = [0 for _ in range(2)]
+                point_before[0], length_before[0] = self.calc_next_point(
+                    position, tangents[0], skipped_obstacles[:-1]
+                )
+                point_before[1], length_before[1] = self.calc_next_point(
+                    position, tangents[1], skipped_obstacles[:-1]
+                )
+
+                length_after: list[float] = [0 for _ in range(2)]
+                _, length_after[0] = self.calc_next_point(
+                    tangents[0], target, remaining_obstacles
+                )
+                _, length_after[1] = self.calc_next_point(
+                    tangents[1], target, remaining_obstacles
+                )
+
+                length0 = length_before[0] + length_after[0]
+                length1 = length_before[1] + length_after[1]
+                if length0 < length1:
+                    pth_point = point_before[0]
+                    length = length_before[0] + length_after[0]
+                else:
+                    pth_point = point_before[1]
+                    length = length_before[1] + length_after[1]
+
+                print("pth_point: ", pth_point)
+                self.image.draw_line(position, pth_point, color=(255, 0, 255))
+
+                return (pth_point, length)
+
+        self.image.draw_line(position, target, color=(255, 0, 127))
+        return target, aux.dist(position, target)

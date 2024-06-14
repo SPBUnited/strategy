@@ -168,7 +168,9 @@ class Route:
 
         lerp_angles = [target_point.angle, angle60]
 
-        angle0 = aux.lerp(lerp_angles[0], lerp_angles[1], aux.minmax((dist - 100) / 1000, 0, 1))
+        angle0 = aux.lerp(
+            lerp_angles[0], lerp_angles[1], aux.minmax((dist - 100) / 1000, 0, 1)
+        )
 
         rbt.pos_reg_x.select_mode(tau.Mode.NORMAL)
         rbt.pos_reg_y.select_mode(tau.Mode.NORMAL)
@@ -190,7 +192,6 @@ class Route:
                 angle0 = end_point.angle
 
             rbt.dribbler_enable_ = True
-            print("asd",rbt.r_id, rbt.kicker_voltage_)
             rbt.dribbler_speed_ = 15
             if rbt.kicker_voltage_ == 0:
                 rbt.kicker_voltage_ = const.VOLTAGE_SHOOT
@@ -233,7 +234,7 @@ class Route:
             angle0 = end_point.angle
 
             if target_point.type == wp.WType.R_PASSTHROUGH:
-                transl_vel = transl_vel.unity() * const.MAX_SPEED
+                transl_vel = -vec_err.unity() * const.MAX_SPEED
 
         aerr = aux.wind_down_angle(angle0 - rbt.get_angle())
 
@@ -261,7 +262,9 @@ class Route:
             rbt.auto_kick_ = 1
             if rbt.r_id < 9:
                 rbt.auto_kick_ = 2
-        elif end_point.type == wp.WType.S_BALL_KICK_UP and rbt.is_kick_aligned_by_angle(end_point.angle):
+        elif end_point.type == wp.WType.S_BALL_KICK_UP and rbt.is_kick_aligned_by_angle(
+            end_point.angle
+        ):
             rbt.auto_kick_ = 2
         else:
             rbt.auto_kick_ = 0

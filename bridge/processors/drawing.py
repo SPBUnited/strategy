@@ -19,10 +19,10 @@ class Image:
     """
 
     def __init__(self) -> None:
-        self.disable = True
+        self.disable = False
 
         width, heigh = 1200, 900
-        goal_dx, goal_dy = abs(const.GOAL_DX), abs(1500)
+        goal_dx, goal_dy = abs(const.GOAL_DX), abs(3000)
         self.scale = min(width / 2 / goal_dx, heigh / 2 / goal_dy)
         self.size_x = goal_dx * self.scale * 2
         self.size_y = goal_dy * self.scale * 2
@@ -39,6 +39,11 @@ class Image:
             self.left_border = self.middle_x - goal_dx * self.scale
             self.right_border = self.middle_x + goal_dx * self.scale
 
+    def calc_coord_to_pixel(self, point: aux.Point) -> aux.Point:
+        return aux.Point(
+            point.x * self.scale + self.middle_x, -point.y * self.scale + self.middle_y
+        )
+
     def draw_field(self) -> None:
         """
         draw green field and white lines
@@ -50,19 +55,38 @@ class Image:
         field_color = (20, 178, 10)
         line_color = (255, 255, 255)
         self.screen.fill(back_color)
-        pygame.draw.rect(self.screen, field_color, (self.left_border, self.upper_border, self.size_x, self.size_y))  # Поле
         pygame.draw.rect(
-            self.screen, line_color, (self.left_border, self.upper_border, self.size_x, self.size_y), 2
+            self.screen,
+            field_color,
+            (self.left_border, self.upper_border, self.size_x, self.size_y),
+        )  # Поле
+        pygame.draw.rect(
+            self.screen,
+            line_color,
+            (self.left_border, self.upper_border, self.size_x, self.size_y),
+            2,
         )  # Обводка поля
         pygame.draw.line(
-            self.screen, line_color, (self.left_border, self.middle_y), (self.right_border, self.middle_y), 2
+            self.screen,
+            line_color,
+            (self.left_border, self.middle_y),
+            (self.right_border, self.middle_y),
+            2,
         )  # Горизонтальная линия
         pygame.draw.line(
-            self.screen, line_color, (self.middle_x, self.upper_border), (self.middle_x, self.lower_border), 2
+            self.screen,
+            line_color,
+            (self.middle_x, self.upper_border),
+            (self.middle_x, self.lower_border),
+            2,
         )  # Вертикальная линия
-        pygame.draw.circle(self.screen, line_color, (self.middle_x, self.middle_y), 50, 2)  # Круг в центре
+        pygame.draw.circle(
+            self.screen, line_color, (self.middle_x, self.middle_y), 50, 2
+        )  # Круг в центре
 
-    def draw_poly(self, dots: list[aux.Point], color: tuple[int, int, int] = (255, 255, 255)) -> None:
+    def draw_poly(
+        self, dots: list[aux.Point], color: tuple[int, int, int] = (255, 255, 255)
+    ) -> None:
         """
         Connect nearest dots with line
         """
@@ -73,10 +97,27 @@ class Image:
             new_dots[i] = dot * self.scale + aux.Point(self.middle_x, self.middle_y)
 
         for i in range(len(new_dots) - 1):
-            pygame.draw.line(self.screen, color, (new_dots[i].x, new_dots[i].y), (new_dots[i + 1].x, new_dots[i + 1].y), 2)
-        pygame.draw.line(self.screen, color, (dots[len(dots) - 1].x, dots[len(dots) - 1].y), (dots[0].x, dots[0].y), 2)
+            pygame.draw.line(
+                self.screen,
+                color,
+                (new_dots[i].x, new_dots[i].y),
+                (new_dots[i + 1].x, new_dots[i + 1].y),
+                2,
+            )
+        pygame.draw.line(
+            self.screen,
+            color,
+            (dots[len(dots) - 1].x, dots[len(dots) - 1].y),
+            (dots[0].x, dots[0].y),
+            2,
+        )
 
-    def draw_robot(self, r: aux.Point, angle: float = 0.0, robot_color: tuple[int, int, int] = (0, 0, 255)) -> None:
+    def draw_robot(
+        self,
+        r: aux.Point,
+        angle: float = 0.0,
+        robot_color: tuple[int, int, int] = (0, 0, 255),
+    ) -> None:
         """
         draw robot
         """
@@ -89,38 +130,59 @@ class Image:
             int(-r.y * self.scale + self.middle_y - robot_length * math.sin(angle)),
         )
         pygame.draw.circle(
-            self.screen, robot_color, [r.x * self.scale + self.middle_x, -r.y * self.scale + self.middle_y], robot_radius
+            self.screen,
+            robot_color,
+            [r.x * self.scale + self.middle_x, -r.y * self.scale + self.middle_y],
+            robot_radius,
         )
         pygame.draw.line(
-            self.screen, robot_color, [r.x * self.scale + self.middle_x, -r.y * self.scale + self.middle_y], end_point, 2
+            self.screen,
+            robot_color,
+            [r.x * self.scale + self.middle_x, -r.y * self.scale + self.middle_y],
+            end_point,
+            2,
         )
 
-    def draw_dot(self, pos: aux.Point, size: float = 3, color: tuple[int, int, int] = (255, 0, 0)) -> None:
+    def draw_dot(
+        self, pos: aux.Point, size: float = 3, color: tuple[int, int, int] = (255, 0, 0)
+    ) -> None:
         """
         draw single point
         """
         if self.disable:
             return
+
+        point = self.calc_coord_to_pixel(pos)
         pygame.draw.circle(
-            self.screen, color, (pos.x * self.scale + self.middle_x, -pos.y * self.scale + self.middle_y), size
+            self.screen,
+            color,
+            (point.x, point.y),
+            size,
         )
 
     def draw_line(
-        self, dot1: aux.Point, dot2: aux.Point, size: int = 2, color: tuple[int, int, int] = (255, 255, 0)
+        self,
+        dot1: aux.Point,
+        dot2: aux.Point,
+        size: int = 2,
+        color: tuple[int, int, int] = (255, 255, 0),
     ) -> None:
         """
         draw line
         """
         if self.disable:
             return
+
+        dot1 = self.calc_coord_to_pixel(dot1)
+        dot2 = self.calc_coord_to_pixel(dot2)
         pygame.draw.line(self.screen, color, (dot1.x, dot1.y), (dot2.x, dot2.y), size)
 
     def update_window(self) -> None:
-
         """
         update image
         """
         if self.disable:
             return
         pygame.display.flip()
+        pygame.event.get()
         # self.draw_field()

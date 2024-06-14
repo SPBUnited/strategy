@@ -16,7 +16,7 @@ from bridge.processors.robot_command_sink import CommandSink
 
 if __name__ == "__main__":
 
-    config.init_logging("./logs")
+    # config.init_logging("./logs")
 
     # TODO: Move list of processors to config
     PROCESSORS = [
@@ -39,7 +39,11 @@ if __name__ == "__main__":
             dbg_state=strategy.States.ATTACK,
         ),
         CommandSink(processing_pause=const.Ts / 2),  # , should_debug=True
-        RobotCommandsSender(processing_pause=const.Ts / 2, should_debug=True, reduce_pause_on_process_time=True),
+        RobotCommandsSender(
+            processing_pause=const.Ts / 2,
+            should_debug=True,
+            reduce_pause_on_process_time=True,
+        ),
     ]
 
     RUNNER = Runner(processors=PROCESSORS)

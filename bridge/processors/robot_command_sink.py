@@ -1,6 +1,7 @@
 """
 Модуль-прослойка между стратегией и отправкой пакетов на роботов
 """
+
 import struct
 import typing
 
@@ -28,10 +29,12 @@ class CommandSink(BaseProcessor):
     commands_writer: DataWriter = attr.ib(init=False)
 
     b_control_team = [
-        robot.Robot(aux.GRAVEYARD_POS, 0, const.ROBOT_R, "b", i, 0) for i in range(const.TEAM_ROBOTS_MAX_COUNT)
+        robot.Robot(aux.GRAVEYARD_POS, 0, const.ROBOT_R, "b", i, 0)
+        for i in range(const.TEAM_ROBOTS_MAX_COUNT)
     ]
     y_control_team = [
-        robot.Robot(aux.GRAVEYARD_POS, 0, const.ROBOT_R, "y", i, 0) for i in range(const.TEAM_ROBOTS_MAX_COUNT)
+        robot.Robot(aux.GRAVEYARD_POS, 0, const.ROBOT_R, "y", i, 0)
+        for i in range(const.TEAM_ROBOTS_MAX_COUNT)
     ]
 
     def initialize(self, data_bus: DataBus) -> None:
@@ -40,7 +43,9 @@ class CommandSink(BaseProcessor):
         """
         super(CommandSink, self).initialize(data_bus)
         self.commands_sink_reader = DataReader(data_bus, const.TOPIC_SINK, 20)
-        self.commands_writer = DataWriter(data_bus, config.ROBOT_COMMANDS_TOPIC, self.max_commands_to_persist)
+        self.commands_writer = DataWriter(
+            data_bus, config.ROBOT_COMMANDS_TOPIC, self.max_commands_to_persist
+        )
 
     def process(self) -> None:
         """
@@ -69,8 +74,7 @@ class CommandSink(BaseProcessor):
                 self.b_control_team[ctrl_id].copy_control_fields(r)
             elif r.color == const.Color.YELLOW:
                 self.y_control_team[ctrl_id].copy_control_fields(r)
-                #self.y_control_team[ctrl_id].used(1)
-
+                # self.y_control_team[ctrl_id].used(1)
 
         rules = self.get_rules()
 
@@ -126,8 +130,12 @@ class CommandSink(BaseProcessor):
                 rules.append(0)
         else:
             for i in range(const.TEAM_ROBOTS_MAX_COUNT):
-                control_team = self.y_control_team if self.y_control_team[i].is_used() else self.b_control_team
-            
+                control_team = (
+                    self.y_control_team
+                    if self.y_control_team[i].is_used()
+                    else self.b_control_team
+                )
+
                 if self.y_control_team[i].is_used():
                     pass
                 elif self.b_control_team[i].is_used():
@@ -138,7 +146,7 @@ class CommandSink(BaseProcessor):
                     continue
 
                 if not const.IS_DRIBLER_USED:
-                    if round(time()*2) % 10 == 0:
+                    if round(time() * 2) % 10 == 0:
                         control_team[i].dribbler_enable_ = 1
                         control_team[i].dribbler_speed_ = 1
                     else:
