@@ -116,9 +116,9 @@ class CommandSink(BaseProcessor):
                 if abs(self.y_control_team[i].speed_r) < 1.5:
                     self.y_control_team[i].speed_r = 0
                 rules.append(0)
-                rules.append(self.y_control_team[i].speed_x)
+                rules.append(10)
                 rules.append(self.y_control_team[i].speed_y)
-                rules.append(self.y_control_team[i].speed_r)
+                rules.append(0)
                 rules.append(self.y_control_team[i].kick_up_)
                 rules.append(self.y_control_team[i].kick_forward_)
                 rules.append(self.y_control_team[i].auto_kick_)

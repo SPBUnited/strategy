@@ -22,7 +22,9 @@ class Entity:
     Хранит положение, скорость, угол и тп.
     """
 
-    def __init__(self, pos: aux.Point, angle: float, R: float, T: float = const.Ts) -> None:
+    def __init__(
+        self, pos: aux.Point, angle: float, R: float, T: float = const.Ts
+    ) -> None:
         """
         Конструктор
 
@@ -46,7 +48,6 @@ class Entity:
         self._radius = R
         self.last_update_ = 0.0
 
-        self.__launch_flag = False
         self.__launch_timer = time()
 
     def update(self, pos: aux.Point, angle: float, t: float) -> None:
@@ -65,9 +66,6 @@ class Entity:
         self._anglevel = self._vel_fr.process(self._angle)
         self.last_update_ = t
 
-        if not self.__launch_flag and time() - self.__launch_timer > 5:
-             self.__launch_flag = True
-
     def last_update(self) -> float:
         """
         Получить время последнего обновления
@@ -84,8 +82,6 @@ class Entity:
 
     def get_vel(self) -> aux.Point:
         """Геттер скорости"""
-        if not self.__launch_flag:
-            return self._vel * 0
         return self._vel
 
     def get_acc(self) -> aux.Point:

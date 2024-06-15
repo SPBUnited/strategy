@@ -95,12 +95,6 @@ class Router:
         Рассчитать маршруты по актуальным путевым точкам
         """
         self.image.draw_field()
-        for rbt in fld.allies:
-            if rbt.is_used():
-                self.image.draw_robot(rbt.get_pos(), rbt.get_angle())
-        for rbt in fld.enemies:
-            if rbt.is_used():
-                self.image.draw_robot(rbt.get_pos(), rbt.get_angle(), (255, 255, 0))
         self.image.draw_dot(fld.ball.get_pos(), 5)
         self.image.draw_poly(fld.ally_goal.hull)
         self.image.draw_poly(fld.enemy_goal.hull)
@@ -227,6 +221,12 @@ class Router:
                 if not is_inside:
                     self.routes[idx].insert_wp(pth_wp)
 
+        for rbt in fld.allies:
+            if rbt.is_used():
+                self.image.draw_robot(rbt.get_pos(), rbt.get_angle())
+        for rbt in fld.enemies:
+            if rbt.is_used():
+                self.image.draw_robot(rbt.get_pos(), rbt.get_angle(), (255, 255, 0))
         self.image.update_window()
 
     def calc_kick_wp(self, idx: int) -> wp.Waypoint:
@@ -308,30 +308,43 @@ class Router:
         while len(remaining_obstacles) > 1:
             obstacle = remaining_obstacles.pop(0)
             skipped_obstacles.append(obstacle)
+
+            time_to_reach = aux.dist(obstacle.get_pos(), position) / const.MAX_SPEED
+            center = obstacle.get_pos() + obstacle.get_vel() * time_to_reach
+            radius = (
+                obstacle.get_radius()
+                + const.ROBOT_R
+                + time_to_reach
+                * obstacle.get_vel().mag()
+                * 0.3  # <-- coefficient of fear [0; 1]
+            )
+            self.image.draw_dot(
+                center,
+                radius * self.image.scale,
+                (127, 127, 127),
+            )
             if (
                 aux.line_circle_intersect(
                     position,
                     target,
-                    obstacle.get_pos(),
-                    obstacle.get_radius() + const.ROBOT_R,
+                    center,
+                    radius,
                 )
                 is not None
             ):
-                tangents = aux.get_tangent_points(
-                    obstacle.get_pos(), position, obstacle.get_radius() + const.ROBOT_R
-                )
+                tangents = aux.get_tangent_points(center, position, radius)
                 if tangents is None or len(tangents) < 2:
                     continue
 
                 tangents[0] = aux.point_on_line(
-                    obstacle.get_pos(),
+                    center,
                     tangents[0],
-                    obstacle.get_radius() + const.ROBOT_R * 1.5,
+                    radius + const.ROBOT_R * 0.5,
                 )
                 tangents[1] = aux.point_on_line(
-                    obstacle.get_pos(),
+                    center,
                     tangents[1],
-                    obstacle.get_radius() + const.ROBOT_R * 1.5,
+                    radius + const.ROBOT_R * 0.5,
                 )
 
                 point_before: list[aux.Point] = [aux.Point(0, 0) for _ in range(2)]
