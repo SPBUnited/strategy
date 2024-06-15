@@ -2,7 +2,6 @@
 Точка входа в стратегию
 """
 
-from strategy_bridge.common import config
 from strategy_bridge.processors import RobotCommandsSender, VisionDetectionsCollector
 from strategy_bridge.processors.referee_commands_collector import (
     RefereeCommandsCollector,
@@ -13,6 +12,7 @@ import bridge.processors.const as const
 import bridge.processors.strategy as strategy
 from bridge.processors.python_controller import SSLController
 from bridge.processors.robot_command_sink import CommandSink
+from bridge.processors.field_creator import FieldCreator
 
 if __name__ == "__main__":
 
@@ -30,6 +30,7 @@ if __name__ == "__main__":
         #     dbg_game_status=strategy.GameStates.RUN,
         #     dbg_state=strategy.States.ATTACK,
         # ),
+        FieldCreator(processing_pause=const.Ts / 2),
         SSLController(
             ally_color=const.COLOR,
             # should_debug=True,

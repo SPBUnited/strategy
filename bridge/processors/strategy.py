@@ -199,12 +199,15 @@ class Strategy:
             if role == Role.GOALKEEPER:
                 robot_id = field.gk_id
             elif role == Role.ATTACKER:
-                if field.ally_with_ball is None or field.ally_with_ball == field.gk_id:
+                if (
+                    not field.robot_with_ball in field.allies
+                    or field.robot_with_ball == field.allies[field.gk_id]
+                ):
                     robot_id = fld.find_nearest_robot(
                         field.ball.get_pos(), field.allies, used_ids
                     ).r_id
                 else:
-                    robot_id = field.ally_with_ball.r_id
+                    robot_id = field.robot_with_ball.r_id
             elif role == Role.WALLLINER:
                 robot_id = fld.find_nearest_robot(wall_pos, field.allies, used_ids).r_id
             elif role == Role.FORWARD:
@@ -230,11 +233,6 @@ class Strategy:
             self.ball_start_point = self.ball_history[0]
         else:
             self.ball_start_point = self.ball_history[self.ball_history_idx]
-
-        # self.robot_with_ball = None
-        # for r in field.all_bots:
-        #     if field._is_ball_in(r):
-        #         self.robot_with_ball = r
 
         self.ball_history[self.ball_history_idx] = field.ball.get_pos()
         self.ball_history_idx += 1
@@ -323,10 +321,10 @@ class Strategy:
         "Выбор роботов для всех ролей, с учетом вычесленных выше точек"
         robot_roles = self.choose_robots_for_roles(field, roles, wall_pos)
 
-        print("Roles:")
-        for idx, role in enumerate(robot_roles):
-            if role != Role.UNAVAILABLE:
-                print("  ", idx, role)
+        # print("Roles:")
+        # for idx, role in enumerate(robot_roles):
+        #     if role != Role.UNAVAILABLE:
+        #         print("  ", idx, role)
 
         "Вычисление конечных точек, которые зависят от положения робота и создание путевых точек"
         self.forwards = find_role(field, robot_roles, Role.FORWARD)
@@ -470,21 +468,21 @@ class Strategy:
             for i in range(num):
                 delta = const.ROBOT_R * (2 * i + 1)
                 poses.append(intersections[0] + wall_vec.unity() * delta)
-                self.image.draw_dot(
-                    intersections[0] + wall_vec.unity() * delta,
-                    const.ROBOT_R * self.image.scale,
-                    (128, 128, 128),
-                )
+                # self.image.draw_dot(
+                #     intersections[0] + wall_vec.unity() * delta,
+                #     const.ROBOT_R * self.image.scale,
+                #     (128, 128, 128),
+                # )
         else:
             wall_middle = intersections[0] + wall_vec / 2
             for i in range(num):
                 delta = const.ROBOT_R * (-(num - 1) + 2 * i)
                 poses.append(wall_middle + wall_vec.unity() * delta)
-                self.image.draw_dot(
-                    wall_middle + wall_vec.unity() * delta,
-                    const.ROBOT_R * self.image.scale,
-                    (200, 200, 200),
-                )
+                # self.image.draw_dot(
+                #     wall_middle + wall_vec.unity() * delta,
+                #     const.ROBOT_R * self.image.scale,
+                #     (200, 200, 200),
+                # )
 
         return poses
 
@@ -577,15 +575,15 @@ class Strategy:
             waypoint = self.kick.pass_to_point(
                 field, field.allies[kicker_id], receiver.get_pos()
             )
-            self.image.draw_dot(
-                field.ball.get_pos()
-                + aux.rotate(
-                    aux.RIGHT,
-                    aux.angle_to_point(field.ball.get_pos(), receiver.get_pos()),
-                ),
-                5,
-                (255, 0, 255),
-            )
+            # self.image.draw_dot(
+            #     field.ball.get_pos()
+            #     + aux.rotate(
+            #         aux.RIGHT,
+            #         aux.angle_to_point(field.ball.get_pos(), receiver.get_pos()),
+            #     ),
+            #     5,
+            #     (255, 0, 255),
+            # )
         else:
             waypoint = wp.Waypoint(aux.Point(0, 0), 0, wp.WType.S_STOP)
 
@@ -609,12 +607,11 @@ class Strategy:
             and self.ball_start_point is not None
             and (self.ball_start_point - field.ball.get_pos()).mag()
             > const.INTERCEPT_SPEED
-            and field.ally_with_ball is None
         ):
             target = aux.closest_point_on_line(
                 self.ball_start_point, field.ball.get_pos(), receiver.get_pos(), "R"
             )
-            self.image.draw_dot(target, 5, (255, 255, 0))
+            # self.image.draw_dot(target, 5, (255, 255, 0))
 
             waypoints[receiver_id] = wp.Waypoint(
                 target,
@@ -627,7 +624,7 @@ class Strategy:
                 aux.angle_to_point(receive_point, field.ball.get_pos()),
                 wp.WType.S_ENDPOINT,
             )
-            self.image.draw_dot(receive_point, 5, (255, 255, 0))
+            # self.image.draw_dot(receive_point, 5, (255, 255, 0))
 
     def estimate_pass_point(
         self, field: fld.Field, frm: Optional[aux.Point], to: Optional[aux.Point]
@@ -715,7 +712,7 @@ class Strategy:
         pnt = A
         if tmp2 != 0:
             pnt = C + CA * 0.5 * (tmp1 / tmp2)
-        self.image.draw_dot(pnt, 10, (255, 0, 0))
+        # self.image.draw_dot(pnt, 10, (255, 0, 0))
 
         return pnt
 
@@ -821,7 +818,7 @@ class Strategy:
 
         if (
             field.is_ball_stop_near_goal()
-            or field.ally_with_ball == field.allies[field.gk_id]
+            or field.robot_with_ball == field.allies[field.gk_id]
         ):
             return wp.Waypoint(
                 ball, field.ally_goal.eye_forw.arg(), wp.WType.S_BALL_KICK_UP

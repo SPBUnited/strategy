@@ -1,6 +1,7 @@
 """
 Генерация объектов типа wp.Waypoint для роботов, движущихся с мячом
 """
+
 from typing import Optional
 
 import bridge.processors.auxiliary as aux
@@ -10,6 +11,7 @@ import bridge.processors.robot as rbt
 
 from bridge.processors import const
 from time import time
+
 
 class KickerAux:
     def __init__(self) -> None:
@@ -23,32 +25,37 @@ class KickerAux:
         self.twist_w = 0.5
         self.wait_kick_timer = None
 
-    def pass_to_point(self, field:fld.Field, kicker: rbt.Robot, receive_pos: aux.Point) -> wp.Waypoint:
+    def pass_to_point(
+        self, field: fld.Field, kicker: rbt.Robot, receive_pos: aux.Point
+    ) -> wp.Waypoint:
         "Пасс"
         self.set_voltage(field, kicker.r_id, receive_pos, "PASS")
 
-        if kicker.r_id < 9: ####NOTE
-            angle  = aux.angle_to_point(field.ball.get_pos(), receive_pos)
+        if kicker.r_id < 9:  ####NOTE
+            angle = aux.angle_to_point(field.ball.get_pos(), receive_pos)
             self.reset_kick_consts()
             return wp.Waypoint(field.ball.get_pos(), angle, wp.WType.S_BALL_KICK)
 
         nearest_enemy = fld.find_nearest_robot(field.ball.get_pos(), field.enemies)
-        if aux.dist(field.ball.get_pos(), nearest_enemy.get_pos()) < 500 or field.is_ball_in(kicker):
+        if aux.dist(
+            field.ball.get_pos(), nearest_enemy.get_pos()
+        ) < 500 or field.is_ball_in(kicker):
             return self.twisted(field, kicker, receive_pos)
         else:
             angle = aux.angle_to_point(field.ball.get_pos(), receive_pos)
             return wp.Waypoint(field.ball.get_pos(), angle, wp.WType.S_BALL_KICK)
 
-    def shoot_to_goal(self, field:fld.Field, kicker: rbt.Robot, shoot_point: aux.Point) -> wp.Waypoint:
+    def shoot_to_goal(
+        self, field: fld.Field, kicker: rbt.Robot, shoot_point: aux.Point
+    ) -> wp.Waypoint:
         "Удар по воротам"
         self.set_voltage(field, kicker.r_id, shoot_point, "SHOOT")
 
-
-        if kicker.r_id < 9: ####NOTE
-            angle  = aux.angle_to_point(field.ball.get_pos(), shoot_point)
+        if kicker.r_id < 9:  ####NOTE
+            angle = aux.angle_to_point(field.ball.get_pos(), shoot_point)
             self.reset_kick_consts()
             return wp.Waypoint(field.ball.get_pos(), angle, wp.WType.S_BALL_KICK)
-        
+
         nearest_enemy = fld.find_nearest_robot(field.ball.get_pos(), field.enemies)
         if aux.dist(field.ball.get_pos(), nearest_enemy.get_pos()) < 500:
             return self.twisted(field, kicker, shoot_point)
@@ -64,11 +71,22 @@ class KickerAux:
             angle = aux.angle_to_point(field.ball.get_pos(), target)
             return wp.Waypoint(field.ball.get_pos(), angle, wp.WType.S_BALL_GRAB)
 
-
-    def set_voltage(self, field: fld.Field, kicker_id: int, kick_point: aux.Point, style: str) -> None:
+    def set_voltage(
+        self, field: fld.Field, kicker_id: int, kick_point: aux.Point, style: str
+    ) -> None:
         "Set voltage for robot's kicker"
-        angle_to_target = aux.angle_to_point(field.allies[kicker_id].get_pos(), kick_point)
-        if aux.dist(field.allies[kicker_id].get_pos(), field.ball.get_pos()) > 200 or abs(aux.wind_down_angle(field.allies[kicker_id].get_angle() - angle_to_target)) > 1:
+        angle_to_target = aux.angle_to_point(
+            field.allies[kicker_id].get_pos(), kick_point
+        )
+        if (
+            aux.dist(field.allies[kicker_id].get_pos(), field.ball.get_pos()) > 200
+            or abs(
+                aux.wind_down_angle(
+                    field.allies[kicker_id].get_angle() - angle_to_target
+                )
+            )
+            > 1
+        ):
             # print(aux.dist(field.allies[kicker_id].get_pos(), field.ball.get_pos()), aux.wind_down_angle(field.allies[kicker_id].get_angle() - angle_to_target))
             field.allies[kicker_id].kicker_voltage_ = const.VOLTAGE_ZERO
         elif style == "PASS":
@@ -78,25 +96,33 @@ class KickerAux:
         elif style == "UP":
             field.allies[kicker_id].kicker_voltage_ = const.VOLTAGE_UP
 
-        print("voltage", self.robot_voltage[kicker_id], "->", field.allies[kicker_id].kicker_voltage_)
-        if field.allies[kicker_id].kicker_voltage_ < self.robot_voltage[kicker_id] and not field.is_ball_in(field.allies[kicker_id]):
+        # print("voltage", self.robot_voltage[kicker_id], "->", field.allies[kicker_id].kicker_voltage_)
+        if field.allies[kicker_id].kicker_voltage_ < self.robot_voltage[
+            kicker_id
+        ] and not field.is_ball_in(field.allies[kicker_id]):
             field.allies[kicker_id].kick_forward()
         self.robot_voltage[kicker_id] = field.allies[kicker_id].kicker_voltage_
 
     def twisted(
-            self, field: fld.Field, kicker: rbt.Robot, kick_point: aux.Point, style: str = "SAFE"
-        ) -> wp.Waypoint:
+        self,
+        field: fld.Field,
+        kicker: rbt.Robot,
+        kick_point: aux.Point,
+        style: str = "SAFE",
+    ) -> wp.Waypoint:
         """
         Прицеливание и удар в точку
         """
         if not field.is_ball_in(kicker):
-            angle  =aux.angle_to_point(kicker.get_pos(), field.ball.get_pos())
+            angle = aux.angle_to_point(kicker.get_pos(), field.ball.get_pos())
             if kicker.is_kick_aligned_by_angle(angle):
                 return wp.Waypoint(field.ball.get_pos(), angle, wp.WType.S_BALL_KICK)
             self.reset_kick_consts()
             return wp.Waypoint(field.ball.get_pos(), angle, wp.WType.S_BALL_GRAB)
 
-        signed_x = aux.wind_down_angle(aux.angle_to_point(kicker.get_pos(), kick_point) - kicker.get_angle())
+        signed_x = aux.wind_down_angle(
+            aux.angle_to_point(kicker.get_pos(), kick_point) - kicker.get_angle()
+        )
         x = abs(signed_x)
 
         if not const.IS_DRIBLER_USED:
@@ -134,6 +160,7 @@ class KickerAux:
             #     field.allies[kicker_id].set_dribbler_speed(max(5, 15 - (15 / wt) * (time() - self.wait_kick_timer)))
         return waypoint
 
+
 def spin_with_ball(w: float) -> wp.Waypoint:
     """
     Расчёт скорости робота для поворота с мячом с угловой скоростью w (рад/сек)
@@ -151,6 +178,7 @@ def spin_with_ball(w: float) -> wp.Waypoint:
     k_vel = 0.4 * k_w
     return wp.Waypoint(vel * k_vel, w * k_w, wp.WType.S_VELOCITY)
 
+
 def spin_around_ball(w: float) -> wp.Waypoint:
     """
     Расчёт скорости робота для поворота с мячом с угловой скоростью w (рад/сек)
@@ -159,7 +187,7 @@ def spin_around_ball(w: float) -> wp.Waypoint:
         w = 0.3 * aux.sign(w)
 
     delta_r = aux.Point(0, 140)
-    
+
     vel = delta_r * w
 
     k_w = 1.65  # костыль для приближения значений угловой скорости к рад/с

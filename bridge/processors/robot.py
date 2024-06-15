@@ -130,9 +130,10 @@ class Robot(entity.Entity):
         self.is_kick_committed = False
 
     def __eq__(self, robo: typing.Any) -> bool:
-        if not isinstance(robo, Robot):
+        try:
+            return self.r_id == robo.r_id and self.color == robo.color
+        except:
             return False
-        return self.r_id == robo.r_id and self.color == robo.color
 
     def to_entity(self) -> entity.Entity:
         ent = entity.Entity(self._pos, self._angle, self._radius)

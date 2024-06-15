@@ -64,7 +64,7 @@ class Field:
     Класс, хранящий информацию о всех объектах на поле и ключевых точках
     """
 
-    def __init__(self, ctrl_mapping: dict[int, int], ally_color: const.Color) -> None:
+    def __init__(self) -> None:
         """
         Конструктор
         Инициализирует все нулями
@@ -72,16 +72,21 @@ class Field:
         TODO Сделать инициализацию реальными параметрами для корректного
         определения скоростей и ускорений в первые секунды
         """
-        self.ally_with_ball: Optional[robot.Robot] = None
+        self.last_update = 0.0
+        self.robot_with_ball: Optional[robot.Robot] = None
 
-        self.gk_id = const.GK if ally_color == const.COLOR else const.ENEMY_GK
+        self.gk_id = const.GK
+        self.enemy_gk_id = const.ENEMY_GK
 
-        self.ally_color = ally_color
+        self.ally_color = const.COLOR
+
         if self.ally_color == const.Color.BLUE:
             self.polarity = const.POLARITY * -1
         else:
             self.polarity = const.POLARITY
+
         self.ball = entity.Entity(aux.GRAVEYARD_POS, 0, const.BALL_R, 0.2)
+        ctrl_mapping = const.CONTROL_MAPPING
         self.b_team = [
             robot.Robot(
                 aux.GRAVEYARD_POS,
@@ -128,6 +133,20 @@ class Field:
             self.allies = [*self.y_team]
             self.enemies = [*self.b_team]
 
+    def reverse_field(self) -> None:
+        self.gk_id, self.enemy_gk_id = self.enemy_gk_id, self.gk_id
+
+        if self.ally_color == const.Color.BLUE:
+            self.ally_color = const.Color.YELLOW
+        else:
+            self.ally_color = const.Color.BLUE
+
+        self.polarity *= -1
+
+        self.ally_goal, self.enemy_goal = self.enemy_goal, self.ally_goal
+
+        self.allies, self.enemies = self.enemies, self.allies
+
     def update_ball(self, pos: aux.Point, t: float) -> None:
         """
         Обновить положение мяча
@@ -151,7 +170,7 @@ class Field:
         """
         Определить, находится ли мяч внутри дриблера
         """
-        return robo == self.ally_with_ball
+        return robo == self.robot_with_ball
 
     def update_blu_robot(
         self, idx: int, pos: aux.Point, angle: float, t: float
@@ -219,7 +238,7 @@ class Field:
             self.ball.get_vel().mag()
             * (cos(vec_to_point.arg() - self.ball.get_vel().arg()) ** 3)
             > const.INTERCEPT_SPEED * 2
-            and self.ally_with_ball is None
+            and self.robot_with_ball is None
         )
 
     def is_ball_moves_to_goal(self) -> bool:
