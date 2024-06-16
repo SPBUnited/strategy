@@ -283,18 +283,6 @@ class Strategy:
 
         self.debug(field, waypoints)  # NOTE
 
-        # for rbt in field.allies:
-        #     if rbt.is_used():
-        #         self.image.draw_robot(rbt.get_pos(), rbt.get_angle())
-        # for rbt in field.enemies:
-        #     if rbt.is_used():
-        #         self.image.draw_robot(rbt.get_pos(), rbt.get_angle(), (255, 255, 0))
-        # self.image.draw_dot(field.ball.get_pos(), 5)
-        # self.image.draw_poly(field.ally_goal.hull)
-        # self.image.draw_poly(field.enemy_goal.hull)
-        # self.image.update_window()
-        # self.image.draw_field()
-
         return waypoints
 
     def run(self, field: fld.Field, waypoints: list[wp.Waypoint]) -> None:
@@ -468,9 +456,9 @@ class Strategy:
             for i in range(num):
                 delta = const.ROBOT_R * (2 * i + 1)
                 poses.append(intersections[0] + wall_vec.unity() * delta)
-                # self.image.draw_dot(
+                # field.image.draw_dot(
                 #     intersections[0] + wall_vec.unity() * delta,
-                #     const.ROBOT_R * self.image.scale,
+                #     const.ROBOT_R * field.image.scale,
                 #     (128, 128, 128),
                 # )
         else:
@@ -478,9 +466,9 @@ class Strategy:
             for i in range(num):
                 delta = const.ROBOT_R * (-(num - 1) + 2 * i)
                 poses.append(wall_middle + wall_vec.unity() * delta)
-                # self.image.draw_dot(
+                # field.image.draw_dot(
                 #     wall_middle + wall_vec.unity() * delta,
-                #     const.ROBOT_R * self.image.scale,
+                #     const.ROBOT_R * field.image.scale,
                 #     (200, 200, 200),
                 # )
 
@@ -575,7 +563,7 @@ class Strategy:
             waypoint = self.kick.pass_to_point(
                 field, field.allies[kicker_id], receiver.get_pos()
             )
-            # self.image.draw_dot(
+            # field.image.draw_dot(
             #     field.ball.get_pos()
             #     + aux.rotate(
             #         aux.RIGHT,
@@ -611,7 +599,7 @@ class Strategy:
             target = aux.closest_point_on_line(
                 self.ball_start_point, field.ball.get_pos(), receiver.get_pos(), "R"
             )
-            # self.image.draw_dot(target, 5, (255, 255, 0))
+            # field.image.draw_dot(target, 5, (255, 255, 0))
 
             waypoints[receiver_id] = wp.Waypoint(
                 target,
@@ -624,7 +612,7 @@ class Strategy:
                 aux.angle_to_point(receive_point, field.ball.get_pos()),
                 wp.WType.S_ENDPOINT,
             )
-            # self.image.draw_dot(receive_point, 5, (255, 255, 0))
+            # field.image.draw_dot(receive_point, 5, (255, 255, 0))
 
     def estimate_pass_point(
         self, field: fld.Field, frm: Optional[aux.Point], to: Optional[aux.Point]
@@ -712,7 +700,7 @@ class Strategy:
         pnt = A
         if tmp2 != 0:
             pnt = C + CA * 0.5 * (tmp1 / tmp2)
-        # self.image.draw_dot(pnt, 10, (255, 0, 0))
+        # field.image.draw_dot(pnt, 10, (255, 0, 0))
 
         return pnt
 

@@ -66,6 +66,8 @@ for i in range(TEAM_ROBOTS_MAX_COUNT):
         CONTROL_MAPPING[i] = -1
 
 TOPIC_SINK = "control-sink"
+FIELD_TOPIC = "field-topic"
+IMAGE_TOPIC = "image-topic"
 ##################################################
 
 ##################################################

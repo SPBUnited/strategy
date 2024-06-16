@@ -24,16 +24,17 @@ class CommandSink(BaseProcessor):
     """
 
     processing_pause: typing.Optional[float] = 0.01
+    reduce_pause_on_process_time: bool = False
     max_commands_to_persist: int = 20
     commands_sink_reader: DataReader = attr.ib(init=False)
     commands_writer: DataWriter = attr.ib(init=False)
 
     b_control_team = [
-        robot.Robot(aux.GRAVEYARD_POS, 0, const.ROBOT_R, "b", i, 0)
+        robot.Robot(aux.GRAVEYARD_POS, 0, const.ROBOT_R, const.Color.BLUE, i, 0)
         for i in range(const.TEAM_ROBOTS_MAX_COUNT)
     ]
     y_control_team = [
-        robot.Robot(aux.GRAVEYARD_POS, 0, const.ROBOT_R, "y", i, 0)
+        robot.Robot(aux.GRAVEYARD_POS, 0, const.ROBOT_R, const.Color.YELLOW, i, 0)
         for i in range(const.TEAM_ROBOTS_MAX_COUNT)
     ]
 
@@ -53,6 +54,9 @@ class CommandSink(BaseProcessor):
         """
 
         cmds = self.commands_sink_reader.read_new()
+
+        if len(cmds) > 0:
+            print(len(cmds), "total delay:", time() - cmds[0].content.last_update())
 
         for cmd in cmds:
             r: robot.Robot = cmd.content
@@ -88,11 +92,11 @@ class CommandSink(BaseProcessor):
 
         if const.IS_SIMULATOR_USED:
             for i in range(const.TEAM_ROBOTS_MAX_COUNT):
-                if abs(self.b_control_team[i].speed_x) < 1.5:
+                if abs(self.b_control_team[i].speed_x) < 1:
                     self.b_control_team[i].speed_x = 0
-                if abs(self.b_control_team[i].speed_y) < 1.5:
+                if abs(self.b_control_team[i].speed_y) < 1:
                     self.b_control_team[i].speed_y = 0
-                if abs(self.b_control_team[i].speed_r) < 1.5:
+                if abs(self.b_control_team[i].speed_r) < 1:
                     self.b_control_team[i].speed_r = 0
                 rules.append(0)
                 rules.append(self.b_control_team[i].speed_x)

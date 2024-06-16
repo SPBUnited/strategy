@@ -203,6 +203,7 @@ class Robot(entity.Entity):
         self.kicker_charge_enable_ = robot.kicker_charge_enable_
         self.beep = robot.beep
         self.__is_used = robot.is_used()
+        self.last_update_ = robot.last_update_
 
     def clear_fields(self) -> None:
         """

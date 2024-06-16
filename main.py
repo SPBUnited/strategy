@@ -13,6 +13,7 @@ import bridge.processors.strategy as strategy
 from bridge.processors.python_controller import SSLController
 from bridge.processors.robot_command_sink import CommandSink
 from bridge.processors.field_creator import FieldCreator
+from bridge.processors.drawing_processor import Drawer
 
 if __name__ == "__main__":
 
@@ -20,8 +21,8 @@ if __name__ == "__main__":
 
     # TODO: Move list of processors to config
     PROCESSORS = [
-        VisionDetectionsCollector(processing_pause=0.001, should_debug=True),
-        RefereeCommandsCollector(processing_pause=0.001, should_debug=True),
+        VisionDetectionsCollector(processing_pause=0.001),
+        RefereeCommandsCollector(processing_pause=0.001),
         # SSLController(
         #     ally_color="y",
         #     # should_debug=True,
@@ -30,21 +31,21 @@ if __name__ == "__main__":
         #     dbg_game_status=strategy.GameStates.RUN,
         #     dbg_state=strategy.States.ATTACK,
         # ),
-        FieldCreator(processing_pause=const.Ts / 2),
+        FieldCreator(
+            processing_pause=const.Ts / 2,
+            reduce_pause_on_process_time=True,
+        ),
         SSLController(
             ally_color=const.COLOR,
             # should_debug=True,
-            processing_pause=const.Ts,  # type:ignore
+            processing_pause=const.Ts,
             reduce_pause_on_process_time=True,
             dbg_game_status=strategy.GameStates.RUN,
             dbg_state=strategy.States.ATTACK,
         ),
-        CommandSink(processing_pause=const.Ts / 2),  # , should_debug=True
-        RobotCommandsSender(
-            processing_pause=const.Ts / 2,
-            should_debug=True,
-            reduce_pause_on_process_time=True,
-        ),
+        Drawer(),
+        CommandSink(processing_pause=0.001),  # , should_debug=True
+        RobotCommandsSender(processing_pause=0.001),
     ]
 
     RUNNER = Runner(processors=PROCESSORS)

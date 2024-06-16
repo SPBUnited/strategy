@@ -6,9 +6,7 @@ from math import cos
 from typing import Optional
 
 import bridge.processors.auxiliary as aux
-import bridge.processors.const as const
-import bridge.processors.entity as entity
-import bridge.processors.robot as robot
+from bridge.processors import const, entity, robot, drawing
 
 
 class Goal:
@@ -74,6 +72,7 @@ class Field:
         """
         self.last_update = 0.0
         self.robot_with_ball: Optional[robot.Robot] = None
+        self.image: drawing.Image = drawing.Image()
 
         self.gk_id = const.GK
         self.enemy_gk_id = const.ENEMY_GK

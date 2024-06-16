@@ -21,6 +21,7 @@ from time import time
 class FieldCreator(BaseProcessor):
 
     processing_pause: typing.Optional[float] = 0.01
+    reduce_pause_on_process_time: bool = False
     commands_sink_reader: DataReader = attr.ib(init=False)
     field_writer: DataWriter = attr.ib(init=False)
     _ssl_converter: SSL_WrapperPacket = attr.ib(init=False)
@@ -31,7 +32,7 @@ class FieldCreator(BaseProcessor):
         """
         super(FieldCreator, self).initialize(data_bus)
         self.vision_reader = DataReader(data_bus, config.VISION_DETECTIONS_TOPIC)
-        self.field_writer = DataWriter(data_bus, config.FIELD_TOPIC, 20)
+        self.field_writer = DataWriter(data_bus, const.FIELD_TOPIC, 20)
         self._ssl_converter = SSL_WrapperPacket()
         self.field = fld.Field()
 

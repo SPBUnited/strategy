@@ -30,9 +30,6 @@ class Router:
         ]
         self.__avoid_ball = False
 
-        self.image = Image()
-        self.image.draw_field()
-
     def avoid_ball(self, state: bool = True) -> None:
         """
         Stop game state
@@ -94,12 +91,6 @@ class Router:
         """
         Рассчитать маршруты по актуальным путевым точкам
         """
-        self.image.draw_field()
-        self.image.draw_dot(fld.ball.get_pos(), 5)
-        self.image.draw_poly(fld.ally_goal.hull)
-        self.image.draw_poly(fld.enemy_goal.hull)
-
-        self.image.draw_dot(self.routes[0].get_next_wp().pos, 8)
 
         for idx in [0]:  # NOTE
 
@@ -221,14 +212,6 @@ class Router:
                 if not is_inside:
                     self.routes[idx].insert_wp(pth_wp)
 
-        for rbt in fld.allies:
-            if rbt.is_used():
-                self.image.draw_robot(rbt.get_pos(), rbt.get_angle())
-        for rbt in fld.enemies:
-            if rbt.is_used():
-                self.image.draw_robot(rbt.get_pos(), rbt.get_angle(), (255, 255, 0))
-        self.image.update_window()
-
     def calc_kick_wp(self, idx: int) -> wp.Waypoint:
         """
         Рассчитать точку для выравнивания по мячу
@@ -272,7 +255,6 @@ class Router:
         """
         robot = fld.allies[idx]
         target = self.routes[idx].get_next_wp().pos
-        # self.image.draw_dot(target)
 
         if obstacles is None:
             obstacles_dist: list[tuple[Entity, float]] = []
@@ -293,15 +275,21 @@ class Router:
             for obst in sorted_obstacles:
                 obstacles.append(obst[0])
 
-        pth_point, length = self.calc_next_point(robot.get_pos(), target, obstacles)
-        self.image.draw_line(robot.get_pos(), pth_point, color=(0, 0, 0))
+        pth_point, length = self.calc_next_point(
+            fld, robot.get_pos(), target, obstacles
+        )
+        fld.image.draw_line(robot.get_pos(), pth_point, color=(0, 0, 0))
         if pth_point == target:
             return None
         angle = self.routes[idx].get_next_angle()
         return wp.Waypoint(pth_point, angle, wp.WType.R_PASSTHROUGH)
 
     def calc_next_point(
-        self, position: aux.Point, target: aux.Point, obstacles: list[Entity]
+        self,
+        fld: field.Field,
+        position: aux.Point,
+        target: aux.Point,
+        obstacles: list[Entity],
     ) -> tuple[aux.Point, float]:
         remaining_obstacles: list[Entity] = obstacles
         skipped_obstacles: list[Entity] = []
@@ -318,10 +306,10 @@ class Router:
                 * obstacle.get_vel().mag()
                 * 0.3  # <-- coefficient of fear [0; 1]
             )
-            self.image.draw_dot(
+            fld.image.draw_dot(
                 center,
-                radius * self.image.scale,
                 (127, 127, 127),
+                radius,
             )
             if (
                 aux.line_circle_intersect(
@@ -350,18 +338,18 @@ class Router:
                 point_before: list[aux.Point] = [aux.Point(0, 0) for _ in range(2)]
                 length_before: list[float] = [0 for _ in range(2)]
                 point_before[0], length_before[0] = self.calc_next_point(
-                    position, tangents[0], skipped_obstacles[:-1]
+                    fld, position, tangents[0], skipped_obstacles[:-1]
                 )
                 point_before[1], length_before[1] = self.calc_next_point(
-                    position, tangents[1], skipped_obstacles[:-1]
+                    fld, position, tangents[1], skipped_obstacles[:-1]
                 )
 
                 length_after: list[float] = [0 for _ in range(2)]
                 _, length_after[0] = self.calc_next_point(
-                    tangents[0], target, remaining_obstacles
+                    fld, tangents[0], target, remaining_obstacles
                 )
                 _, length_after[1] = self.calc_next_point(
-                    tangents[1], target, remaining_obstacles
+                    fld, tangents[1], target, remaining_obstacles
                 )
 
                 length0 = length_before[0] + length_after[0]
@@ -373,10 +361,9 @@ class Router:
                     pth_point = point_before[1]
                     length = length_before[1] + length_after[1]
 
-                print("pth_point: ", pth_point)
-                self.image.draw_line(position, pth_point, color=(255, 0, 255))
+                fld.image.draw_line(position, pth_point, color=(255, 0, 255))
 
                 return (pth_point, length)
 
-        self.image.draw_line(position, target, color=(255, 0, 127))
+        fld.image.draw_line(position, target, color=(255, 0, 127))
         return target, aux.dist(position, target)

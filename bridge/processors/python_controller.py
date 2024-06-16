@@ -24,7 +24,10 @@ class SSLController(BaseProcessor):
     Процессор стратегии SSL
     """
 
+    processing_pause: float = const.Ts
+    reduce_pause_on_process_time: bool = True
     max_commands_to_persist: int = 20
+
     ally_color: const.Color = const.Color.BLUE
 
     field_reader: DataReader = attr.ib(init=False)
@@ -45,9 +48,10 @@ class SSLController(BaseProcessor):
         Инициализировать контроллер
         """
         super(SSLController, self).initialize(data_bus)
-        self.field_reader = DataReader(data_bus, config.FIELD_TOPIC)
+        self.field_reader = DataReader(data_bus, const.FIELD_TOPIC)
         self.referee_reader = DataReader(data_bus, config.REFEREE_COMMANDS_TOPIC)
         self.commands_sink_writer = DataWriter(data_bus, const.TOPIC_SINK, 20)
+        self.image_writer = DataWriter(data_bus, const.IMAGE_TOPIC, 20)
 
         self.field = field.Field()
         self.router = router.Router(self.field)
@@ -78,11 +82,13 @@ class SSLController(BaseProcessor):
         """
         new_field = self.field_reader.read_last()
         if new_field is not None:
-            print(new_field.content.last_update - self.field.last_update)
             self.field = new_field.content
-            print("got in field-topic:", time.time() - self.field.last_update)
         else:
             print("No new field")
+
+    def draw_image(self) -> None:
+        if self.field.image is not None:
+            self.image_writer.write(self.field.image)
 
     def control_loop(self) -> None:
         """
@@ -110,16 +116,17 @@ class SSLController(BaseProcessor):
         for i in range(const.TEAM_ROBOTS_MAX_COUNT):
             if self.field.allies[i].is_used():
                 self.field.allies[i].color = self.ally_color
-            self.commands_sink_writer.write(self.field.allies[i])
+                self.commands_sink_writer.write(self.field.allies[i])
 
     def process_referee_cmd(self) -> None:
         cur_cmd = self.get_last_referee_command()
-        if cur_cmd.state == -1:
-            return
-
         cur_state, cur_active = self.state_machine.get_state()
         self.strategy.change_game_state(cur_state, cur_active)
         self.router.avoid_ball(False)
+
+        if cur_cmd.state == -1:
+            return
+
         if cur_state in [state_machine.State.STOP] or (
             cur_active != const.Color.ALL and cur_active != self.field.ally_color
         ):
@@ -176,3 +183,4 @@ class SSLController(BaseProcessor):
         self.control_loop()
 
         self.control_assign()
+        self.draw_image()
