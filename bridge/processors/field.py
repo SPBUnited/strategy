@@ -189,14 +189,6 @@ class Field:
         """
         self.y_team[idx].update(pos, angle, t)
 
-    def get_ball(self) -> entity.Entity:
-        """
-        Получить объект мяча
-
-        @return Объект entity.Entity
-        """
-        return self.ball
-
     def get_blu_team(self) -> list[robot.Robot]:
         """
         Получить массив роботов синей команды

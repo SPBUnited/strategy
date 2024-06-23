@@ -234,7 +234,9 @@ class Route:
             angle0 = end_point.angle
 
             if target_point.type == wp.WType.R_PASSTHROUGH:
-                transl_vel = -vec_err.unity() * const.MAX_SPEED
+                transl_vel = (
+                    -vec_err.unity() * const.MAX_SPEED
+                )  # TODO: change speed by dist to final point
 
         aerr = aux.wind_down_angle(angle0 - rbt.get_angle())
 
@@ -270,3 +272,8 @@ class Route:
             rbt.auto_kick_ = 0
 
         rbt.update_vel_xyw(transl_vel, ang_vel)
+
+        # if rbt.r_id == 0:
+        #     print("cord: ", int(rbt.get_pos().x), int(rbt.get_pos().y))
+        #     print("speed:", int(transl_vel.mag()), rbt.get_vel().mag())
+        #     print("ball:", fld.ball.get_pos(), fld.ball.get_vel())

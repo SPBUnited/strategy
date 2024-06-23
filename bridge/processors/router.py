@@ -266,7 +266,10 @@ class Router:
 
             for obstacle in fld.enemies:
                 dist = (obstacle.get_pos() - robot.get_pos()).mag()
-                if dist > obstacle.get_radius() + robot.get_radius():
+                if (
+                    obstacle.is_used()
+                    and dist > obstacle.get_radius() + robot.get_radius()
+                ):
                     obstacles_dist.append((obstacle.to_entity(), dist))
 
             sorted_obstacles = sorted(obstacles_dist, key=lambda x: x[1])
@@ -274,7 +277,6 @@ class Router:
             obstacles = []
             for obst in sorted_obstacles:
                 obstacles.append(obst[0])
-
         pth_point, length = self.calc_next_point(
             fld, robot.get_pos(), target, obstacles
         )
@@ -291,9 +293,9 @@ class Router:
         target: aux.Point,
         obstacles: list[Entity],
     ) -> tuple[aux.Point, float]:
-        remaining_obstacles: list[Entity] = obstacles
+        remaining_obstacles: list[Entity] = obstacles.copy()
         skipped_obstacles: list[Entity] = []
-        while len(remaining_obstacles) > 1:
+        while len(remaining_obstacles) > 0:
             obstacle = remaining_obstacles.pop(0)
             skipped_obstacles.append(obstacle)
 

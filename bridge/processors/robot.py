@@ -45,7 +45,6 @@ class Robot(entity.Entity):
         self.dribbler_speed_ = 0
         self.kicker_charge_enable_ = 1
         self.beep = 0
-        self.role = 0
 
         # v! SIM
         if const.IS_SIMULATOR_USED:
@@ -138,7 +137,7 @@ class Robot(entity.Entity):
     def to_entity(self) -> entity.Entity:
         ent = entity.Entity(self._pos, self._angle, self._radius)
         ent._vel = self._vel
-        ent._acc = self._acc
+        # ent._acc = self._acc
         return ent
 
     def used(self, a: int) -> None:

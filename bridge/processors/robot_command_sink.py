@@ -55,8 +55,8 @@ class CommandSink(BaseProcessor):
 
         cmds = self.commands_sink_reader.read_new()
 
-        if len(cmds) > 0:
-            print(len(cmds), "total delay:", time() - cmds[0].content.last_update())
+        # if len(cmds) > 0:
+        #     print(len(cmds), "total delay:", time() - cmds[0].content.last_update())
 
         for cmd in cmds:
             r: robot.Robot = cmd.content
@@ -113,16 +113,16 @@ class CommandSink(BaseProcessor):
                 rules.append(0)
 
             for i in range(const.TEAM_ROBOTS_MAX_COUNT):
-                if abs(self.y_control_team[i].speed_x) < 1.5:
+                if abs(self.y_control_team[i].speed_x) < 1:
                     self.y_control_team[i].speed_x = 0
-                if abs(self.y_control_team[i].speed_y) < 1.5:
+                if abs(self.y_control_team[i].speed_y) < 1:
                     self.y_control_team[i].speed_y = 0
-                if abs(self.y_control_team[i].speed_r) < 1.5:
+                if abs(self.y_control_team[i].speed_r) < 1:
                     self.y_control_team[i].speed_r = 0
                 rules.append(0)
-                rules.append(10)
+                rules.append(5)
                 rules.append(self.y_control_team[i].speed_y)
-                rules.append(0)
+                rules.append(2)
                 rules.append(self.y_control_team[i].kick_up_)
                 rules.append(self.y_control_team[i].kick_forward_)
                 rules.append(self.y_control_team[i].auto_kick_)
@@ -157,11 +157,11 @@ class CommandSink(BaseProcessor):
                         control_team[i].dribbler_enable_ = 0
                         control_team[i].dribbler_speed_ = 0
 
-                if abs(control_team[i].speed_x) < 1.5:
+                if abs(control_team[i].speed_x) < 1:
                     control_team[i].speed_x = 0
-                if abs(control_team[i].speed_y) < 1.5:
+                if abs(control_team[i].speed_y) < 1:
                     control_team[i].speed_y = 0
-                if abs(control_team[i].speed_r) < 1.5:
+                if abs(control_team[i].speed_r) < 1:
                     control_team[i].speed_r = 0
                 rules.append(0)
                 rules.append(control_team[i].speed_x)

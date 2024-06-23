@@ -45,6 +45,7 @@ class FieldCreator(BaseProcessor):
         if not queue:
             return
 
+        # print("field delay:", time() - self.field.last_update)
         balls: list[aux.Point] = []
         b_bots_id: list[int] = []
         b_bots_pos: list[list] = [[] for _ in range(const.TEAM_ROBOTS_MAX_COUNT)]
@@ -133,3 +134,6 @@ class FieldCreator(BaseProcessor):
 
         self.field.last_update = time()
         self.field_writer.write(self.field)
+
+        if len(b_bots_pos[0]) > 0:
+            print(b_bots_pos[0][0])

@@ -31,10 +31,7 @@ if __name__ == "__main__":
         #     dbg_game_status=strategy.GameStates.RUN,
         #     dbg_state=strategy.States.ATTACK,
         # ),
-        FieldCreator(
-            processing_pause=const.Ts / 2,
-            reduce_pause_on_process_time=True,
-        ),
+        FieldCreator(processing_pause=0.01),
         SSLController(
             ally_color=const.COLOR,
             # should_debug=True,
