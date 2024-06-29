@@ -22,7 +22,9 @@ class Entity:
     Хранит положение, скорость, угол и тп.
     """
 
-    def __init__(self, pos: aux.Point, angle: float, R: float, T: float = const.Ts) -> None:
+    def __init__(
+        self, pos: aux.Point, angle: float, R: float, T: float = const.Ts
+    ) -> None:
         """
         Конструктор
 
@@ -53,8 +55,6 @@ class Entity:
         """
         Обновить положение и рассчитать исходя из этого скорость и ускорение
         !!! Вызывать один раз за итерацию с постоянной частотой !!!
-
-        TODO Реализовать расчет скоростей и ускорений
         """
         self._pos = pos
         self._angle = angle
@@ -66,7 +66,7 @@ class Entity:
         self.last_update_ = t
 
         if not self.__launch_flag and time() - self.__launch_timer > 5:
-             self.__launch_flag = True
+            self.__launch_flag = True
 
     def last_update(self) -> float:
         """

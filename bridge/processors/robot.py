@@ -1,6 +1,7 @@
 """
 Описание полей и интерфейсов взаимодействия с роботом
 """
+
 import math
 import typing
 
@@ -16,7 +17,15 @@ class Robot(entity.Entity):
     Описание робота
     """
 
-    def __init__(self, pos: aux.Point, angle: float, R: float, color: const.Color, r_id: int, ctrl_id: int) -> None:
+    def __init__(
+        self,
+        pos: aux.Point,
+        angle: float,
+        R: float,
+        color: const.Color,
+        r_id: int,
+        ctrl_id: int,
+    ) -> None:
         super().__init__(pos, angle, R)
 
         self.r_id = r_id
@@ -210,12 +219,17 @@ class Robot(entity.Entity):
         """
 
         commit_scale = 1.2 if self.is_kick_committed else 1
-        is_dist = (self.get_pos() - target.pos).mag() < const.KICK_ALIGN_DIST * const.KICK_ALIGN_DIST_MULT * commit_scale
+        is_dist = (
+            self.get_pos() - target.pos
+        ).mag() < const.KICK_ALIGN_DIST * const.KICK_ALIGN_DIST_MULT * commit_scale
         is_angle = self.is_kick_aligned_by_angle(target.angle)
         is_offset = (
             aux.dist(
                 aux.closest_point_on_line(
-                    target.pos, target.pos - aux.rotate(aux.RIGHT, target.angle) * const.KICK_ALIGN_DIST, self._pos
+                    target.pos,
+                    target.pos
+                    - aux.rotate(aux.RIGHT, target.angle) * const.KICK_ALIGN_DIST,
+                    self._pos,
                 ),
                 self._pos,
             )
@@ -235,7 +249,10 @@ class Robot(entity.Entity):
         Определить, выровнен ли робот относительно путевой точки target
         """
         commit_scale = 1.2 if self.is_kick_committed else 1
-        return abs(aux.wind_down_angle(self._angle - angle)) < const.KICK_ALIGN_ANGLE * commit_scale
+        return (
+            abs(aux.wind_down_angle(self._angle - angle))
+            < const.KICK_ALIGN_ANGLE * commit_scale
+        )
 
     def update_vel_xyw(self, vel: aux.Point, wvel: float) -> None:
         """
@@ -244,8 +261,12 @@ class Robot(entity.Entity):
         vel - требуемый вектор скорости [мм/с] \\
         wvel - требуемая угловая скорость [рад/с]
         """
-        self.speed_x = self.xx_flp.process(1 / self.k_xx * aux.rotate(vel, -self._angle).x)
-        self.speed_y = self.yy_flp.process(1 / self.k_yy * aux.rotate(vel, -self._angle).y)
+        self.speed_x = self.xx_flp.process(
+            1 / self.k_xx * aux.rotate(vel, -self._angle).x
+        )
+        self.speed_y = self.yy_flp.process(
+            1 / self.k_yy * aux.rotate(vel, -self._angle).y
+        )
 
         # self.speed_x = self.xx_flp.process(1 / self.k_xx * vel.x)
         # self.speed_y = self.yy_flp.process(1 / self.k_yy * vel.y)
@@ -268,12 +289,6 @@ class Robot(entity.Entity):
         ang = math.atan2(self.speed_y, self.speed_x)
         self.speed_x = vec_speed * math.cos(ang)
         self.speed_y = vec_speed * math.sin(ang)
-
-    def clamp_motors(self) -> None:
-        """
-        Ограничить управляющее воздействие
-        """
-        # TODO
 
     def __str__(self) -> str:
         return (
