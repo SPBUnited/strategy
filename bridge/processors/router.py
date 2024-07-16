@@ -92,7 +92,7 @@ class Router:
         Рассчитать маршруты по актуальным путевым точкам
         """
 
-        for idx in [0]:  # NOTE
+        for idx in range(const.TEAM_ROBOTS_MAX_COUNT):
 
             self_pos = fld.allies[idx].get_pos()
 
@@ -257,14 +257,11 @@ class Router:
         target = self.routes[idx].get_next_wp().pos
 
         if obstacles is None:
-            obstacles_dist: list[tuple[Entity, float]] = []
+            obstacles_dist: list[tuple[Entity, float]] = [
+                (fld.ball, aux.dist(fld.ball.get_pos(), robot.get_pos()))
+            ]
 
-            # for obstacle in fld.allies:
-            #     dist = (obstacle.get_pos() - robot.get_pos()).mag()
-            #     if dist > obstacle.get_radius() + robot.get_radius():
-            #         obstacles_dist.append((obstacle.to_entity(), dist))
-
-            for obstacle in fld.enemies:
+            for obstacle in fld.enemies:  # in [fld.enemies, fld.allies]
                 dist = (obstacle.get_pos() - robot.get_pos()).mag()
                 if (
                     obstacle.is_used()
@@ -280,7 +277,7 @@ class Router:
         pth_point, length = self.calc_next_point(
             fld, robot.get_pos(), target, obstacles
         )
-        fld.image.draw_line(robot.get_pos(), pth_point, color=(0, 0, 0))
+        # fld.image.draw_line(robot.get_pos(), pth_point, color=(0, 0, 0))
         if pth_point == target:
             return None
         angle = self.routes[idx].get_next_angle()
@@ -308,11 +305,11 @@ class Router:
                 * obstacle.get_vel().mag()
                 * 0.3  # <-- coefficient of fear [0; 1]
             )
-            fld.image.draw_dot(
-                center,
-                (127, 127, 127),
-                radius,
-            )
+            # fld.image.draw_dot(
+            #     center,
+            #     (127, 127, 127),
+            #     radius,
+            # )
             if (
                 aux.line_circle_intersect(
                     position,
@@ -363,9 +360,9 @@ class Router:
                     pth_point = point_before[1]
                     length = length_before[1] + length_after[1]
 
-                fld.image.draw_line(position, pth_point, color=(255, 0, 255))
+                # fld.image.draw_line(position, pth_point, color=(255, 0, 255))
 
                 return (pth_point, length)
 
-        fld.image.draw_line(position, target, color=(255, 0, 127))
+        # fld.image.draw_line(position, target, color=(255, 0, 127))
         return target, aux.dist(position, target)

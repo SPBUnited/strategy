@@ -262,8 +262,8 @@ class Route:
             end_point.type in [wp.WType.S_BALL_KICK, wp.WType.S_BALL_PASS]
         ) and rbt.is_kick_aligned_by_angle(end_point.angle):
             rbt.auto_kick_ = 1
-            if rbt.r_id < 9:
-                rbt.auto_kick_ = 2
+            # if rbt.r_id < 9:
+            #     rbt.auto_kick_ = 2
         elif end_point.type == wp.WType.S_BALL_KICK_UP and rbt.is_kick_aligned_by_angle(
             end_point.angle
         ):

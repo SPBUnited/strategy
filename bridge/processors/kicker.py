@@ -31,10 +31,10 @@ class KickerAux:
         "Пасс"
         self.set_voltage(field, kicker.r_id, receive_pos, "PASS")
 
-        if kicker.r_id < 9:  ####NOTE
-            angle = aux.angle_to_point(field.ball.get_pos(), receive_pos)
-            self.reset_kick_consts()
-            return wp.Waypoint(field.ball.get_pos(), angle, wp.WType.S_BALL_KICK)
+        # if kicker.r_id < 9:  ####NOTE
+        #     angle = aux.angle_to_point(field.ball.get_pos(), receive_pos)
+        #     self.reset_kick_consts()
+        #     return wp.Waypoint(field.ball.get_pos(), angle, wp.WType.S_BALL_KICK)
 
         nearest_enemy = fld.find_nearest_robot(field.ball.get_pos(), field.enemies)
         if aux.dist(
@@ -51,10 +51,10 @@ class KickerAux:
         "Удар по воротам"
         self.set_voltage(field, kicker.r_id, shoot_point, "SHOOT")
 
-        if kicker.r_id < 9:  ####NOTE
-            angle = aux.angle_to_point(field.ball.get_pos(), shoot_point)
-            self.reset_kick_consts()
-            return wp.Waypoint(field.ball.get_pos(), angle, wp.WType.S_BALL_KICK)
+        # if kicker.r_id < 9:  ####NOTE
+        #     angle = aux.angle_to_point(field.ball.get_pos(), shoot_point)
+        #     self.reset_kick_consts()
+        #     return wp.Waypoint(field.ball.get_pos(), angle, wp.WType.S_BALL_KICK)
 
         nearest_enemy = fld.find_nearest_robot(field.ball.get_pos(), field.enemies)
         if aux.dist(field.ball.get_pos(), nearest_enemy.get_pos()) < 500:

@@ -135,5 +135,5 @@ class FieldCreator(BaseProcessor):
         self.field.last_update = time()
         self.field_writer.write(self.field)
 
-        if len(b_bots_pos[0]) > 0:
-            print(b_bots_pos[0][0])
+        # if len(b_bots_pos[0]) > 0:
+        #     print(b_bots_pos[0][0])

@@ -87,8 +87,9 @@ class Robot(entity.Entity):
         # gains_soft = [10, 0.32, 0, const.SOFT_MAX_SPEED]
         # gains_soft = gains_full
         if const.IS_SIMULATOR_USED:
-            gains_full = [3, 0.35, 0, const.MAX_SPEED]
-            gains_soft = [5, 0.35, 0, const.SOFT_MAX_SPEED]
+            # gains_full = [8, 0.35, 0, const.MAX_SPEED]
+            gains_full = [25, 0.08, 0, const.MAX_SPEED]
+            gains_soft = [25, 0.08, 0, const.SOFT_MAX_SPEED]
             a_gains_full = [2, 0.1, 0.1, const.MAX_SPEED_R]  # 4, 0.1, 0.1
         # a_gains_soft = [4, 0.07, 8, const.SOFT_MAX_SPEED_R]
         a_gains_soft = a_gains_full

@@ -147,8 +147,8 @@ class Strategy:
             Role.WALLLINER,
         ]
 
-        atk_min = 0
-        def_min = 0
+        atk_min = 1
+        def_min = 2
         # atk_min = 0
         # def_min = 0
 
@@ -254,7 +254,7 @@ class Strategy:
         print("-" * 32)
         print(self.game_status, "\twe_active:", self.we_active)
 
-        if self.game_status == GameStates.RUN:
+        if self.game_status == GameStates.RUN or 1:
             self.run(field, waypoints)
         else:
             if self.game_status == GameStates.TIMEOUT:
@@ -281,7 +281,7 @@ class Strategy:
             elif self.game_status == GameStates.STOP:
                 self.run(field, waypoints)
 
-        self.debug(field, waypoints)  # NOTE
+        # self.debug(field, waypoints)  # NOTE
 
         return waypoints
 
@@ -309,10 +309,10 @@ class Strategy:
         "Выбор роботов для всех ролей, с учетом вычесленных выше точек"
         robot_roles = self.choose_robots_for_roles(field, roles, wall_pos)
 
-        # print("Roles:")
-        # for idx, role in enumerate(robot_roles):
-        #     if role != Role.UNAVAILABLE:
-        #         print("  ", idx, role)
+        print("Roles", field.ally_color)
+        for idx, role in enumerate(robot_roles):
+            if role != Role.UNAVAILABLE:
+                print("  ", idx, role)
 
         "Вычисление конечных точек, которые зависят от положения робота и создание путевых точек"
         self.forwards = find_role(field, robot_roles, Role.FORWARD)
@@ -799,7 +799,7 @@ class Strategy:
         goal_down = field.ally_goal.down
         goal_up = field.ally_goal.up
 
-        if abs(ball.y) > const.GOAL_DX:
+        if abs(ball.x) > const.GOAL_DX:  # NOTE
             return wp.Waypoint(
                 field.ally_goal.center, gk_angle, wp.WType.S_IGNOREOBSTACLES
             )

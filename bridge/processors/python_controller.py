@@ -83,6 +83,8 @@ class SSLController(BaseProcessor):
         new_field = self.field_reader.read_last()
         if new_field is not None:
             self.field = new_field.content
+            if self.field.ally_color != self.ally_color:
+                self.field.reverse_field()
         else:
             print("No new field")
 
