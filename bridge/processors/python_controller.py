@@ -5,19 +5,19 @@
 import time
 
 import attr
-import numpy as np
 from strategy_bridge.bus import DataBus, DataReader, DataWriter
 from strategy_bridge.common import config
 from strategy_bridge.model.referee import RefereeCommand
 from strategy_bridge.processors import BaseProcessor
 from strategy_bridge.utils.debugger import debugger
+
 import bridge.processors.referee_state_processor as state_machine
+from bridge import const
+from bridge.auxiliary import aux, fld
+from bridge.router import router
+from bridge.strategy import strategy
 
-import bridge.processors.auxiliary as aux
-from bridge.processors import const, field, router, signal, strategy
 
-
-# TODO: Refactor this class and corresponding matlab scripts
 @attr.s(auto_attribs=True)
 class SSLController(BaseProcessor):
     """
@@ -53,7 +53,7 @@ class SSLController(BaseProcessor):
         self.commands_sink_writer = DataWriter(data_bus, const.TOPIC_SINK, 20)
         self.image_writer = DataWriter(data_bus, const.IMAGE_TOPIC, 20)
 
-        self.field = field.Field()
+        self.field = fld.Field()
         self.router = router.Router(self.field)
 
         self.strategy = strategy.Strategy()
@@ -89,6 +89,7 @@ class SSLController(BaseProcessor):
             print("No new field")
 
     def draw_image(self) -> None:
+        """Send commands to drawer processor"""
         if self.field.image is not None:
             self.image_writer.write(self.field.image)
 
@@ -107,10 +108,6 @@ class SSLController(BaseProcessor):
         for i in range(const.TEAM_ROBOTS_MAX_COUNT):
             self.router.get_route(i).go_route(self.field.allies[i], self.field)
 
-    square = signal.Signal(2, "SQUARE", lohi=(-20, 20))
-    sine = signal.Signal(2, "SINE", ampoffset=(1000, 0))
-    cosine = signal.Signal(2, "COSINE", ampoffset=(1000, 0))
-
     def control_assign(self) -> None:
         """
         Определить связь номеров роботов с каналами управления
@@ -121,6 +118,7 @@ class SSLController(BaseProcessor):
                 self.commands_sink_writer.write(self.field.allies[i])
 
     def process_referee_cmd(self) -> None:
+        """Get referee commands"""
         cur_cmd = self.get_last_referee_command()
         cur_state, cur_active = self.state_machine.get_state()
         self.strategy.change_game_state(cur_state, cur_active)
@@ -129,9 +127,7 @@ class SSLController(BaseProcessor):
         if cur_cmd.state == -1:
             return
 
-        if cur_state in [state_machine.State.STOP] or (
-            cur_active != const.Color.ALL and cur_active != self.field.ally_color
-        ):
+        if cur_state == state_machine.State.STOP or (cur_active != const.Color.ALL and cur_active != self.field.ally_color):
             self.router.avoid_ball(True)
 
         if cur_cmd.state != self.cur_cmd_state:
@@ -158,9 +154,7 @@ class SSLController(BaseProcessor):
                 self.wait_ball_moved = self.field.ball.get_pos()
         else:
             if self.wait_10_sec_flag and time.time() - self.wait_10_sec > 10:
-                self.state_machine.make_transition_(
-                    state_machine.Command.PASS_10_SECONDS
-                )
+                self.state_machine.make_transition_(state_machine.Command.PASS_10_SECONDS)
                 self.state_machine.active_team(0)
                 self.wait_10_sec_flag = False
                 self.wait_ball_moved_flag = False

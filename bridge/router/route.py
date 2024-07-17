@@ -4,9 +4,9 @@
 
 import math
 
-import bridge.processors.auxiliary as aux
-import bridge.processors.waypoint as wp
-from bridge.processors import const, field, robot, tau
+from bridge.auxiliary import aux, fld, rbt, tau
+import bridge.router.waypoint as wp
+from bridge import const
 
 
 class Route:
@@ -14,7 +14,7 @@ class Route:
     Класс описание произвольного маршрута
     """
 
-    def __init__(self, rbt: robot.Robot):
+    def __init__(self, rbt: rbt.Robot):
         """
         Конструктор
         """
@@ -26,7 +26,7 @@ class Route:
         self.go_flag = 0
         self.go_time = 0
 
-    def update(self, rbt: robot.Robot) -> None:
+    def update(self, rbt: rbt.Robot) -> None:
         """
         Обновить маршрут
 
@@ -127,7 +127,7 @@ class Route:
         #     strin += " -> " + str(wp)
         return strin
 
-    def go_route(self, rbt: robot.Robot, fld: field.Field) -> None:
+    def go_route(self, rbt: rbt.Robot, field: fld.Field) -> None:
         """
         Двигаться по маршруту route
         """
@@ -276,4 +276,4 @@ class Route:
         # if rbt.r_id == 0:
         #     print("cord: ", int(rbt.get_pos().x), int(rbt.get_pos().y))
         #     print("speed:", int(transl_vel.mag()), rbt.get_vel().mag())
-        #     print("ball:", fld.ball.get_pos(), fld.ball.get_vel())
+        #     print("ball:", field.ball.get_pos(), field.ball.get_vel())

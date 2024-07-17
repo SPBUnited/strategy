@@ -5,7 +5,7 @@
 import math
 import typing
 
-from bridge.processors import const
+from bridge import const
 from typing import Optional
 
 

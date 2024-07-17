@@ -5,8 +5,9 @@
 from math import cos
 from typing import Optional
 
-import bridge.processors.auxiliary as aux
-from bridge.processors import const, entity, robot, drawing
+from bridge import const
+from bridge.auxiliary import aux, entity, rbt
+from bridge import drawing
 
 
 class Goal:
@@ -71,7 +72,7 @@ class Field:
         определения скоростей и ускорений в первые секунды
         """
         self.last_update = 0.0
-        self.robot_with_ball: Optional[robot.Robot] = None
+        self.robot_with_ball: Optional[rbt.Robot] = None
         self.image: drawing.Image = drawing.Image()
 
         self.gk_id = const.GK
@@ -87,7 +88,7 @@ class Field:
         self.ball = entity.Entity(aux.GRAVEYARD_POS, 0, const.BALL_R, 0.2)
         ctrl_mapping = const.CONTROL_MAPPING
         self.b_team = [
-            robot.Robot(
+            rbt.Robot(
                 aux.GRAVEYARD_POS,
                 0,
                 const.ROBOT_R,
@@ -98,7 +99,7 @@ class Field:
             for i in range(const.TEAM_ROBOTS_MAX_COUNT)
         ]
         self.y_team = [
-            robot.Robot(
+            rbt.Robot(
                 aux.GRAVEYARD_POS,
                 0,
                 const.ROBOT_R,
@@ -153,7 +154,7 @@ class Field:
         """
         self.ball.update(pos, 0, t)
 
-    def _is_ball_in(self, robo: robot.Robot) -> bool:
+    def _is_ball_in(self, robo: rbt.Robot) -> bool:
         """
         Определить, находится ли мяч внутри дриблера
         """
@@ -165,7 +166,7 @@ class Field:
             )
         ) < const.BALL_GRABBED_ANGLE
 
-    def is_ball_in(self, robo: robot.Robot) -> bool:
+    def is_ball_in(self, robo: rbt.Robot) -> bool:
         """
         Определить, находится ли мяч внутри дриблера
         """
@@ -189,7 +190,7 @@ class Field:
         """
         self.y_team[idx].update(pos, angle, t)
 
-    def get_blu_team(self) -> list[robot.Robot]:
+    def get_blu_team(self) -> list[rbt.Robot]:
         """
         Получить массив роботов синей команды
 
@@ -197,7 +198,7 @@ class Field:
         """
         return self.b_team
 
-    def get_yel_team(self) -> list[robot.Robot]:
+    def get_yel_team(self) -> list[rbt.Robot]:
         """
         Получить массив роботов желтой команды
 
@@ -240,14 +241,14 @@ class Field:
 
     def find_nearest_allies(
         self, point: aux.Point, num: int, avoid: Optional[list[int]] = None
-    ) -> list[robot.Robot]:
+    ) -> list[rbt.Robot]:
         """
         Найти num роботов из field.allies, ближайших к точке point
         """
         if avoid is None:
             avoid = []
         avoid += [self.gk_id]
-        robots: list[robot.Robot] = []
+        robots: list[rbt.Robot] = []
         # if len(self.allies) < num:
         #     return None  # сам виноват
 
@@ -259,8 +260,8 @@ class Field:
 
 
 def find_nearest_robot(
-    point: aux.Point, team: list[robot.Robot], avoid: Optional[list[int]] = None
-) -> robot.Robot:
+    point: aux.Point, team: list[rbt.Robot], avoid: Optional[list[int]] = None
+) -> rbt.Robot:
     """
     Найти ближайший робот из массива team к точке point, игнорируя точки avoid
     """

@@ -4,11 +4,13 @@ draw field with robots and trajectory
 
 import math
 
-import bridge.processors.auxiliary as aux
-import bridge.processors.const as const
+from bridge.auxiliary import aux
+from bridge import const
 
 
 class Command:
+    """Command to draw something"""
+
     def __init__(
         self,
         color: tuple[int, int, int],
@@ -44,20 +46,20 @@ class Image:
         dot1: aux.Point,
         dot2: aux.Point,
         color: tuple[int, int, int] = (255, 255, 255),
-        size_in_pxls: int = 2,
+        size_in_pixels: int = 2,
     ) -> None:
         """
         draw line
         """
         new_dots = [(dot1.x, dot1.y), (dot2.x, dot2.y)]
 
-        self.commands.append(Command(color, new_dots, size_in_pxls))
+        self.commands.append(Command(color, new_dots, size_in_pixels))
 
     def draw_poly(
         self,
         dots: list[aux.Point],
         color: tuple[int, int, int] = (255, 255, 255),
-        size_in_pxls: int = 2,
+        size_in_pixels: int = 2,
     ) -> None:
         """
         Connect nearest dots with line
@@ -66,7 +68,7 @@ class Image:
         for dot in dots:
             new_dots.append((dot.x, dot.y))
 
-        self.commands.append(Command(color, new_dots, size_in_pxls))
+        self.commands.append(Command(color, new_dots, size_in_pixels))
 
     def draw_robot(
         self,
@@ -77,6 +79,6 @@ class Image:
         """
         draw robot
         """
-        eye_vec = aux.rotate(aux.RIGHT, angle)
+        eye_vec = aux.rotate(aux.RIGHT, angle) * 150
         self.draw_dot(pos, color, const.ROBOT_R)
         self.draw_line(pos, pos + eye_vec, color, 2)

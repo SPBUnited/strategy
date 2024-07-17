@@ -7,13 +7,14 @@
 import math
 from typing import Optional
 
-import bridge.processors.auxiliary as aux
-from bridge.processors import const, field, route
-import bridge.processors.quickhull as qh
-import bridge.processors.waypoint as wp
+from bridge import const
+from bridge.auxiliary import aux, fld
+from bridge.router import route
+import bridge.auxiliary.quickhull as qh
+import bridge.router.waypoint as wp
 
-from bridge.processors.entity import Entity
-from bridge.processors.drawing import Image
+from bridge.auxiliary.entity import Entity
+from bridge.drawing import Image
 
 
 class Router:
@@ -21,12 +22,12 @@ class Router:
     Маршрутизатор
     """
 
-    def __init__(self, fld: field.Field) -> None:
+    def __init__(self, field: fld.Field) -> None:
         """
         Конструктор
         """
         self.routes = [
-            route.Route(fld.allies[i]) for i in range(const.TEAM_ROBOTS_MAX_COUNT)
+            route.Route(field.allies[i]) for i in range(const.TEAM_ROBOTS_MAX_COUNT)
         ]
         self.__avoid_ball = False
 
@@ -36,12 +37,12 @@ class Router:
         """
         self.__avoid_ball = state
 
-    def update(self, fld: field.Field) -> None:
+    def update(self, field: fld.Field) -> None:
         """
         Обновить маршруты актуальным состоянием поля
         """
         for i in range(const.TEAM_ROBOTS_MAX_COUNT):
-            self.routes[i].update(fld.allies[i])
+            self.routes[i].update(field.allies[i])
 
     def get_route(self, idx: int) -> route.Route:
         """
@@ -49,13 +50,13 @@ class Router:
         """
         return self.routes[idx]
 
-    def set_dest(self, idx: int, target: wp.Waypoint, fld: field.Field) -> None:
+    def set_dest(self, idx: int, target: wp.Waypoint, field: fld.Field) -> None:
         """
         Установить единственную путевую точку для робота с индексом idx
         """
-        if idx != fld.gk_id and target.type != wp.WType.R_IGNORE_GOAl_HULL:
+        if idx != field.gk_id and target.type != wp.WType.R_IGNORE_GOAl_HULL:
             dest_pos = target.pos
-            for goal in [fld.ally_goal, fld.enemy_goal]:
+            for goal in [field.ally_goal, field.enemy_goal]:
                 if aux.is_point_inside_poly(dest_pos, goal.big_hull):
                     closest_out = aux.nearest_point_on_poly(dest_pos, goal.big_hull)
                     angle0 = target.angle
@@ -67,12 +68,12 @@ class Router:
         if self.__avoid_ball:
             dest_pos = target.pos
             if aux.is_point_inside_circle(
-                dest_pos, fld.ball.get_pos(), const.KEEP_BALL_DIST
+                dest_pos, field.ball.get_pos(), const.KEEP_BALL_DIST
             ):
                 delta = -aux.rotate(aux.RIGHT, target.angle)
                 closest_out = aux.nearest_point_on_circle(
                     dest_pos + delta,
-                    fld.ball.get_pos(),
+                    field.ball.get_pos(),
                     const.KEEP_BALL_DIST + const.ROBOT_R,
                 )
                 angle0 = target.angle
@@ -87,14 +88,14 @@ class Router:
             target.pos.y = 3000 * aux.sign(target.pos.y)
         self.routes[idx].set_dest_wp(target)
 
-    def reroute(self, fld: field.Field) -> None:
+    def reroute(self, field: fld.Field) -> None:
         """
         Рассчитать маршруты по актуальным путевым точкам
         """
 
         for idx in range(const.TEAM_ROBOTS_MAX_COUNT):
 
-            self_pos = fld.allies[idx].get_pos()
+            self_pos = field.allies[idx].get_pos()
 
             if not self.routes[idx].is_used():
                 continue
@@ -115,15 +116,15 @@ class Router:
                 self.routes[idx].insert_wp(align_wp)
 
             if (
-                idx == fld.gk_id
+                idx == field.gk_id
                 or self.routes[idx].get_dest_wp().type == wp.WType.R_IGNORE_GOAl_HULL
             ):
-                pth_wp = self.calc_passthrough_wp(fld, idx)
+                pth_wp = self.calc_passthrough_wp(field, idx)
                 if pth_wp is not None:
                     self.routes[idx].insert_wp(pth_wp)
                 continue
 
-            for goal in [fld.ally_goal, fld.enemy_goal]:
+            for goal in [field.ally_goal, field.enemy_goal]:
                 if aux.is_point_inside_poly(self_pos, goal.hull):
                     closest_out = aux.find_nearest_point(
                         self_pos, goal.big_hull, [goal.up, aux.GRAVEYARD_POS, goal.down]
@@ -161,26 +162,26 @@ class Router:
 
             if self.__avoid_ball:
                 dest_pos = self.routes[idx].get_dest_wp().pos
-                self_pos = fld.allies[idx].get_pos()
+                self_pos = field.allies[idx].get_pos()
                 angle0 = self.routes[idx].get_dest_wp().angle
                 if aux.is_point_inside_circle(
-                    self_pos, fld.ball.get_pos(), const.KEEP_BALL_DIST
+                    self_pos, field.ball.get_pos(), const.KEEP_BALL_DIST
                 ):
                     closest_out = aux.nearest_point_on_circle(
-                        self_pos, fld.ball.get_pos(), const.KEEP_BALL_DIST
+                        self_pos, field.ball.get_pos(), const.KEEP_BALL_DIST
                     )
                     self.routes[idx].insert_wp(
                         wp.Waypoint(closest_out, angle0, wp.WType.R_PASSTHROUGH)
                     )
                     continue
                 points = aux.line_circle_intersect(
-                    self_pos, dest_pos, fld.ball.get_pos(), const.KEEP_BALL_DIST
+                    self_pos, dest_pos, field.ball.get_pos(), const.KEEP_BALL_DIST
                 )
                 if points is None:
                     continue
                 if len(points) == 2:
                     points = aux.get_tangent_points(
-                        fld.ball.get_pos(), self_pos, const.KEEP_BALL_DIST
+                        field.ball.get_pos(), self_pos, const.KEEP_BALL_DIST
                     )
                     p = aux.Point(0, 0)
                     if points is None:
@@ -196,16 +197,16 @@ class Router:
                         p = points[0]
                     self.routes[idx].insert_wp(
                         wp.Waypoint(
-                            p + (p - fld.ball.get_pos()).unity() * const.ROBOT_R,
+                            p + (p - field.ball.get_pos()).unity() * const.ROBOT_R,
                             angle0,
                             wp.WType.R_PASSTHROUGH,
                         )
                     )
 
-            pth_wp = self.calc_passthrough_wp(fld, idx)
+            pth_wp = self.calc_passthrough_wp(field, idx)
             if pth_wp is not None:
                 is_inside = False
-                for goal in [fld.ally_goal, fld.enemy_goal]:
+                for goal in [field.ally_goal, field.enemy_goal]:
                     if aux.is_point_inside_poly(pth_wp.pos, goal.big_hull):
                         is_inside = True
                         break
@@ -247,21 +248,21 @@ class Router:
         return align_wp
 
     def calc_passthrough_wp(
-        self, fld: field.Field, idx: int, obstacles: Optional[list[Entity]] = None
+        self, field: fld.Field, idx: int, obstacles: Optional[list[Entity]] = None
     ) -> Optional[wp.Waypoint]:
         """
         Рассчитать ближайшую промежуточную путевую точку
         согласно первому приближению векторного поля
         """
-        robot = fld.allies[idx]
+        robot = field.allies[idx]
         target = self.routes[idx].get_next_wp().pos
 
         if obstacles is None:
             obstacles_dist: list[tuple[Entity, float]] = [
-                (fld.ball, aux.dist(fld.ball.get_pos(), robot.get_pos()))
+                (field.ball, aux.dist(field.ball.get_pos(), robot.get_pos()))
             ]
 
-            for obstacle in fld.enemies:  # in [fld.enemies, fld.allies]
+            for obstacle in field.enemies:  # in [field.enemies, field.allies]
                 dist = (obstacle.get_pos() - robot.get_pos()).mag()
                 if (
                     obstacle.is_used()
@@ -275,9 +276,9 @@ class Router:
             for obst in sorted_obstacles:
                 obstacles.append(obst[0])
         pth_point, length = self.calc_next_point(
-            fld, robot.get_pos(), target, obstacles
+            field, robot.get_pos(), target, obstacles
         )
-        # fld.image.draw_line(robot.get_pos(), pth_point, color=(0, 0, 0))
+        # field.image.draw_line(robot.get_pos(), pth_point, color=(0, 0, 0))
         if pth_point == target:
             return None
         angle = self.routes[idx].get_next_angle()
@@ -285,7 +286,7 @@ class Router:
 
     def calc_next_point(
         self,
-        fld: field.Field,
+        field: fld.Field,
         position: aux.Point,
         target: aux.Point,
         obstacles: list[Entity],
@@ -305,7 +306,7 @@ class Router:
                 * obstacle.get_vel().mag()
                 * 0.3  # <-- coefficient of fear [0; 1]
             )
-            # fld.image.draw_dot(
+            # field.image.draw_dot(
             #     center,
             #     (127, 127, 127),
             #     radius,
@@ -337,32 +338,44 @@ class Router:
                 point_before: list[aux.Point] = [aux.Point(0, 0) for _ in range(2)]
                 length_before: list[float] = [0 for _ in range(2)]
                 point_before[0], length_before[0] = self.calc_next_point(
-                    fld, position, tangents[0], skipped_obstacles[:-1]
+                    field, position, tangents[0], skipped_obstacles[:-1]
                 )
                 point_before[1], length_before[1] = self.calc_next_point(
-                    fld, position, tangents[1], skipped_obstacles[:-1]
+                    field, position, tangents[1], skipped_obstacles[:-1]
                 )
 
                 length_after: list[float] = [0 for _ in range(2)]
                 _, length_after[0] = self.calc_next_point(
-                    fld, tangents[0], target, remaining_obstacles
+                    field, tangents[0], target, remaining_obstacles
                 )
                 _, length_after[1] = self.calc_next_point(
-                    fld, tangents[1], target, remaining_obstacles
+                    field, tangents[1], target, remaining_obstacles
                 )
 
                 length0 = length_before[0] + length_after[0]
                 length1 = length_before[1] + length_after[1]
-                if length0 < length1:
+
+                in_zone0 = aux.is_point_inside_poly(
+                    point_before[0], field.ally_goal.big_hull
+                ) or aux.is_point_inside_poly(
+                    point_before[0], field.enemy_goal.big_hull
+                )
+                in_zone1 = aux.is_point_inside_poly(
+                    point_before[1], field.ally_goal.big_hull
+                ) or aux.is_point_inside_poly(
+                    point_before[1], field.enemy_goal.big_hull
+                )
+
+                if (length0 < length1 or in_zone1) and not in_zone0:
                     pth_point = point_before[0]
                     length = length_before[0] + length_after[0]
                 else:
                     pth_point = point_before[1]
                     length = length_before[1] + length_after[1]
 
-                # fld.image.draw_line(position, pth_point, color=(255, 0, 255))
+                # field.image.draw_line(position, pth_point, color=(255, 0, 255))
 
                 return (pth_point, length)
 
-        # fld.image.draw_line(position, target, color=(255, 0, 127))
+        # field.image.draw_line(position, target, color=(255, 0, 127))
         return target, aux.dist(position, target)

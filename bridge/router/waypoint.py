@@ -9,7 +9,7 @@
 
 from enum import Enum
 
-import bridge.processors.auxiliary as aux
+from bridge.auxiliary import aux
 
 
 class WType(Enum):
@@ -51,4 +51,6 @@ class Waypoint:
         self.type = wp_type
 
     def __str__(self) -> str:
-        return f"WP:  {str(self.pos)}; angle = {self.angle:0.2f}; type =  {str(self.type)}"
+        return (
+            f"WP:  {str(self.pos)}; angle = {self.angle:0.2f}; type =  {str(self.type)}"
+        )

@@ -1,24 +1,23 @@
 """
-Модуль-прослойка между стратегией и отправкой пакетов на роботов
+Processor that creates the field
 """
 
 import typing
+from time import time
 
 import attr
 from strategy_bridge.bus import DataBus, DataReader, DataWriter
 from strategy_bridge.common import config
-from strategy_bridge.processors import BaseProcessor
 from strategy_bridge.pb.messages_robocup_ssl_wrapper_pb2 import SSL_WrapperPacket
+from strategy_bridge.processors import BaseProcessor
 
-import bridge.processors.auxiliary as aux
-import bridge.processors.field as fld
-from bridge.processors import const
-
-from time import time
+from bridge import const
+from bridge.auxiliary import aux, fld
 
 
 @attr.s(auto_attribs=True)
 class FieldCreator(BaseProcessor):
+    """class that creates the field"""
 
     processing_pause: typing.Optional[float] = 0.01
     reduce_pause_on_process_time: bool = False
@@ -79,16 +78,12 @@ class FieldCreator(BaseProcessor):
             # TODO: Barrier states
             for robot_det in detection.robots_blue:
                 b_bots_id.append(robot_det.robot_id)
-                b_bots_pos[robot_det.robot_id].append(
-                    aux.Point(robot_det.x, robot_det.y)
-                )
+                b_bots_pos[robot_det.robot_id].append(aux.Point(robot_det.x, robot_det.y))
                 b_bots_ang[robot_det.robot_id].append(robot_det.orientation)
 
             for robot_det in detection.robots_yellow:
                 y_bots_id.append(robot_det.robot_id)
-                y_bots_pos[robot_det.robot_id].append(
-                    aux.Point(robot_det.x, robot_det.y)
-                )
+                y_bots_pos[robot_det.robot_id].append(aux.Point(robot_det.x, robot_det.y))
                 y_bots_ang[robot_det.robot_id].append(robot_det.orientation)
 
         if len(balls) != 0:
@@ -99,10 +94,7 @@ class FieldCreator(BaseProcessor):
             self.field.update_ball(ball, time())
         elif self.field.robot_with_ball is not None:
             ally = self.field.robot_with_ball
-            ball = (
-                ally.get_pos()
-                + aux.rotate(aux.RIGHT, ally.get_angle()) * ally.get_radius() / 2
-            )
+            ball = ally.get_pos() + aux.rotate(aux.RIGHT, ally.get_angle()) * ally.get_radius() / 2
             self.field.update_ball(ball, time())
 
         self.field.robot_with_ball = None

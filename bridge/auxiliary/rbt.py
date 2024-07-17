@@ -5,11 +5,9 @@
 import math
 import typing
 
-import bridge.processors.auxiliary as aux
-import bridge.processors.const as const
-import bridge.processors.entity as entity
-import bridge.processors.tau as tau
-import bridge.processors.waypoint as wp
+from bridge.auxiliary import aux, entity, tau
+from bridge import const
+import bridge.router.waypoint as wp
 
 
 class Robot(entity.Entity):

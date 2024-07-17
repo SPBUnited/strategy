@@ -4,10 +4,12 @@
 
 import math
 
-import bridge.processors.auxiliary as aux
+from bridge.auxiliary import aux
 
 
-def shortesthull(p1: aux.Point, p2: aux.Point, points: list[aux.Point]) -> list[aux.Point]:
+def shortesthull(
+    p1: aux.Point, p2: aux.Point, points: list[aux.Point]
+) -> list[aux.Point]:
     """
     Получить кратчайший путь от точки p1 до точки p2, огибающий точки points
     """
@@ -29,7 +31,9 @@ def shortesthull(p1: aux.Point, p2: aux.Point, points: list[aux.Point]) -> list[
     return hull[0]
 
 
-def quickhull(p1: aux.Point, p2: aux.Point, points: list[aux.Point], polarity: int = 1) -> list[aux.Point]:
+def quickhull(
+    p1: aux.Point, p2: aux.Point, points: list[aux.Point], polarity: int = 1
+) -> list[aux.Point]:
     """
     Найти половину выпуклой оболочки вокруг points с началом в p1, концом в p2
 
@@ -39,11 +43,15 @@ def quickhull(p1: aux.Point, p2: aux.Point, points: list[aux.Point], polarity: i
     if polarity == 1:
         return [p1] + quickhullupper(p1, p2, points) + [p2]
     if polarity == -1:
-        return list(reversed(([p2] + quickhullupper(p2, p1, points) + [p1])))  # pylint: disable = arguments-out-of-order
+        return list(
+            reversed(([p2] + quickhullupper(p2, p1, points) + [p1]))
+        )  # pylint: disable = arguments-out-of-order
     return []
 
 
-def quickhullupper(p1: aux.Point, p2: aux.Point, points: list[aux.Point]) -> list[aux.Point]:
+def quickhullupper(
+    p1: aux.Point, p2: aux.Point, points: list[aux.Point]
+) -> list[aux.Point]:
     """
     Найти верхнюю половину выпуклой оболочки вокруг points с началом в p1, концом в p2
     """
@@ -60,10 +68,18 @@ def quickhullupper(p1: aux.Point, p2: aux.Point, points: list[aux.Point]) -> lis
     max_dist = 0.0
     max_p = None
     for p in uppoints:
-        if aux.dist2line(p2, p1, p) > max_dist:  # pylint: disable = arguments-out-of-order
-            max_dist = aux.dist2line(p2, p1, p)  # pylint: disable = arguments-out-of-order
+        if (
+            aux.dist2line(p2, p1, p) > max_dist
+        ):  # pylint: disable = arguments-out-of-order
+            max_dist = aux.dist2line(
+                p2, p1, p
+            )  # pylint: disable = arguments-out-of-order
             max_p = p
 
     if max_p is None:
         return []
-    return quickhullupper(p1, max_p, uppoints) + [max_p] + quickhullupper(max_p, p2, uppoints)
+    return (
+        quickhullupper(p1, max_p, uppoints)
+        + [max_p]
+        + quickhullupper(max_p, p2, uppoints)
+    )

@@ -4,12 +4,10 @@
 
 from typing import Optional
 
-import bridge.processors.auxiliary as aux
-import bridge.processors.waypoint as wp
-import bridge.processors.field as fld
-import bridge.processors.robot as rbt
+from bridge.auxiliary import aux, fld, rbt
+import bridge.router.waypoint as wp
 
-from bridge.processors import const
+from bridge import const
 from time import time
 
 
@@ -29,7 +27,10 @@ class KickerAux:
         self, field: fld.Field, kicker: rbt.Robot, receive_pos: aux.Point
     ) -> wp.Waypoint:
         "Пасс"
-        self.set_voltage(field, kicker.r_id, receive_pos, "PASS")
+        if receive_pos.x * kicker.get_pos().x > 0:
+            self.set_voltage(field, kicker.r_id, receive_pos, "PASS")
+        else:
+            self.set_voltage(field, kicker.r_id, receive_pos, "SHOOT")
 
         # if kicker.r_id < 9:  ####NOTE
         #     angle = aux.angle_to_point(field.ball.get_pos(), receive_pos)
@@ -57,14 +58,14 @@ class KickerAux:
         #     return wp.Waypoint(field.ball.get_pos(), angle, wp.WType.S_BALL_KICK)
 
         nearest_enemy = fld.find_nearest_robot(field.ball.get_pos(), field.enemies)
-        if aux.dist(field.ball.get_pos(), nearest_enemy.get_pos()) < 500:
-            return self.twisted(field, kicker, shoot_point)
-        elif field.is_ball_in(kicker):
+        # if aux.dist(field.ball.get_pos(), nearest_enemy.get_pos()) < 500:
+        #     return self.twisted(field, kicker, shoot_point)
+        if field.is_ball_in(kicker):
             if aux.dist(field.ball.get_pos(), field.enemy_goal.center) < 1000:
                 return self.twisted(field, kicker, shoot_point, "ANGRY")
             return self.twisted(field, kicker, shoot_point)
         else:
-            if const.IS_DRIBLER_USED:
+            if const.IS_DRIBBLER_USED:
                 target = aux.Point(shoot_point.x, 0)
             else:
                 target = shoot_point
@@ -113,6 +114,10 @@ class KickerAux:
         """
         Прицеливание и удар в точку
         """
+        if const.IS_SIMULATOR_USED:
+            angle = aux.angle_to_point(field.ball.get_pos(), kick_point)
+            return wp.Waypoint(field.ball.get_pos(), angle, wp.WType.S_BALL_KICK)
+
         if not field.is_ball_in(kicker):
             angle = aux.angle_to_point(kicker.get_pos(), field.ball.get_pos())
             if kicker.is_kick_aligned_by_angle(angle):
@@ -125,7 +130,7 @@ class KickerAux:
         )
         x = abs(signed_x)
 
-        if not const.IS_DRIBLER_USED:
+        if not const.IS_DRIBBLER_USED:
             waypoint = spin_around_ball(1 * aux.sign(signed_x))
         elif style != "SAFE":
             waypoint = spin_with_ball(1 * aux.sign(signed_x))

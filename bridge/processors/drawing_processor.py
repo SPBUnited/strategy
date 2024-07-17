@@ -1,16 +1,19 @@
+"""Processor for drawing"""
+
 import typing
+
 import attr
+import pygame
 from strategy_bridge.bus import DataBus, DataReader
 from strategy_bridge.processors import BaseProcessor
 
-import bridge.processors.auxiliary as aux
-from bridge.processors import const, drawing, field as fld
-
-import pygame
+from bridge import const, drawing
+from bridge.auxiliary import aux, fld
 
 
 @attr.s(auto_attribs=True)
 class Drawer(BaseProcessor):
+    """Class for drawing"""
 
     processing_pause: typing.Optional[float] = 1 / 30
     reduce_pause_on_process_time: bool = True
@@ -72,9 +75,7 @@ class Drawer(BaseProcessor):
         for goal in [field.ally_goal, field.enemy_goal]:
             new_dots = []
             for i, dot in enumerate(goal.hull):
-                new_dots.append(
-                    dot * self.scale + aux.Point(self.middle_x, self.middle_y)
-                )
+                new_dots.append(dot * self.scale + aux.Point(self.middle_x, self.middle_y))
 
             for i, _ in enumerate(new_dots):
                 pygame.draw.line(
@@ -119,15 +120,12 @@ class Drawer(BaseProcessor):
             (self.middle_x, self.lower_border),
             2,
         )  # Вертикальная линия
-        pygame.draw.circle(
-            self.screen, line_color, (self.middle_x, self.middle_y), 50, 2
-        )  # Круг в центре
+        pygame.draw.circle(self.screen, line_color, (self.middle_x, self.middle_y), 50, 2)  # Круг в центре
 
     def complete_command(self, command: drawing.Command) -> None:
+        """Draw something on a screen by command"""
         if len(command.dots) == 1:
-            pygame.draw.circle(
-                self.screen, command.color, command.dots[0], command.size * self.scale
-            )
+            pygame.draw.circle(self.screen, command.color, command.dots[0], command.size * self.scale)
         elif len(command.dots) == 2:
             pygame.draw.line(
                 self.screen,
@@ -147,6 +145,7 @@ class Drawer(BaseProcessor):
                 )
 
     def scale_dots(self, command: drawing.Command) -> None:
+        """Scale dots from coordinates to pixels"""
         for i, _ in enumerate(command.dots):
             command.dots[i] = (
                 command.dots[i][0] * self.scale + self.middle_x,

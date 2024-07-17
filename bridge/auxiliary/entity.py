@@ -14,8 +14,8 @@ import numpy as np
 from filterpy.kalman import KalmanFilter
 from filterpy.common import Q_discrete_white_noise
 
-import bridge.processors.auxiliary as aux
-from bridge.processors import const, tau
+from bridge.auxiliary import aux, tau
+from bridge import const
 
 
 class Entity:

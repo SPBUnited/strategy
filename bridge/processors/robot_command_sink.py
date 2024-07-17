@@ -4,17 +4,15 @@
 
 import struct
 import typing
+from time import time
 
 import attr
 from strategy_bridge.bus import DataBus, DataReader, DataWriter
 from strategy_bridge.common import config
 from strategy_bridge.processors import BaseProcessor
 
-import bridge.processors.auxiliary as aux
-import bridge.processors.const as const
-import bridge.processors.robot as robot
-
-from time import time
+from bridge import const
+from bridge.auxiliary import aux, rbt
 
 
 @attr.s(auto_attribs=True)
@@ -30,12 +28,10 @@ class CommandSink(BaseProcessor):
     commands_writer: DataWriter = attr.ib(init=False)
 
     b_control_team = [
-        robot.Robot(aux.GRAVEYARD_POS, 0, const.ROBOT_R, const.Color.BLUE, i, 0)
-        for i in range(const.TEAM_ROBOTS_MAX_COUNT)
+        rbt.Robot(aux.GRAVEYARD_POS, 0, const.ROBOT_R, const.Color.BLUE, i, 0) for i in range(const.TEAM_ROBOTS_MAX_COUNT)
     ]
     y_control_team = [
-        robot.Robot(aux.GRAVEYARD_POS, 0, const.ROBOT_R, const.Color.YELLOW, i, 0)
-        for i in range(const.TEAM_ROBOTS_MAX_COUNT)
+        rbt.Robot(aux.GRAVEYARD_POS, 0, const.ROBOT_R, const.Color.YELLOW, i, 0) for i in range(const.TEAM_ROBOTS_MAX_COUNT)
     ]
 
     def initialize(self, data_bus: DataBus) -> None:
@@ -44,9 +40,7 @@ class CommandSink(BaseProcessor):
         """
         super(CommandSink, self).initialize(data_bus)
         self.commands_sink_reader = DataReader(data_bus, const.TOPIC_SINK, 20)
-        self.commands_writer = DataWriter(
-            data_bus, config.ROBOT_COMMANDS_TOPIC, self.max_commands_to_persist
-        )
+        self.commands_writer = DataWriter(data_bus, config.ROBOT_COMMANDS_TOPIC, self.max_commands_to_persist)
 
     def process(self) -> None:
         """
@@ -55,11 +49,14 @@ class CommandSink(BaseProcessor):
 
         cmds = self.commands_sink_reader.read_new()
 
+        if cmds is None:
+            return
+
         # if len(cmds) > 0:
         #     print(len(cmds), "total delay:", time() - cmds[0].content.last_update())
 
         for cmd in cmds:
-            r: robot.Robot = cmd.content
+            r: rbt.Robot = cmd.content
             if not r.is_used():
                 continue
             ctrl_id = r.ctrl_id
@@ -134,11 +131,7 @@ class CommandSink(BaseProcessor):
                 rules.append(0)
         else:
             for i in range(const.TEAM_ROBOTS_MAX_COUNT):
-                control_team = (
-                    self.y_control_team
-                    if self.y_control_team[i].is_used()
-                    else self.b_control_team
-                )
+                control_team = self.y_control_team if self.y_control_team[i].is_used() else self.b_control_team
 
                 if self.y_control_team[i].is_used():
                     pass
@@ -149,7 +142,7 @@ class CommandSink(BaseProcessor):
                         rules.append(0)
                     continue
 
-                if not const.IS_DRIBLER_USED:
+                if not const.IS_DRIBBLER_USED:
                     if round(time() * 2) % 10 == 0:
                         control_team[i].dribbler_enable_ = 1
                         control_team[i].dribbler_speed_ = 1

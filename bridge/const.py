@@ -20,7 +20,7 @@ COLOR = Color.BLUE
 POLARITY = 1  # -1 если ворота синих на +x; 1 если ворота синих на -x
 
 IS_SIMULATOR_USED = True
-IS_DRIBLER_USED = True  # dribler and upper_kick
+IS_DRIBBLER_USED = True  # dribler and upper_kick
 SELF_PLAY = False
 
 GK = 5
@@ -129,7 +129,7 @@ FULL_DELAY = 0.16
 
 
 # VOLTAGES
-VOLTAGE_PASS = 6
+VOLTAGE_PASS = 10
 VOLTAGE_SHOOT = 15
-VOLTAGE_UP = 15
+VOLTAGE_UP = 10
 VOLTAGE_ZERO = min(VOLTAGE_PASS, VOLTAGE_SHOOT, VOLTAGE_UP)
