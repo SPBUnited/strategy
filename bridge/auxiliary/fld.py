@@ -2,7 +2,7 @@
 Модуль описания структуры Field для хранения информации об объектах на поле (роботы и мяч)
 """
 
-from math import cos
+from math import cos, pi
 from typing import Optional
 
 from bridge import const
@@ -156,7 +156,7 @@ class Field:
 
     def _is_ball_in(self, robo: rbt.Robot) -> bool:
         """
-        Определить, находится ли мяч внутри дриблера
+        Определить, находится ли мяч внутри дрибблера
         """
         return (
             robo.get_pos() - self.ball.get_pos()
@@ -168,7 +168,7 @@ class Field:
 
     def is_ball_in(self, robo: rbt.Robot) -> bool:
         """
-        Определить, находится ли мяч внутри дриблера
+        Определить, находится ли мяч внутри дрибблера
         """
         return robo == self.robot_with_ball
 
@@ -208,11 +208,11 @@ class Field:
 
     def is_ball_stop_near_goal(self) -> bool:
         """
-        Определить, находится ли мяч в штрафной зоне
+        Определить, остановился ли мяч в штрафной зоне
         """
         return (
             aux.is_point_inside_poly(self.ball.get_pos(), self.ally_goal.hull)
-            and not self.is_ball_moves_to_goal()
+            and not self.is_ball_moves()
         )
 
     def is_ball_moves(self) -> bool:
@@ -228,45 +228,37 @@ class Field:
         vec_to_point = point - self.ball.get_pos()
         return (
             self.ball.get_vel().mag()
-            * (cos(vec_to_point.arg() - self.ball.get_vel().arg()) ** 3)
-            > const.INTERCEPT_SPEED * 2
+            * (cos(vec_to_point.arg() - self.ball.get_vel().arg()) ** 5)
+            > const.INTERCEPT_SPEED * 10
             and self.robot_with_ball is None
+            and vec_to_point.arg() - self.ball.get_vel().arg() < pi / 2
         )
 
     def is_ball_moves_to_goal(self) -> bool:
         """
         Определить, движется ли мяч в сторону ворот
         """
-        return self.is_ball_moves_to_point(self.ally_goal.center)
-
-    def find_nearest_allies(
-        self, point: aux.Point, num: int, avoid: Optional[list[int]] = None
-    ) -> list[rbt.Robot]:
-        """
-        Найти num роботов из field.allies, ближайших к точке point
-        """
-        if avoid is None:
-            avoid = []
-        avoid += [self.gk_id]
-        robots: list[rbt.Robot] = []
-        # if len(self.allies) < num:
-        #     return None  # сам виноват
-
-        while len(robots) < num:
-            robo = find_nearest_robot(point, self.allies, avoid)
-            robots.append(robo)
-            avoid.append(robo.r_id)
-        return robots
+        inter = aux.get_line_intersection(
+            self.ally_goal.up,
+            self.ally_goal.down,
+            self.ball.get_pos(),
+            self.ball.get_pos() + self.ball.get_vel(),
+            "SR",
+        )
+        return (
+            inter
+            is not None
+            # or self.is_ball_moves_to_point(self.ally_goal.up)
+            # or self.is_ball_moves_to_point(self.ally_goal.down)
+        )
 
 
 def find_nearest_robot(
-    point: aux.Point, team: list[rbt.Robot], avoid: Optional[list[int]] = None
+    point: aux.Point, team: list[rbt.Robot], avoid: list[int] = []
 ) -> rbt.Robot:
     """
     Найти ближайший робот из массива team к точке point, игнорируя точки avoid
     """
-    if avoid is None:
-        avoid = []
     robo_id = -1
     min_dist = 10e10
 
@@ -277,3 +269,32 @@ def find_nearest_robot(
             min_dist = aux.dist(point, player.get_pos())
             robo_id = i
     return team[robo_id]
+
+
+def find_nearest_robots(
+    point: aux.Point,
+    team: list[rbt.Robot],
+    num: Optional[int] = None,
+    avoid: Optional[list[int]] = None,
+) -> list[rbt.Robot]:
+    """
+    Найти num роботов из team, ближайших к точке point
+    """
+    if num is None:
+        num = len(team)
+    if avoid is None:
+        avoid = []
+    robots: list[rbt.Robot] = []
+
+    robot_dist: list[tuple[rbt.Robot, float]] = []
+
+    for robot in team:  # in [field.enemies, field.allies]
+        dist = (robot.get_pos() - point).mag()
+        if robot.is_used():
+            robot_dist.append((robot, dist))
+
+    sorted_robot_dist = sorted(robot_dist, key=lambda x: x[1])
+
+    sorted_robots: list[rbt.Robot] = [rbt_dst[0] for rbt_dst in sorted_robot_dist]
+
+    return sorted_robots[:num]

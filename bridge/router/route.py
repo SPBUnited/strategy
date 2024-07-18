@@ -184,7 +184,7 @@ class Route:
                 wp.WType.S_BALL_GO,
                 wp.WType.S_BALL_PASS,
             ]
-        ) and dist < 500:
+        ) and dist < 300:
             rbt.pos_reg_x.select_mode(tau.Mode.SOFT)
             rbt.pos_reg_y.select_mode(tau.Mode.SOFT)
 

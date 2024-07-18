@@ -2,6 +2,7 @@
 Точка входа в стратегию
 """
 
+from strategy_bridge.common import config
 from strategy_bridge.processors import RobotCommandsSender, VisionDetectionsCollector
 from strategy_bridge.processors.referee_commands_collector import (
     RefereeCommandsCollector,
@@ -25,7 +26,6 @@ if __name__ == "__main__":
         FieldCreator(processing_pause=0.01),
         SSLController(
             ally_color=const.COLOR,
-            # should_debug=True,
             processing_pause=const.Ts,
             reduce_pause_on_process_time=True,
             dbg_game_status=strategy.GameStates.RUN,
@@ -33,7 +33,6 @@ if __name__ == "__main__":
         ),
         SSLController(
             ally_color=const.Color.YELLOW,
-            # should_debug=True,
             processing_pause=const.Ts,
             reduce_pause_on_process_time=True,
             dbg_game_status=strategy.GameStates.RUN,

@@ -90,7 +90,7 @@ class SSLController(BaseProcessor):
 
     def draw_image(self) -> None:
         """Send commands to drawer processor"""
-        if self.field.image is not None:
+        if self.field.image is not None and self.field.ally_color == const.COLOR:
             self.image_writer.write(self.field.image)
 
     def control_loop(self) -> None:
@@ -127,7 +127,9 @@ class SSLController(BaseProcessor):
         if cur_cmd.state == -1:
             return
 
-        if cur_state == state_machine.State.STOP or (cur_active != const.Color.ALL and cur_active != self.field.ally_color):
+        if cur_state == state_machine.State.STOP or (
+            cur_active != const.Color.ALL and cur_active != self.field.ally_color
+        ):
             self.router.avoid_ball(True)
 
         if cur_cmd.state != self.cur_cmd_state:
@@ -154,7 +156,9 @@ class SSLController(BaseProcessor):
                 self.wait_ball_moved = self.field.ball.get_pos()
         else:
             if self.wait_10_sec_flag and time.time() - self.wait_10_sec > 10:
-                self.state_machine.make_transition_(state_machine.Command.PASS_10_SECONDS)
+                self.state_machine.make_transition_(
+                    state_machine.Command.PASS_10_SECONDS
+                )
                 self.state_machine.active_team(0)
                 self.wait_10_sec_flag = False
                 self.wait_ball_moved_flag = False

@@ -74,8 +74,10 @@ class Drawer(BaseProcessor):
         self.draw_field()
         for goal in [field.ally_goal, field.enemy_goal]:
             new_dots = []
-            for i, dot in enumerate(goal.hull):
-                new_dots.append(dot * self.scale + aux.Point(self.middle_x, self.middle_y))
+            for dot in goal.hull:
+                new_dots.append(
+                    dot * self.scale + aux.Point(self.middle_x, self.middle_y)
+                )
 
             for i, _ in enumerate(new_dots):
                 pygame.draw.line(
@@ -85,6 +87,15 @@ class Drawer(BaseProcessor):
                     (new_dots[i].x, new_dots[i].y),
                     2,
                 )
+            goal_up = goal.up * self.scale + aux.Point(self.middle_x, self.middle_y)
+            goal_down = goal.down * self.scale + aux.Point(self.middle_x, self.middle_y)
+            pygame.draw.line(
+                self.screen,
+                (255, 255, 255),
+                (goal_up.x, goal_up.y),
+                (goal_down.x, goal_down.y),
+                10,
+            )
 
     def draw_field(self) -> None:
         """
@@ -120,12 +131,16 @@ class Drawer(BaseProcessor):
             (self.middle_x, self.lower_border),
             2,
         )  # Вертикальная линия
-        pygame.draw.circle(self.screen, line_color, (self.middle_x, self.middle_y), 50, 2)  # Круг в центре
+        pygame.draw.circle(
+            self.screen, line_color, (self.middle_x, self.middle_y), 50, 2
+        )  # Круг в центре
 
     def complete_command(self, command: drawing.Command) -> None:
         """Draw something on a screen by command"""
         if len(command.dots) == 1:
-            pygame.draw.circle(self.screen, command.color, command.dots[0], command.size * self.scale)
+            pygame.draw.circle(
+                self.screen, command.color, command.dots[0], command.size * self.scale
+            )
         elif len(command.dots) == 2:
             pygame.draw.line(
                 self.screen,
