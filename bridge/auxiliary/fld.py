@@ -133,6 +133,10 @@ class Field:
             self.allies = [*self.y_team]
             self.enemies = [*self.b_team]
 
+        self.ball_history: list[Optional[aux.Point]] = [None] * round(0.3 / const.Ts)
+        self.ball_history_idx = 0
+        self.ball_start_point: Optional[aux.Point] = None
+
     def reverse_field(self) -> None:
         self.gk_id, self.enemy_gk_id = self.enemy_gk_id, self.gk_id
 
@@ -153,6 +157,15 @@ class Field:
         !!! Вызывать один раз за итерацию с постоянной частотой !!!
         """
         self.ball.update(pos, 0, t)
+
+        if self.ball_history[self.ball_history_idx] is None:
+            self.ball_start_point = self.ball_history[0]
+        else:
+            self.ball_start_point = self.ball_history[self.ball_history_idx]
+
+        self.ball_history[self.ball_history_idx] = self.ball.get_pos()
+        self.ball_history_idx += 1
+        self.ball_history_idx %= len(self.ball_history)
 
     def _is_ball_in(self, robo: rbt.Robot) -> bool:
         """
