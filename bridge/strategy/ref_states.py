@@ -1,13 +1,9 @@
-import math
-
-from bridge.auxiliary import aux, fld
 import bridge.const as const
 import bridge.router.waypoint as wp
+from bridge.auxiliary import aux, fld
 
 
-def halt(
-    field: fld.Field, waypoints: list[wp.Waypoint]
-) -> None:  # TODO: проверить что роботы останавливаются на самом деле
+def halt(field: fld.Field, waypoints: list[wp.Waypoint]) -> None:  # TODO: проверить что роботы останавливаются на самом деле
     """Пауза по команде от судей"""
     for i in range(const.TEAM_ROBOTS_MAX_COUNT):
         if field.allies[i].is_used():
@@ -33,9 +29,7 @@ def timeout(field: fld.Field, waypoints: list[wp.Waypoint]) -> None:
             rC += 1
 
 
-def prepare_penalty(
-    field: fld.Field, waypoints: list[wp.Waypoint], we_active: bool
-) -> None:
+def prepare_penalty(field: fld.Field, waypoints: list[wp.Waypoint], we_active: bool) -> None:
     """Подготовка пенальти по команде от судей"""
     stopped_robots = []
     for ally in field.allies:
@@ -52,9 +46,7 @@ def prepare_penalty(
     if we_active:
         waypoints[const.PENALTY_KICKER] = wp.Waypoint(
             aux.Point(250 * field.polarity, 0),
-            aux.angle_to_point(
-                field.allies[const.PENALTY_KICKER].get_pos(), field.ball.get_pos()
-            ),
+            aux.angle_to_point(field.allies[const.PENALTY_KICKER].get_pos(), field.ball.get_pos()),
             wp.WType.S_ENDPOINT,
         )
     else:
@@ -62,16 +54,11 @@ def prepare_penalty(
         delta_x *= -1
         waypoints[const.PENALTY_KICKER] = wp.Waypoint(
             aux.Point((x0 - delta_x) * field.polarity, y0),
-            aux.angle_to_point(
-                field.allies[const.PENALTY_KICKER].get_pos(), field.ball.get_pos()
-            ),
+            aux.angle_to_point(field.allies[const.PENALTY_KICKER].get_pos(), field.ball.get_pos()),
             wp.WType.S_ENDPOINT,
         )
 
-    poses = [
-        aux.Point((x0 + delta_x * i) * field.polarity, y0)
-        for i in range(len(stopped_robots))
-    ]
+    poses = [aux.Point((x0 + delta_x * i) * field.polarity, y0) for i in range(len(stopped_robots))]
 
     for robot_id in stopped_robots:
         robot_pos = field.allies[robot_id].get_pos()
@@ -114,14 +101,10 @@ def penalty_kick(field: fld.Field, waypoints: list[wp.Waypoint]) -> None:
     else:
         target = aux.Point(field.enemy_goal.center.x, -kick_delta)
 
-    waypoints[const.PENALTY_KICKER] = wp.Waypoint(
-        ball, aux.angle_to_point(ball, target), wp.WType.S_BALL_KICK
-    )
+    waypoints[const.PENALTY_KICKER] = wp.Waypoint(ball, aux.angle_to_point(ball, target), wp.WType.S_BALL_KICK)
 
 
-def prepare_kickoff(
-    field: fld.Field, waypoints: list[wp.Waypoint], we_active: bool
-) -> None:
+def prepare_kickoff(field: fld.Field, waypoints: list[wp.Waypoint], we_active: bool) -> None:
     """Настройка перед состоянием kickoff по команде судей"""
     if we_active:
         if const.DIV == "B":
@@ -194,8 +177,6 @@ def kickoff(field: fld.Field, waypoints: list[wp.Waypoint], we_active: bool) -> 
         target = aux.point_on_line(field.ball.get_pos(), field.ally_goal.center, 250)
         waypoints[go_kick.r_id] = wp.Waypoint(
             target,
-            aux.angle_to_point(
-                field.allies[go_kick.r_id].get_pos(), field.ball.get_pos()
-            ),
+            aux.angle_to_point(field.allies[go_kick.r_id].get_pos(), field.ball.get_pos()),
             wp.WType.S_IGNOREOBSTACLES,
         )

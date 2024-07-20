@@ -10,12 +10,13 @@
 """
 
 from time import time
-import numpy as np
-from filterpy.kalman import KalmanFilter
-from filterpy.common import Q_discrete_white_noise
 
-from bridge.auxiliary import aux, tau
+import numpy as np
+from filterpy.common import Q_discrete_white_noise
+from filterpy.kalman import KalmanFilter
+
 from bridge import const
+from bridge.auxiliary import aux, tau
 
 
 class Entity:
@@ -25,9 +26,7 @@ class Entity:
     Хранит положение, скорость, угол и тп.
     """
 
-    def __init__(
-        self, pos: aux.Point, angle: float, R: float, T: float = const.Ts
-    ) -> None:
+    def __init__(self, pos: aux.Point, angle: float, R: float, T: float = const.Ts) -> None:
         """
         Конструктор
 

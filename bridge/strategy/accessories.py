@@ -5,9 +5,7 @@ from bridge import const
 from bridge.auxiliary import aux, fld, rbt
 
 
-def estimate_pass_point(
-    field: fld.Field, frm: Optional[aux.Point], to: Optional[aux.Point]
-) -> float:
+def estimate_pass_point(field: fld.Field, frm: Optional[aux.Point], to: Optional[aux.Point]) -> float:
     """
     Оценивает пас из точки "frm" в точку "to, возвращая положительное значение до 0.8
     """
@@ -54,9 +52,7 @@ def estimate_pass_point(
     if min_ == 10e3 or len(shadows_bots) != 0:
         return 0
     dist = (frm - to).mag() / 1000
-    max_ang = abs(
-        aux.wind_down_angle(2 * math.atan2(const.ROBOT_SPEED, -0.25 * dist + 4.5))
-    )
+    max_ang = abs(aux.wind_down_angle(2 * math.atan2(const.ROBOT_SPEED, -0.25 * dist + 4.5)))
     # max_ang = 10
     return min(abs(min_ / max_ang), 1)
 
@@ -104,13 +100,10 @@ def choose_segment_in_goal(
     Выбирает самый большой угловой промежуток на воротах (если смотреть из точки ball_pos)
     """
     positions = []
-    for rbt in interfering_robots:
-        if rbt != field.allies[kicker_id]:
-            if (
-                aux.dist(rbt.get_pos(), goal.center) < aux.dist(goal.center, ball_pos)
-                and rbt.is_used()
-            ):
-                positions.append(rbt.get_pos())
+    for robot in interfering_robots:
+        if robot != field.allies[kicker_id]:
+            if aux.dist(robot.get_pos(), goal.center) < aux.dist(goal.center, ball_pos) and robot.is_used():
+                positions.append(robot.get_pos())
 
     positions = sorted(positions, key=lambda x: x.y * -goal.eye_up.y)
 

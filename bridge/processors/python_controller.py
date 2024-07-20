@@ -127,9 +127,7 @@ class SSLController(BaseProcessor):
         if cur_cmd.state == -1:
             return
 
-        if cur_state == state_machine.State.STOP or (
-            cur_active != const.Color.ALL and cur_active != self.field.ally_color
-        ):
+        if cur_state == state_machine.State.STOP or (cur_active not in [const.Color.ALL, self.field.ally_color]):
             self.router.avoid_ball(True)
 
         if cur_cmd.state != self.cur_cmd_state:
@@ -156,9 +154,7 @@ class SSLController(BaseProcessor):
                 self.wait_ball_moved = self.field.ball.get_pos()
         else:
             if self.wait_10_sec_flag and time.time() - self.wait_10_sec > 10:
-                self.state_machine.make_transition_(
-                    state_machine.Command.PASS_10_SECONDS
-                )
+                self.state_machine.make_transition_(state_machine.Command.PASS_10_SECONDS)
                 self.state_machine.active_team(0)
                 self.wait_10_sec_flag = False
                 self.wait_ball_moved_flag = False

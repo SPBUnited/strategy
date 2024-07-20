@@ -4,11 +4,9 @@
 
 from typing import Optional
 
-from bridge.auxiliary import aux, fld, rbt
 import bridge.router.waypoint as wp
-
 from bridge import const
-from time import time
+from bridge.auxiliary import aux, fld, rbt
 
 
 class KickerAux:
@@ -23,9 +21,7 @@ class KickerAux:
         self.twist_w = 0.5
         self.wait_kick_timer = None
 
-    def pass_to_point(
-        self, field: fld.Field, kicker: rbt.Robot, receive_pos: aux.Point
-    ) -> wp.Waypoint:
+    def pass_to_point(self, field: fld.Field, kicker: rbt.Robot, receive_pos: aux.Point) -> wp.Waypoint:
         "Пасс"
         if receive_pos.x * kicker.get_pos().x > 0:
             self.set_voltage(field, kicker.r_id, receive_pos, "PASS")
@@ -38,17 +34,13 @@ class KickerAux:
         #     return wp.Waypoint(field.ball.get_pos(), angle, wp.WType.S_BALL_KICK)
 
         nearest_enemy = fld.find_nearest_robot(field.ball.get_pos(), field.enemies)
-        if aux.dist(
-            field.ball.get_pos(), nearest_enemy.get_pos()
-        ) < 500 or field.is_ball_in(kicker):
+        if aux.dist(field.ball.get_pos(), nearest_enemy.get_pos()) < 500 or field.is_ball_in(kicker):
             return self.twisted(field, kicker, receive_pos)
         else:
             angle = aux.angle_to_point(field.ball.get_pos(), receive_pos)
             return wp.Waypoint(field.ball.get_pos(), angle, wp.WType.S_BALL_KICK)
 
-    def shoot_to_goal(
-        self, field: fld.Field, kicker: rbt.Robot, shoot_point: aux.Point
-    ) -> wp.Waypoint:
+    def shoot_to_goal(self, field: fld.Field, kicker: rbt.Robot, shoot_point: aux.Point) -> wp.Waypoint:
         "Удар по воротам"
         self.set_voltage(field, kicker.r_id, shoot_point, "SHOOT")
 
@@ -57,7 +49,7 @@ class KickerAux:
         #     self.reset_kick_consts()
         #     return wp.Waypoint(field.ball.get_pos(), angle, wp.WType.S_BALL_KICK)
 
-        nearest_enemy = fld.find_nearest_robot(field.ball.get_pos(), field.enemies)
+        fld.find_nearest_robot(field.ball.get_pos(), field.enemies)
         # if aux.dist(field.ball.get_pos(), nearest_enemy.get_pos()) < 500:
         #     return self.twisted(field, kicker, shoot_point)
         if field.is_ball_in(kicker):
@@ -72,21 +64,12 @@ class KickerAux:
             angle = aux.angle_to_point(field.ball.get_pos(), target)
             return wp.Waypoint(field.ball.get_pos(), angle, wp.WType.S_BALL_GRAB)
 
-    def set_voltage(
-        self, field: fld.Field, kicker_id: int, kick_point: aux.Point, style: str
-    ) -> None:
+    def set_voltage(self, field: fld.Field, kicker_id: int, kick_point: aux.Point, style: str) -> None:
         "Set voltage for robot's kicker"
-        angle_to_target = aux.angle_to_point(
-            field.allies[kicker_id].get_pos(), kick_point
-        )
+        angle_to_target = aux.angle_to_point(field.allies[kicker_id].get_pos(), kick_point)
         if (
             aux.dist(field.allies[kicker_id].get_pos(), field.ball.get_pos()) > 200
-            or abs(
-                aux.wind_down_angle(
-                    field.allies[kicker_id].get_angle() - angle_to_target
-                )
-            )
-            > 1
+            or abs(aux.wind_down_angle(field.allies[kicker_id].get_angle() - angle_to_target)) > 1
         ):
             # print(aux.dist(field.allies[kicker_id].get_pos(), field.ball.get_pos()), aux.wind_down_angle(field.allies[kicker_id].get_angle() - angle_to_target))
             field.allies[kicker_id].kicker_voltage_ = const.VOLTAGE_ZERO
@@ -98,9 +81,9 @@ class KickerAux:
             field.allies[kicker_id].kicker_voltage_ = const.VOLTAGE_UP
 
         # print("voltage", self.robot_voltage[kicker_id], "->", field.allies[kicker_id].kicker_voltage_)
-        if field.allies[kicker_id].kicker_voltage_ < self.robot_voltage[
-            kicker_id
-        ] and not field.is_ball_in(field.allies[kicker_id]):
+        if field.allies[kicker_id].kicker_voltage_ < self.robot_voltage[kicker_id] and not field.is_ball_in(
+            field.allies[kicker_id]
+        ):
             field.allies[kicker_id].kick_forward()
         self.robot_voltage[kicker_id] = field.allies[kicker_id].kicker_voltage_
 
@@ -125,9 +108,7 @@ class KickerAux:
             self.reset_kick_consts()
             return wp.Waypoint(field.ball.get_pos(), angle, wp.WType.S_BALL_GRAB)
 
-        signed_x = aux.wind_down_angle(
-            aux.angle_to_point(kicker.get_pos(), kick_point) - kicker.get_angle()
-        )
+        signed_x = aux.wind_down_angle(aux.angle_to_point(kicker.get_pos(), kick_point) - kicker.get_angle())
         x = abs(signed_x)
 
         if not const.IS_DRIBBLER_USED:

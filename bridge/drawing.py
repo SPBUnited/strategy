@@ -2,10 +2,9 @@
 draw field with robots and trajectory
 """
 
-import math
 
-from bridge.auxiliary import aux
 from bridge import const
+from bridge.auxiliary import aux
 
 
 class Command:

@@ -2,7 +2,6 @@
 Точка входа в стратегию
 """
 
-from strategy_bridge.common import config
 from strategy_bridge.processors import RobotCommandsSender, VisionDetectionsCollector
 from strategy_bridge.processors.referee_commands_collector import (
     RefereeCommandsCollector,

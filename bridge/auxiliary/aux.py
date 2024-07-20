@@ -4,9 +4,9 @@
 
 import math
 import typing
+from typing import Optional
 
 from bridge import const
-from typing import Optional
 
 
 class Graph:
@@ -145,9 +145,7 @@ def dist2line(p1: Point, p2: Point, p: Point) -> float:
 #     return False
 
 
-def segment_poly_intersect(
-    p1: Point, p2: Point, points: list[Point]
-) -> typing.Optional[Point]:
+def segment_poly_intersect(p1: Point, p2: Point, points: list[Point]) -> typing.Optional[Point]:
     """
     Определить, пересекает ли отрезок p1-p2 полигон points
     Если да - возвращает одну из двух точек пересечения
@@ -244,21 +242,9 @@ def get_line_intersection(
 
     first_valid = False
     second_valid = False
-    if (
-        is_inf[0] == "S"
-        and 0 <= t1 <= 1
-        or is_inf[0] == "R"
-        and t1 >= 0
-        or is_inf[0] == "L"
-    ):
+    if is_inf[0] == "S" and 0 <= t1 <= 1 or is_inf[0] == "R" and t1 >= 0 or is_inf[0] == "L":
         first_valid = True
-    if (
-        is_inf[1] == "S"
-        and 0 <= t2 <= 1
-        or is_inf[1] == "R"
-        and t2 >= 0
-        or is_inf[1] == "L"
-    ):
+    if is_inf[1] == "S" and 0 <= t2 <= 1 or is_inf[1] == "R" and t2 >= 0 or is_inf[1] == "L":
         second_valid = True
 
     if first_valid and second_valid:
@@ -291,9 +277,7 @@ def rotate(p: Point, angle: float) -> Point:
     )
 
 
-def find_nearest_point(
-    p: Point, points: list[Point], exclude: list[Point] = []
-) -> Point:  #
+def find_nearest_point(p: Point, points: list[Point], exclude: list[Point] = []) -> Point:  #
     """
     Найти ближайшую точку к p из облака points, игнорируя точки exclude
     """
@@ -318,9 +302,7 @@ def wind_down_angle(angle: float) -> float:
     return angle
 
 
-def closest_point_on_line(
-    point1: Point, point2: Point, point: Point, is_inf: str = "S"
-) -> Point:
+def closest_point_on_line(point1: Point, point2: Point, point: Point, is_inf: str = "S") -> Point:
     """
     Получить ближайшую к точке point току на линии point1-point2
 
@@ -340,9 +322,7 @@ def closest_point_on_line(
     line_direction = (line_vector[0] / line_length, line_vector[1] / line_length)
 
     point_vector = (point.x - point1.x, point.y - point1.y)
-    dot_product = (
-        point_vector[0] * line_direction[0] + point_vector[1] * line_direction[1]
-    )
+    dot_product = point_vector[0] * line_direction[0] + point_vector[1] * line_direction[1]
 
     if dot_product <= 0 and is_inf != "L":
         return point1
@@ -480,9 +460,7 @@ def cosine_theorem(a: float, b: float, angle: float) -> float:
     return math.sqrt(a * a + b * b - 2 * a * b * math.cos(angle))
 
 
-def line_circle_intersect(
-    x1: Point, x2: Point, c: Point, radius: float
-) -> Optional[list[Point]]:
+def line_circle_intersect(x1: Point, x2: Point, c: Point, radius: float) -> Optional[list[Point]]:
     """TODO"""
     h = closest_point_on_line(x1, x2, c, "L")
     if radius < dist(c, h):

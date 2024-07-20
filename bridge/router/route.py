@@ -4,9 +4,9 @@
 
 import math
 
-from bridge.auxiliary import aux, fld, rbt, tau
 import bridge.router.waypoint as wp
 from bridge import const
+from bridge.auxiliary import aux, fld, rbt, tau
 
 
 class Route:
@@ -168,9 +168,7 @@ class Route:
 
         lerp_angles = [target_point.angle, angle60]
 
-        angle0 = aux.lerp(
-            lerp_angles[0], lerp_angles[1], aux.minmax((dist - 100) / 1000, 0, 1)
-        )
+        angle0 = aux.lerp(lerp_angles[0], lerp_angles[1], aux.minmax((dist - 100) / 1000, 0, 1))
 
         rbt.pos_reg_x.select_mode(tau.Mode.NORMAL)
         rbt.pos_reg_y.select_mode(tau.Mode.NORMAL)
@@ -234,9 +232,7 @@ class Route:
             angle0 = end_point.angle
 
             if target_point.type == wp.WType.R_PASSTHROUGH:
-                transl_vel = (
-                    -vec_err.unity() * const.MAX_SPEED
-                )  # TODO: change speed by dist to final point
+                transl_vel = -vec_err.unity() * const.MAX_SPEED  # TODO: change speed by dist to final point
 
         aerr = aux.wind_down_angle(angle0 - rbt.get_angle())
 
@@ -258,15 +254,13 @@ class Route:
         # transl_vel = vel0 * 200
         # ang_vel = 0.7
 
-        if (
-            end_point.type in [wp.WType.S_BALL_KICK, wp.WType.S_BALL_PASS]
-        ) and rbt.is_kick_aligned_by_angle(end_point.angle):
+        if (end_point.type in [wp.WType.S_BALL_KICK, wp.WType.S_BALL_PASS]) and rbt.is_kick_aligned_by_angle(
+            end_point.angle
+        ):
             rbt.auto_kick_ = 1
             # if rbt.r_id < 9:
             #     rbt.auto_kick_ = 2
-        elif end_point.type == wp.WType.S_BALL_KICK_UP and rbt.is_kick_aligned_by_angle(
-            end_point.angle
-        ):
+        elif end_point.type == wp.WType.S_BALL_KICK_UP and rbt.is_kick_aligned_by_angle(end_point.angle):
             rbt.auto_kick_ = 2
         else:
             rbt.auto_kick_ = 0
