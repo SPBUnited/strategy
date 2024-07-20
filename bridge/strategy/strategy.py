@@ -150,14 +150,31 @@ class Strategy:
         defs = free_allies - (atks - atk_min) + def_min
 
         roles = ATTACK_ROLES[:atks] + DEFENSE_ROLES[:defs]
-        return [Role.GOALKEEPER, Role.ATTACKER] + sorted(roles, key=lambda x: x.value)
+        return [Role.GOALKEEPER, Role.ATTACKER] + roles
+
+    def manage_roles(
+        self,
+        field: fld.Field,
+        roles: list[Role],
+        enemies_near_goal: list[aux.Point],
+    ) -> list[Role]:
+        pass_defenders_num = len(find_role(field, roles, Role.PASS_DEFENDER))
+        if pass_defenders_num > len(enemies_near_goal):
+            roles = replace_role(
+                roles,
+                Role.PASS_DEFENDER,
+                Role.WALLLINER,
+                pass_defenders_num - len(enemies_near_goal),
+            )
+
+        return sorted(roles, key=lambda x: x.value)
 
     def choose_robots_for_roles(
         self,
         field: fld.Field,
         roles: list[Role],
         wall_pos: aux.Point,
-        enemies_near_goal: list[rbt.Robot],
+        enemies_near_goal: list[aux.Point],
     ) -> list[Role]:
         robot_roles: list[Role] = [
             Role.UNAVAILABLE for _ in range(const.TEAM_ROBOTS_MAX_COUNT)
@@ -168,7 +185,7 @@ class Strategy:
             if role in [
                 Role.FORWARD,
                 Role.WALLLINER,
-                Role.PASS_DEFENDER,
+                # Role.PASS_DEFENDER, TODO
             ] and field.is_ball_moves_to_point(field.allies[robot_id].get_pos()):
                 used_ids.append(robot_id)
                 robot_roles[robot_id] = role
@@ -178,44 +195,34 @@ class Strategy:
         # robot_roles[13] = Role.WALLLINER
         # delete_role(roles, Role.WALLLINER)
 
-        defended_enemies: list[int] = []
-
-        for role in roles:
+        for i, role in enumerate(roles):
             robot_id = -1
-            if role == Role.GOALKEEPER:
-                robot_id = field.gk_id
-            elif role == Role.ATTACKER:
-                if (
-                    not field.robot_with_ball in field.allies
-                    or field.robot_with_ball == field.allies[field.gk_id]
-                ):
+            match role:
+                case Role.GOALKEEPER:
+                    robot_id = field.gk_id
+                case Role.ATTACKER:
+                    if (
+                        not field.robot_with_ball in field.allies
+                        or field.robot_with_ball == field.allies[field.gk_id]
+                    ):
+                        robot_id = fld.find_nearest_robot(
+                            field.ball.get_pos(), field.allies, used_ids
+                        ).r_id
+                    else:
+                        robot_id = field.robot_with_ball.r_id
+                case Role.PASS_DEFENDER:
+                    enemy = enemies_near_goal.pop(0)
                     robot_id = fld.find_nearest_robot(
-                        field.ball.get_pos(), field.allies, used_ids
+                        enemy, field.allies, used_ids
                     ).r_id
-                else:
-                    robot_id = field.robot_with_ball.r_id
-            elif role == Role.PASS_DEFENDER:
-                if len(defended_enemies) == len(
-                    enemies_near_goal
-                ):  # TODO same as ~15 lines lower
-                    role = Role.WALLLINER
+                case Role.WALLLINER:
                     robot_id = fld.find_nearest_robot(
                         wall_pos, field.allies, used_ids
                     ).r_id
-                    continue
-                enemy = fld.find_nearest_robot(
-                    field.ally_goal.center, enemies_near_goal, defended_enemies
-                )
-                defended_enemies.append(enemy.r_id)
-                robot_id = fld.find_nearest_robot(
-                    enemy.get_pos(), field.allies, used_ids
-                ).r_id
-            elif role == Role.WALLLINER:
-                robot_id = fld.find_nearest_robot(wall_pos, field.allies, used_ids).r_id
-            elif role == Role.FORWARD:
-                robot_id = fld.find_nearest_robot(
-                    field.enemy_goal.center, field.allies, used_ids
-                ).r_id
+                case Role.FORWARD:
+                    robot_id = fld.find_nearest_robot(
+                        field.enemy_goal.center, field.allies, used_ids
+                    ).r_id
             robot_roles[robot_id] = role
             used_ids.append(robot_id)
 
@@ -248,27 +255,34 @@ class Strategy:
         print("-" * 32)
         print(self.game_status, "\twe_active:", self.we_active)
 
-        if self.game_status in [GameStates.RUN, GameStates.FREE_KICK, GameStates.STOP]:
-            self.run(field, waypoints)
-        elif self.game_status == GameStates.TIMEOUT:
-            ref_states.timeout(field, waypoints)
-        elif self.game_status == GameStates.HALT:
-            pass
-            # self.halt(field, waypoints)
-        elif self.game_status == GameStates.PREPARE_PENALTY:
-            ref_states.prepare_penalty(field, waypoints, self.we_active)
-        elif self.game_status == GameStates.PENALTY:
-            if self.we_active:
-                ref_states.penalty_kick(field, waypoints)
-            else:
-                robot_with_ball = fld.find_nearest_robot(
-                    field.ball.get_pos(), field.enemies
-                )
-                waypoints[field.gk_id] = defense_roles.goalk(field, [], robot_with_ball)
-        elif self.game_status == GameStates.PREPARE_KICKOFF:
-            ref_states.prepare_kickoff(field, waypoints, self.we_active)
-        elif self.game_status == GameStates.KICKOFF:
-            ref_states.kickoff(field, waypoints, self.we_active)
+        match self.game_status:
+            case GameStates.RUN:
+                self.run(field, waypoints)
+            case GameStates.TIMEOUT:
+                ref_states.timeout(field, waypoints)
+            case GameStates.HALT:
+                pass
+                # self.halt(field, waypoints)
+            case GameStates.PREPARE_PENALTY:
+                ref_states.prepare_penalty(field, waypoints, self.we_active)
+            case GameStates.PENALTY:
+                if self.we_active:
+                    ref_states.penalty_kick(field, waypoints)
+                else:
+                    robot_with_ball = fld.find_nearest_robot(
+                        field.ball.get_pos(), field.enemies
+                    )
+                    waypoints[field.gk_id] = defense_roles.goalk(
+                        field, [], robot_with_ball
+                    )
+            case GameStates.PREPARE_KICKOFF:
+                ref_states.prepare_kickoff(field, waypoints, self.we_active)
+            case GameStates.KICKOFF:
+                ref_states.kickoff(field, waypoints, self.we_active)
+            case GameStates.FREE_KICK:
+                self.run(field, waypoints)
+            case GameStates.STOP:
+                self.run(field, waypoints)
 
         # self.debug(field, waypoints)  # NOTE
 
@@ -292,15 +306,16 @@ class Strategy:
         enemies_near_goal = defense_roles.get_enemies_near_goal(field)
 
         "Выбор роботов для всех ролей, с учетом вычисленных выше точек"
+        roles = self.manage_roles(field, roles, enemies_near_goal)
         robot_roles = self.choose_robots_for_roles(
-            field, roles, wall_pos, enemies_near_goal
+            field, roles, wall_pos, enemies_near_goal.copy()
         )
 
-        if field.ally_color == const.COLOR:
-            print("Roles", field.ally_color)
-            for idx, role in enumerate(robot_roles):
-                if role != Role.UNAVAILABLE:
-                    print("  ", idx, role)
+        # if field.ally_color == const.COLOR:
+        print("Roles", field.ally_color)
+        for idx, role in enumerate(robot_roles):
+            if role != Role.UNAVAILABLE:
+                print("  ", idx, role)
 
         "Вычисление конечных точек, которые зависят от положения робота и создание путевых точек"
         self.forwards = find_role(field, robot_roles, Role.FORWARD)
@@ -364,3 +379,17 @@ def find_role(
             robots.append(field.allies[i])
 
     return robots
+
+
+def replace_role(
+    roles: list[Role], old_role: Role, new_role: Role, count: int = 1
+) -> list[Role]:
+    """Заменяет old_role на new_role, выполняется count раз"""
+    num = 0
+    for i, role in enumerate(roles):
+        if role == old_role:
+            roles[i] = new_role
+            num += 1
+            if num >= count:
+                return roles
+    return roles

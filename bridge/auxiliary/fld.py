@@ -133,7 +133,7 @@ class Field:
             self.allies = [*self.y_team]
             self.enemies = [*self.b_team]
 
-        self.ball_history: list[Optional[aux.Point]] = [None] * round(0.3 / const.Ts)
+        self.ball_history: list[Optional[aux.Point]] = [None] * round(0.2 / const.Ts)
         self.ball_history_idx = 0
         self.ball_start_point: Optional[aux.Point] = None
 

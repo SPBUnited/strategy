@@ -126,17 +126,6 @@ GRAVEYARD_POS = Point(0, const.GRAVEYARD_POS_X)
 FIELD_INF = Point(const.GRAVEYARD_POS_X, 0)
 
 
-class BobLine:
-    """
-    Прямая в виде Ax+By+C=0
-    """
-
-    def __init__(self, A: float, B: float, C: float):
-        self.A = A
-        self.B = B
-        self.C = C
-
-
 def dist2line(p1: Point, p2: Point, p: Point) -> float:
     """
     Рассчитать расстояние от точки p до прямой, образованной точками p1 и p2
@@ -144,16 +133,16 @@ def dist2line(p1: Point, p2: Point, p: Point) -> float:
     return abs(vec_mult((p2 - p1).unity(), p - p1))
 
 
-def line_poly_intersect(p1: Point, p2: Point, points: list[Point]) -> bool:
-    """
-    Определить, пересекает ли линия p1-p2 полигон points
-    """
-    vec = p2 - p1
-    old_sign = sign(vec_mult(vec, points[0] - p1))
-    for p in points:
-        if old_sign != sign(vec_mult(vec, p - p1)):
-            return True
-    return False
+# def line_poly_intersect(p1: Point, p2: Point, points: list[Point]) -> bool:
+#     """
+#     Определить, пересекает ли линия p1-p2 полигон points
+#     """
+#     vec = p2 - p1
+#     old_sign = sign(vec_mult(vec, points[0] - p1))
+#     for p in points:
+#         if old_sign != sign(vec_mult(vec, p - p1)):
+#             return True
+#     return False
 
 
 def segment_poly_intersect(
@@ -303,13 +292,11 @@ def rotate(p: Point, angle: float) -> Point:
 
 
 def find_nearest_point(
-    p: Point, points: list[Point], exclude: typing.Optional[list[Point]] = None
+    p: Point, points: list[Point], exclude: list[Point] = []
 ) -> Point:  #
     """
     Найти ближайшую точку к p из облака points, игнорируя точки exclude
     """
-    if exclude is None:
-        exclude = []
     closest = points[0]
     min_dist = 10e10
     for _, point in enumerate(points):
@@ -423,22 +410,6 @@ def det(a: float, b: float, c: float, d: float) -> float:
     |c d|
     """
     return a * d - b * c
-
-
-def line_intersect(m: BobLine, bots: list[BobLine]) -> list[Point]:
-    """
-    TODO написать доку
-    """
-    result = []
-    for n in bots:
-        mat_inv = det(m.A, m.B, n.A, n.B)
-        res = Point(0, 0)
-        if abs(mat_inv) < 1e-9:
-            return []
-        res.x = -det(m.C, m.B, n.C, n.B) / mat_inv
-        res.y = -det(m.A, m.C, n.A, n.C) / mat_inv
-        result.append(res)
-    return result
 
 
 def nearest_point_on_poly(p: Point, poly: list[Point]) -> Point:

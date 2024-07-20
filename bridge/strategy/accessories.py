@@ -35,7 +35,7 @@ def estimate_pass_point(
         ang1 = aux.get_angle_between_points(to, frm, tangent[1][0])
         ang2 = aux.get_angle_between_points(to, frm, tangent[1][1])
 
-        if ang1 * ang2 < 0:
+        if ang1 * ang2 < 0 and abs(ang1) < math.pi / 2 and abs(ang2) < math.pi / 2:
             shadows_bots.append(tangent[0])
         ang1 = abs(ang1)
         ang2 = abs(ang2)
