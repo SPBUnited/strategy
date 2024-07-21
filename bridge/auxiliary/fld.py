@@ -164,6 +164,10 @@ class Field:
         self.ball_history_idx += 1
         self.ball_history_idx %= len(self.ball_history)
 
+        if self.robot_with_ball is not None:
+            length = len(self.ball_history)
+            self.ball_history = [self.robot_with_ball.get_pos() for _ in range(length)]
+
     def _is_ball_in(self, robo: rbt.Robot) -> bool:
         """
         Определить, находится ли мяч внутри дрибблера

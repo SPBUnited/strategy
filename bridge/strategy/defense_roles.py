@@ -12,8 +12,8 @@ def set_wall_enemy(field: fld.Field) -> aux.Point:
     if aux.is_point_inside_poly(ball, field.ally_goal.hull):
         return fld.find_nearest_robot(field.ally_goal.center, field.enemies).get_pos()
 
-    if not field.is_ball_moves():
-        return fld.find_nearest_robot(ball, field.enemies).get_pos()
+    # if not field.is_ball_moves():
+    #     return fld.find_nearest_robot(ball, field.enemies).get_pos()
 
     if field.is_ball_moves() and not field.is_ball_moves_to_goal():
         sorted_enemies = fld.find_nearest_robots(field.ally_goal.center, field.enemies)
@@ -27,18 +27,6 @@ def set_wall_enemy(field: fld.Field) -> aux.Point:
 
 def calc_wall_pos(field: fld.Field, ball: aux.Point) -> aux.Point:
     """Рассчитывает точку, по которой будут выбираться роботы для стенки"""
-    # for i in range(
-    #     len(field.ally_goal.hull) * 1
-    # ):  # NOTE: исправить пересечение прямой с углом зоны
-    #     point = aux.get_line_intersection(
-    #         field.ally_goal.hull[i - 1],
-    #         field.ally_goal.hull[i],
-    #         field.ally_goal.center,
-    #         ball,
-    #         "SR",
-    #     )
-    #     if point is not None:
-    #         return point
     inter = aux.segment_poly_intersect(field.ally_goal.center, ball, field.ally_goal.hull)
     if inter:
         return inter

@@ -216,13 +216,13 @@ class Route:
             # angle0 = end_point.angle
             angle0 = rbt.get_angle()
 
-            transl_vel = vel0 * 400
+            transl_vel = vel0 * 800
 
-            if end_point.type == wp.WType.S_BALL_GRAB:
-                transl_vel = vel0 * 200
-                # if self.go_flag == 0:
-                #     self.go_flag = 1
-                #     self.go_time = time.time()
+            # if end_point.type == wp.WType.S_BALL_GRAB:
+            #     transl_vel = vel0 * 200
+            #     # if self.go_flag == 0:
+            #     #     self.go_flag = 1
+            #     #     self.go_time = time.time()
 
         else:
             u_x = -rbt.pos_reg_x.process(vec_err.x, -cur_vel.x)

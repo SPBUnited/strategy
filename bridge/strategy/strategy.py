@@ -32,8 +32,8 @@ class Role(Enum):
     GOALKEEPER = 0
     ATTACKER = 1
 
-    PASS_DEFENDER = 2
-    WALLLINER = 3
+    PASS_DEFENDER = 3
+    WALLLINER = 2
     FORWARD = 11
 
     UNAVAILABLE = 100
@@ -221,8 +221,9 @@ class Strategy:
                 )
             )
 
-        print("-" * 32)
-        print(self.game_status, "\twe_active:", self.we_active)
+        if field.ally_color == const.COLOR:
+            print("-" * 32)
+            print(self.game_status, "\twe_active:", self.we_active)
 
         match self.game_status:
             case GameStates.RUN:
@@ -274,11 +275,11 @@ class Strategy:
         roles = self.manage_roles(field, roles, enemies_near_goal)
         robot_roles = self.choose_robots_for_roles(field, roles, wall_pos, enemies_near_goal.copy())
 
-        # if field.ally_color == const.COLOR:
-        print("Roles", field.ally_color)
-        for idx, role in enumerate(robot_roles):
-            if role != Role.UNAVAILABLE:
-                print("  ", idx, role)
+        if field.ally_color == const.COLOR:
+            print("Roles", field.ally_color)
+            for idx, role in enumerate(robot_roles):
+                if role != Role.UNAVAILABLE:
+                    print("  ", idx, role)
 
         "Вычисление конечных точек, которые зависят от положения робота и создание путевых точек"
         self.forwards = find_role(field, robot_roles, Role.FORWARD)

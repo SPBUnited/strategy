@@ -16,6 +16,7 @@ def attacker(
     forwards: list[rbt.Robot],
 ) -> None:
     """Логика действий для робота с мячом"""
+    attacker = field.allies[attacker_id]
     kick_point = acc.choose_kick_point(field, attacker_id)
     kick_est = acc.estimate_pass_point(field, field.ball.get_pos(), kick_point)
     field.image.draw_dot(kick_point, (255, 0, 0), 15)
@@ -26,11 +27,21 @@ def attacker(
         # print(pass_est, kick_est)
         if pass_est is not None and pass_est > kick_est and receiver_id is not None:
             waypoints[attacker_id] = pass_kicker(field, attacker_id, receiver_id)
-            print("attacker: pass to", receiver_id)
+            if waypoints[attacker_id].type == wp.WType.S_BALL_KICK:
+                enemy_near = fld.find_nearest_robot(attacker.get_pos(), field.enemies)
+                enemy_point = aux.closest_point_on_line(
+                    attacker.get_pos(),
+                    attacker.get_pos() + aux.rotate(aux.RIGHT, attacker.get_angle()) * const.ROBOT_R * 5,
+                    enemy_near.get_pos(),
+                    "S",
+                )
+                if aux.dist(enemy_near.get_pos(), enemy_point) < const.ROBOT_R:
+                    waypoints[attacker_id].type = wp.WType.S_BALL_KICK_UP
+            # print("attacker: pass to", receiver_id)
             return
 
-    waypoints[attacker_id] = kick.shoot_to_goal(field, field.allies[attacker_id], kick_point)
-    print("attacker: shoot to goal")
+    waypoints[attacker_id] = kick.shoot_to_goal(field, attacker, kick_point)
+    # print("attacker: shoot to goal")
 
 
 def choose_receiver(field: fld.Field, forwards: list[rbt.Robot]) -> tuple[Optional[int], Optional[float]]:
@@ -131,7 +142,7 @@ def pass_receiver(
     else:
         waypoints[receiver_id] = wp.Waypoint(
             receive_point,
-            aux.angle_to_point(receive_point, field.ball.get_pos()),
+            aux.angle_to_point(receiver.get_pos(), field.ball.get_pos()),
             wp.WType.S_ENDPOINT,
         )
         # field.image.draw_dot(receive_point, 5, (255, 255, 0))
