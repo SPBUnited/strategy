@@ -66,7 +66,7 @@ class Entity:
         self.last_update_ = t
 
         if not self.__launch_flag and time() - self.__launch_timer > 5:
-             self.__launch_flag = True
+            self.__launch_flag = True
 
     def last_update(self) -> float:
         """

@@ -4,9 +4,9 @@
 
 import math
 import typing
+from typing import Optional
 
 from bridge.processors import const
-from typing import Optional
 
 
 class Graph:
@@ -143,11 +143,14 @@ def dist2line(p1: Point, p2: Point, p: Point) -> float:
     """
     return abs(vec_mult((p2 - p1).unity(), p - p1))
 
+
 def is_on_line(p1: Point, p2: Point, p: Point) -> float:
     """
     Определить, лежит ли высота из p на отрезок p1 - p2 в пределах этого отрезка
     """
-    return abs(get_angle_between_points(p, p1, p2)) <= math.pi / 2 and abs(get_angle_between_points(p, p2, p1)) <= math.pi / 2
+    return (
+        abs(get_angle_between_points(p, p1, p2)) <= math.pi / 2 and abs(get_angle_between_points(p, p2, p1)) <= math.pi / 2
+    )
 
 
 def line_poly_intersect(p1: Point, p2: Point, points: list[Point]) -> bool:
@@ -173,6 +176,29 @@ def segment_poly_intersect(p1: Point, p2: Point, points: list[Point]) -> typing.
         if p is not None:
             return p
     return None
+
+
+def segments_poly_intersect(p1: Point, p2: Point, points: list[Point]) -> list:
+    """
+    Определить, пересекает ли прямая p1-p2 полигон points
+    Вернуть массив точек
+    """
+    inters = []
+    for i in range(-1, len(points) - 1):
+        inter = get_line_intersection(p1, p2, points[i], points[i + 1], "LS")
+        if inter is not None:
+            inters.append(inter)
+    return inters
+
+
+def closest_point_on_poly(p1: Point, p2: Point, points: list[Point]) -> list:
+    closest_p = segments_poly_intersect(p1, p2, points)
+    if closest_p == []:
+        closest_p = [points[0]]
+        for i in range(1, len(points)):
+            if dist2line(p1, p2, points[i]) < dist2line(p1, p2, closest_p[0]):
+                closest_p[0] = points[i]
+    return closest_p
 
 
 def is_point_inside_poly(p: Point, points: list[Point]) -> bool:
@@ -376,11 +402,12 @@ def minmax(x: float, a: float, b: Optional[float] = None) -> float:
     return min(max(x, a), b)
 
 
-def is_in_range(x: float, a: float, b: float) -> bool:
+def is_in_range(x: float, r: list) -> bool:
     """
     проверяет, лежит ли x в диапазоне [a, b]
     """
-    return x == minmax(x, a, b)
+    return x == minmax(x, r[0], r[1])
+
 
 def angle_to_point(point1: Point, point2: Point) -> float:
     """
@@ -490,6 +517,7 @@ def cosine_theorem(a: float, b: float, angle: float) -> float:
     """Теорема косинусов"""
     return math.sqrt(a * a + b * b - 2 * a * b * math.cos(angle))
 
+
 def line_circle_intersect(x1: Point, x2: Point, c: Point, radius: float) -> Optional[list[Point]]:
     """TODO"""
     h = closest_point_on_line(x1, x2, c, "L")
@@ -498,7 +526,7 @@ def line_circle_intersect(x1: Point, x2: Point, c: Point, radius: float) -> Opti
     elif radius == dist(c, h):
         return [h]
 
-    d = math.sqrt(radius ** 2 -  dist(c, h) ** 2)
+    d = math.sqrt(radius**2 - dist(c, h) ** 2)
     vec = (x2 - x1).unity() * d
     p1 = h + vec
     p2 = h - vec
@@ -514,17 +542,20 @@ def line_circle_intersect(x1: Point, x2: Point, c: Point, radius: float) -> Opti
         return [p1]
     return [p1, p2]
 
+
 def is_point_inside_circle(a: Point, c: Point, radius: float) -> bool:
     """Return TRUE if point inside circle"""
     return dist(a, c) < radius
+
 
 def nearest_point_on_circle(a: Point, c: Point, radius: float) -> Point:
     """Return nearest point in circle"""
     return c + (a - c).unity() * radius
 
+
 def range_minus(mns0: list, mns1: list, may_be_smaller: bool = True) -> list:
     """
-    вычитает из списка множеств mns0 список множеств mns1. множества задаются как (min, max) - где min, max - крайние значения. 
+    вычитает из списка множеств mns0 список множеств mns1. множества задаются как (min, max) - где min, max - крайние значения.
     не вычитает из mns0[x] mns1[y], если включено may_be_smaller и вычитаемый диапазон меньше
     """
     i = 0
@@ -532,18 +563,21 @@ def range_minus(mns0: list, mns1: list, may_be_smaller: bool = True) -> list:
         j = 0
         while j < len(mns0):
             bigger = mns1[i][1] - mns1[i][0] >= mns0[j][1] - mns0[j][0]
-            if is_in_range(mns1[i][0], mns0[j][0], mns0[j][1]) and not is_in_range(mns1[i][1], mns0[j][0], mns0[j][1]) and (may_be_smaller or bigger):
+            if is_in_range(mns1[i][0], mns0[j]) and not is_in_range(mns1[i][1], mns0[j]) and (may_be_smaller or bigger):
                 mns0[j] = (mns0[j][0], mns1[i][0])
-            elif not is_in_range(mns1[i][0], mns0[j][0], mns0[j][1]) and is_in_range(mns1[i][1], mns0[j][0], mns0[j][1]) and (may_be_smaller or bigger):
+            elif not is_in_range(mns1[i][0], mns0[j]) and is_in_range(mns1[i][1], mns0[j]) and (may_be_smaller or bigger):
                 mns0[j] = (mns1[i][1], mns0[j][1])
-            elif is_in_range(mns1[i][0], mns0[j][0], mns0[j][1]) and is_in_range(mns1[i][1], mns0[j][0], mns0[j][1]) and (may_be_smaller or bigger):
+            elif is_in_range(mns1[i][0], mns0[j]) and is_in_range(mns1[i][1], mns0[j]) and (may_be_smaller or bigger):
                 mns0.insert(j + 1, (mns1[i][1], mns0[j][1]))
                 mns0[j] = (mns0[j][0], mns1[i][0])
                 j += 1
-            elif is_in_range(mns0[j][0], mns1[i][0], mns1[i][1]) and is_in_range(mns0[j][1], mns1[i][0], mns1[i][1]) and (may_be_smaller or bigger):
+            elif is_in_range(mns0[j][0], mns1[i]) and is_in_range(mns0[j][1], mns1[i]) and (may_be_smaller or bigger):
                 mns0.pop(j)
                 j -= 1
             j += 1
         i += 1
     return mns0
 
+
+def range_plus(mns: list) -> list:
+    return range_minus([[-10e10, 10e10]], range_minus([[-10e10, 10e10]], mns))

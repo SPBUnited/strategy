@@ -13,8 +13,6 @@ import bridge.processors.auxiliary as aux
 import bridge.processors.const as const
 import bridge.processors.robot as robot
 
-from time import time
-
 
 @attr.s(auto_attribs=True)
 class CommandSink(BaseProcessor):
@@ -88,7 +86,7 @@ class CommandSink(BaseProcessor):
                 rules.append(self.b_control_team[i].kick_up_)
                 rules.append(self.b_control_team[i].kick_forward_)
                 rules.append(self.b_control_team[i].auto_kick_)
-                rules.append(self.b_control_team[i].kicker_voltage_ // 2)
+                rules.append(8)
                 rules.append(self.b_control_team[i].dribbler_enable_)
                 rules.append(self.b_control_team[i].dribbler_speed_)
                 rules.append(self.b_control_team[i].kicker_charge_enable_)
@@ -109,7 +107,7 @@ class CommandSink(BaseProcessor):
                 rules.append(self.y_control_team[i].kick_up_)
                 rules.append(self.y_control_team[i].kick_forward_)
                 rules.append(self.y_control_team[i].auto_kick_)
-                rules.append(self.y_control_team[i].kicker_voltage_ // 2)
+                rules.append(8)
                 rules.append(self.y_control_team[i].dribbler_enable_)
                 rules.append(self.y_control_team[i].dribbler_speed_)
                 rules.append(self.y_control_team[i].kicker_charge_enable_)
@@ -118,7 +116,7 @@ class CommandSink(BaseProcessor):
         else:
             for i in range(const.TEAM_ROBOTS_MAX_COUNT):
                 control_team = self.y_control_team if self.y_control_team[i].is_used() else self.b_control_team
-            
+
                 if self.y_control_team[i].is_used():
                     pass
                 elif self.b_control_team[i].is_used():

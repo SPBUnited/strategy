@@ -69,14 +69,15 @@ class Robot(entity.Entity):
         # self.a0Flp = tau.FOLP(self.a0TF, const.Ts)
 
         # !v REAL
-        gains_full = [3, 0.18, 0, const.MAX_SPEED]
-        gains_soft = [3, 0.18, 0.1, const.SOFT_MAX_SPEED]
-        a_gains_full = [20, 0, 0, const.MAX_SPEED_R]
+        gains_full = [2, 0.25, 0, const.MAX_SPEED]
+        # gains_soft = gains_full
+        gains_soft = [2, 0.25, 0.1, const.SOFT_MAX_SPEED]
+        a_gains_full = [2.5, 0, 0, const.MAX_SPEED_R]
         # gains_soft = [10, 0.32, 0, const.SOFT_MAX_SPEED]
         # gains_soft = gains_full
         if const.IS_SIMULATOR_USED:
             gains_full = [3, 0.35, 0, const.MAX_SPEED]
-            gains_soft = [5, 0.35, 0, const.SOFT_MAX_SPEED]
+            gains_soft = [3, 0.35, 0, const.SOFT_MAX_SPEED]
             a_gains_full = [2, 0.1, 0.1, const.MAX_SPEED_R]  # 4, 0.1, 0.1
         # a_gains_soft = [4, 0.07, 8, const.SOFT_MAX_SPEED_R]
         a_gains_soft = a_gains_full
@@ -240,6 +241,8 @@ class Robot(entity.Entity):
         vel - требуемый вектор скорости [мм/с] \\
         wvel - требуемая угловая скорость [рад/с]
         """
+        # vel = aux.Point(-300, 0)
+
         self.speed_x = self.xx_flp.process(1 / self.k_xx * aux.rotate(vel, -self._angle).x)
         self.speed_y = self.yy_flp.process(1 / self.k_yy * aux.rotate(vel, -self._angle).y)
 
@@ -254,12 +257,12 @@ class Robot(entity.Entity):
             self.speed_r = const.MAX_SPEED_R * abs(self.speed_r) / self.speed_r
 
         vec_speed = math.sqrt(self.speed_x**2 + self.speed_y**2)
-        r_speed = abs(self.speed_r)
+        abs(self.speed_r)
 
-        if const.IS_SIMULATOR_USED:
-            vec_speed *= (const.MAX_SPEED_R - r_speed) / const.MAX_SPEED_R
-        else:
-            vec_speed *= ((const.MAX_SPEED_R - r_speed) / const.MAX_SPEED_R) ** 4
+        # if const.IS_SIMULATOR_USED:
+        #     vec_speed *= (const.MAX_SPEED_R - r_speed) / const.MAX_SPEED_R
+        # else:
+        # vec_speed *= ((const.MAX_SPEED_R - r_speed) / const.MAX_SPEED_R) ** 1
 
         ang = math.atan2(self.speed_y, self.speed_x)
         self.speed_x = vec_speed * math.cos(ang)

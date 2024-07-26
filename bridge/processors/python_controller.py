@@ -11,9 +11,9 @@ from strategy_bridge.model.referee import RefereeCommand
 from strategy_bridge.pb.messages_robocup_ssl_wrapper_pb2 import SSL_WrapperPacket
 from strategy_bridge.processors import BaseProcessor
 from strategy_bridge.utils.debugger import debugger
-import bridge.processors.referee_state_processor as state_machine
 
 import bridge.processors.auxiliary as aux
+import bridge.processors.referee_state_processor as state_machine
 from bridge.processors import const, field, router, signal, strategy
 
 
@@ -33,7 +33,6 @@ class SSLController(BaseProcessor):
     _ssl_converter: SSL_WrapperPacket = attr.ib(init=False)
 
     dbg_game_status: strategy.GameStates = strategy.GameStates.TIMEOUT
-    dbg_state: strategy.States = strategy.States.DEBUG
 
     cur_time = time.time()
     delta_t = 0.0
@@ -116,11 +115,13 @@ class SSLController(BaseProcessor):
             # camera_id = detection.camera_id
             for ball in detection.balls:
                 balls.append(aux.Point(ball.x, ball.y))
-            
+
             cur_state, cur_active = self.state_machine.get_state()
             self.strategy.change_game_state(cur_state, cur_active)
             self.router.avoid_ball(False)
-            if cur_state in [state_machine.State.STOP] or (cur_active != const.Color.ALL and cur_active != self.field.ally_color):
+            if cur_state in [state_machine.State.STOP] or (
+                cur_active != const.Color.ALL and cur_active != self.field.ally_color
+            ):
                 self.router.avoid_ball(True)
 
             # TODO: Barrier states
@@ -184,7 +185,11 @@ class SSLController(BaseProcessor):
         for i in range(const.TEAM_ROBOTS_MAX_COUNT):
             self.router.get_route(i).clear()
             self.router.set_dest(i, waypoints[i], self.field)
+        # print(self.router.routes[0])
         self.router.reroute(self.field)
+        # print(self.router.routes[0])
+
+        # print("----")
 
         for i in range(const.TEAM_ROBOTS_MAX_COUNT):
             self.router.get_route(i).go_route(self.field.allies[i], self.field)
@@ -200,6 +205,11 @@ class SSLController(BaseProcessor):
         # self.field.allies[const.DEBUG_ID].speed_x = 0
         # self.field.allies[const.DEBUG_ID].speed_y = 0
         for i in range(const.TEAM_ROBOTS_MAX_COUNT):
+
+            self.field.allies[i].speed_x = aux.minmax(self.field.allies[i].speed_x, -127, 127)
+            self.field.allies[i].speed_y = aux.minmax(self.field.allies[i].speed_y, -127, 127)
+            self.field.allies[i].speed_r = aux.minmax(self.field.allies[i].speed_r, -127, 127)
+
             if self.field.allies[i].is_used():
                 self.field.allies[i].color = self.ally_color
             # self.field.allies[i].speed_r = self.square.get()
@@ -254,7 +264,6 @@ class SSLController(BaseProcessor):
                 self.wait_ball_moved_flag = False
         self.tmp += 1
 
-
     @debugger
     def process(self) -> None:
         """
@@ -267,6 +276,5 @@ class SSLController(BaseProcessor):
         self.read_vision()
         self.process_referee_cmd()
         self.control_loop()
-
 
         self.control_assign()

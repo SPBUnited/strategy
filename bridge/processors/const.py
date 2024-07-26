@@ -4,24 +4,29 @@
 
 from enum import Enum
 
+
 class Color(Enum):
     """Класс с цветами"""
+
     ALL = 0
     BLUE = 1
     YELLOW = 2
 
+
 ##################################################
 # GAME SETTING CONSTS
-COLOR = Color.YELLOW
-POLARITY = 1  # -1 если ворота синих на +x; 1 если ворота синих на -x
+DEBUG_ID = 0
+
+COLOR = Color.BLUE
+POLARITY = -1  # -1 если ворота синих на +x; 1 если ворота синих на -x
 
 IS_SIMULATOR_USED = False
-IS_DRIBLER_USED = False #dribler and upper_kick
-SELF_PLAY = True
+IS_DRIBLER_USED = False  # dribler and upper_kick
+SELF_PLAY = False
 
-GK = 14
-PENALTY_KICKER = 13
-ENEMY_GK = 1
+GK = 1
+PENALTY_KICKER = 2
+ENEMY_GK = 3
 
 CAMERAS_COUNT: int = 4
 MAX_BALLS_IN_CAMERA: int = 64
@@ -73,9 +78,9 @@ Ts = 0.05  # s
 # MAX_SPEED_R = 50
 # ACCELERATION = 3
 # BASE_KICKER_VOLTAGE = 7.0
-MAX_SPEED = 1000
+MAX_SPEED = 1200
 MAX_SPEED_R = 30
-SOFT_MAX_SPEED = 750
+SOFT_MAX_SPEED = 500
 SOFT_MAX_SPEED_R = 16
 ACCELERATION = 3
 BASE_KICKER_VOLTAGE = 7.0
@@ -94,6 +99,7 @@ ROBOT_R = 100
 GRAVEYARD_POS_X = -10000
 
 GOAL_DX = 2250  # width / 2
+HALF_HEIGHT = 1500
 GOAL_DY = 800
 GOAL_PEN_DX = 500
 GOAL_PEN_DY = 1350

@@ -224,6 +224,8 @@ class Route:
             if target_point.type == wp.WType.R_PASSTHROUGH:
                 transl_vel = transl_vel.unity() * const.MAX_SPEED
 
+            # print(target_point)
+
         aerr = aux.wind_down_angle(angle0 - rbt.get_angle())
 
         ang_vel = rbt.angle_reg.process(aerr, -rbt.get_anglevel())
@@ -244,10 +246,10 @@ class Route:
         # transl_vel = vel0 * 200
         # ang_vel = 0.7
 
-        if (
-            end_point.type in [wp.WType.S_BALL_KICK, wp.WType.S_BALL_PASS]
-        ) and rbt.is_kick_aligned_by_angle(end_point.angle):
-            rbt.auto_kick_ = 1
+        if (end_point.type in [wp.WType.S_BALL_KICK, wp.WType.S_BALL_PASS]) and rbt.is_kick_aligned_by_angle(
+            end_point.angle
+        ):
+            rbt.auto_kick_ = 2
         elif end_point.type == wp.WType.S_BALL_KICK_UP and rbt.is_kick_aligned_by_angle(end_point.angle):
             rbt.auto_kick_ = 2
         else:

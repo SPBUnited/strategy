@@ -48,6 +48,13 @@ class Goal:
             self.center_down,
         ]
 
+        self.small_hull = [
+            aux.Point(self.up.x + const.ROBOT_R * self.eye_forw.x, self.up.y),
+            aux.Point(self.frw_up.x, self.up.y),
+            aux.Point(self.frw_down.x, self.down.y),
+            aux.Point(self.down.x - const.ROBOT_R * self.eye_forw.x, self.down.y),
+        ]
+
         self.big_hull = [
             aux.FIELD_INF * self.eye_forw.x,
             self.center_up + self.eye_up * const.ROBOT_R,
@@ -55,6 +62,7 @@ class Goal:
             self.frw_down + (self.eye_forw - self.eye_up) * const.ROBOT_R,
             self.center_down - self.eye_up * const.ROBOT_R,
         ]
+
 
 class Field:
     """
@@ -189,7 +197,8 @@ class Field:
         vec_to_point = point - self.ball.get_pos()
         return (
             self.ball.get_vel().mag() * (cos(vec_to_point.arg() - self.ball.get_vel().arg()) ** 3)
-            > const.INTERCEPT_SPEED * 2 and self.ally_with_ball is None
+            > const.INTERCEPT_SPEED * 2
+            and self.ally_with_ball is None
         )
 
     def is_ball_moves_to_goal(self) -> bool:
@@ -198,13 +207,18 @@ class Field:
         """
         return self.is_ball_moves_to_point(self.ally_goal.center)
 
-    def find_nearest_robots(self, point: aux.Point, team: list[robot.Robot], num: int, avoid: Optional[list[int]] = None) -> list[robot.Robot]:
+    def find_nearest_robots(
+        self, point: aux.Point, team: list[robot.Robot], num: int, avoid: Optional[list[int]] = None
+    ) -> list[robot.Robot]:
         """
         Найти num роботов из field.allies, ближайших к точке point
         """
         if avoid is None:
             avoid = []
-        avoid += [const.GK]
+        if team[0].color:
+            avoid += [const.GK]
+        elif aux.is_point_inside_poly(self.enemies[const.ENEMY_GK], self.enemy_goal.hull):
+            avoid += [const.ENEMY_GK]
         robots: list[robot.Robot] = []
         # if len(self.allies) < num:
         #     return None  # сам виноват
