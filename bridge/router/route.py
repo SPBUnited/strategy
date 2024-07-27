@@ -4,9 +4,9 @@
 
 import math
 
-import bridge.processors.auxiliary as aux
-import bridge.processors.waypoint as wp
-from bridge.processors import const, field, robot, tau
+import bridge.router.waypoint as wp
+from bridge import const
+from bridge.auxiliary import aux, fld, rbt, tau
 
 
 class Route:
@@ -14,7 +14,7 @@ class Route:
     Класс описание произвольного маршрута
     """
 
-    def __init__(self, rbt: robot.Robot):
+    def __init__(self, rbt: rbt.Robot):
         """
         Конструктор
         """
@@ -26,7 +26,7 @@ class Route:
         self.go_flag = 0
         self.go_time = 0
 
-    def update(self, rbt: robot.Robot) -> None:
+    def update(self, rbt: rbt.Robot) -> None:
         """
         Обновить маршрут
 
@@ -127,7 +127,7 @@ class Route:
         #     strin += " -> " + str(wp)
         return strin
 
-    def go_route(self, rbt: robot.Robot, fld: field.Field) -> None:
+    def go_route(self, rbt: rbt.Robot, field: fld.Field) -> None:
         """
         Двигаться по маршруту route
         """
@@ -182,13 +182,23 @@ class Route:
                 wp.WType.S_BALL_GO,
                 wp.WType.S_BALL_PASS,
             ]
-        ) and dist < 500:
+        ) and dist < 300:
             rbt.pos_reg_x.select_mode(tau.Mode.SOFT)
             rbt.pos_reg_y.select_mode(tau.Mode.SOFT)
 
             if end_point.type == wp.WType.S_BALL_GO:
                 angle0 = end_point.angle
 
+            rbt.dribbler_enable_ = True
+            rbt.dribbler_speed_ = 15
+            if rbt.kicker_voltage_ == 0:
+                rbt.kicker_voltage_ = const.VOLTAGE_SHOOT
+                if end_point.type in [wp.WType.S_BALL_GRAB, wp.WType.S_BALL_GO]:
+                    rbt.kicker_voltage_ = const.VOLTAGE_ZERO
+                elif end_point.type == wp.WType.S_BALL_PASS:
+                    rbt.kicker_voltage_ = const.VOLTAGE_PASS
+                elif end_point.type == wp.WType.S_BALL_KICK_UP:
+                    rbt.kicker_voltage_ = const.VOLTAGE_UP
         else:
             pass
 
@@ -206,13 +216,13 @@ class Route:
             # angle0 = end_point.angle
             angle0 = rbt.get_angle()
 
-            transl_vel = vel0 * 400
+            transl_vel = vel0 * 800
 
-            if end_point.type == wp.WType.S_BALL_GRAB:
-                transl_vel = vel0 * 200
-                # if self.go_flag == 0:
-                #     self.go_flag = 1
-                #     self.go_time = time.time()
+            # if end_point.type == wp.WType.S_BALL_GRAB:
+            #     transl_vel = vel0 * 200
+            #     # if self.go_flag == 0:
+            #     #     self.go_flag = 1
+            #     #     self.go_time = time.time()
 
         else:
             u_x = -rbt.pos_reg_x.process(vec_err.x, -cur_vel.x)
@@ -222,9 +232,7 @@ class Route:
             angle0 = end_point.angle
 
             if target_point.type == wp.WType.R_PASSTHROUGH:
-                transl_vel = transl_vel.unity() * const.MAX_SPEED
-
-            # print(target_point)
+                transl_vel = -vec_err.unity() * const.MAX_SPEED  # TODO: change speed by dist to final point
 
         aerr = aux.wind_down_angle(angle0 - rbt.get_angle())
 
@@ -249,10 +257,17 @@ class Route:
         if (end_point.type in [wp.WType.S_BALL_KICK, wp.WType.S_BALL_PASS]) and rbt.is_kick_aligned_by_angle(
             end_point.angle
         ):
-            rbt.auto_kick_ = 2
+            rbt.auto_kick_ = 1
+            # if rbt.r_id < 9:
+            #     rbt.auto_kick_ = 2
         elif end_point.type == wp.WType.S_BALL_KICK_UP and rbt.is_kick_aligned_by_angle(end_point.angle):
             rbt.auto_kick_ = 2
         else:
             rbt.auto_kick_ = 0
 
         rbt.update_vel_xyw(transl_vel, ang_vel)
+
+        # if rbt.r_id == 0:
+        #     print("cord: ", int(rbt.get_pos().x), int(rbt.get_pos().y))
+        #     print("speed:", int(transl_vel.mag()), rbt.get_vel().mag())
+        #     print("ball:", field.ball.get_pos(), field.ball.get_vel())

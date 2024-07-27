@@ -9,7 +9,7 @@
 
 from enum import Enum
 
-import bridge.processors.auxiliary as aux
+from bridge.auxiliary import aux
 
 
 class WType(Enum):

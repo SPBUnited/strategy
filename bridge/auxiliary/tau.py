@@ -5,7 +5,7 @@
 import math
 from enum import Enum, auto
 
-import bridge.processors.auxiliary as aux
+from bridge.auxiliary import aux
 
 
 class FOD:

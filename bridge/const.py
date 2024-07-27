@@ -15,18 +15,17 @@ class Color(Enum):
 
 ##################################################
 # GAME SETTING CONSTS
-DEBUG_ID = 0
-
+DIV = "C"
 COLOR = Color.BLUE
-POLARITY = -1  # -1 если ворота синих на +x; 1 если ворота синих на -x
+POLARITY = 1  # -1 если ворота синих на +x; 1 если ворота синих на -x
 
-IS_SIMULATOR_USED = False
-IS_DRIBLER_USED = False  # dribler and upper_kick
+IS_SIMULATOR_USED = True
+IS_DRIBBLER_USED = False  # dribbler and upper_kick
 SELF_PLAY = False
 
-GK = 1
-PENALTY_KICKER = 2
-ENEMY_GK = 3
+GK = 0
+PENALTY_KICKER = 1
+ENEMY_GK = 0
 
 CAMERAS_COUNT: int = 4
 MAX_BALLS_IN_CAMERA: int = 64
@@ -58,7 +57,7 @@ CONTROL_MAPPING: dict[int, int] = {
     14: 14,
     15: 15,
 }
-REVERSED_KICK: list[int] = [13]
+REVERSED_KICK: list[int] = []
 
 for i in range(TEAM_ROBOTS_MAX_COUNT):
     try:
@@ -67,6 +66,8 @@ for i in range(TEAM_ROBOTS_MAX_COUNT):
         CONTROL_MAPPING[i] = -1
 
 TOPIC_SINK = "control-sink"
+FIELD_TOPIC = "field-topic"
+IMAGE_TOPIC = "image-topic"
 ##################################################
 
 ##################################################
@@ -78,7 +79,7 @@ Ts = 0.05  # s
 # MAX_SPEED_R = 50
 # ACCELERATION = 3
 # BASE_KICKER_VOLTAGE = 7.0
-MAX_SPEED = 1200
+MAX_SPEED = 1000
 MAX_SPEED_R = 30
 SOFT_MAX_SPEED = 500
 SOFT_MAX_SPEED_R = 16
@@ -98,14 +99,20 @@ BALL_R = 50
 ROBOT_R = 100
 GRAVEYARD_POS_X = -10000
 
-GOAL_DX = 2250  # width / 2
-HALF_HEIGHT = 1500
-GOAL_DY = 800
-GOAL_PEN_DX = 500
-GOAL_PEN_DY = 1350
+
+GOAL_DX = 4500
+HALF_HEIGHT = 1000
+GOAL_DY = 1000
+GOAL_PEN_DX = 1000
+GOAL_PEN_DY = 2000
+if DIV == "C":
+    GOAL_DX = 1500
+    GOAL_DY = 800
+    GOAL_PEN_DX = 500
+    GOAL_PEN_DY = 1000
 
 GK_FORW = 200 + ROBOT_R
-KICK_ALIGN_DIST = 200
+KICK_ALIGN_DIST = 150
 GRAB_ALIGN_DIST = 130
 KICK_ALIGN_DIST_MULT = 1.5
 KICK_ALIGN_ANGLE = 0.07
@@ -120,3 +127,10 @@ KEEP_BALL_DIST = 500 + ROBOT_R
 MIN_GOOD_ANGLE = 90
 ROBOT_SPEED = 1.5
 FULL_DELAY = 0.16
+
+
+# VOLTAGES
+VOLTAGE_PASS = 5
+VOLTAGE_SHOOT = 10
+VOLTAGE_UP = 8
+VOLTAGE_ZERO = min(VOLTAGE_PASS, VOLTAGE_SHOOT, VOLTAGE_UP)
