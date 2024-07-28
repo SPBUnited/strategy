@@ -178,9 +178,12 @@ class Strategy:
         self.doing_pass.id = None
         self.doing_pass.point = None
         now_enemies = fld.find_nearest_robots(field.ball.get_pos(), field.enemies)
-        now_allies = fld.find_nearest_robots(field.ball.get_pos(), field.allies, None, [const.GK])
+        now_allies = fld.find_nearest_robots(
+            field.ball.get_pos(), field.allies, None, [(const.GK, field.allies[const.GK].color)]
+        )
         now_enemies.pop(0)
         ally_with_ball = now_allies[0]
+        print("ГЛАВНЫЙ ЗАЩИТНИЧЕК", ally_with_ball.r_id, ally_with_ball.color)
         now_allies.pop(0)
         angle_point = aux.closest_point_on_line(field.ally_goal.up, field.ally_goal.down, field.ball.get_pos(), is_inf="L")
         gates = [
@@ -249,17 +252,16 @@ class Strategy:
                 field.ally_goal.center.x,
                 field.ball.get_pos().y + (field.ally_goal.center.x - field.ball.get_pos().x) * math.tan(def_angle),
             )
-            p2 = help_point
             if (
                 aux.dist(
-                    aux.average_point(aux.closest_point_on_poly(p1, p2, field.ally_goal.small_hull)),
+                    aux.average_point(aux.closest_point_on_poly(p1, help_point, field.ally_goal.small_hull)),
                     aux.average_point(aux.closest_point_on_poly(p1, field.ball.get_pos(), field.ally_goal.small_hull)),
                 )
-                > const.ROBOT_R
+                < const.ROBOT_R
             ):
-                p2 = field.ball.get_pos()
+                p2 = help_point
             # print(def_angle)
-        else:
+        if p1 is None or p2 is None:
             angle_point = aux.closest_point_on_line(
                 field.ally_goal.up, field.ally_goal.down, field.ball.get_pos(), is_inf="L"
             )
@@ -437,7 +439,7 @@ class Strategy:
             if self.doing_kick.id == ally_with_ball.r_id and self.doing_kick.angle is not None:
                 angle_to_go = self.doing_kick.angle
                 waypoints[ally_with_ball.r_id] = wp.Waypoint(p_to_go, angle_to_go, wp.WType.S_BALL_KICK)
-                # print(waypoints[ally_with_ball.r_id].pos, waypoints[ally_with_ball.r_id].angle, ally_with_ball.r_id, "ball111")
+                # print(waypoints[ally_with_ball.r_id].pos,waypoints[ally_with_ball.r_id].angle, ally_with_ball.r_id, "ball")
             if angle_to_go is None:
                 # print(ally_with_ball.r_id)
                 gate_angles.insert(0, self.go_to_ball(field.ball.get_pos(), field))

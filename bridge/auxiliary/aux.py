@@ -468,7 +468,8 @@ def is_in_range(x: float, r: list) -> bool:
 
 def range_minus(mns0: list, mns1: list, may_be_smaller: bool = True) -> list:
     """
-    вычитает из списка множеств mns0 список множеств mns1. множества задаются как (min, max) - где min, max - крайние значения.
+    Вычитает из списка множеств mns0 список множеств mns1.
+    множества задаются как (min, max) - где min, max - крайние значения.
     не вычитает из mns0[x] mns1[y], если включено may_be_smaller и вычитаемый диапазон меньше
     """
     i = 0

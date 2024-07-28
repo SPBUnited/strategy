@@ -130,7 +130,7 @@ class Robot(entity.Entity):
     def __eq__(self, robo: typing.Any) -> bool:
         try:
             return self.r_id == robo.r_id and self.color == robo.color
-        except:
+        except AttributeError:
             return False
 
     def to_entity(self) -> entity.Entity:

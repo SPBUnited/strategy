@@ -64,7 +64,7 @@ def prepare_penalty(field: fld.Field, waypoints: list[wp.Waypoint], we_active: b
     for robot_id in stopped_robots:
         robot_pos = field.allies[robot_id].get_pos()
         best_pos = None
-        min_dist: float
+        min_dist: float = 0
         for pos in enumerate(poses):
             dist = aux.dist(pos[1], robot_pos)
             if best_pos is None or dist < min_dist:
@@ -122,7 +122,7 @@ def prepare_kickoff(field: fld.Field, waypoints: list[wp.Waypoint], we_active: b
         if field.allies[i].is_used() and field.allies[i].r_id != field.gk_id:
             robot_pos = field.allies[i].get_pos()
             best_pos = None
-            min_dist: float
+            min_dist: float = 0
             for pos in enumerate(poses):
                 dist = aux.dist(pos[1], robot_pos)
                 if best_pos is None or dist < min_dist:

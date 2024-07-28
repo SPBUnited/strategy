@@ -287,7 +287,7 @@ def find_nearest_robots(
     point: aux.Point,
     team: list[rbt.Robot],
     num: Optional[int] = None,
-    avoid: Optional[list[int]] = None,
+    avoid: Optional[list[tuple[int, const.Color]]] = None,
 ) -> list[rbt.Robot]:
     """
     Найти num роботов из team, ближайших к точке point
@@ -301,7 +301,7 @@ def find_nearest_robots(
 
     for robot in team:  # in [field.enemies, field.allies]
         dist = (robot.get_pos() - point).mag()
-        if robot.is_used():
+        if robot.is_used() and (robot.r_id, robot.color) not in avoid:
             robot_dist.append((robot, dist))
 
     sorted_robot_dist = sorted(robot_dist, key=lambda x: x[1])
