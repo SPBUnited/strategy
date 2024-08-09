@@ -28,10 +28,12 @@ class CommandSink(BaseProcessor):
     commands_writer: DataWriter = attr.ib(init=False)
 
     b_control_team = [
-        rbt.Robot(aux.GRAVEYARD_POS, 0, const.ROBOT_R, const.Color.BLUE, i, 0) for i in range(const.TEAM_ROBOTS_MAX_COUNT)
+        rbt.Robot(aux.GRAVEYARD_POS, 0, const.ROBOT_R, const.Color.BLUE, i, 0)
+        for i in range(const.TEAM_ROBOTS_MAX_COUNT)
     ]
     y_control_team = [
-        rbt.Robot(aux.GRAVEYARD_POS, 0, const.ROBOT_R, const.Color.YELLOW, i, 0) for i in range(const.TEAM_ROBOTS_MAX_COUNT)
+        rbt.Robot(aux.GRAVEYARD_POS, 0, const.ROBOT_R, const.Color.YELLOW, i, 0)
+        for i in range(const.TEAM_ROBOTS_MAX_COUNT)
     ]
 
     def initialize(self, data_bus: DataBus) -> None:
@@ -40,7 +42,9 @@ class CommandSink(BaseProcessor):
         """
         super(CommandSink, self).initialize(data_bus)
         self.commands_sink_reader = DataReader(data_bus, const.TOPIC_SINK, 20)
-        self.commands_writer = DataWriter(data_bus, config.ROBOT_COMMANDS_TOPIC, self.max_commands_to_persist)
+        self.commands_writer = DataWriter(
+            data_bus, config.ROBOT_COMMANDS_TOPIC, self.max_commands_to_persist
+        )
 
     def process(self) -> None:
         """
@@ -64,7 +68,7 @@ class CommandSink(BaseProcessor):
             if ctrl_id is None:
                 continue
 
-            if ctrl_id in const.REVERSED_KICK:
+            if ctrl_id not in const.REVERSED_KICK:  # because all robots are reversed :)
                 r.kick_forward_, r.kick_up_ = r.kick_up_, r.kick_forward_
                 if r.auto_kick_ == 2:
                     r.auto_kick_ = 1
@@ -75,7 +79,6 @@ class CommandSink(BaseProcessor):
                 self.b_control_team[ctrl_id].copy_control_fields(r)
             elif r.color == const.Color.YELLOW:
                 self.y_control_team[ctrl_id].copy_control_fields(r)
-                # self.y_control_team[ctrl_id].used(1)
 
         rules = self.get_rules()
 
@@ -131,16 +134,20 @@ class CommandSink(BaseProcessor):
                 rules.append(0)
         else:
             for i in range(const.TEAM_ROBOTS_MAX_COUNT):
-                control_team = self.y_control_team if self.y_control_team[i].is_used() else self.b_control_team
+                control_team = (
+                    self.y_control_team
+                    if self.y_control_team[i].is_used()
+                    else self.b_control_team
+                )
 
-                if self.y_control_team[i].is_used():
-                    pass
-                elif self.b_control_team[i].is_used():
-                    pass
-                else:
-                    for _ in range(13):
-                        rules.append(0)
-                    continue
+                # if self.y_control_team[i].is_used():
+                #     pass
+                # elif self.b_control_team[i].is_used():
+                #     pass
+                # else:
+                #     for _ in range(13):
+                #         rules.append(0)
+                #     continue
 
                 if not const.IS_DRIBBLER_USED:
                     if round(time() * 2) % 10 == 0:

@@ -15,15 +15,15 @@ class Color(Enum):
 
 ##################################################
 # GAME SETTING CONSTS
-DIV = "B"
-COLOR = Color.BLUE
+DIV = "C"
+COLOR = Color.YELLOW
 POLARITY = 1  # -1 если ворота синих на +x; 1 если ворота синих на -x
 
-IS_SIMULATOR_USED = True
+IS_SIMULATOR_USED = False
 IS_DRIBBLER_USED = True  # dribler and upper_kick
 SELF_PLAY = False
 
-GK = 5
+GK = 12
 PENALTY_KICKER = 0
 ENEMY_GK = 5
 
@@ -40,22 +40,38 @@ ROBOT_TEAM_PACKET_SIZE: int = SINGLE_ROBOT_PACKET_SIZE * TEAM_ROBOTS_MAX_COUNT
 GEOMETRY_PACKET_SIZE: int = 2
 
 CONTROL_MAPPING: dict[int, int] = {
-    0: 0,
-    1: 1,
-    2: 2,
-    3: 3,
-    4: 4,
-    5: 5,
-    6: 6,
-    7: 7,
-    8: 8,
-    9: 9,
-    10: 10,
-    11: 11,
-    12: 12,
-    13: 13,
-    14: 14,
-    15: 15,
+    # 0: 0,
+    # 1: 1,
+    # 2: 2,
+    # 3: 3,
+    # 4: 4,
+    # 5: 5,
+    # 6: 6,
+    # 7: 7,
+    # 8: 8,
+    # 9: 9,
+    # 10: 10,
+    # 11: 11,
+    # 12: 12,
+    # 13: 13,
+    # 14: 14,
+    # 15: 15,
+    0: 8,
+    1: 9,
+    2: 10,
+    3: 11,
+    4: 12,
+    5: 13,
+    6: 14,
+    7: 15,
+    8: 0,
+    9: 1,
+    10: 2,
+    11: 3,
+    12: 4,
+    13: 5,
+    14: 6,
+    15: 7,
 }
 REVERSED_KICK: list[int] = []
 
@@ -104,13 +120,16 @@ GOAL_DX = 4500
 GOAL_DY = 1000
 GOAL_PEN_DX = 1000
 GOAL_PEN_DY = 2000
+
+GK_FORW = 200 + ROBOT_R
 if DIV == "C":
     GOAL_DX = 2250
     GOAL_DY = 800
     GOAL_PEN_DX = 500
     GOAL_PEN_DY = 1350
 
-GK_FORW = 200 + ROBOT_R
+    GK_FORW = 100 + ROBOT_R
+
 KICK_ALIGN_DIST = 150
 GRAB_ALIGN_DIST = 130
 KICK_ALIGN_DIST_MULT = 1.5

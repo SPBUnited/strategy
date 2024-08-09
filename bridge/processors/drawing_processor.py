@@ -29,7 +29,7 @@ class Drawer(BaseProcessor):
         self.image_reader = DataReader(data_bus, const.IMAGE_TOPIC)
 
         width, heigh = 1200, 900
-        goal_dx, goal_dy = abs(const.GOAL_DX), abs(3000)
+        goal_dx, goal_dy = abs(const.GOAL_DX), abs(1500)
         self.scale = min(width / 2 / goal_dx, heigh / 2 / goal_dy)
         self.size_x = goal_dx * self.scale * 2
         self.size_y = goal_dy * self.scale * 2
@@ -75,7 +75,9 @@ class Drawer(BaseProcessor):
         for goal in [field.ally_goal, field.enemy_goal]:
             new_dots = []
             for dot in goal.hull:
-                new_dots.append(dot * self.scale + aux.Point(self.middle_x, self.middle_y))
+                new_dots.append(
+                    dot * self.scale + aux.Point(self.middle_x, self.middle_y)
+                )
 
             for i, _ in enumerate(new_dots):
                 pygame.draw.line(
@@ -129,12 +131,16 @@ class Drawer(BaseProcessor):
             (self.middle_x, self.lower_border),
             2,
         )  # Вертикальная линия
-        pygame.draw.circle(self.screen, line_color, (self.middle_x, self.middle_y), 50, 2)  # Круг в центре
+        pygame.draw.circle(
+            self.screen, line_color, (self.middle_x, self.middle_y), 50, 2
+        )  # Круг в центре
 
     def complete_command(self, command: drawing.Command) -> None:
         """Draw something on a screen by command"""
         if len(command.dots) == 1:
-            pygame.draw.circle(self.screen, command.color, command.dots[0], command.size * self.scale)
+            pygame.draw.circle(
+                self.screen, command.color, command.dots[0], command.size * self.scale
+            )
         elif len(command.dots) == 2:
             pygame.draw.line(
                 self.screen,
