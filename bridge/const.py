@@ -23,7 +23,7 @@ IS_SIMULATOR_USED = False
 IS_DRIBBLER_USED = True  # dribler and upper_kick
 SELF_PLAY = False
 
-GK = 12
+GK = 11
 PENALTY_KICKER = 0
 ENEMY_GK = 5
 
