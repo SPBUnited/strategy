@@ -191,7 +191,7 @@ class PISD:
             self.__max_out[self.__mode.value],
         )
 
-    def process(self, xerr: float, x_i: float, is_cropped: Optional[bool] = None) -> float:
+    def process(self, xerr: float, x_i: float) -> float:
         """
         Рассчитать следующий тик регулятора
         """
@@ -206,7 +206,7 @@ class PISD:
         #     self.__int.process(xerr + k_d * x_i)
 
         # self.__out = u_clipped
-        if u != aux.minmax(u, max_out) and is_cropped is None or is_cropped == True:
+        if u != aux.minmax(u, max_out):
             self.__int.process(xerr + k_d * x_i)
 
         self.__out = u

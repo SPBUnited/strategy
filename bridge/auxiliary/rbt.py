@@ -287,6 +287,7 @@ class Robot(entity.Entity):
         vel - требуемый вектор скорости [мм/с] \\
         wvel - требуемая угловая скорость [рад/с]
         """
+        
         self.speed_x = self.xx_flp.process(1 / self.k_xx * vel.x)
         self.speed_y = self.yy_flp.process(1 / self.k_yy * vel.y)
 

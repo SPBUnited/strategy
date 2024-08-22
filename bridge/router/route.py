@@ -191,15 +191,13 @@ class Route:
                 robot.pos_reg_y.select_mode(tau.Mode.NORMAL)
 
             vec_err_rotated = aux.rotate(vec_err, -robot.get_angle())
-            if vec_err_rotated.mag() > const.MAX_SPEED:
-                vec_err_rotated = vec_err_rotated.unity() * const.MAX_SPEED
-                is_vel_cropped = True
-            else:
-                is_vel_cropped = False
-            u_x = -robot.pos_reg_x.process(vec_err_rotated.x, -cur_vel.x, is_vel_cropped)
-            u_y = -robot.pos_reg_y.process(vec_err_rotated.y, -cur_vel.y, is_vel_cropped)
-            
+            u_x = -robot.pos_reg_x.process(vec_err_rotated.x, -cur_vel.x)
+            u_y = -robot.pos_reg_y.process(vec_err_rotated.y, -cur_vel.y)
+
             transl_vel = aux.Point(u_x, u_y)
+            if transl_vel.mag() > const.MAX_SPEED:
+                transl_vel = transl_vel.unity() * const.MAX_SPEED
+            
             angle = end_point.angle
 
         return (transl_vel, angle)
