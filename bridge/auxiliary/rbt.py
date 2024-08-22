@@ -77,7 +77,7 @@ class Robot(entity.Entity):
         # self.a0Flp = tau.FOLP(self.a0TF, const.Ts)
 
         # !v REAL
-        gains_full = [2.5, 0.1, 0.3, const.MAX_SPEED]
+        gains_full = [2, 0.1, 2, const.MAX_SPEED]
         gains_soft = [3, 0.35, 0.1, const.SOFT_MAX_SPEED]
         a_gains_full = [8, 0.1, 0, const.MAX_SPEED_R]
         # gains_soft = [10, 0.32, 0, const.SOFT_MAX_SPEED]
@@ -287,9 +287,15 @@ class Robot(entity.Entity):
         vel - требуемый вектор скорости [мм/с] \\
         wvel - требуемая угловая скорость [рад/с]
         """
-        
-        self.speed_x = self.xx_flp.process(1 / self.k_xx * vel.x)
-        self.speed_y = self.yy_flp.process(1 / self.k_yy * vel.y)
+        global_speed_x = self.xx_flp.process(1 / self.k_xx * vel.x)
+        global_speed_y = self.yy_flp.process(1 / self.k_yy * vel.y)
+
+        global_speed = aux.Point(global_speed_x, global_speed_y)
+
+        speed = -aux.rotate(global_speed, self._angle)
+
+        self.speed_x = speed.x
+        self.speed_y = speed.y
 
         # if abs(self.speed_r) > const.MAX_SPEED_R:
         #     self.speed_r = math.copysign(const.MAX_SPEED_R, self.speed_r)

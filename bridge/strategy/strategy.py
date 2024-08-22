@@ -295,8 +295,8 @@ class Strategy:
         """
         match self.flag:
             case 0:
-                pos = aux.Point(1000, 1000)
-                angle = 0
+                pos = aux.Point(-250, 1000)
+                angle = math.pi / 2 * 3
 
             case 1:
                 pos = aux.Point(500, 1000)
@@ -307,7 +307,7 @@ class Strategy:
                 angle = math.pi
 
             case 3:
-                pos = aux.Point(1500, -1000)
+                pos = aux.Point(-750, -1000)
                 angle = math.pi / 2 * 3
                 
         if aux.in_place(field.allies[10].get_pos(), pos, 25):

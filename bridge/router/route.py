@@ -183,16 +183,15 @@ class Route:
             transl_vel = -aux.rotate(aux.RIGHT, robot.get_angle()) * 800
             angle = robot.get_angle()
         else:
-            if target_point.type in self.ball_wp_types and self.get_length() < 500:
-                robot.pos_reg_x.select_mode(tau.Mode.SOFT)
-                robot.pos_reg_y.select_mode(tau.Mode.SOFT)
-            else:
-                robot.pos_reg_x.select_mode(tau.Mode.NORMAL)
-                robot.pos_reg_y.select_mode(tau.Mode.NORMAL)
-
-            vec_err_rotated = aux.rotate(vec_err, -robot.get_angle())
-            u_x = -robot.pos_reg_x.process(vec_err_rotated.x, -cur_vel.x)
-            u_y = -robot.pos_reg_y.process(vec_err_rotated.y, -cur_vel.y)
+            # if target_point.type in self.ball_wp_types and self.get_length() < 500:
+            #     robot.pos_reg_x.select_mode(tau.Mode.SOFT)
+            #     robot.pos_reg_y.select_mode(tau.Mode.SOFT)
+            # else:
+            robot.pos_reg_x.select_mode(tau.Mode.NORMAL)
+            robot.pos_reg_y.select_mode(tau.Mode.NORMAL)
+            
+            u_x = robot.pos_reg_x.process(vec_err.x, -cur_vel.x)
+            u_y = robot.pos_reg_y.process(vec_err.y, -cur_vel.y)
 
             transl_vel = aux.Point(u_x, u_y)
             if transl_vel.mag() > const.MAX_SPEED:
@@ -207,7 +206,7 @@ class Route:
         """
         Двигаться по маршруту route
         """
-        vel, angle = self.vel_control(robot, field)
+        vel, angle = self.vel_control(robot, field) #in global coordinate system
 
         self.kicker_control(robot, field)
 
@@ -220,8 +219,8 @@ class Route:
         else:
             robot._delta_angle = math.log(18 / math.pi * abs(aerr) + 1) * aux.sign(aerr) * (100 / math.log(18 + 1))
 
-        
-        field.image.draw_line(robot.get_pos(), robot.get_pos() + aux.rotate(vel, math.pi + robot.get_angle()) / 2, (0, 0, 0))
+        field.image.draw_line(robot.get_pos(), self.get_dest_wp().pos, (255, 0, 0))
+        field.image.draw_line(robot.get_pos(), robot.get_pos() + vel / 2, (0, 0, 0))
 
         reg_vel = aux.Point(robot.speed_x, -robot.speed_y)
         field.image.draw_line(robot.get_pos(), robot.get_pos() + aux.rotate(reg_vel, robot.get_angle()) * 10)

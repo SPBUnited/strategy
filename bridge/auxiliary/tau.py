@@ -206,8 +206,8 @@ class PISD:
         #     self.__int.process(xerr + k_d * x_i)
 
         # self.__out = u_clipped
-        if u != aux.minmax(u, max_out):
-            self.__int.process(xerr + k_d * x_i)
+        # if u != aux.minmax(u, max_out):
+        self.__int.process(xerr + k_d * x_i)
 
         self.__out = u
 
