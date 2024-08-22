@@ -148,6 +148,21 @@ class Field:
 
         self.allies, self.enemies = self.enemies, self.allies
 
+    def update_field(self, new_field: "Field") -> None:
+        self.robot_with_ball = new_field.robot_with_ball
+        self.last_update = new_field.last_update
+
+        self.ball = new_field.ball
+
+        for i, robot in enumerate(self.all_bots):
+            robot._pos = new_field.all_bots[i]._pos
+            robot._vel = new_field.all_bots[i]._vel
+            robot._angle = new_field.all_bots[i]._angle
+            robot._anglevel = new_field.all_bots[i]._anglevel
+
+            robot._is_used = new_field.all_bots[i]._is_used
+            robot.last_update_ = new_field.all_bots[i].last_update_
+
     def update_ball(self, pos: aux.Point, t: float) -> None:
         """
         Обновить положение мяча

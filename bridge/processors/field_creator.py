@@ -21,8 +21,9 @@ class FieldCreator(BaseProcessor):
 
     processing_pause: typing.Optional[float] = 0.01
     reduce_pause_on_process_time: bool = False
-    commands_sink_reader: DataReader = attr.ib(init=False)
-    field_writer: DataWriter = attr.ib(init=False)
+    # commands_sink_reader: DataReader = attr.ib(init=False)
+    # box_feedback_reader: DataReader = attr.ib(init=False)
+    # field_writer: DataWriter = attr.ib(init=False)
     _ssl_converter: SSL_WrapperPacket = attr.ib(init=False)
 
     def initialize(self, data_bus: DataBus) -> None:
@@ -31,6 +32,7 @@ class FieldCreator(BaseProcessor):
         """
         super(FieldCreator, self).initialize(data_bus)
         self.vision_reader = DataReader(data_bus, config.VISION_DETECTIONS_TOPIC)
+        self.box_feedback_reader = DataReader(data_bus, config.BOX_FEEDBACK_TOPIC)
         self.field_writer = DataWriter(data_bus, const.FIELD_TOPIC, 20)
         self._ssl_converter = SSL_WrapperPacket()
         self.field = fld.Field()
@@ -129,3 +131,7 @@ class FieldCreator(BaseProcessor):
 
         # if len(b_bots_pos[0]) > 0:
         #     print(b_bots_pos[0][0])
+
+        feedback_queue = self.box_feedback_reader.read_new()
+        if feedback_queue:
+            print("feedback from box:", feedback_queue)

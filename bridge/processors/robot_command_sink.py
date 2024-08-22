@@ -4,6 +4,7 @@
 
 import struct
 import typing
+import math
 from time import time
 
 import attr
@@ -60,6 +61,7 @@ class CommandSink(BaseProcessor):
         #     print(len(cmds), "total delay:", time() - cmds[0].content.last_update())
 
         for cmd in cmds:
+            # print(len(cmds))
             r: rbt.Robot = cmd.content
             if not r.is_used():
                 continue
@@ -166,7 +168,7 @@ class CommandSink(BaseProcessor):
                 rules.append(0)
                 rules.append(control_team[i].speed_x)
                 rules.append(control_team[i].speed_y)
-                rules.append(control_team[i].speed_r)
+                rules.append(control_team[i]._delta_angle)
                 rules.append(control_team[i].kick_up_)
                 rules.append(control_team[i].kick_forward_)
                 rules.append(control_team[i].auto_kick_)

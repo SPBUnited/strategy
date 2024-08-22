@@ -29,13 +29,14 @@ class Robot(entity.Entity):
 
         self.r_id = r_id
         self.ctrl_id = ctrl_id
-        self.__is_used = 0
+        self._is_used = 0
         self.color = color
         self.last_update_ = 0.0
 
         self.speed_x = 0.0
         self.speed_y = 0.0
         self.speed_r = 0.0
+        self._delta_angle = 0
         self.kick_up_ = 0
         self.kick_forward_ = 0
         self.auto_kick_ = 0
@@ -57,8 +58,8 @@ class Robot(entity.Entity):
 
         # v! REAL
         else:
-            self.k_xx = -250 / 20
-            self.k_yy = 0.5 * 250 / 20
+            self.k_xx = -1500 / 100
+            self.k_yy = 1250 / 100
             self.k_ww = 6 / 20
             self.k_wy = 0
             self.t_wy = 0.15
@@ -68,15 +69,15 @@ class Robot(entity.Entity):
         # self.max_acc = 1000
         # self.xxRL = tau.RateLimiter(const.Ts, self.max_acc)
         # self.yyRL = tau.RateLimiter(const.Ts, self.max_acc)
-        self.xx_t = 0.2
+        self.xx_t = 0.1
         self.xx_flp = tau.FOLP(self.xx_t, const.Ts)
-        self.yy_t = 0.2
+        self.yy_t = 0.1
         self.yy_flp = tau.FOLP(self.yy_t, const.Ts)
         # self.a0TF = 0.5
         # self.a0Flp = tau.FOLP(self.a0TF, const.Ts)
 
         # !v REAL
-        gains_full = [3, 0.2, 0, const.MAX_SPEED]
+        gains_full = [2.5, 0.1, 0.3, const.MAX_SPEED]
         gains_soft = [3, 0.35, 0.1, const.SOFT_MAX_SPEED]
         a_gains_full = [8, 0.1, 0, const.MAX_SPEED_R]
         # gains_soft = [10, 0.32, 0, const.SOFT_MAX_SPEED]
@@ -124,6 +125,8 @@ class Robot(entity.Entity):
 
         self.is_kick_committed = False
 
+        self.kostiiiiil = tau.FOLP(0.08, const.Ts)
+
     def __eq__(self, robo: typing.Any) -> bool:
         try:
             return self.r_id == robo.r_id and self.color == robo.color
@@ -140,13 +143,13 @@ class Robot(entity.Entity):
         """
         Выставить флаг использования робота
         """
-        self.__is_used = a
+        self._is_used = a
 
     def is_used(self) -> int:
         """
         Узнать, используется ли робот
         """
-        return self.__is_used
+        return self._is_used
 
     def last_update(self) -> float:
         """
@@ -208,6 +211,7 @@ class Robot(entity.Entity):
         self.speed_x = robot.speed_x
         self.speed_y = robot.speed_y
         self.speed_r = robot.speed_r
+        self._delta_angle = robot._delta_angle
         self.kick_up_ = robot.kick_up_
         self.kick_forward_ = robot.kick_forward_
         self.auto_kick_ = robot.auto_kick_
@@ -216,7 +220,7 @@ class Robot(entity.Entity):
         self.dribbler_speed_ = robot.dribbler_speed_
         self.kicker_charge_enable_ = robot.kicker_charge_enable_
         self.beep = robot.beep
-        self.__is_used = robot.is_used()
+        self._is_used = robot.is_used()
         self.last_update_ = robot.last_update_
 
     def clear_fields(self) -> None:
@@ -276,39 +280,30 @@ class Robot(entity.Entity):
             < const.KICK_ALIGN_ANGLE * commit_scale
         )
 
-    def update_vel_xyw(self, vel: aux.Point, wvel: float) -> None:
+    def update_vel_xy(self, vel: aux.Point) -> None:
         """
         Выполнить тик низкоуровневых регуляторов скорости робота
 
         vel - требуемый вектор скорости [мм/с] \\
         wvel - требуемая угловая скорость [рад/с]
         """
-        self.speed_x = self.xx_flp.process(
-            1 / self.k_xx * aux.rotate(vel, -self._angle).x
-        )
-        self.speed_y = self.yy_flp.process(
-            1 / self.k_yy * aux.rotate(vel, -self._angle).y
-        )
+        self.speed_x = self.xx_flp.process(1 / self.k_xx * vel.x)
+        self.speed_y = self.yy_flp.process(1 / self.k_yy * vel.y)
 
-        # self.speed_x = self.xx_flp.process(1 / self.k_xx * vel.x)
-        # self.speed_y = self.yy_flp.process(1 / self.k_yy * vel.y)
+        # if abs(self.speed_r) > const.MAX_SPEED_R:
+        #     self.speed_r = math.copysign(const.MAX_SPEED_R, self.speed_r)
 
-        # RcompY = self.Kwy * self.RcompFfy.process(self.RcompFdy.process(self.speed_y))
-        # RcompY = self.Kwy * self.RcompFdy.process(abs(float(self.speed_y)**2))
-        r_comp_y = 0
-        self.speed_r = 1 / self.k_ww * (wvel - r_comp_y)
-        if abs(self.speed_r) > const.MAX_SPEED_R:
-            self.speed_r = const.MAX_SPEED_R * abs(self.speed_r) / self.speed_r
+        # vec_speed = math.sqrt(self.speed_x**2 + self.speed_y**2)
+        # r_speed = abs(self.speed_r)
+        # if not const.IS_SIMULATOR_USED:
+        #     vec_speed *= abs((const.MAX_SPEED_R - r_speed) / const.MAX_SPEED_R) ** 2
+        # ang = math.atan2(self.speed_y, self.speed_x)
 
-        vec_speed = math.sqrt(self.speed_x**2 + self.speed_y**2)
-        r_speed = abs(self.speed_r)
+        # self.speed_x = vec_speed * math.cos(ang)
+        # self.speed_y = vec_speed * math.sin(ang)
 
-        if not const.IS_SIMULATOR_USED:
-            vec_speed *= ((const.MAX_SPEED_R - r_speed) / const.MAX_SPEED_R) ** 2
-
-        ang = math.atan2(self.speed_y, self.speed_x)
-        self.speed_x = vec_speed * math.cos(ang)
-        self.speed_y = vec_speed * math.sin(ang)
+    def update_vel_w(self, wvel: float) -> None:
+        self.speed_r = 1 / self.k_ww * wvel
 
     def clamp_motors(self) -> None:
         """

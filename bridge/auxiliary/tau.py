@@ -4,6 +4,7 @@
 
 import math
 from enum import Enum, auto
+from typing import Optional
 
 from bridge.auxiliary import aux
 
@@ -190,7 +191,7 @@ class PISD:
             self.__max_out[self.__mode.value],
         )
 
-    def process(self, xerr: float, x_i: float) -> float:
+    def process(self, xerr: float, x_i: float, is_cropped: Optional[bool] = None) -> float:
         """
         Рассчитать следующий тик регулятора
         """
@@ -199,12 +200,17 @@ class PISD:
         s = xerr + k_d * x_i + k_i * self.__int.get_val()
         u = gain * s
 
-        u_clipped = aux.minmax(u, max_out)
+        # u_clipped = aux.minmax(u, max_out)
 
-        if u != u_clipped:
+        # if u != u_clipped:
+        #     self.__int.process(xerr + k_d * x_i)
+
+        # self.__out = u_clipped
+        if u != aux.minmax(u, max_out) and is_cropped is None or is_cropped == True:
             self.__int.process(xerr + k_d * x_i)
 
-        self.__out = u_clipped
+        self.__out = u
+
         return self.__out
 
     def get_val(self) -> float:

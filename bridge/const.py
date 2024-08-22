@@ -16,14 +16,14 @@ class Color(Enum):
 ##################################################
 # GAME SETTING CONSTS
 DIV = "C"
-COLOR = Color.YELLOW
+COLOR = Color.BLUE
 POLARITY = 1  # -1 если ворота синих на +x; 1 если ворота синих на -x
 
 IS_SIMULATOR_USED = False
 IS_DRIBBLER_USED = True  # dribler and upper_kick
 SELF_PLAY = False
 
-GK = 11
+GK = 12
 PENALTY_KICKER = 0
 ENEMY_GK = 5
 
@@ -40,22 +40,6 @@ ROBOT_TEAM_PACKET_SIZE: int = SINGLE_ROBOT_PACKET_SIZE * TEAM_ROBOTS_MAX_COUNT
 GEOMETRY_PACKET_SIZE: int = 2
 
 CONTROL_MAPPING: dict[int, int] = {
-    # 0: 0,
-    # 1: 1,
-    # 2: 2,
-    # 3: 3,
-    # 4: 4,
-    # 5: 5,
-    # 6: 6,
-    # 7: 7,
-    # 8: 8,
-    # 9: 9,
-    # 10: 10,
-    # 11: 11,
-    # 12: 12,
-    # 13: 13,
-    # 14: 14,
-    # 15: 15,
     0: 8,
     1: 9,
     2: 10,
@@ -72,6 +56,22 @@ CONTROL_MAPPING: dict[int, int] = {
     13: 5,
     14: 6,
     15: 7,
+    # 0: 0,
+    # 1: 1,
+    # 2: 2,
+    # 3: 3,
+    # 4: 4,
+    # 5: 5,
+    # 6: 6,
+    # 7: 7,
+    # 8: 8,
+    # 9: 9,
+    # 10: 10,
+    # 11: 11,
+    # 12: 12,
+    # 13: 13,
+    # 14: 14,
+    # 15: 15,
 }
 REVERSED_KICK: list[int] = []
 
@@ -88,14 +88,14 @@ IMAGE_TOPIC = "image-topic"
 
 ##################################################
 # CONTROL CONSTS
-Ts = 0.05  # s
+Ts = 0.02  # s
 
 # ROBOT SETTING CONSTS
 # MAX_SPEED = 100
 # MAX_SPEED_R = 50
 # ACCELERATION = 3
 # BASE_KICKER_VOLTAGE = 7.0
-MAX_SPEED = 3000
+MAX_SPEED = 1500
 MAX_SPEED_R = 30
 SOFT_MAX_SPEED = 1500
 SOFT_MAX_SPEED_R = 16

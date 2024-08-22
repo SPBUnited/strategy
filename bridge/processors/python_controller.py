@@ -82,16 +82,18 @@ class SSLController(BaseProcessor):
         """
         new_field = self.field_reader.read_last()
         if new_field is not None:
-            self.field = new_field.content
-            if self.field.ally_color != self.ally_color:
-                self.field.reverse_field()
+            updated_field = new_field.content
+            if updated_field.ally_color != self.ally_color:
+                updated_field.reverse_field()
+            self.field.update_field(updated_field)
         else:
             print("No new field")
 
     def draw_image(self) -> None:
         """Send commands to drawer processor"""
-        if self.field.image is not None and self.field.ally_color == const.COLOR:
+        if self.field.image and self.field.ally_color == const.COLOR:
             self.image_writer.write(self.field.image)
+        self.field.image.commands = []
 
     def control_loop(self) -> None:
         """
