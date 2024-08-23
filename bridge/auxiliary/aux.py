@@ -91,9 +91,10 @@ class Point:
         return Point(self.x**a, self.y**a)
 
     def __eq__(self, p: typing.Any) -> bool:
-        if not isinstance(p, Point):
+        try:
+            return abs(self.x - p.x) < 0.1 and abs(self.y - p.y) < 0.1
+        except TypeError:
             return False
-        return abs(self.x - p.x) < 0.1 and abs(self.y - p.y) < 0.1
 
     def __str__(self) -> str:
         return f"x = {self.x:.2f}, y = {self.y:.2f}"
@@ -131,18 +132,6 @@ def dist2line(p1: Point, p2: Point, p: Point) -> float:
     Рассчитать расстояние от точки p до прямой, образованной точками p1 и p2
     """
     return abs(vec_mult((p2 - p1).unity(), p - p1))
-
-
-# def line_poly_intersect(p1: Point, p2: Point, points: list[Point]) -> bool:
-#     """
-#     Определить, пересекает ли линия p1-p2 полигон points
-#     """
-#     vec = p2 - p1
-#     old_sign = sign(vec_mult(vec, points[0] - p1))
-#     for p in points:
-#         if old_sign != sign(vec_mult(vec, p - p1)):
-#             return True
-#     return False
 
 
 def segment_poly_intersect(p1: Point, p2: Point, points: list[Point]) -> typing.Optional[Point]:

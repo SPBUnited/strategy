@@ -20,7 +20,7 @@ if __name__ == "__main__":
     # config.init_logging("./logs")
 
     PROCESSORS = [
-        VisionDetectionsCollector(processing_pause=0.001),
+        VisionDetectionsCollector(processing_pause=0.001), #TODO: move to field creator
         RefereeCommandsCollector(processing_pause=0.001),
         FieldCreator(processing_pause=0.01),
         SSLController(
@@ -38,8 +38,8 @@ if __name__ == "__main__":
         #     dbg_state=strategy.States.ATTACK,
         # ),
         Drawer(),
-        CommandSink(processing_pause=0.001),  # , should_debug=True
-        RobotCommandsSender(processing_pause=0.001),
+        CommandSink(processing_pause=0.001),
+        # RobotCommandsSender(processing_pause=0.001), # moved to command_sink
         BoxFeedbackCollector(processing_pause=0.001)
     ]
 

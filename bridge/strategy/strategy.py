@@ -310,16 +310,16 @@ class Strategy:
                 pos = aux.Point(-750, -1000)
                 angle = math.pi / 2 * 3
                 
-        if aux.in_place(field.allies[10].get_pos(), pos, 25):
+        if aux.in_place(field.allies[1].get_pos(), pos, 25):
             if time() - self.timer > 0.5:
                 self.flag += 1
                 self.flag = self.flag % 4
         else:
             self.timer = time()
         angle += math.pi / 4
-        waypoints[10] = wp.Waypoint(pos, angle, wp.WType.S_ENDPOINT)
-        print("vel", field.allies[10].get_vel().mag())
-        print("dist to pos", (field.allies[10].get_pos() - pos).mag())
+        waypoints[1] = wp.Waypoint(pos, angle, wp.WType.S_ENDPOINT)
+        print("vel", field.allies[1].get_vel().mag())
+        print("dist to pos", (field.allies[1].get_pos() - pos).mag())
         # waypoints[12] = wp.Waypoint(aux.Point(0,0), math.pi / 2, wp.WType.S_ENDPOINT)
         return
 

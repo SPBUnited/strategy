@@ -1,7 +1,7 @@
 """
 Модуль-прослойка между стратегией и отправкой пакетов на роботов
 """
-
+import zmq
 import struct
 import typing
 import math
@@ -43,9 +43,13 @@ class CommandSink(BaseProcessor):
         """
         super(CommandSink, self).initialize(data_bus)
         self.commands_sink_reader = DataReader(data_bus, const.TOPIC_SINK, 20)
-        self.commands_writer = DataWriter(
-            data_bus, config.ROBOT_COMMANDS_TOPIC, self.max_commands_to_persist
-        )
+        # self.commands_writer = DataWriter(
+        #     data_bus, config.ROBOT_COMMANDS_TOPIC, self.max_commands_to_persist
+        # )
+
+        context = zmq.Context()
+        self.socket = context.socket(zmq.PUB)
+        self.socket.bind(f"tcp://*:{config.COMMANDS_PUBLISH_PORT}")
 
     def process(self) -> None:
         """
@@ -84,7 +88,8 @@ class CommandSink(BaseProcessor):
 
         rules = self.get_rules()
 
-        self.commands_writer.write(rules)
+        # self.commands_writer.write(rules)
+        self.socket.send(rules)
 
     def get_rules(self) -> bytes:
         """
