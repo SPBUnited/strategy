@@ -165,6 +165,7 @@ class Route:
 
         cur_vel = robot.get_vel()
         vec_err = target_point.pos - robot.get_pos()
+        dest_vec = end_point.pos - robot.get_pos()
 
         transl_vel: Optional[aux.Point] = None
 
@@ -177,23 +178,34 @@ class Route:
             transl_vel = aux.Point(0, 0)
             angle = robot.get_angle()
         elif target_point.type == wp.WType.R_PASSTHROUGH:
-            transl_vel = -vec_err.unity() * const.MAX_SPEED  # TODO: change speed by dist to final point
-            angle = end_point.angle
-        elif target_point.type in self.ball_wp_types and robot.is_kick_aligned():
-            transl_vel = -aux.rotate(aux.RIGHT, robot.get_angle()) * 800
-            angle = robot.get_angle()
-        else:
-            # if target_point.type in self.ball_wp_types and self.get_length() < 500:
-            #     robot.pos_reg_x.select_mode(tau.Mode.SOFT)
-            #     robot.pos_reg_y.select_mode(tau.Mode.SOFT)
-            # else:
             robot.pos_reg_x.select_mode(tau.Mode.NORMAL)
             robot.pos_reg_y.select_mode(tau.Mode.NORMAL)
             
+            u_x = robot.pos_reg_x.process(dest_vec.x, -cur_vel.x)
+            u_y = robot.pos_reg_y.process(dest_vec.y, -cur_vel.y)
+
+            transl_vel = aux.rotate(aux.Point(u_x, u_y), vec_err.arg() - dest_vec.arg())
+            if transl_vel.mag() > const.MAX_SPEED:
+                transl_vel = transl_vel.unity() * const.MAX_SPEED
+
+            angle = end_point.angle
+        elif end_point.type in self.ball_wp_types and robot.is_kick_aligned(end_point):
+            transl_vel = aux.rotate(aux.RIGHT, target_point.angle) * 300
+            angle = target_point.angle
+        else:
+            if end_point.type in self.ball_wp_types and self.get_length() < 500:
+                robot.pos_reg_x.select_mode(tau.Mode.SOFT)
+                robot.pos_reg_y.select_mode(tau.Mode.SOFT)
+                transl_vel = field.ball.get_vel()
+            else:
+                robot.pos_reg_x.select_mode(tau.Mode.NORMAL)
+                robot.pos_reg_y.select_mode(tau.Mode.NORMAL)
+                transl_vel = aux.Point(0, 0)
+
             u_x = robot.pos_reg_x.process(vec_err.x, -cur_vel.x)
             u_y = robot.pos_reg_y.process(vec_err.y, -cur_vel.y)
 
-            transl_vel = aux.Point(u_x, u_y)
+            transl_vel += aux.Point(u_x, u_y)
             if transl_vel.mag() > const.MAX_SPEED:
                 transl_vel = transl_vel.unity() * const.MAX_SPEED
             
@@ -219,8 +231,5 @@ class Route:
         else:
             robot._delta_angle = math.log(18 / math.pi * abs(aerr) + 1) * aux.sign(aerr) * (100 / math.log(18 + 1))
 
-        field.image.draw_line(robot.get_pos(), self.get_dest_wp().pos, (255, 0, 0))
-        field.image.draw_line(robot.get_pos(), robot.get_pos() + vel / 2, (0, 0, 0))
-
         reg_vel = aux.Point(robot.speed_x, -robot.speed_y)
-        field.image.draw_line(robot.get_pos(), robot.get_pos() + aux.rotate(reg_vel, robot.get_angle()) * 10)
+        field.router_image.draw_line(robot.get_pos(), robot.get_pos() + aux.rotate(reg_vel, robot.get_angle()) * 10)

@@ -296,7 +296,7 @@ class Strategy:
         match self.flag:
             case 0:
                 pos = aux.Point(-250, 1000)
-                angle = math.pi / 2 * 3
+                angle = math.pi
 
             case 1:
                 pos = aux.Point(500, 1000)
@@ -308,19 +308,23 @@ class Strategy:
 
             case 3:
                 pos = aux.Point(-750, -1000)
-                angle = math.pi / 2 * 3
+                angle = math.pi
                 
-        if aux.in_place(field.allies[1].get_pos(), pos, 25):
+        if aux.in_place(field.allies[12].get_pos(), pos, 50):
             if time() - self.timer > 0.5:
                 self.flag += 1
                 self.flag = self.flag % 4
         else:
             self.timer = time()
         angle += math.pi / 4
-        waypoints[1] = wp.Waypoint(pos, angle, wp.WType.S_ENDPOINT)
-        print("vel", field.allies[1].get_vel().mag())
-        print("dist to pos", (field.allies[1].get_pos() - pos).mag())
-        # waypoints[12] = wp.Waypoint(aux.Point(0,0), math.pi / 2, wp.WType.S_ENDPOINT)
+        waypoints[12] = wp.Waypoint(pos, angle, wp.WType.S_ENDPOINT)
+        print("vel", field.allies[12].get_vel().mag())
+        print("dist to pos", (field.allies[12].get_pos() - pos).mag())
+
+        for point in [aux.Point(-250, 1000), aux.Point(500, 1000), aux.Point(500, -1000), aux.Point(-750, -1000)]:
+            field.strategy_image.draw_dot(point, (0, 0, 0), 25)
+
+        # waypoints[12] = wp.Waypoint(field.ball.get_pos(), aux.angle_to_point(field.ball.get_pos(), field.enemy_goal.center), wp.WType.S_BALL_KICK)
         return
 
         "Определение набора ролей для роботов"

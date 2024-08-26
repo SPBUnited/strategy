@@ -19,7 +19,7 @@ def attacker(
     attacker = field.allies[attacker_id]
     kick_point = acc.choose_kick_point(field, attacker_id)
     kick_est = acc.estimate_pass_point(field, field.ball.get_pos(), kick_point)
-    field.image.draw_dot(kick_point, (255, 0, 0), 15)
+    field.strategy_image.draw_dot(kick_point, (255, 0, 0), 15)
 
     # if self.pass_or_kick_decision_border.is_lower(kick_est) and len(forwards) > 0:
     if kick_est < 0.2 and len(forwards) > 0:
@@ -99,15 +99,15 @@ def pass_kicker(field: fld.Field, kicker_id: int, receiver_id: int) -> wp.Waypoi
         # )
         # print("pass to", receiver_id)
         waypoint = kick.pass_to_point(field, field.allies[kicker_id], receiver.get_pos())
-        # field.image.draw_dot(
-        #     field.ball.get_pos()
-        #     + aux.rotate(
-        #         aux.RIGHT,
-        #         aux.angle_to_point(field.ball.get_pos(), receiver.get_pos()),
-        #     ),
-        #     5,
-        #     (255, 0, 255),
-        # )
+        field.strategy_image_image.draw_dot(
+            field.ball.get_pos()
+            + aux.rotate(
+                aux.RIGHT,
+                aux.angle_to_point(field.ball.get_pos(), receiver.get_pos()),
+            ),
+            5,
+            (255, 0, 255),
+        )
     else:
         waypoint = wp.Waypoint(aux.Point(0, 0), 0, wp.WType.S_STOP)
 
@@ -132,7 +132,7 @@ def pass_receiver(
         and (field.ball_start_point - field.ball.get_pos()).mag() > const.INTERCEPT_SPEED
     ):
         target = aux.closest_point_on_line(field.ball_start_point, field.ball.get_pos(), receiver.get_pos(), "R")
-        field.image.draw_line(target, receiver.get_pos(), (255, 127, 0), 2)
+        field.strategy_image.draw_line(target, receiver.get_pos(), (255, 127, 0), 2)
 
         waypoints[receiver_id] = wp.Waypoint(
             target,
@@ -145,4 +145,4 @@ def pass_receiver(
             aux.angle_to_point(receiver.get_pos(), field.ball.get_pos()),
             wp.WType.S_ENDPOINT,
         )
-        # field.image.draw_dot(receive_point, 5, (255, 255, 0))
+        field.strategy_image.draw_dot(receive_point, 5, (255, 255, 0))

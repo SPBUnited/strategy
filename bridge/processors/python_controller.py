@@ -16,6 +16,7 @@ from bridge import const
 from bridge.auxiliary import aux, fld
 from bridge.router import router
 from bridge.strategy import strategy
+from bridge.drawing import Image
 
 
 @attr.s(auto_attribs=True)
@@ -91,9 +92,13 @@ class SSLController(BaseProcessor):
 
     def draw_image(self) -> None:
         """Send commands to drawer processor"""
-        if self.field.image and self.field.ally_color == const.COLOR:
-            self.image_writer.write(self.field.image)
-        self.field.image.commands = []
+        if self.field.ally_color == const.COLOR:
+            full_image = Image()
+            for image in [self.field.strategy_image, self.field.path_image, self.field.router_image]:
+                if image:
+                    full_image.commands += image.commands
+                    image.commands = []
+            self.image_writer.write(full_image)
 
     def control_loop(self) -> None:
         """

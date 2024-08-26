@@ -59,7 +59,7 @@ class Robot(entity.Entity):
         # v! REAL
         else:
             self.k_xx = -1500 / 100
-            self.k_yy = 1250 / 100
+            self.k_yy = 1400 / 100
             self.k_ww = 6 / 20
             self.k_wy = 0
             self.t_wy = 0.15
@@ -78,7 +78,7 @@ class Robot(entity.Entity):
 
         # !v REAL
         gains_full = [2, 0.1, 2, const.MAX_SPEED]
-        gains_soft = [3, 0.35, 0.1, const.SOFT_MAX_SPEED]
+        gains_soft = [3.5, 0.15, 2, const.SOFT_MAX_SPEED]
         a_gains_full = [8, 0.1, 0, const.MAX_SPEED_R]
         # gains_soft = [10, 0.32, 0, const.SOFT_MAX_SPEED]
         # gains_soft = gains_full
@@ -287,15 +287,15 @@ class Robot(entity.Entity):
         vel - требуемый вектор скорости [мм/с] \\
         wvel - требуемая угловая скорость [рад/с]
         """
-        global_speed_x = self.xx_flp.process(1 / self.k_xx * vel.x)
-        global_speed_y = self.yy_flp.process(1 / self.k_yy * vel.y)
+        # global_speed_x = self.xx_flp.process(1 / self.k_xx * vel.x)
+        # global_speed_y = self.yy_flp.process(1 / self.k_yy * vel.y)
 
-        global_speed = aux.Point(global_speed_x, global_speed_y)
+        # global_speed = aux.Point(global_speed_x, global_speed_y)
 
-        speed = -aux.rotate(global_speed, self._angle)
+        speed = -aux.rotate(vel, -self._angle)
 
-        self.speed_x = speed.x
-        self.speed_y = speed.y
+        self.speed_x = self.xx_flp.process(1 / self.k_xx * speed.x)
+        self.speed_y = self.yy_flp.process(1 / self.k_yy * speed.y)
 
         # if abs(self.speed_r) > const.MAX_SPEED_R:
         #     self.speed_r = math.copysign(const.MAX_SPEED_R, self.speed_r)

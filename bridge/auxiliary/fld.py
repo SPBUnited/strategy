@@ -70,7 +70,9 @@ class Field:
         """
         self.last_update = 0.0
         self.robot_with_ball: Optional[rbt.Robot] = None
-        self.image: drawing.Image = drawing.Image()
+        self.strategy_image: drawing.Image = drawing.Image()
+        self.router_image: drawing.Image = drawing.Image()
+        self.path_image: drawing.Image = drawing.Image()
 
         self.gk_id = const.GK
         self.enemy_gk_id = const.ENEMY_GK

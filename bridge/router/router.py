@@ -86,7 +86,7 @@ class Router:
 
             self_pos = field.allies[idx].get_pos()
 
-            if not self.routes[idx].is_used():
+            if not self.routes[idx].is_used() or not field.allies[idx].is_used():
                 continue
 
             if self.routes[idx].get_next_type() == wp.WType.S_VELOCITY:
@@ -228,7 +228,7 @@ class Router:
             for obst in sorted_obstacles:
                 obstacles.append(obst[0])
         pth_point, length = self.calc_next_point(field, robot.get_pos(), target, obstacles)
-        # field.image.draw_line(robot.get_pos(), pth_point, color=(0, 0, 0))
+        field.path_image.draw_line(robot.get_pos(), pth_point, color=(0, 0, 0))
         if pth_point == target:
             return None
         angle = self.routes[idx].get_next_angle()
@@ -254,11 +254,11 @@ class Router:
                 + const.ROBOT_R
                 + time_to_reach * obstacle.get_vel().mag() * 0.3  # <-- coefficient of fear [0; 1]
             )
-            # field.image.draw_dot(
-            #     center,
-            #     (127, 127, 127),
-            #     radius,
-            # )
+            field.path_image.draw_dot(
+                center,
+                (127, 127, 127),
+                radius,
+            )
             if (
                 aux.line_circle_intersect(
                     position,
@@ -313,9 +313,9 @@ class Router:
                     pth_point = point_before[1]
                     length = length_before[1] + length_after[1]
 
-                # field.image.draw_line(position, pth_point, color=(255, 0, 255))
+                field.path_image.draw_line(position, pth_point, color=(255, 0, 255))
 
                 return (pth_point, length)
 
-        # field.image.draw_line(position, target, color=(255, 0, 127))
+        field.path_image.draw_line(position, target, color=(255, 0, 127))
         return target, aux.dist(position, target)

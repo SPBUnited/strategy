@@ -67,7 +67,7 @@ def set_wall_targets(field: fld.Field, num: int, ball: aux.Point) -> list[aux.Po
             for i in range(num):
                 delta = const.ROBOT_R * (-(num - 1) + 2 * i)
                 poses.append(wall_middle + wall_vec.unity() * delta)
-                field.image.draw_dot(
+                field.strategy_image.draw_dot(
                     wall_middle + wall_vec.unity() * delta,
                     (200, 200, 200),
                     const.ROBOT_R * 0.9,
@@ -87,7 +87,7 @@ def set_wall_targets(field: fld.Field, num: int, ball: aux.Point) -> list[aux.Po
         for i in range(num):
             delta = const.ROBOT_R * (2 * i + 1)
             poses.append(intersections[0] + wall_vec.unity() * delta)
-            field.image.draw_dot(
+            field.strategy_image.draw_dot(
                 intersections[0] + wall_vec.unity() * delta,
                 (128, 128, 128),
                 const.ROBOT_R,
@@ -97,7 +97,7 @@ def set_wall_targets(field: fld.Field, num: int, ball: aux.Point) -> list[aux.Po
         for i in range(num):
             delta = const.ROBOT_R * (-(num - 1) + 2 * i)
             poses.append(wall_middle + wall_vec.unity() * delta)
-            field.image.draw_dot(
+            field.strategy_image.draw_dot(
                 wall_middle + wall_vec.unity() * delta,
                 (200, 200, 200),
                 const.ROBOT_R,
@@ -184,7 +184,7 @@ def set_pass_defenders_wps(
                 target = enemy + delta_vec
             angle = (ball - target).arg()
             waypoints[defender.r_id] = wp.Waypoint(target, angle, wp.WType.S_ENDPOINT)
-            field.image.draw_dot(target, (100, 200, 255), 55)
+            field.strategy_image.draw_dot(target, (100, 200, 255), 55)
             continue
 
         point_to_close = aux.closest_point_on_line(ball, enemy, defender.get_pos())
@@ -195,7 +195,7 @@ def set_pass_defenders_wps(
 
         target = enemy + delta_vec
 
-        field.image.draw_dot(target, (100, 200, 255), 25)
+        field.strategy_image.draw_dot(target, (100, 200, 255), 25)
         angle = (ball - target).arg()
         waypoints[defender.r_id] = wp.Waypoint(target, angle, wp.WType.S_ENDPOINT)
 
