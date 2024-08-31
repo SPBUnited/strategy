@@ -22,7 +22,7 @@ def estimate_pass_point(field: fld.Field, frm: Optional[aux.Point], to: Optional
     tangents: list[tuple[int, list[aux.Point]]] = []
     for p in positions:
         tgs = aux.get_tangent_points(p[1], frm, const.ROBOT_R)
-        if tgs is None or len(tgs) < 2:
+        if len(tgs) < 2:
             continue
         tangents.append((p[0], tgs))
 
@@ -110,7 +110,7 @@ def choose_segment_in_goal(
     segments = [goal.up]
     for p in positions:
         tangents = aux.get_tangent_points(p, ball_pos, const.ROBOT_R)
-        if tangents is None or len(tangents) < 2:
+        if len(tangents) < 2:
             continue
 
         int1 = aux.get_line_intersection(

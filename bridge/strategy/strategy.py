@@ -10,6 +10,7 @@
 from enum import Enum
 from time import time
 import math
+from typing import Optional
 
 import bridge.router.waypoint as wp
 from bridge import const
@@ -93,6 +94,8 @@ class Strategy:
         self.pass_or_kick_decision_border = FloatingBorder(0.2, 0.3)
 
         self.flag = 0
+
+        self.zero_pos: Optional[aux.Point] = None
 
     def change_game_state(self, new_state: GameStates, upd_active_team: ActiveTeam) -> None:
         """Изменение состояния игры и цвета команды"""
@@ -254,6 +257,9 @@ class Strategy:
             print("-" * 32)
             print(self.game_status, "\twe_active:", self.we_active)
 
+        # self.debug(field, waypoints)
+        # return waypoints
+
         match self.game_status:
             case GameStates.RUN:
                 self.run(field, waypoints)
@@ -293,38 +299,7 @@ class Strategy:
         roles - роли роботов, отсортированные по приоритету
         robot_roles - список соответствия id робота и его роли
         """
-        match self.flag:
-            case 0:
-                pos = aux.Point(-250, 1000)
-                angle = math.pi
-
-            case 1:
-                pos = aux.Point(500, 1000)
-                angle = math.pi
-
-            case 2:
-                pos = aux.Point(500, -1000)
-                angle = math.pi
-
-            case 3:
-                pos = aux.Point(-750, -1000)
-                angle = math.pi
-                
-        if aux.in_place(field.allies[12].get_pos(), pos, 50):
-            if time() - self.timer > 0.5:
-                self.flag += 1
-                self.flag = self.flag % 4
-        else:
-            self.timer = time()
-        angle += math.pi / 4
-        waypoints[12] = wp.Waypoint(pos, angle, wp.WType.S_ENDPOINT)
-        print("vel", field.allies[12].get_vel().mag())
-        print("dist to pos", (field.allies[12].get_pos() - pos).mag())
-
-        for point in [aux.Point(-250, 1000), aux.Point(500, 1000), aux.Point(500, -1000), aux.Point(-750, -1000)]:
-            field.strategy_image.draw_dot(point, (0, 0, 0), 25)
-
-        # waypoints[12] = wp.Waypoint(field.ball.get_pos(), aux.angle_to_point(field.ball.get_pos(), field.enemy_goal.center), wp.WType.S_BALL_KICK)
+        waypoints[1] = wp.Waypoint(field.ball.get_pos(), aux.angle_to_point(field.allies[2].get_pos(), field.ball.get_pos()), wp.WType.S_BALL_KICK)
         return
 
         "Определение набора ролей для роботов"
@@ -379,13 +354,34 @@ class Strategy:
     ) -> list[wp.Waypoint]:
         """Отладка"""
 
-        angle = aux.angle_to_point(field.allies[0].get_pos(), field.ball.get_pos())
-        waypoints[0] = wp.Waypoint(field.ball.get_pos(), angle, wp.WType.S_ENDPOINT)
-        # self.goalk(field, waypoints, [field.gk_id], robot_with_ball)
+        match self.flag:
+            case 0:
+                pos = aux.Point(-250, 1000)
+                angle = math.pi
 
-        # waypoints[const.DEBUG_ID].pos = field.ball.get_pos()
-        # waypoints[const.DEBUG_ID].angle = (field.ally_goal.center - field.ball.get_pos() + aux.UP * self.square.get()).arg()
-        # waypoints[const.DEBUG_ID].type = wp.WType.S_BALL_KICK
+            case 1:
+                pos = aux.Point(500, 1000)
+                angle = math.pi
+
+            case 2:
+                pos = aux.Point(500, -1000)
+                angle = math.pi
+
+            case 3:
+                pos = aux.Point(-750, -1000)
+                angle = math.pi
+                
+        if aux.in_place(field.allies[12].get_pos(), pos, 50):
+            if time() - self.timer > 0.5:
+                self.flag += 1
+                self.flag = self.flag % 4
+        else:
+            self.timer = time()
+        angle += math.pi / 4
+        waypoints[12] = wp.Waypoint(pos, angle, wp.WType.S_ENDPOINT)
+        print("vel", field.allies[12].get_vel().mag())
+        print("dist to pos", (field.allies[12].get_pos() - pos).mag())
+
 
         return waypoints
 

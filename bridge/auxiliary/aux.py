@@ -421,13 +421,13 @@ def circles_inter(p0: Point, p1: Point, r0: float, r1: float) -> tuple[Point, Po
     return Point(x3, y3), Point(x4, y4)
 
 
-def get_tangent_points(point0: Point, point1: Point, r: float) -> Optional[list[Point]]:
+def get_tangent_points(point0: Point, point1: Point, r: float) -> list[Point]:
     """
     Get tangents (point0 - center of circle)
     """
     d = dist(point0, point1)
     if d < r:
-        return None
+        return []
     elif d == r:
         return [point1]
     else:
