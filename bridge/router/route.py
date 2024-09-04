@@ -177,7 +177,7 @@ class Route:
         elif target_point.type == wp.WType.S_STOP:
             transl_vel = aux.Point(0, 0)
             angle = robot.get_angle()
-        elif target_point.type == wp.WType.R_PASSTHROUGH:
+        elif target_point.type == wp.WType.R_PASSTHROUGH: #TODO fix bad vel control
             robot.pos_reg_x.select_mode(tau.Mode.NORMAL)
             robot.pos_reg_y.select_mode(tau.Mode.NORMAL)
             

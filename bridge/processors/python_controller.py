@@ -54,7 +54,7 @@ class SSLController(BaseProcessor):
         self.commands_sink_writer = DataWriter(data_bus, const.TOPIC_SINK, 20)
         self.image_writer = DataWriter(data_bus, const.IMAGE_TOPIC, 20)
 
-        self.field = fld.Field()
+        self.field = fld.Field(self.ally_color)
         self.router = router.Router(self.field)
 
         self.strategy = strategy.Strategy()
@@ -84,8 +84,6 @@ class SSLController(BaseProcessor):
         new_field = self.field_reader.read_last()
         if new_field is not None:
             updated_field = new_field.content
-            if updated_field.ally_color != self.ally_color:
-                updated_field.reverse_field()
             self.field.update_field(updated_field)
         else:
             print("No new field")
@@ -94,7 +92,10 @@ class SSLController(BaseProcessor):
         """Send commands to drawer processor"""
         if self.field.ally_color == const.COLOR:
             full_image = Image()
-            for image in [self.field.strategy_image, self.field.path_image, self.field.router_image]:
+            for image in [
+                self.field.strategy_image,
+                self.field.router_image,
+            ]:  # self.field.path_image
                 if image:
                     full_image.commands += image.commands
                     image.commands = []
@@ -134,7 +135,9 @@ class SSLController(BaseProcessor):
         if cur_cmd.state == -1:
             return
 
-        if cur_state == state_machine.State.STOP or (cur_active not in [const.Color.ALL, self.field.ally_color]):
+        if cur_state == state_machine.State.STOP or (
+            cur_active not in [const.Color.ALL, self.field.ally_color]
+        ):
             self.router.avoid_ball(True)
 
         if cur_cmd.state != self.cur_cmd_state:
@@ -161,7 +164,9 @@ class SSLController(BaseProcessor):
                 self.wait_ball_moved = self.field.ball.get_pos()
         else:
             if self.wait_10_sec_flag and time.time() - self.wait_10_sec > 10:
-                self.state_machine.make_transition_(state_machine.Command.PASS_10_SECONDS)
+                self.state_machine.make_transition_(
+                    state_machine.Command.PASS_10_SECONDS
+                )
                 self.state_machine.active_team(0)
                 self.wait_10_sec_flag = False
                 self.wait_ball_moved_flag = False

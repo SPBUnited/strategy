@@ -15,15 +15,15 @@ class Color(Enum):
 
 ##################################################
 # GAME SETTING CONSTS
-DIV = "C"
+DIV = "B"
 COLOR = Color.BLUE
 POLARITY = 1  # -1 если ворота синих на +x; 1 если ворота синих на -x
 
-IS_SIMULATOR_USED = False
+IS_SIMULATOR_USED = True
 IS_DRIBBLER_USED = True  # dribler and upper_kick
 SELF_PLAY = False
 
-GK = 1
+GK = 5
 PENALTY_KICKER = 0
 ENEMY_GK = 5
 

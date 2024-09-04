@@ -27,7 +27,9 @@ def set_wall_enemy(field: fld.Field) -> aux.Point:
 
 def calc_wall_pos(field: fld.Field, ball: aux.Point) -> aux.Point:
     """Рассчитывает точку, по которой будут выбираться роботы для стенки"""
-    inter = aux.segment_poly_intersect(field.ally_goal.center, ball, field.ally_goal.hull)
+    inter = aux.segment_poly_intersect(
+        field.ally_goal.center, ball, field.ally_goal.hull
+    )
     if inter:
         return inter
     return field.ally_goal.frw
@@ -41,12 +43,18 @@ def set_wall_targets(field: fld.Field, num: int, ball: aux.Point) -> list[aux.Po
 
     intersections: list[Optional[aux.Point]] = []
 
-    intersections.append(aux.segment_poly_intersect(ball, field.ally_goal.down, field.ally_goal.big_hull))
-    intersections.append(aux.segment_poly_intersect(ball, field.ally_goal.up, field.ally_goal.big_hull))
+    intersections.append(
+        aux.segment_poly_intersect(ball, field.ally_goal.down, field.ally_goal.big_hull)
+    )
+    intersections.append(
+        aux.segment_poly_intersect(ball, field.ally_goal.up, field.ally_goal.big_hull)
+    )
 
     if intersections[0] is None or intersections[1] is None:
         return [
-            field.ally_goal.frw + field.ally_goal.eye_up * const.ROBOT_R * (-(num - 1) + 2 * i) for i in range(num)
+            field.ally_goal.frw
+            + field.ally_goal.eye_up * const.ROBOT_R * (-(num - 1) + 2 * i)
+            for i in range(num)
         ]  # ball in goal.hull
     elif aux.dist(ball, intersections[0]) > aux.dist(ball, intersections[1]):
         intersections[1], intersections[0] = intersections[0], intersections[1]
@@ -75,7 +83,9 @@ def set_wall_targets(field: fld.Field, num: int, ball: aux.Point) -> list[aux.Po
             return poses
 
     for point in field.ally_goal.big_hull:
-        inter = aux.get_line_intersection(ball, point, intersections[0], intersections[1], "RS")
+        inter = aux.get_line_intersection(
+            ball, point, intersections[0], intersections[1], "RS"
+        )
         if inter is None:
             continue
         if aux.is_point_inside_poly(point, [ball, intersections[0], intersections[1]]):
@@ -125,7 +135,9 @@ def set_wallliners_wps(
 
     projections: list[tuple[float, int]] = []
     for _, waller in enumerate(active_wallers):
-        point = aux.closest_point_on_line(poses[0], poses[len(poses) - 1], waller.get_pos(), "L")
+        point = aux.closest_point_on_line(
+            poses[0], poses[len(poses) - 1], waller.get_pos(), "L"
+        )
         projections.append((point.y, waller.r_id))
     projections = sorted(projections, key=lambda x: x[0])
     poses = sorted(poses, key=lambda x: x.y)
@@ -150,7 +162,10 @@ def get_enemies_near_goal(field: fld.Field) -> list[aux.Point]:
 
     enemy_with_ball = fld.find_nearest_robot(field.ball.get_pos(), field.enemies)
     for enemy in field.enemies:
-        if aux.dist(enemy.get_pos(), field.ally_goal.center) < const.GOAL_DX and enemy != enemy_with_ball:
+        if (
+            aux.dist(enemy.get_pos(), field.ally_goal.center) < const.GOAL_DX
+            and enemy != enemy_with_ball
+        ):
             dist_to_ally = aux.dist(
                 enemy.get_pos(),
                 fld.find_nearest_robot(enemy.get_pos(), field.allies).get_pos(),
@@ -174,12 +189,23 @@ def set_pass_defenders_wps(
     defeated_enemies: list[aux.Point] = []
     ball = field.ball.get_pos()
     for defender in pass_defenders:
-        enemy = aux.find_nearest_point(defender.get_pos(), enemies_near_goal, defeated_enemies)
+        enemy = aux.find_nearest_point(
+            defender.get_pos(), enemies_near_goal, defeated_enemies
+        )
         defeated_enemies.append(enemy)
-        if field.is_ball_moves_to_point(defender.get_pos()) and field.ball_start_point is not None:
-            target = aux.closest_point_on_line(field.ball_start_point, ball, defender.get_pos(), "R")
-            if (enemy.y - target.y) * (target.y - ball.y) < 0:  # target is not between enemy and ball
-                enemy_target = aux.closest_point_on_line(field.ball_start_point, ball, enemy, "R")
+        if (
+            field.is_ball_moves_to_point(defender.get_pos())
+            and field.ball_start_point is not None
+        ):
+            target = aux.closest_point_on_line(
+                field.ball_start_point, ball, defender.get_pos(), "R"
+            )
+            if (enemy.y - target.y) * (
+                target.y - ball.y
+            ) < 0:  # target is not between enemy and ball
+                enemy_target = aux.closest_point_on_line(
+                    field.ball_start_point, ball, enemy, "R"
+                )
                 delta_vec = (ball - enemy_target).unity() * const.ROBOT_R * 3
                 target = enemy + delta_vec
             angle = (ball - target).arg()
@@ -222,8 +248,13 @@ def goalk(
     if abs(ball.x) > const.GOAL_DX:  # NOTE
         return wp.Waypoint(field.ally_goal.center, gk_angle, wp.WType.S_IGNOREOBSTACLES)
 
-    if field.is_ball_stop_near_goal() or field.robot_with_ball == field.allies[field.gk_id]:
-        return wp.Waypoint(ball, field.ally_goal.eye_forw.arg(), wp.WType.S_BALL_KICK_UP)
+    if (
+        field.is_ball_stop_near_goal()
+        or field.robot_with_ball == field.allies[field.gk_id]
+    ):
+        return wp.Waypoint(
+            ball, field.ally_goal.eye_forw.arg(), wp.WType.S_BALL_KICK_UP
+        )
 
     if (
         field.is_ball_moves_to_goal()
@@ -238,7 +269,9 @@ def goalk(
             "RS",
         )
         if tmp_pos is not None:
-            gk_pos = aux.closest_point_on_line(ball, tmp_pos, field.allies[field.gk_id].get_pos())
+            gk_pos = aux.closest_point_on_line(
+                ball, tmp_pos, field.allies[field.gk_id].get_pos()
+            )
             return wp.Waypoint(gk_pos, gk_angle, wp.WType.S_IGNOREOBSTACLES)
         else:
             tmp_pos = aux.get_line_intersection(
@@ -250,20 +283,29 @@ def goalk(
             )
             if tmp_pos is not None:
                 poses = [
-                    goal_up + (field.ally_goal.eye_forw - field.ally_goal.eye_up) * const.ROBOT_R * 0.8,
-                    goal_down + (field.ally_goal.eye_forw + field.ally_goal.eye_up) * const.ROBOT_R * 0.8,
+                    goal_up
+                    + (field.ally_goal.eye_forw - field.ally_goal.eye_up)
+                    * const.ROBOT_R
+                    * 0.8,
+                    goal_down
+                    + (field.ally_goal.eye_forw + field.ally_goal.eye_up)
+                    * const.ROBOT_R
+                    * 0.8,
                 ]
                 gk_pos = aux.find_nearest_point(tmp_pos, poses)
                 return wp.Waypoint(gk_pos, gk_angle, wp.WType.S_IGNOREOBSTACLES)
 
     if len(wallliners) != 0:
-        segment = acc.choose_segment_in_goal(field, -1, field.ally_goal, ball, wallliners)
+        segment = acc.choose_segment_in_goal(
+            field, -1, field.ally_goal, ball, wallliners
+        )
         goal_down, goal_up = segment
 
     if robot_with_ball is not None:
         predict = aux.get_line_intersection(
             robot_with_ball.get_pos(),
-            robot_with_ball.get_pos() + aux.rotate(aux.RIGHT, robot_with_ball.get_angle()),
+            robot_with_ball.get_pos()
+            + aux.rotate(aux.RIGHT, robot_with_ball.get_angle()),
             goal_down,
             goal_up,
             "RS",
@@ -275,7 +317,8 @@ def goalk(
                 p_ball * const.GK_FORW
                 + aux.get_line_intersection(
                     robot_with_ball.get_pos(),
-                    robot_with_ball.get_pos() + aux.rotate(aux.RIGHT, robot_with_ball.get_angle()),
+                    robot_with_ball.get_pos()
+                    + aux.rotate(aux.RIGHT, robot_with_ball.get_angle()),
                     goal_down,
                     goal_up,
                     "RS",
@@ -294,7 +337,9 @@ def goalk(
         kick_point = goal_down
 
     radius = (const.GK_FORW**2 + (const.GOAL_DY / 2) ** 2) / 2 / const.GK_FORW
-    circle_center = field.ally_goal.center - field.ally_goal.eye_forw * (radius - const.GK_FORW - const.ROBOT_R)
+    circle_center = field.ally_goal.center - field.ally_goal.eye_forw * (
+        radius - const.GK_FORW - const.ROBOT_R
+    )
     intersects = aux.line_circle_intersect(kick_point, ball, circle_center, radius)
 
     if intersects is None:

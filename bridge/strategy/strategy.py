@@ -97,7 +97,9 @@ class Strategy:
 
         self.zero_pos: Optional[aux.Point] = None
 
-    def change_game_state(self, new_state: GameStates, upd_active_team: ActiveTeam) -> None:
+    def change_game_state(
+        self, new_state: GameStates, upd_active_team: ActiveTeam
+    ) -> None:
         """Изменение состояния игры и цвета команды"""
         self.game_status = new_state
         self.active_team = upd_active_team
@@ -299,8 +301,8 @@ class Strategy:
         roles - роли роботов, отсортированные по приоритету
         robot_roles - список соответствия id робота и его роли
         """
-        waypoints[1] = wp.Waypoint(field.ball.get_pos(), aux.angle_to_point(field.allies[2].get_pos(), field.ball.get_pos()), wp.WType.S_BALL_KICK)
-        return
+        # waypoints[1] = wp.Waypoint(field.ball.get_pos(), aux.angle_to_point(field.allies[2].get_pos(), field.ball.get_pos()), wp.WType.S_BALL_KICK)
+        # return
 
         "Определение набора ролей для роботов"
         roles = self.choose_roles(field)
@@ -370,7 +372,7 @@ class Strategy:
             case 3:
                 pos = aux.Point(-750, -1000)
                 angle = math.pi
-                
+
         if aux.in_place(field.allies[12].get_pos(), pos, 50):
             if time() - self.timer > 0.5:
                 self.flag += 1
@@ -381,7 +383,6 @@ class Strategy:
         waypoints[12] = wp.Waypoint(pos, angle, wp.WType.S_ENDPOINT)
         print("vel", field.allies[12].get_vel().mag())
         print("dist to pos", (field.allies[12].get_pos() - pos).mag())
-
 
         return waypoints
 

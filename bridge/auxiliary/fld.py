@@ -14,7 +14,9 @@ class Goal:
     Структура, описывающая ключевые точки ворот
     """
 
-    def __init__(self, goal_dx: float, goal_dy: float, pen_dx: float, pen_dy: float) -> None:
+    def __init__(
+        self, goal_dx: float, goal_dy: float, pen_dx: float, pen_dy: float
+    ) -> None:
 
         # Абсолютный центр
         self.center = aux.Point(goal_dx, 0)
@@ -60,7 +62,7 @@ class Field:
     Класс, хранящий информацию о всех объектах на поле и ключевых точках
     """
 
-    def __init__(self) -> None:
+    def __init__(self, color: const.Color) -> None:
         """
         Конструктор
         Инициализирует все нулями
@@ -70,6 +72,7 @@ class Field:
         """
         self.last_update = 0.0
         self.robot_with_ball: Optional[rbt.Robot] = None
+
         self.strategy_image: drawing.Image = drawing.Image()
         self.router_image: drawing.Image = drawing.Image()
         self.path_image: drawing.Image = drawing.Image()
@@ -77,7 +80,7 @@ class Field:
         self.gk_id = const.GK
         self.enemy_gk_id = const.ENEMY_GK
 
-        self.ally_color = const.COLOR
+        self.ally_color = color
 
         if self.ally_color == const.Color.BLUE:
             self.polarity = const.POLARITY * -1
@@ -136,20 +139,6 @@ class Field:
         self.ball_history_idx = 0
         self.ball_start_point: Optional[aux.Point] = None
 
-    def reverse_field(self) -> None:
-        self.gk_id, self.enemy_gk_id = self.enemy_gk_id, self.gk_id
-
-        if self.ally_color == const.Color.BLUE:
-            self.ally_color = const.Color.YELLOW
-        else:
-            self.ally_color = const.Color.BLUE
-
-        self.polarity *= -1
-
-        self.ally_goal, self.enemy_goal = self.enemy_goal, self.ally_goal
-
-        self.allies, self.enemies = self.enemies, self.allies
-
     def update_field(self, new_field: "Field") -> None:
         self.robot_with_ball = new_field.robot_with_ball
         self.last_update = new_field.last_update
@@ -189,8 +178,12 @@ class Field:
         """
         Определить, находится ли мяч внутри дрибблера
         """
-        return (robo.get_pos() - self.ball.get_pos()).mag() < const.BALL_GRABBED_DIST and abs(
-            aux.wind_down_angle((self.ball.get_pos() - robo.get_pos()).arg() - robo.get_angle())
+        return (
+            robo.get_pos() - self.ball.get_pos()
+        ).mag() < const.BALL_GRABBED_DIST and abs(
+            aux.wind_down_angle(
+                (self.ball.get_pos() - robo.get_pos()).arg() - robo.get_angle()
+            )
         ) < const.BALL_GRABBED_ANGLE
 
     def is_ball_in(self, robo: rbt.Robot) -> bool:
@@ -199,14 +192,18 @@ class Field:
         """
         return robo == self.robot_with_ball
 
-    def update_blu_robot(self, idx: int, pos: aux.Point, angle: float, t: float) -> None:
+    def update_blu_robot(
+        self, idx: int, pos: aux.Point, angle: float, t: float
+    ) -> None:
         """
         Обновить положение робота синей команды
         !!! Вызывать один раз за итерацию с постоянной частотой !!!
         """
         self.b_team[idx].update(pos, angle, t)
 
-    def update_yel_robot(self, idx: int, pos: aux.Point, angle: float, t: float) -> None:
+    def update_yel_robot(
+        self, idx: int, pos: aux.Point, angle: float, t: float
+    ) -> None:
         """
         Обновить положение робота желтой команды
         !!! Вызывать один раз за итерацию с постоянной частотой !!!
@@ -233,7 +230,10 @@ class Field:
         """
         Определить, остановился ли мяч в штрафной зоне
         """
-        return aux.is_point_inside_poly(self.ball.get_pos(), self.ally_goal.hull) and not self.is_ball_moves()
+        return (
+            aux.is_point_inside_poly(self.ball.get_pos(), self.ally_goal.hull)
+            and not self.is_ball_moves()
+        )
 
     def is_ball_moves(self) -> bool:
         """
@@ -247,7 +247,8 @@ class Field:
         """
         vec_to_point = point - self.ball.get_pos()
         return (
-            self.ball.get_vel().mag() * (cos(vec_to_point.arg() - self.ball.get_vel().arg()) ** 5)
+            self.ball.get_vel().mag()
+            * (cos(vec_to_point.arg() - self.ball.get_vel().arg()) ** 5)
             > const.INTERCEPT_SPEED * 10
             and self.robot_with_ball is None
             and vec_to_point.arg() - self.ball.get_vel().arg() < pi / 2
@@ -272,7 +273,9 @@ class Field:
         )
 
 
-def find_nearest_robot(point: aux.Point, team: list[rbt.Robot], avoid: list[int] = []) -> rbt.Robot:
+def find_nearest_robot(
+    point: aux.Point, team: list[rbt.Robot], avoid: list[int] = []
+) -> rbt.Robot:
     """
     Найти ближайший робот из массива team к точке point, игнорируя точки avoid
     """

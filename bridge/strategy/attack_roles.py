@@ -31,7 +31,8 @@ def attacker(
                 enemy_near = fld.find_nearest_robot(attacker.get_pos(), field.enemies)
                 enemy_point = aux.closest_point_on_line(
                     attacker.get_pos(),
-                    attacker.get_pos() + aux.rotate(aux.RIGHT, attacker.get_angle()) * const.ROBOT_R * 5,
+                    attacker.get_pos()
+                    + aux.rotate(aux.RIGHT, attacker.get_angle()) * const.ROBOT_R * 5,
                     enemy_near.get_pos(),
                     "S",
                 )
@@ -44,13 +45,19 @@ def attacker(
     # print("attacker: shoot to goal")
 
 
-def choose_receiver(field: fld.Field, forwards: list[rbt.Robot]) -> tuple[Optional[int], Optional[float]]:
+def choose_receiver(
+    field: fld.Field, forwards: list[rbt.Robot]
+) -> tuple[Optional[int], Optional[float]]:
     """Выбирает робота для получения паса"""
     receiver_id = None
     receiver_score = None
     for forward in forwards:
-        pass_score = acc.estimate_pass_point(field, field.ball.get_pos(), forward.get_pos())
-        kick_point = acc.choose_kick_point(field, forward.r_id, ball_pos=forward.get_pos())
+        pass_score = acc.estimate_pass_point(
+            field, field.ball.get_pos(), forward.get_pos()
+        )
+        kick_point = acc.choose_kick_point(
+            field, forward.r_id, ball_pos=forward.get_pos()
+        )
         kick_score = acc.estimate_pass_point(field, forward.get_pos(), kick_point)
 
         score = pass_score * kick_score
@@ -60,7 +67,9 @@ def choose_receiver(field: fld.Field, forwards: list[rbt.Robot]) -> tuple[Option
     return receiver_id, score
 
 
-def set_forwards_wps(field: fld.Field, waypoints: list[wp.Waypoint], forwards: list[rbt.Robot]) -> None:
+def set_forwards_wps(
+    field: fld.Field, waypoints: list[wp.Waypoint], forwards: list[rbt.Robot]
+) -> None:
     """Расставляет роботов по точкам для получения паса"""
     pos_num = len(forwards)
 
@@ -98,15 +107,17 @@ def pass_kicker(field: fld.Field, kicker_id: int, receiver_id: int) -> wp.Waypoi
         #     wp.WType.S_BALL_PASS,
         # )
         # print("pass to", receiver_id)
-        waypoint = kick.pass_to_point(field, field.allies[kicker_id], receiver.get_pos())
-        field.strategy_image_image.draw_dot(
+        waypoint = kick.pass_to_point(
+            field, field.allies[kicker_id], receiver.get_pos()
+        )
+        field.strategy_image.draw_dot(
             field.ball.get_pos()
             + aux.rotate(
                 aux.RIGHT,
                 aux.angle_to_point(field.ball.get_pos(), receiver.get_pos()),
             ),
-            5,
             (255, 0, 255),
+            5,
         )
     else:
         waypoint = wp.Waypoint(aux.Point(0, 0), 0, wp.WType.S_STOP)
@@ -129,9 +140,12 @@ def pass_receiver(
     if (
         field.is_ball_moves_to_point(receiver.get_pos())
         and field.ball_start_point is not None
-        and (field.ball_start_point - field.ball.get_pos()).mag() > const.INTERCEPT_SPEED
+        and (field.ball_start_point - field.ball.get_pos()).mag()
+        > const.INTERCEPT_SPEED
     ):
-        target = aux.closest_point_on_line(field.ball_start_point, field.ball.get_pos(), receiver.get_pos(), "R")
+        target = aux.closest_point_on_line(
+            field.ball_start_point, field.ball.get_pos(), receiver.get_pos(), "R"
+        )
         field.strategy_image.draw_line(target, receiver.get_pos(), (255, 127, 0), 2)
 
         waypoints[receiver_id] = wp.Waypoint(
@@ -145,4 +159,4 @@ def pass_receiver(
             aux.angle_to_point(receiver.get_pos(), field.ball.get_pos()),
             wp.WType.S_ENDPOINT,
         )
-        field.strategy_image.draw_dot(receive_point, 5, (255, 255, 0))
+        field.strategy_image.draw_dot(receive_point, (255, 255, 0), 5)

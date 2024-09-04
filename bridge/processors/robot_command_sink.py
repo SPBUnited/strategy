@@ -1,6 +1,7 @@
 """
 Модуль-прослойка между стратегией и отправкой пакетов на роботов
 """
+
 import zmq
 import struct
 import typing
@@ -74,7 +75,9 @@ class CommandSink(BaseProcessor):
             if ctrl_id is None:
                 continue
 
-            if ctrl_id not in const.REVERSED_KICK:  # because all robots are reversed :)
+            if (
+                not const.IS_SIMULATOR_USED and ctrl_id not in const.REVERSED_KICK
+            ):  # because all robots are reversed :)
                 r.kick_forward_, r.kick_up_ = r.kick_up_, r.kick_forward_
                 if r.auto_kick_ == 2:
                     r.auto_kick_ = 1
@@ -107,6 +110,7 @@ class CommandSink(BaseProcessor):
                     self.b_control_team[i].speed_r = 0
                 rules.append(0)
                 rules.append(self.b_control_team[i].speed_x)
+                print(self.b_control_team[i].speed_x, i, self.b_control_team[i].speed_x)
                 rules.append(self.b_control_team[i].speed_y)
                 rules.append(self.b_control_team[i].speed_r)
                 rules.append(self.b_control_team[i].kick_up_)
