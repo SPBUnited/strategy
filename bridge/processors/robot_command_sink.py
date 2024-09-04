@@ -102,15 +102,8 @@ class CommandSink(BaseProcessor):
 
         if const.IS_SIMULATOR_USED:
             for i in range(const.TEAM_ROBOTS_MAX_COUNT):
-                if abs(self.b_control_team[i].speed_x) < 1:
-                    self.b_control_team[i].speed_x = 0
-                if abs(self.b_control_team[i].speed_y) < 1:
-                    self.b_control_team[i].speed_y = 0
-                if abs(self.b_control_team[i].speed_r) < 1:
-                    self.b_control_team[i].speed_r = 0
                 rules.append(0)
                 rules.append(self.b_control_team[i].speed_x)
-                print(self.b_control_team[i].speed_x, i, self.b_control_team[i].speed_x)
                 rules.append(self.b_control_team[i].speed_y)
                 rules.append(self.b_control_team[i].speed_r)
                 rules.append(self.b_control_team[i].kick_up_)
@@ -124,12 +117,6 @@ class CommandSink(BaseProcessor):
                 rules.append(0)
 
             for i in range(const.TEAM_ROBOTS_MAX_COUNT):
-                if abs(self.y_control_team[i].speed_x) < 1:
-                    self.y_control_team[i].speed_x = 0
-                if abs(self.y_control_team[i].speed_y) < 1:
-                    self.y_control_team[i].speed_y = 0
-                if abs(self.y_control_team[i].speed_r) < 1:
-                    self.y_control_team[i].speed_r = 0
                 rules.append(0)
                 rules.append(self.y_control_team[i].speed_x)
                 rules.append(self.y_control_team[i].speed_y)

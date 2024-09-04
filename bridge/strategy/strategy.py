@@ -129,8 +129,8 @@ class Strategy:
 
         # atk_min = 1
         # def_min = 2
-        atk_min = 0
-        def_min = 1
+        atk_min = 1
+        def_min = 2
 
         free_allies = -atk_min - def_min - 1
 

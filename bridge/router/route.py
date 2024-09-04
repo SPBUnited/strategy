@@ -28,12 +28,12 @@ class Route:
         self.go_time = 0
 
         self.ball_wp_types = [
-                wp.WType.S_BALL_GO,
-                wp.WType.S_BALL_KICK,
-                wp.WType.S_BALL_GRAB,
-                wp.WType.S_BALL_KICK_UP,
-                wp.WType.S_BALL_PASS,
-            ]
+            wp.WType.S_BALL_GO,
+            wp.WType.S_BALL_KICK,
+            wp.WType.S_BALL_GRAB,
+            wp.WType.S_BALL_KICK_UP,
+            wp.WType.S_BALL_PASS,
+        ]
 
     def update(self, rbt: rbt.Robot) -> None:
         """
@@ -127,8 +127,8 @@ class Route:
         for wpt in self.__get_route():
             strin += " ->\n" + str(wpt)
         return strin
-    
-    def kicker_control(self, robot: rbt.Robot, field: fld.Field) -> None:
+
+    def kicker_control(self, robot: rbt.Robot) -> None:
         end_point = self.get_dest_wp()
 
         robot.kicker_charge_enable_ = 0
@@ -149,17 +149,20 @@ class Route:
                     robot.kicker_voltage_ = const.VOLTAGE_UP
 
             is_aligned_by_angle = robot.is_kick_aligned_by_angle(end_point.angle)
-            if end_point.type in [wp.WType.S_BALL_KICK, wp.WType.S_BALL_PASS] and is_aligned_by_angle:
+            print(robot.r_id, is_aligned_by_angle)
+            if (
+                end_point.type in [wp.WType.S_BALL_KICK, wp.WType.S_BALL_PASS]
+                and is_aligned_by_angle
+            ):
                 robot.auto_kick_ = 1
-                # if rbt.r_id < 9:
-                #     rbt.auto_kick_ = 2
             elif end_point.type == wp.WType.S_BALL_KICK_UP and is_aligned_by_angle:
                 robot.auto_kick_ = 2
             else:
                 robot.auto_kick_ = 0
 
-
-    def vel_control(self, robot: rbt.Robot, field: fld.Field) -> tuple[aux.Point, float]:
+    def vel_control(
+        self, robot: rbt.Robot, field: fld.Field
+    ) -> tuple[aux.Point, float]:
         target_point = self.get_next_wp()
         end_point = self.get_dest_wp()
 
@@ -177,10 +180,10 @@ class Route:
         elif target_point.type == wp.WType.S_STOP:
             transl_vel = aux.Point(0, 0)
             angle = robot.get_angle()
-        elif target_point.type == wp.WType.R_PASSTHROUGH: #TODO fix bad vel control
+        elif target_point.type == wp.WType.R_PASSTHROUGH:  # TODO fix bad vel control
             robot.pos_reg_x.select_mode(tau.Mode.NORMAL)
             robot.pos_reg_y.select_mode(tau.Mode.NORMAL)
-            
+
             u_x = robot.pos_reg_x.process(dest_vec.x, -cur_vel.x)
             u_y = robot.pos_reg_y.process(dest_vec.y, -cur_vel.y)
 
@@ -208,19 +211,18 @@ class Route:
             transl_vel += aux.Point(u_x, u_y)
             if transl_vel.mag() > const.MAX_SPEED:
                 transl_vel = transl_vel.unity() * const.MAX_SPEED
-            
+
             angle = end_point.angle
 
         return (transl_vel, angle)
-
 
     def go_route(self, robot: rbt.Robot, field: fld.Field) -> None:
         """
         Двигаться по маршруту route
         """
-        vel, angle = self.vel_control(robot, field) #in global coordinate system
+        vel, angle = self.vel_control(robot, field)  # in global coordinate system
 
-        self.kicker_control(robot, field)
+        self.kicker_control(robot)
 
         robot.update_vel_xy(vel)
 
@@ -229,7 +231,14 @@ class Route:
             ang_vel = robot.angle_reg.process(aerr, -robot.get_anglevel())
             robot.update_vel_w(ang_vel)
         else:
-            robot._delta_angle = math.log(18 / math.pi * abs(aerr) + 1) * aux.sign(aerr) * (100 / math.log(18 + 1))
+            robot._delta_angle = (
+                math.log(18 / math.pi * abs(aerr) + 1)
+                * aux.sign(aerr)
+                * (100 / math.log(18 + 1))
+            )
 
         reg_vel = aux.Point(robot.speed_x, -robot.speed_y)
-        field.router_image.draw_line(robot.get_pos(), robot.get_pos() + aux.rotate(reg_vel, robot.get_angle()) * 10)
+        field.router_image.draw_line(
+            robot.get_pos(),
+            robot.get_pos() + aux.rotate(reg_vel, robot.get_angle()) * 10,
+        )

@@ -213,8 +213,11 @@ def set_pass_defenders_wps(
             field.strategy_image.draw_dot(target, (100, 200, 255), 55)
             continue
 
-        point_to_close = aux.closest_point_on_line(ball, enemy, defender.get_pos())
-        if aux.dist(point_to_close, defender.get_pos()) > const.ROBOT_R:
+        point_to_close = aux.closest_point_on_line(ball, enemy, defender.get_pos(), "S")
+        if (
+            aux.dist(point_to_close, defender.get_pos()) > const.ROBOT_R * 2
+            and aux.dist(point_to_close, enemy) > const.ROBOT_R * 3
+        ):
             delta_vec = (ball - enemy).unity() * aux.dist(point_to_close, enemy) * 0.8
         else:
             delta_vec = (ball - enemy).unity() * const.ROBOT_R * 3

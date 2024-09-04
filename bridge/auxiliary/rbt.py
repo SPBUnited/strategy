@@ -36,7 +36,7 @@ class Robot(entity.Entity):
         self.speed_x = 0.0
         self.speed_y = 0.0
         self.speed_r = 0.0
-        self._delta_angle = 0
+        self._delta_angle = 0.0
         self.kick_up_ = 0
         self.kick_forward_ = 0
         self.auto_kick_ = 0
