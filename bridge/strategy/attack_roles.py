@@ -75,9 +75,9 @@ def set_forwards_wps(
 
     k = -1 if const.SELF_PLAY else 1
     poses = [
-        aux.Point(-3500 * field.polarity * k, 1750),
-        aux.Point(-3500 * field.polarity * k, -1750),
-        aux.Point(-3000 * field.polarity * k, 0),
+        aux.Point(-1500 * field.polarity * k, 1250),
+        aux.Point(-1500 * field.polarity * k, -1250),
+        aux.Point(-1000 * field.polarity * k, 0),
     ]
     poses = poses[: (pos_num + 1)]
     bad_pos = aux.find_nearest_point(field.ball.get_pos(), poses)
@@ -147,6 +147,8 @@ def pass_receiver(
             field.ball_start_point, field.ball.get_pos(), receiver.get_pos(), "R"
         )
         field.strategy_image.draw_line(target, receiver.get_pos(), (255, 127, 0), 2)
+
+        receiver.set_dribbler_speed(15)
 
         waypoints[receiver_id] = wp.Waypoint(
             target,

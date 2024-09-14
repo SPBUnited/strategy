@@ -15,17 +15,17 @@ class Color(Enum):
 
 ##################################################
 # GAME SETTING CONSTS
-DIV = "B"
+DIV = "C"
 COLOR = Color.BLUE
 POLARITY = 1  # -1 если ворота синих на +x; 1 если ворота синих на -x
 
-IS_SIMULATOR_USED = True
+IS_SIMULATOR_USED = False
 IS_DRIBBLER_USED = True  # dribler and upper_kick
 SELF_PLAY = False
 
-GK = 5
+GK = 13
 PENALTY_KICKER = 0
-ENEMY_GK = 5
+ENEMY_GK = 8
 
 CAMERAS_COUNT: int = 4
 MAX_BALLS_IN_CAMERA: int = 64
@@ -91,7 +91,7 @@ IMAGE_TOPIC = "image-topic"
 Ts = 0.02  # s
 
 # ROBOT SETTING CONSTS
-MAX_SPEED = 1500
+MAX_SPEED = 1250
 MAX_SPEED_R = 30
 SOFT_MAX_SPEED = 500
 SOFT_MAX_SPEED_R = 16
@@ -139,6 +139,6 @@ FULL_DELAY = 0.16
 
 # VOLTAGES
 VOLTAGE_PASS = 10
-VOLTAGE_SHOOT = 15
+VOLTAGE_SHOOT = 12
 VOLTAGE_UP = 10
 VOLTAGE_ZERO = min(VOLTAGE_PASS, VOLTAGE_SHOOT, VOLTAGE_UP)

@@ -76,7 +76,7 @@ class CommandSink(BaseProcessor):
                 continue
 
             if (
-                not const.IS_SIMULATOR_USED and ctrl_id not in const.REVERSED_KICK
+                not const.IS_SIMULATOR_USED and ctrl_id in const.REVERSED_KICK
             ):  # because all robots are reversed :)
                 r.kick_forward_, r.kick_up_ = r.kick_up_, r.kick_forward_
                 if r.auto_kick_ == 2:
@@ -128,7 +128,7 @@ class CommandSink(BaseProcessor):
                 rules.append(self.y_control_team[i].dribbler_enable_)
                 rules.append(self.y_control_team[i].dribbler_speed_)
                 rules.append(self.y_control_team[i].kicker_charge_enable_)
-                rules.append(self.y_control_team[i].beep)
+                rules.append(self.b_control_team[i].beep)
                 rules.append(0)
         else:
             for i in range(const.TEAM_ROBOTS_MAX_COUNT):

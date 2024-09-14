@@ -77,8 +77,8 @@ class Robot(entity.Entity):
         # self.a0Flp = tau.FOLP(self.a0TF, const.Ts)
 
         # !v REAL
-        gains_full = [2, 0.1, 2, const.MAX_SPEED]
-        gains_soft = [3.5, 0.15, 2, const.SOFT_MAX_SPEED]
+        gains_full = [2, 0.12, 2, const.MAX_SPEED]
+        gains_soft = [2, 0.1, 2, const.SOFT_MAX_SPEED]
         a_gains_full = [8, 0.1, 0, const.MAX_SPEED_R]
         # gains_soft = [10, 0.32, 0, const.SOFT_MAX_SPEED]
         # gains_soft = gains_full
@@ -86,7 +86,7 @@ class Robot(entity.Entity):
             # gains_full = [8, 0.35, 0, const.MAX_SPEED]
             gains_full = [2.5, 0.08, 0.4, const.MAX_SPEED]
             gains_soft = [2.5, 0.08, 0, const.SOFT_MAX_SPEED]
-            a_gains_full = [2, 0.1, 0.1, const.MAX_SPEED_R]  # 4, 0.1, 0.1
+            a_gains_full = [2, 0.1, 0.1, const.MAX_SPEED_R]
         # a_gains_soft = [4, 0.07, 8, const.SOFT_MAX_SPEED_R]
         a_gains_soft = a_gains_full
         # else:
@@ -182,25 +182,6 @@ class Robot(entity.Entity):
         self.dribbler_enable_ = True
         self.dribbler_speed_ = round(aux.minmax(speed, 0.0, 15.0))
 
-    def lights(self, mode: int) -> None:
-        """
-        0 - turn off, 1 - turn on (default), 2 - blink slow, 3 - blink fast
-        """
-        match mode:
-            case 0:
-                self.beep = 0
-
-            case 1:
-                self.beep = 1
-
-            case 2:
-                T = 0.5
-                self.beep = int((time() % T) / T * 2)
-
-            case 3:
-                T = 0.25
-                self.beep = int((time() % T) / T * 2)
-
     def copy_control_fields(self, robot: "Robot") -> None:
         """
         Скопировать в данный "робот" поля управления робота robot
@@ -227,6 +208,7 @@ class Robot(entity.Entity):
         self.speed_x = 0.0
         self.speed_y = 0.0
         self.speed_r = 0.0
+        self._delta_angle = 0.0
         self.kick_up_ = 0
         self.kick_forward_ = 0
         self.auto_kick_ = 0

@@ -77,10 +77,13 @@ class Field:
         self.router_image: drawing.Image = drawing.Image()
         self.path_image: drawing.Image = drawing.Image()
 
-        self.gk_id = const.GK
-        self.enemy_gk_id = const.ENEMY_GK
-
         self.ally_color = color
+        if self.ally_color == const.COLOR:
+            self.gk_id = const.GK
+            self.enemy_gk_id = const.ENEMY_GK
+        else:
+            self.gk_id = const.ENEMY_GK
+            self.enemy_gk_id = const.GK
 
         if self.ally_color == const.Color.BLUE:
             self.polarity = const.POLARITY * -1
@@ -144,6 +147,7 @@ class Field:
         self.last_update = new_field.last_update
 
         self.ball = new_field.ball
+        self.ball_start_point = new_field.ball_start_point
 
         for i, robot in enumerate(self.all_bots):
             robot._pos = new_field.all_bots[i]._pos
@@ -258,19 +262,17 @@ class Field:
         """
         Определить, движется ли мяч в сторону ворот
         """
+        if self.ball_start_point is None:
+            return False
+
         inter = aux.get_line_intersection(
-            self.ally_goal.up,
-            self.ally_goal.down,
+            self.ally_goal.center_up,
+            self.ally_goal.center_down,
+            self.ball_start_point,
             self.ball.get_pos(),
-            self.ball.get_pos() + self.ball.get_vel(),
             "SR",
         )
-        return (
-            inter
-            is not None
-            # or self.is_ball_moves_to_point(self.ally_goal.up)
-            # or self.is_ball_moves_to_point(self.ally_goal.down)
-        )
+        return inter is not None and self.ball.get_vel().mag() > const.INTERCEPT_SPEED
 
 
 def find_nearest_robot(

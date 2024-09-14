@@ -131,8 +131,6 @@ class Route:
     def kicker_control(self, robot: rbt.Robot) -> None:
         end_point = self.get_dest_wp()
 
-        robot.kicker_charge_enable_ = 0
-
         if end_point.type in self.ball_wp_types and self.get_length() < 300:
             robot.dribbler_enable_ = 1
             if robot.dribbler_speed_ == 0:
@@ -149,7 +147,6 @@ class Route:
                     robot.kicker_voltage_ = const.VOLTAGE_UP
 
             is_aligned_by_angle = robot.is_kick_aligned_by_angle(end_point.angle)
-            print(robot.r_id, is_aligned_by_angle)
             if (
                 end_point.type in [wp.WType.S_BALL_KICK, wp.WType.S_BALL_PASS]
                 and is_aligned_by_angle
@@ -172,12 +169,7 @@ class Route:
 
         transl_vel: Optional[aux.Point] = None
 
-        if target_point.type == wp.WType.S_VELOCITY:
-            transl_vel = target_point.pos
-            # wvel = target_point.angle
-            print("WType.S_VELOCITY isn't working")
-            angle = robot.get_angle()
-        elif target_point.type == wp.WType.S_STOP:
+        if target_point.type == wp.WType.S_STOP:
             transl_vel = aux.Point(0, 0)
             angle = robot.get_angle()
         elif target_point.type == wp.WType.R_PASSTHROUGH:  # TODO fix bad vel control
@@ -220,10 +212,24 @@ class Route:
         """
         Двигаться по маршруту route
         """
-        vel, angle = self.vel_control(robot, field)  # in global coordinate system
+        if self.get_next_type() == wp.WType.S_VELOCITY:
+            waypoint = self.get_dest_wp()
+            robot.kicker_charge_enable_ = 1
+            robot.speed_x = -waypoint.pos.x / robot.k_xx
+            robot.speed_y = waypoint.pos.y / robot.k_yy
+            robot._delta_angle = (
+                math.log(18 / math.pi * abs(waypoint.angle) + 1)
+                * aux.sign(waypoint.angle)
+                * (100 / math.log(18 + 1))
+            )
+            robot.beep = 1
+            return
+
+        robot.beep = 0
 
         self.kicker_control(robot)
 
+        vel, angle = self.vel_control(robot, field)  # in global coordinate system
         robot.update_vel_xy(vel)
 
         aerr = aux.wind_down_angle(angle - robot.get_angle())

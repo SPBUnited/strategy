@@ -5,7 +5,7 @@
 from strategy_bridge.processors import (
     RobotCommandsSender,
     VisionDetectionsCollector,
-    BoxFeedbackCollector,
+    # BoxFeedbackCollector,
 )
 from strategy_bridge.processors.referee_commands_collector import (
     RefereeCommandsCollector,
@@ -46,7 +46,7 @@ if __name__ == "__main__":
         Drawer(),
         CommandSink(processing_pause=0.001),
         # RobotCommandsSender(processing_pause=0.001), # moved to command_sink
-        BoxFeedbackCollector(processing_pause=0.001),
+        # BoxFeedbackCollector(processing_pause=0.001),
     ]
 
     RUNNER = Runner(processors=PROCESSORS)

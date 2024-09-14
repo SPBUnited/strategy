@@ -130,7 +130,7 @@ class Strategy:
         # atk_min = 1
         # def_min = 2
         atk_min = 1
-        def_min = 2
+        def_min = 0
 
         free_allies = -atk_min - def_min - 1
 
@@ -301,7 +301,11 @@ class Strategy:
         roles - роли роботов, отсортированные по приоритету
         robot_roles - список соответствия id робота и его роли
         """
-        # waypoints[1] = wp.Waypoint(field.ball.get_pos(), aux.angle_to_point(field.allies[2].get_pos(), field.ball.get_pos()), wp.WType.S_BALL_KICK)
+        # waypoints[10] = wp.Waypoint(aux.Point(200, 0), 1.5, wp.WType.S_VELOCITY)
+        # field.allies[10].set_dribbler_speed(15)
+        # waypoints[10] = self.kick.shoot_to_goal(
+        #     field, field.allies[10], field.enemy_goal.center
+        # )
         # return
 
         "Определение набора ролей для роботов"

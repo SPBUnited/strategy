@@ -94,7 +94,7 @@ class SSLController(BaseProcessor):
             full_image = Image()
             for image in [
                 self.field.strategy_image,
-                self.field.router_image,
+                # self.field.router_image,
             ]:  # self.field.path_image
                 if image:
                     full_image.commands += image.commands
@@ -124,6 +124,7 @@ class SSLController(BaseProcessor):
             if self.field.allies[i].is_used():
                 self.field.allies[i].color = self.ally_color
                 self.commands_sink_writer.write(self.field.allies[i])
+                self.field.allies[i].clear_fields()
 
     def process_referee_cmd(self) -> None:
         """Get referee commands"""

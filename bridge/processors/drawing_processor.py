@@ -29,7 +29,7 @@ class Drawer(BaseProcessor):
         self.image_reader = DataReader(data_bus, const.IMAGE_TOPIC)
 
         width, heigh = 1200, 900
-        goal_dx, goal_dy = abs(const.GOAL_DX), abs(3000)
+        goal_dx, goal_dy = abs(const.GOAL_DX), abs(1500)
         self.scale = min(width / 2 / goal_dx, heigh / 2 / goal_dy)
         self.size_x = goal_dx * self.scale * 2
         self.size_y = goal_dy * self.scale * 2
@@ -63,6 +63,10 @@ class Drawer(BaseProcessor):
                 external_image.draw_robot(rbt.get_pos(), rbt.get_angle(), (255, 255, 0))
 
         external_image.draw_dot(field.ball.get_pos(), (255, 0, 0), const.BALL_R)
+        if field.ball_start_point is not None:
+            external_image.draw_dot(
+                field.ball_start_point, (255, 0, 0), const.BALL_R // 2
+            )
 
         for command in external_image.commands:
             self.scale_dots(command)
