@@ -409,9 +409,9 @@ def cosine_theorem(a: float, b: float, angle: float) -> float:
     return math.sqrt(a * a + b * b - 2 * a * b * math.cos(angle))
 
 
-def line_circle_intersect(x1: Point, x2: Point, c: Point, radius: float, is_inf: str = 'S') -> Optional[list[Point]]:
+def line_circle_intersect(x1: Point, x2: Point, c: Point, radius: float, is_inf: str = "S") -> Optional[list[Point]]:
     """Получить пересечение прямой и окружности"""
-    h = closest_point_on_line(x1, x2, c, 'L')
+    h = closest_point_on_line(x1, x2, c, "L")
     if radius < dist(c, h):
         return None
     elif radius == dist(c, h):
@@ -444,6 +444,7 @@ def poly_circle_intersect(poly: list[Point], c: Point, radius: float) -> list[Po
         if now_points is not None:
             mas.extend(now_points)
     return mas
+
 
 def is_point_inside_circle(a: Point, c: Point, radius: float) -> bool:
     """Return TRUE if point inside circle"""
@@ -529,11 +530,12 @@ def get_minmax_idxs(numbers: list[float], mode: str, dp: float = 0) -> list[int]
     for idx, number in enumerate(numbers):
         if abs(number - numbers[idxs_return[0]]) < numbers[idxs_return[0]] * dp / 100:
             idxs_return.append(idx)
-        elif (mode == 'min' and number < numbers[idxs_return[0]]) or (mode == 'max' and number > numbers[idxs_return[0]]):
+        elif (mode == "min" and number < numbers[idxs_return[0]]) or (mode == "max" and number > numbers[idxs_return[0]]):
             idxs_return = [idx]
     if not idxs_return[0]:
         idxs_return.pop(0)
     return idxs_return
+
 
 def tangent_in_point(center: Point, tang_point: Point) -> Point:
     """
@@ -542,6 +544,7 @@ def tangent_in_point(center: Point, tang_point: Point) -> Point:
     vec = center - tang_point
     vec = rotate(vec, math.pi / 2)
     return tang_point + vec
+
 
 def angle_to_circles(center1: Point, r1: float, center2: Point, r2: float, angle: float) -> Optional[list[Point]]:
     """
@@ -562,7 +565,7 @@ def angle_to_circles(center1: Point, r1: float, center2: Point, r2: float, angle
         vec4 = tangent_in_point(center2, vec2)
     else:
         vec2 = center2
-        vec4 = rotate((center1 - center2).unity(), - (math.pi / 2 + angle / 2)) + center2
+        vec4 = rotate((center1 - center2).unity(), -(math.pi / 2 + angle / 2)) + center2
     point1 = get_line_intersection(vec1, vec3, vec2, vec4, "LL")
     point2 = None
     if point1 is not None:

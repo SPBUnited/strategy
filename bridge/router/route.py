@@ -272,4 +272,3 @@ class Route:
         #     print("cord: ", int(rbt.get_pos().x), int(rbt.get_pos().y))
         #     print("speed:", int(transl_vel.mag()), rbt.get_vel().mag())
         #     print("ball:", field.ball.get_pos(), field.ball.get_vel())
-

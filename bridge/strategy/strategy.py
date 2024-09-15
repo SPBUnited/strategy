@@ -11,11 +11,12 @@ from time import time
 from typing import Optional
 
 import bridge.router.waypoint as wp
-from bridge import const, drawing
+from bridge import const
 from bridge.auxiliary import aux, fld, rbt
 from bridge.processors.referee_state_processor import Color as ActiveTeam
 from bridge.processors.referee_state_processor import State as GameStates
 from bridge.strategy import ref_states as refs
+
 
 class DoingAction:
     """
@@ -26,6 +27,7 @@ class DoingAction:
         self.id: Optional[int] = None
         self.angle: Optional[float] = None
         self.point: Optional[aux.Point] = None
+
 
 class Strategy:
     """Основной класс с кодом стратегии"""
@@ -120,7 +122,7 @@ class Strategy:
             aux.get_angle_between_points(angle_point, main_p, field.enemy_goal.down),
             aux.get_angle_between_points(angle_point, main_p, field.enemy_goal.up),
         ]
-        #print("aaa", len(gates_st))
+        # print("aaa", len(gates_st))
         # print("gates =", gates[0][0], gates[0][1])
         gates.sort()
         gates_st.sort()
@@ -143,9 +145,11 @@ class Strategy:
                             minuses.append(minus)
         gates = aux.range_minus(gates, minuses)
         max_angle: list[float] = [1, -1]
-        #print(len(gates_st))
+        # print(len(gates_st))
         for ang in gates:
-            if (max_angle[1] - max_angle[0] < ang[1] - ang[0]) or ((ang[0] == gates_st[0] or ang[1] == gates_st[1]) and max_angle[1] - max_angle[0] < (ang[1] - ang[0]) * 1):
+            if (max_angle[1] - max_angle[0] < ang[1] - ang[0]) or (
+                (ang[0] == gates_st[0] or ang[1] == gates_st[1]) and max_angle[1] - max_angle[0] < (ang[1] - ang[0]) * 1
+            ):
                 max_angle = ang
         if max_angle[1] - max_angle[0] < 0:
             cick_angle = aux.get_angle_between_points(angle_point, main_p, field.enemy_goal.center)
@@ -172,11 +176,11 @@ class Strategy:
         if nearest_enemy:
             closest_dist = aux.dist(nearest_enemy[0].get_pos(), field.ball.get_pos())
         else:
-            closest_dist = float('inf')
+            closest_dist = float("inf")
         if nearest_ally:
             closest_dist_ally = aux.dist(nearest_ally[0].get_pos(), field.ball.get_pos())
         else:
-            closest_dist_ally = float('inf')
+            closest_dist_ally = float("inf")
         # print(closest_dist, 'ewwceviwebrlghwbeoi', self.new_st)
         if (closest_dist < const.ROBOT_R + const.BALL_R * 2 or closest_dist < closest_dist_ally) and self.new_st != 0:
             self.new_st = 0
@@ -202,11 +206,15 @@ class Strategy:
             if abs(j.x) <= const.GOAL_DX:
                 final_points.append(j)
         while (len(final_points) < n_points) or (len(positions) <= n_points and not do_full):
-            new_positions = aux.poly_circle_intersect(field.ally_goal.big_hull, positions[len(positions) - 2], const.ROBOT_R * 2)
+            new_positions = aux.poly_circle_intersect(
+                field.ally_goal.big_hull, positions[len(positions) - 2], const.ROBOT_R * 2
+            )
             # for k, _ in enumerate(new_positions):
             #     print(k, _, len(positions), aux.dist(_, positions[max(0, len(positions) - 4)]))
-            max_idxs = aux.get_minmax_idxs(list(map(lambda x: aux.dist(x, positions[max(0, len(positions) - 4)]), new_positions)), 'max', 0.1)
-            #print(len(max_idxs))
+            max_idxs = aux.get_minmax_idxs(
+                list(map(lambda x: aux.dist(x, positions[max(0, len(positions) - 4)]), new_positions)), "max", 0.1
+            )
+            # print(len(max_idxs))
             for i in max_idxs:
                 positions.append(new_positions[i])
                 if abs(new_positions[i].x) <= const.GOAL_DX:
@@ -215,7 +223,7 @@ class Strategy:
         #     print(i, _)
         for k, _ in enumerate(final_points):
             print(k, _)
-        return final_points[:min(n_points, len(final_points))]
+        return final_points[: min(n_points, len(final_points))]
 
     def defense(self, waypoints: list[wp.Waypoint], field: fld.Field) -> None:
         """
@@ -227,12 +235,10 @@ class Strategy:
         self.doing_pass.id = None
         self.doing_pass.point = None
         now_enemies = fld.find_nearest_robots(field.ball.get_pos(), field.enemies)
-        now_allies = fld.find_nearest_robots(
-            field.ball.get_pos(), field.allies, None, [field.allies[const.GK]]
-        )
+        now_allies = fld.find_nearest_robots(field.ball.get_pos(), field.allies, None, [field.allies[const.GK]])
         now_enemies.pop(0)
         ally_with_ball = now_allies[0]
-        #print("ГЛАВНЫЙ ЗАЩИТНИЧЕК", ally_with_ball.r_id, ally_with_ball.color)
+        # print("ГЛАВНЫЙ ЗАЩИТНИЧЕК", ally_with_ball.r_id, ally_with_ball.color)
         now_allies.pop(0)
         angle_point = aux.closest_point_on_line(field.ally_goal.up, field.ally_goal.down, field.ball.get_pos(), is_inf="L")
         gates = [
@@ -252,7 +258,7 @@ class Strategy:
             [
                 aux.closest_point_on_line(field.ball.get_pos(), help_point, ally_with_ball.get_pos(), is_inf="R"),
                 # aux.point_on_line(field.ball.get_pos(), help_point, field.ball.get_radius() + ally_with_ball.get_radius()),
-                field.ball.get_pos()
+                field.ball.get_pos(),
             ]
         )
         waypoints[ally_with_ball.r_id] = wp.Waypoint(p_to_go, aux.wind_down_angle(def_angle - math.pi), wp.WType.S_BALL_KICK)
@@ -307,9 +313,13 @@ class Strategy:
                 if (
                     aux.dist(
                         aux.average_point(aux.closest_point_on_poly(p1, help_point, field.ally_goal.small_hull)),
-                        aux.average_point(aux.closest_point_on_poly(p1, enemy_with_ball.get_pos(), field.ally_goal.small_hull)),
+                        aux.average_point(
+                            aux.closest_point_on_poly(p1, enemy_with_ball.get_pos(), field.ally_goal.small_hull)
+                        ),
                     )
-                    < const.ROBOT_R and aux.dist(field.ball.get_pos(), enemy_with_ball.get_pos()) < const.ROBOT_R + const.BALL_R * 2 and abs(help_point.y) <= abs(field.ally_goal.down.y) 
+                    < const.ROBOT_R
+                    and aux.dist(field.ball.get_pos(), enemy_with_ball.get_pos()) < const.ROBOT_R + const.BALL_R * 2
+                    and abs(help_point.y) <= abs(field.ally_goal.down.y)
                 ):
                     p2 = help_point
         if p1 is None or p2 is None:
@@ -358,7 +368,7 @@ class Strategy:
         #     print("кики", self.doing_kick.id, self.doing_kick.angle)
         # else:
         #     print("нет киков")
-        #print("moving ball", field.is_ball_moves())
+        # print("moving ball", field.is_ball_moves())
         if (
             aux.is_point_inside_poly(field.ball.get_pos(), field.ally_goal.hull)
             or aux.dist(aux.nearest_point_on_poly(field.ball.get_pos(), field.ally_goal.hull), field.ball.get_pos())
@@ -438,7 +448,7 @@ class Strategy:
             point_allies.append(best_point)
         # print(len(point_allies))
         for point_ally in point_allies:
-            #print(point_ally, "best")
+            # print(point_ally, "best")
             now_ally = fld.find_nearest_robots(point_ally, now_allies, 1)[0]
             if (
                 aux.dist(
@@ -458,7 +468,12 @@ class Strategy:
                         self.ball_point, field.ball.get_pos(), self.doing_pass.point, is_inf="L"
                     )
                     p_to_go = aux.point_on_line(
-                        self.ball_point, p_to_go, max(aux.dist(self.ball_point, p_to_go) + const.ROBOT_R * 4, aux.dist(self.ball_point, now_ally.get_pos()))
+                        self.ball_point,
+                        p_to_go,
+                        max(
+                            aux.dist(self.ball_point, p_to_go) + const.ROBOT_R * 4,
+                            aux.dist(self.ball_point, now_ally.get_pos()),
+                        ),
                     )
                     waypoints[now_ally.r_id] = wp.Waypoint(
                         p_to_go, aux.angle_to_point(p_to_go, field.ball.get_pos()), wp.WType.S_IGNOREOBSTACLES
@@ -468,13 +483,13 @@ class Strategy:
                     waypoints[now_ally.r_id] = wp.Waypoint(
                         p_to_go, aux.angle_to_point(p_to_go, field.ball.get_pos()), wp.WType.S_ENDPOINT
                     )
-                #print("doing pass", now_ally.r_id)
+                # print("doing pass", now_ally.r_id)
             if p_to_go is None:
                 p_to_go = point_ally
                 waypoints[now_ally.r_id] = wp.Waypoint(
                     p_to_go, aux.angle_to_point(p_to_go, field.ball.get_pos()), wp.WType.S_ENDPOINT
                 )
-            #print(waypoints[now_ally.r_id].pos, now_ally.r_id)
+            # print(waypoints[now_ally.r_id].pos, now_ally.r_id)
         if not active_gk:
             self.goalkeeper(waypoints, field)
         p_to_go = None
@@ -482,7 +497,14 @@ class Strategy:
         if self.doing_pass.id == ally_with_ball.r_id and self.doing_pass.point is not None:
             if field.is_ball_moves():
                 p_to_go = aux.closest_point_on_line(self.ball_point, field.ball.get_pos(), self.doing_pass.point, is_inf="L")
-                p_to_go = aux.point_on_line(self.ball_point, p_to_go, max(aux.dist(self.ball_point, p_to_go) + const.ROBOT_R * 4, aux.dist(self.ball_point, ally_with_ball.get_pos())))
+                p_to_go = aux.point_on_line(
+                    self.ball_point,
+                    p_to_go,
+                    max(
+                        aux.dist(self.ball_point, p_to_go) + const.ROBOT_R * 4,
+                        aux.dist(self.ball_point, ally_with_ball.get_pos()),
+                    ),
+                )
             else:
                 p_to_go = self.doing_pass.point
             angle_to_go = aux.angle_to_point(p_to_go, field.ball.get_pos())
@@ -506,7 +528,7 @@ class Strategy:
                     else:
                         best_gate_idx = idx
                 if best_gate_idx is not None and ally_with_ball is not None:
-                    #print("best gate", gate_angles[best_gate_idx][1])
+                    # print("best gate", gate_angles[best_gate_idx][1])
                     if (
                         gate_angles[best_gate_idx][2] == ally_with_ball.r_id
                         or abs(field.enemy_goal.center.x - field.ball.get_pos().x) < const.GOAL_DX / 3
@@ -514,7 +536,7 @@ class Strategy:
                         # or ally_with_ball.r_id != const.GK
                     ):
                         best_gate_idx = 0
-                        #print(gate_angles[best_gate_idx][1])
+                        # print(gate_angles[best_gate_idx][1])
                         angle_to_go = gate_angles[best_gate_idx][0]
                     else:
                         angle_to_go = aux.angle_to_point(field.ball.get_pos(), gate_angles[best_gate_idx][3])
@@ -525,7 +547,7 @@ class Strategy:
                         ):
                             self.doing_pass.id = gate_angles[best_gate_idx][2]
                             self.doing_pass.point = gate_angles[best_gate_idx][3]
-                            #print("Я СДЕЛАЛ ПАС")
+                            # print("Я СДЕЛАЛ ПАС")
                     if (
                         aux.dist(p_to_go, ally_with_ball.get_pos()) < const.ROBOT_R + const.BALL_R * 3
                         and self.doing_kick.id is None
@@ -533,22 +555,22 @@ class Strategy:
                     ):
                         self.doing_kick.id = ally_with_ball.r_id
                         self.doing_kick.angle = angle_to_go
-                        #print("Я СДЕЛАЛ КИК")
-                    p_to_go = aux.Point(p_to_go.x - math.cos(angle_to_go) * (const.ROBOT_R + const.BALL_R), p_to_go.y - math.sin(angle_to_go) * (const.ROBOT_R + const.BALL_R))
-                    waypoints[ally_with_ball.r_id] = wp.Waypoint(
-                        p_to_go,
-                        angle_to_go, wp.WType.S_ENDPOINT
+                        # print("Я СДЕЛАЛ КИК")
+                    p_to_go = aux.Point(
+                        p_to_go.x - math.cos(angle_to_go) * (const.ROBOT_R + const.BALL_R),
+                        p_to_go.y - math.sin(angle_to_go) * (const.ROBOT_R + const.BALL_R),
                     )
-                    #print(gate_angles[best_gate_idx][2], "лучший")
-                    #print(
+                    waypoints[ally_with_ball.r_id] = wp.Waypoint(p_to_go, angle_to_go, wp.WType.S_ENDPOINT)
+                    # print(gate_angles[best_gate_idx][2], "лучший")
+                    # print(
                     #    "МЯЧ ДВИГАЕТСЯ??????",
                     #    aux.dist(p_to_go, ally_with_ball.get_pos()) < const.ROBOT_R + const.BALL_R * 3
                     #    and self.doing_kick.id is None
                     #    and not field.is_ball_moves(),
-                    #)
-                    #print(
-                    #    waypoints[ally_with_ball.r_id].pos, waypoints[ally_with_ball.r_id].angle, ally_with_ball.r_id, "ball"
-                    #)
+                    # )
+                    # print(
+                    #    waypoints[ally_with_ball.r_id].pos, waypoints[ally_with_ball.r_id].angle, ally_with_ball.r_id,
+                    # )
 
     def prepare_kickoff(self, field: fld.Field, waypoints: list[wp.Waypoint]) -> None:
         """Настройка перед состоянием kickoff по команде судей"""
@@ -633,6 +655,7 @@ class Strategy:
                 target, (field.ball.get_pos() - field.allies[go_kick.r_id].get_pos()).arg(), wp.WType.S_IGNOREOBSTACLES
             )
             waypoints[go_kick.r_id] = waypoint
+
     def attack_points(self, waypoints: list[wp.Waypoint], field: fld.Field) -> None:
         """
         высчитывает точки, на которые выстраивает защитников

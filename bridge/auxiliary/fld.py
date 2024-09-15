@@ -258,7 +258,8 @@ class Field:
             "SR",
         )
         return (
-            inter is not None and self.is_ball_moves()
+            inter is not None
+            and self.is_ball_moves()
             # or self.is_ball_moves_to_point(self.ally_goal.up)
             # or self.is_ball_moves_to_point(self.ally_goal.down)
         )
@@ -309,7 +310,8 @@ def find_nearest_robots(
 
     return sorted_robots[: min(len(sorted_robots), num)]
 
-def exclude (team: list[rbt.Robot], avoid: list[rbt.Robot]) -> list[rbt.Robot]:
+
+def exclude(team: list[rbt.Robot], avoid: list[rbt.Robot]) -> list[rbt.Robot]:
     """
     Возвращает team без роботов avoid
     """

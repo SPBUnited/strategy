@@ -8,7 +8,7 @@ import math
 from typing import Optional
 
 import bridge.router.waypoint as wp
-from bridge import const, drawing
+from bridge import const
 from bridge.auxiliary import aux, entity, fld
 from bridge.auxiliary import quickhull as qh
 from bridge.auxiliary import rbt
@@ -194,10 +194,10 @@ class Router:
             #     print(n_steps, field.ally_color == const.Color.BLUE)
             on_way: list[int] = []
             for i, robot in enumerate(all_robots):
-                if (
-                    aux.dist2line(queue[n_steps].point(), end_p.point(), robot.get_pos())
-                    < robot.get_radius() + const.ROBOT_R
-                    and aux.is_on_line(queue[n_steps].point(), end_p.point(), all_robots[i].get_pos())
+                if aux.dist2line(
+                    queue[n_steps].point(), end_p.point(), robot.get_pos()
+                ) < robot.get_radius() + const.ROBOT_R and aux.is_on_line(
+                    queue[n_steps].point(), end_p.point(), all_robots[i].get_pos()
                 ):
                     on_way.append(i)
             if len(on_way) == 0:
@@ -265,9 +265,7 @@ class Router:
                     if tangents:
                         if len(tangents) > 1:
                             for tang in tangents:
-                                tang = aux.point_on_line(
-                                    wall.get_pos(), tang, (wall.get_radius() + const.ROBOT_R) * 1.1
-                                )
+                                tang = aux.point_on_line(wall.get_pos(), tang, (wall.get_radius() + const.ROBOT_R) * 1.1)
                                 all_angles.append(aux.get_angle_between_points(end_p.point(), queue[n_steps].point(), tang))
                                 all_dists.append(aux.dist(tang, queue[n_steps].point()))
                 idxs_max = aux.get_minmax_idxs(all_angles, "max")

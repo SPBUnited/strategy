@@ -9,10 +9,10 @@ from strategy_bridge.processors.referee_commands_collector import (
 from strategy_bridge.runner import Runner
 
 from bridge import const
+from bridge.processors.drawing_processor import Drawer
 from bridge.processors.field_creator import FieldCreator
 from bridge.processors.python_controller import SSLController
 from bridge.processors.robot_command_sink import CommandSink
-from bridge.processors.drawing_processor import Drawer
 from bridge.strategy import strategy
 
 if __name__ == "__main__":
