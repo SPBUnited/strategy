@@ -360,14 +360,14 @@ class Strategy:
             if aux.dist(field.ball.get_pos(), field.allies[self.doing_kick.id].get_pos()) > const.ROBOT_R + const.BALL_R * 3:
                 self.doing_kick.id = None
                 self.doing_kick.angle = None
-        # if self.doing_pass.id is not None:
-        #     print("пасики", self.doing_pass.id, self.doing_pass.point)
-        # else:
-        #     print("нет пасиков")
-        # if self.doing_kick.id is not None:
-        #     print("кики", self.doing_kick.id, self.doing_kick.angle)
-        # else:
-        #     print("нет киков")
+        if self.doing_pass.id is not None:
+            print("пасики", self.doing_pass.id, self.doing_pass.point)
+        else:
+            print("нет пасиков")
+        if self.doing_kick.id is not None:
+            print("кики", self.doing_kick.id, self.doing_kick.angle)
+        else:
+            print("нет киков")
         # print("moving ball", field.is_ball_moves())
         if (
             aux.is_point_inside_poly(field.ball.get_pos(), field.ally_goal.hull)

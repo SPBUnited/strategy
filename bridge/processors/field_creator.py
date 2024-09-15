@@ -92,7 +92,7 @@ class FieldCreator(BaseProcessor):
                 balls_sum += ball
             ball = balls_sum / len(balls)
             self.field.update_ball(ball, time())
-        elif self.field.robot_with_ball is not None:
+        elif self.field.robot_with_ball is not None and self.field.robot_with_ball.color != const.COLOR:
             ally = self.field.robot_with_ball
             ball = ally.get_pos() + aux.rotate(aux.RIGHT, ally.get_angle()) * ally.get_radius() / 2
             self.field.update_ball(ball, time())
