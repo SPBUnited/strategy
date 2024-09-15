@@ -258,8 +258,7 @@ class Field:
             "SR",
         )
         return (
-            inter
-            is not None
+            inter is not None and self.is_ball_moves()
             # or self.is_ball_moves_to_point(self.ally_goal.up)
             # or self.is_ball_moves_to_point(self.ally_goal.down)
         )
@@ -287,7 +286,7 @@ def find_nearest_robots(
     point: aux.Point,
     team: list[rbt.Robot],
     num: Optional[int] = None,
-    avoid: Optional[list[tuple[int, const.Color]]] = None,
+    avoid: Optional[list[rbt.Robot]] = None,
 ) -> list[rbt.Robot]:
     """
     Найти num роботов из team, ближайших к точке point
@@ -301,7 +300,7 @@ def find_nearest_robots(
 
     for robot in team:  # in [field.enemies, field.allies]
         dist = (robot.get_pos() - point).mag()
-        if robot.is_used() and (robot.r_id, robot.color) not in avoid:
+        if robot.is_used() and robot not in avoid:
             robot_dist.append((robot, dist))
 
     sorted_robot_dist = sorted(robot_dist, key=lambda x: x[1])
@@ -309,3 +308,13 @@ def find_nearest_robots(
     sorted_robots: list[rbt.Robot] = [rbt_dst[0] for rbt_dst in sorted_robot_dist]
 
     return sorted_robots[: min(len(sorted_robots), num)]
+
+def exclude (team: list[rbt.Robot], avoid: list[rbt.Robot]) -> list[rbt.Robot]:
+    """
+    Возвращает team без роботов avoid
+    """
+    new_team = []
+    for i in team:
+        if i not in avoid:
+            new_team.append(i)
+    return new_team

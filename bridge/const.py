@@ -19,13 +19,19 @@ DIV = "C"
 COLOR = Color.BLUE
 POLARITY = 1  # -1 если ворота синих на +x; 1 если ворота синих на -x
 
-IS_SIMULATOR_USED = True
+IS_SIMULATOR_USED = False
 IS_DRIBBLER_USED = False  # dribbler and upper_kick
 SELF_PLAY = False
 
-GK = 0
+GK = 1
 PENALTY_KICKER = 1
-ENEMY_GK = 0
+ENEMY_GK = 11
+
+DELTA_ANGLE = 0.15
+# погрешность кикера
+BALL_VEL = 4500
+ROBOT_VEL = 1000
+# Примерные скорости робота и мяча для расчета погрешности
 
 CAMERAS_COUNT: int = 4
 MAX_BALLS_IN_CAMERA: int = 64
@@ -95,20 +101,20 @@ GK_PEN_KICKOUT_SPEED = 500
 ##################################################
 # GEOMETRY CONSTS
 
-BALL_R = 50
+BALL_R = 30
 ROBOT_R = 100
 GRAVEYARD_POS_X = -10000
 
 
 GOAL_DX = 4500
-GOAL_DY = 1000
+HALF_HEIGHT = 3000
 GOAL_PEN_DX = 1000
 GOAL_PEN_DY = 2000
 if DIV == "C":
     GOAL_DX = 2250
     GOAL_DY = 800
     GOAL_PEN_DX = 500
-    GOAL_PEN_DY = 1250
+    GOAL_PEN_DY = 1000
     HALF_HEIGHT = 1500
 
 GK_FORW = 200 + ROBOT_R

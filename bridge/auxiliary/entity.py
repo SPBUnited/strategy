@@ -69,7 +69,7 @@ class Entity:
         self._pos = aux.Point(state[0].item(), state[2].item())
         self._vel = aux.Point(state[1].item(), state[3].item())
 
-        # self._pos = pos
+        self._pos = pos
 
         self._angle = angle
         self._anglevel = self._vel_fr.process(self._angle)

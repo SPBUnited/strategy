@@ -257,11 +257,12 @@ class Route:
         if (end_point.type in [wp.WType.S_BALL_KICK, wp.WType.S_BALL_PASS]) and rbt.is_kick_aligned_by_angle(
             end_point.angle
         ):
-            rbt.auto_kick_ = 1
-            # if rbt.r_id < 9:
-            #     rbt.auto_kick_ = 2
+            if const.IS_SIMULATOR_USED:
+                rbt.auto_kick_ = 1
+            else:
+                rbt.auto_kick_ = 2
         elif end_point.type == wp.WType.S_BALL_KICK_UP and rbt.is_kick_aligned_by_angle(end_point.angle):
-            rbt.auto_kick_ = 2
+            rbt.auto_kick_ = 1
         else:
             rbt.auto_kick_ = 0
 
@@ -271,3 +272,4 @@ class Route:
         #     print("cord: ", int(rbt.get_pos().x), int(rbt.get_pos().y))
         #     print("speed:", int(transl_vel.mag()), rbt.get_vel().mag())
         #     print("ball:", field.ball.get_pos(), field.ball.get_vel())
+

@@ -64,12 +64,6 @@ class CommandSink(BaseProcessor):
             if ctrl_id is None:
                 continue
 
-            if ctrl_id in const.REVERSED_KICK:
-                r.kick_forward_, r.kick_up_ = r.kick_up_, r.kick_forward_
-                if r.auto_kick_ == 2:
-                    r.auto_kick_ = 1
-                elif r.auto_kick_ == 1:
-                    r.auto_kick_ = 2
 
             if r.color == const.Color.BLUE:
                 self.b_control_team[ctrl_id].copy_control_fields(r)

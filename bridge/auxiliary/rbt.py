@@ -56,9 +56,9 @@ class Robot(entity.Entity):
 
         # v! REAL
         else:
-            self.k_xx = -250 / 20
-            self.k_yy = 0.5 * 250 / 20
-            self.k_ww = 6 / 20
+            self.k_xx = -10
+            self.k_yy = 10
+            self.k_ww = 0.08
             self.k_wy = 0
             self.t_wy = 0.15
             self.r_comp_f_dy = tau.FOD(self.t_wy, const.Ts)
@@ -79,9 +79,9 @@ class Robot(entity.Entity):
         gains_soft = [3, 0.35, 0.1, const.SOFT_MAX_SPEED]
         a_gains_full = [8, 0.1, 0, const.MAX_SPEED_R]
         if self.r_id < 9:
-            gains_full = [3, 0.18, 0, const.MAX_SPEED]
-            gains_soft = [3, 0.18, 0.1, const.SOFT_MAX_SPEED]
-            a_gains_full = [20, 0, 0, const.MAX_SPEED_R]
+            gains_full = [4, 0.1, 0, const.MAX_SPEED]
+            gains_soft = [6, 0.18, 0.1, const.SOFT_MAX_SPEED]
+            a_gains_full = [3, 0, 0, const.MAX_SPEED_R]
         # gains_soft = [10, 0.32, 0, const.SOFT_MAX_SPEED]
         # gains_soft = gains_full
         if const.IS_SIMULATOR_USED:
@@ -240,6 +240,8 @@ class Robot(entity.Entity):
         )
         is_aligned = is_dist and is_angle and is_offset
 
+        # print("is aligned:", is_dist, is_angle, is_offset)
+
         if is_aligned:
             self.is_kick_committed = True
         else:
@@ -263,6 +265,7 @@ class Robot(entity.Entity):
         """
         self.speed_x = self.xx_flp.process(1 / self.k_xx * aux.rotate(vel, -self._angle).x)
         self.speed_y = self.yy_flp.process(1 / self.k_yy * aux.rotate(vel, -self._angle).y)
+        # print(vel.mag(), aux.Point(self.speed_x, self.speed_y).mag())
 
         # self.speed_x = self.xx_flp.process(1 / self.k_xx * vel.x)
         # self.speed_y = self.yy_flp.process(1 / self.k_yy * vel.y)
