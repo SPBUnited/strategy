@@ -9,7 +9,6 @@
 - радиус
 """
 
-from time import time
 
 import numpy as np
 from filterpy.common import Q_discrete_white_noise
@@ -26,9 +25,7 @@ class Entity:
     Хранит положение, скорость, угол и тп.
     """
 
-    def __init__(
-        self, pos: aux.Point, angle: float, R: float, T: float = const.Ts
-    ) -> None:
+    def __init__(self, pos: aux.Point, angle: float, R: float, T: float = const.Ts) -> None:
         """
         Конструктор
 
@@ -56,7 +53,7 @@ class Entity:
         self._anglevel = 0.0
         self._vel_fr = tau.FOD(T, Ts, True)
         self._radius = R
-        self.last_update_ = time()
+        self.last_update_ = 0.0
 
     def update(self, pos: aux.Point, angle: float, t: float) -> None:
         """

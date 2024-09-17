@@ -14,9 +14,9 @@ from strategy_bridge.utils.debugger import debugger
 import bridge.processors.referee_state_processor as state_machine
 from bridge import const
 from bridge.auxiliary import aux, fld
+from bridge.drawing import Image
 from bridge.router import router
 from bridge.strategy import strategy
-from bridge.drawing import Image
 
 
 @attr.s(auto_attribs=True)
@@ -48,7 +48,7 @@ class SSLController(BaseProcessor):
         """
         Инициализировать контроллер
         """
-        super(SSLController, self).initialize(data_bus)
+        super().initialize(data_bus)
         self.field_reader = DataReader(data_bus, const.FIELD_TOPIC)
         self.referee_reader = DataReader(data_bus, config.REFEREE_COMMANDS_TOPIC)
         self.commands_sink_writer = DataWriter(data_bus, const.TOPIC_SINK, 20)
@@ -90,7 +90,7 @@ class SSLController(BaseProcessor):
 
     def draw_image(self) -> None:
         """Send commands to drawer processor"""
-        if self.field.ally_color == const.COLOR:
+        if self.field.ally_color == const.Color.YELLOW:
             full_image = Image()
             for image in [
                 self.field.strategy_image,

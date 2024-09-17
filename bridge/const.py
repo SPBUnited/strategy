@@ -16,16 +16,16 @@ class Color(Enum):
 ##################################################
 # GAME SETTING CONSTS
 DIV = "C"
-COLOR = Color.BLUE
+COLOR = Color.YELLOW
 POLARITY = 1  # -1 если ворота синих на +x; 1 если ворота синих на -x
 
 IS_SIMULATOR_USED = False
-IS_DRIBBLER_USED = True  # dribler and upper_kick
+IS_DRIBBLER_USED = True  # dribbler and upper_kick
 SELF_PLAY = False
 
-GK = 13
+GK = 8
 PENALTY_KICKER = 0
-ENEMY_GK = 8
+ENEMY_GK = 1
 
 CAMERAS_COUNT: int = 4
 MAX_BALLS_IN_CAMERA: int = 64
@@ -97,7 +97,6 @@ SOFT_MAX_SPEED = 500
 SOFT_MAX_SPEED_R = 16
 
 INTERCEPT_SPEED = 50
-GK_PEN_KICKOUT_SPEED = 500
 ##################################################
 # GEOMETRY CONSTS
 
@@ -105,6 +104,7 @@ BALL_R = 22
 ROBOT_R = 100
 GRAVEYARD_POS_X = -10000
 
+BALL_MAX_SPEED = 10000  # for filter random balls
 
 GOAL_DX = 4500
 GOAL_DY = 1000
@@ -138,7 +138,7 @@ FULL_DELAY = 0.16
 
 
 # VOLTAGES
-VOLTAGE_PASS = 10
-VOLTAGE_SHOOT = 12
-VOLTAGE_UP = 10
+VOLTAGE_PASS = 7
+VOLTAGE_SHOOT = 7
+VOLTAGE_UP = 15
 VOLTAGE_ZERO = min(VOLTAGE_PASS, VOLTAGE_SHOOT, VOLTAGE_UP)

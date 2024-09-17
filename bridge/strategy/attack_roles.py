@@ -21,8 +21,12 @@ def attacker(
     kick_est = acc.estimate_pass_point(field, field.ball.get_pos(), kick_point)
     field.strategy_image.draw_dot(kick_point, (255, 0, 0), 15)
 
+    if aux.is_point_inside_poly(field.ball.get_pos(), field.ally_goal.hull) and not field.is_ball_moves_to_goal():
+        waypoints[attacker_id] = wp.Waypoint(aux.Point(0, 0), 0, wp.WType.S_ENDPOINT)
+        return
+
     # if self.pass_or_kick_decision_border.is_lower(kick_est) and len(forwards) > 0:
-    if kick_est < 0.2 and len(forwards) > 0:
+    if kick_est < 0.13 and len(forwards) > 0:
         receiver_id, pass_est = choose_receiver(field, forwards)
         # print(pass_est, kick_est)
         if pass_est is not None and pass_est > kick_est and receiver_id is not None:
@@ -31,8 +35,7 @@ def attacker(
                 enemy_near = fld.find_nearest_robot(attacker.get_pos(), field.enemies)
                 enemy_point = aux.closest_point_on_line(
                     attacker.get_pos(),
-                    attacker.get_pos()
-                    + aux.rotate(aux.RIGHT, attacker.get_angle()) * const.ROBOT_R * 5,
+                    attacker.get_pos() + aux.rotate(aux.RIGHT, attacker.get_angle()) * const.ROBOT_R * 5,
                     enemy_near.get_pos(),
                     "S",
                 )
@@ -45,19 +48,13 @@ def attacker(
     # print("attacker: shoot to goal")
 
 
-def choose_receiver(
-    field: fld.Field, forwards: list[rbt.Robot]
-) -> tuple[Optional[int], Optional[float]]:
+def choose_receiver(field: fld.Field, forwards: list[rbt.Robot]) -> tuple[Optional[int], Optional[float]]:
     """Выбирает робота для получения паса"""
     receiver_id = None
     receiver_score = None
     for forward in forwards:
-        pass_score = acc.estimate_pass_point(
-            field, field.ball.get_pos(), forward.get_pos()
-        )
-        kick_point = acc.choose_kick_point(
-            field, forward.r_id, ball_pos=forward.get_pos()
-        )
+        pass_score = acc.estimate_pass_point(field, field.ball.get_pos(), forward.get_pos())
+        kick_point = acc.choose_kick_point(field, forward.r_id, ball_pos=forward.get_pos())
         kick_score = acc.estimate_pass_point(field, forward.get_pos(), kick_point)
 
         score = pass_score * kick_score
@@ -67,9 +64,7 @@ def choose_receiver(
     return receiver_id, score
 
 
-def set_forwards_wps(
-    field: fld.Field, waypoints: list[wp.Waypoint], forwards: list[rbt.Robot]
-) -> None:
+def set_forwards_wps(field: fld.Field, waypoints: list[wp.Waypoint], forwards: list[rbt.Robot]) -> None:
     """Расставляет роботов по точкам для получения паса"""
     pos_num = len(forwards)
 
@@ -107,9 +102,7 @@ def pass_kicker(field: fld.Field, kicker_id: int, receiver_id: int) -> wp.Waypoi
         #     wp.WType.S_BALL_PASS,
         # )
         # print("pass to", receiver_id)
-        waypoint = kick.pass_to_point(
-            field, field.allies[kicker_id], receiver.get_pos()
-        )
+        waypoint = kick.pass_to_point(field, field.allies[kicker_id], receiver.get_pos())
         field.strategy_image.draw_dot(
             field.ball.get_pos()
             + aux.rotate(
@@ -137,16 +130,10 @@ def pass_receiver(
     TODO: прописать действия отдающего пас робота после удара и принимающего пас робота до удара
     """
     receiver = field.allies[receiver_id]
-    if (
-        field.is_ball_moves_to_point(receiver.get_pos())
-        and field.ball_start_point is not None
-        and (field.ball_start_point - field.ball.get_pos()).mag()
-        > const.INTERCEPT_SPEED
-    ):
-        target = aux.closest_point_on_line(
-            field.ball_start_point, field.ball.get_pos(), receiver.get_pos(), "R"
-        )
+    if field.is_ball_moves_to_point(receiver.get_pos()) and field.ball_start_point is not None:
+        target = aux.closest_point_on_line(field.ball_start_point, field.ball.get_pos(), receiver.get_pos(), "R")
         field.strategy_image.draw_line(target, receiver.get_pos(), (255, 127, 0), 2)
+        field.strategy_image.draw_dot(target, (128, 128, 255), const.ROBOT_R)
 
         receiver.set_dribbler_speed(15)
 

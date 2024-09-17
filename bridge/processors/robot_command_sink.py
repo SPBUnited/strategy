@@ -2,13 +2,12 @@
 Модуль-прослойка между стратегией и отправкой пакетов на роботов
 """
 
-import zmq
 import struct
 import typing
-import math
 from time import time
 
 import attr
+import zmq
 from strategy_bridge.bus import DataBus, DataReader, DataWriter
 from strategy_bridge.common import config
 from strategy_bridge.processors import BaseProcessor
@@ -30,19 +29,17 @@ class CommandSink(BaseProcessor):
     commands_writer: DataWriter = attr.ib(init=False)
 
     b_control_team = [
-        rbt.Robot(aux.GRAVEYARD_POS, 0, const.ROBOT_R, const.Color.BLUE, i, 0)
-        for i in range(const.TEAM_ROBOTS_MAX_COUNT)
+        rbt.Robot(aux.GRAVEYARD_POS, 0, const.ROBOT_R, const.Color.BLUE, i, 0) for i in range(const.TEAM_ROBOTS_MAX_COUNT)
     ]
     y_control_team = [
-        rbt.Robot(aux.GRAVEYARD_POS, 0, const.ROBOT_R, const.Color.YELLOW, i, 0)
-        for i in range(const.TEAM_ROBOTS_MAX_COUNT)
+        rbt.Robot(aux.GRAVEYARD_POS, 0, const.ROBOT_R, const.Color.YELLOW, i, 0) for i in range(const.TEAM_ROBOTS_MAX_COUNT)
     ]
 
     def initialize(self, data_bus: DataBus) -> None:
         """
         Инициализация
         """
-        super(CommandSink, self).initialize(data_bus)
+        super().initialize(data_bus)
         self.commands_sink_reader = DataReader(data_bus, const.TOPIC_SINK, 20)
         # self.commands_writer = DataWriter(
         #     data_bus, config.ROBOT_COMMANDS_TOPIC, self.max_commands_to_persist
@@ -75,9 +72,7 @@ class CommandSink(BaseProcessor):
             if ctrl_id is None:
                 continue
 
-            if (
-                not const.IS_SIMULATOR_USED and ctrl_id in const.REVERSED_KICK
-            ):  # because all robots are reversed :)
+            if not const.IS_SIMULATOR_USED and ctrl_id in const.REVERSED_KICK:  # because all robots are reversed :)
                 r.kick_forward_, r.kick_up_ = r.kick_up_, r.kick_forward_
                 if r.auto_kick_ == 2:
                     r.auto_kick_ = 1
@@ -132,11 +127,7 @@ class CommandSink(BaseProcessor):
                 rules.append(0)
         else:
             for i in range(const.TEAM_ROBOTS_MAX_COUNT):
-                control_team = (
-                    self.y_control_team
-                    if self.y_control_team[i].is_used()
-                    else self.b_control_team
-                )
+                control_team = self.y_control_team if self.y_control_team[i].is_used() else self.b_control_team
 
                 # if self.y_control_team[i].is_used():
                 #     pass
@@ -164,7 +155,7 @@ class CommandSink(BaseProcessor):
                 rules.append(0)
                 rules.append(control_team[i].speed_x)
                 rules.append(control_team[i].speed_y)
-                rules.append(control_team[i]._delta_angle)
+                rules.append(control_team[i].delta_angle)
                 rules.append(control_team[i].kick_up_)
                 rules.append(control_team[i].kick_forward_)
                 rules.append(control_team[i].auto_kick_)

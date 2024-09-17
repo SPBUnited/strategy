@@ -4,7 +4,6 @@
 
 import math
 from enum import Enum, auto
-from typing import Optional
 
 from bridge.auxiliary import aux
 

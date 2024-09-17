@@ -123,10 +123,10 @@ class Route:
         return dist
 
     def __str__(self) -> str:
-        strin = "ROUTE: "
+        string = "ROUTE: "
         for wpt in self.__get_route():
-            strin += " ->\n" + str(wpt)
-        return strin
+            string += " ->\n" + str(wpt)
+        return string
 
     def kicker_control(self, robot: rbt.Robot) -> None:
         end_point = self.get_dest_wp()
@@ -147,19 +147,14 @@ class Route:
                     robot.kicker_voltage_ = const.VOLTAGE_UP
 
             is_aligned_by_angle = robot.is_kick_aligned_by_angle(end_point.angle)
-            if (
-                end_point.type in [wp.WType.S_BALL_KICK, wp.WType.S_BALL_PASS]
-                and is_aligned_by_angle
-            ):
+            if end_point.type in [wp.WType.S_BALL_KICK, wp.WType.S_BALL_PASS] and is_aligned_by_angle:
                 robot.auto_kick_ = 1
             elif end_point.type == wp.WType.S_BALL_KICK_UP and is_aligned_by_angle:
                 robot.auto_kick_ = 2
             else:
                 robot.auto_kick_ = 0
 
-    def vel_control(
-        self, robot: rbt.Robot, field: fld.Field
-    ) -> tuple[aux.Point, float]:
+    def vel_control(self, robot: rbt.Robot, field: fld.Field) -> tuple[aux.Point, float]:
         target_point = self.get_next_wp()
         end_point = self.get_dest_wp()
 
@@ -217,10 +212,8 @@ class Route:
             robot.kicker_charge_enable_ = 1
             robot.speed_x = -waypoint.pos.x / robot.k_xx
             robot.speed_y = waypoint.pos.y / robot.k_yy
-            robot._delta_angle = (
-                math.log(18 / math.pi * abs(waypoint.angle) + 1)
-                * aux.sign(waypoint.angle)
-                * (100 / math.log(18 + 1))
+            robot.delta_angle = (
+                math.log(18 / math.pi * abs(waypoint.angle) + 1) * aux.sign(waypoint.angle) * (100 / math.log(18 + 1))
             )
             robot.beep = 1
             return
@@ -237,11 +230,7 @@ class Route:
             ang_vel = robot.angle_reg.process(aerr, -robot.get_anglevel())
             robot.update_vel_w(ang_vel)
         else:
-            robot._delta_angle = (
-                math.log(18 / math.pi * abs(aerr) + 1)
-                * aux.sign(aerr)
-                * (100 / math.log(18 + 1))
-            )
+            robot.delta_angle = math.log(18 / math.pi * abs(aerr) + 1) * aux.sign(aerr) * (100 / math.log(18 + 1))
 
         reg_vel = aux.Point(robot.speed_x, -robot.speed_y)
         field.router_image.draw_line(

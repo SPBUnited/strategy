@@ -14,9 +14,7 @@ class Goal:
     Структура, описывающая ключевые точки ворот
     """
 
-    def __init__(
-        self, goal_dx: float, goal_dy: float, pen_dx: float, pen_dy: float
-    ) -> None:
+    def __init__(self, goal_dx: float, goal_dy: float, pen_dx: float, pen_dy: float) -> None:
 
         # Абсолютный центр
         self.center = aux.Point(goal_dx, 0)
@@ -140,7 +138,7 @@ class Field:
 
         self.ball_history: list[Optional[aux.Point]] = [None] * round(0.2 / const.Ts)
         self.ball_history_idx = 0
-        self.ball_start_point: Optional[aux.Point] = None
+        self.ball_start_point: Optional[aux.Point] = self.ball.get_pos()
 
     def update_field(self, new_field: "Field") -> None:
         self.robot_with_ball = new_field.robot_with_ball
@@ -165,10 +163,7 @@ class Field:
         """
         self.ball.update(pos, 0, t)
 
-        if self.ball_history[self.ball_history_idx] is None:
-            self.ball_start_point = self.ball_history[0]
-        else:
-            self.ball_start_point = self.ball_history[self.ball_history_idx]
+        self.ball_start_point = self.ball_history[self.ball_history_idx]
 
         self.ball_history[self.ball_history_idx] = self.ball.get_pos()
         self.ball_history_idx += 1
@@ -182,12 +177,8 @@ class Field:
         """
         Определить, находится ли мяч внутри дрибблера
         """
-        return (
-            robo.get_pos() - self.ball.get_pos()
-        ).mag() < const.BALL_GRABBED_DIST and abs(
-            aux.wind_down_angle(
-                (self.ball.get_pos() - robo.get_pos()).arg() - robo.get_angle()
-            )
+        return (robo.get_pos() - self.ball.get_pos()).mag() < const.BALL_GRABBED_DIST and abs(
+            aux.wind_down_angle((self.ball.get_pos() - robo.get_pos()).arg() - robo.get_angle())
         ) < const.BALL_GRABBED_ANGLE
 
     def is_ball_in(self, robo: rbt.Robot) -> bool:
@@ -196,18 +187,14 @@ class Field:
         """
         return robo == self.robot_with_ball
 
-    def update_blu_robot(
-        self, idx: int, pos: aux.Point, angle: float, t: float
-    ) -> None:
+    def update_blu_robot(self, idx: int, pos: aux.Point, angle: float, t: float) -> None:
         """
         Обновить положение робота синей команды
         !!! Вызывать один раз за итерацию с постоянной частотой !!!
         """
         self.b_team[idx].update(pos, angle, t)
 
-    def update_yel_robot(
-        self, idx: int, pos: aux.Point, angle: float, t: float
-    ) -> None:
+    def update_yel_robot(self, idx: int, pos: aux.Point, angle: float, t: float) -> None:
         """
         Обновить положение робота желтой команды
         !!! Вызывать один раз за итерацию с постоянной частотой !!!
@@ -234,10 +221,7 @@ class Field:
         """
         Определить, остановился ли мяч в штрафной зоне
         """
-        return (
-            aux.is_point_inside_poly(self.ball.get_pos(), self.ally_goal.hull)
-            and not self.is_ball_moves()
-        )
+        return aux.is_point_inside_poly(self.ball.get_pos(), self.ally_goal.hull) and not self.is_ball_moves()
 
     def is_ball_moves(self) -> bool:
         """
@@ -251,11 +235,10 @@ class Field:
         """
         vec_to_point = point - self.ball.get_pos()
         return (
-            self.ball.get_vel().mag()
-            * (cos(vec_to_point.arg() - self.ball.get_vel().arg()) ** 5)
-            > const.INTERCEPT_SPEED * 10
+            self.ball.get_vel().mag() * (cos(vec_to_point.arg() - self.ball.get_vel().arg()) ** 5)
+            > const.INTERCEPT_SPEED * 5
             and self.robot_with_ball is None
-            and vec_to_point.arg() - self.ball.get_vel().arg() < pi / 2
+            and abs(vec_to_point.arg() - self.ball.get_vel().arg()) < pi / 2
         )
 
     def is_ball_moves_to_goal(self) -> bool:
@@ -275,9 +258,7 @@ class Field:
         return inter is not None and self.ball.get_vel().mag() > const.INTERCEPT_SPEED
 
 
-def find_nearest_robot(
-    point: aux.Point, team: list[rbt.Robot], avoid: list[int] = []
-) -> rbt.Robot:
+def find_nearest_robot(point: aux.Point, team: list[rbt.Robot], avoid: list[int] = []) -> rbt.Robot:
     """
     Найти ближайший робот из массива team к точке point, игнорируя точки avoid
     """

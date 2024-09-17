@@ -61,15 +61,13 @@ class StateMachine:
         for state in State:
             self.add_transition(state, State.HALT, Command.HALT)
             self.add_transition(state, State.STOP, Command.STOP)
-
-        self.add_transition(State.TIMEOUT, State.STOP, Command.STOP)
+            self.add_transition(state, State.TIMEOUT, Command.TIMEOUT)
 
         self.add_transition(State.STOP, State.PREPARE_KICKOFF, Command.PREPARE_KICKOFF)
         self.add_transition(State.STOP, State.BALL_PLACEMENT, Command.BALL_PLACEMENT)
         self.add_transition(State.STOP, State.PREPARE_PENALTY, Command.PREPARE_PENALTY)
         self.add_transition(State.STOP, State.FREE_KICK, Command.FREE_KICK)
         self.add_transition(State.STOP, State.RUN, Command.FORCE_START)
-        self.add_transition(State.STOP, State.TIMEOUT, Command.TIMEOUT)
 
         self.add_transition(State.PREPARE_KICKOFF, State.KICKOFF, Command.NORMAL_START)
 

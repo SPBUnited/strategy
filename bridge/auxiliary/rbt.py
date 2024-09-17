@@ -2,9 +2,7 @@
 Описание полей и интерфейсов взаимодействия с роботом
 """
 
-import math
 import typing
-from time import time
 
 import bridge.router.waypoint as wp
 from bridge import const
@@ -36,7 +34,7 @@ class Robot(entity.Entity):
         self.speed_x = 0.0
         self.speed_y = 0.0
         self.speed_r = 0.0
-        self._delta_angle = 0.0
+        self.delta_angle = 0.0
         self.kick_up_ = 0
         self.kick_forward_ = 0
         self.auto_kick_ = 0
@@ -77,7 +75,7 @@ class Robot(entity.Entity):
         # self.a0Flp = tau.FOLP(self.a0TF, const.Ts)
 
         # !v REAL
-        gains_full = [2, 0.12, 2, const.MAX_SPEED]
+        gains_full = [2.5, 0.15, 2.5, const.MAX_SPEED]
         gains_soft = [2, 0.1, 2, const.SOFT_MAX_SPEED]
         a_gains_full = [8, 0.1, 0, const.MAX_SPEED_R]
         # gains_soft = [10, 0.32, 0, const.SOFT_MAX_SPEED]
@@ -189,7 +187,7 @@ class Robot(entity.Entity):
         self.speed_x = robot.speed_x
         self.speed_y = robot.speed_y
         self.speed_r = robot.speed_r
-        self._delta_angle = robot._delta_angle
+        self.delta_angle = robot.delta_angle
         self.kick_up_ = robot.kick_up_
         self.kick_forward_ = robot.kick_forward_
         self.auto_kick_ = robot.auto_kick_
@@ -208,7 +206,7 @@ class Robot(entity.Entity):
         self.speed_x = 0.0
         self.speed_y = 0.0
         self.speed_r = 0.0
-        self._delta_angle = 0.0
+        self.delta_angle = 0.0
         self.kick_up_ = 0
         self.kick_forward_ = 0
         self.auto_kick_ = 0
@@ -224,16 +222,13 @@ class Robot(entity.Entity):
         """
 
         commit_scale = 1.2 if self.is_kick_committed else 1
-        is_dist = (
-            self.get_pos() - target.pos
-        ).mag() < const.KICK_ALIGN_DIST * const.KICK_ALIGN_DIST_MULT * commit_scale
+        is_dist = (self.get_pos() - target.pos).mag() < const.KICK_ALIGN_DIST * const.KICK_ALIGN_DIST_MULT * commit_scale
         is_angle = self.is_kick_aligned_by_angle(target.angle)
         is_offset = (
             aux.dist(
                 aux.closest_point_on_line(
                     target.pos,
-                    target.pos
-                    - aux.rotate(aux.RIGHT, target.angle) * const.KICK_ALIGN_DIST,
+                    target.pos - aux.rotate(aux.RIGHT, target.angle) * const.KICK_ALIGN_DIST,
                     self._pos,
                 ),
                 self._pos,
@@ -254,10 +249,7 @@ class Robot(entity.Entity):
         Определить, выровнен ли робот относительно путевой точки target
         """
         commit_scale = 1.2 if self.is_kick_committed else 1
-        return (
-            abs(aux.wind_down_angle(self._angle - angle))
-            < const.KICK_ALIGN_ANGLE * commit_scale
-        )
+        return abs(aux.wind_down_angle(self._angle - angle)) < const.KICK_ALIGN_ANGLE * commit_scale
 
     def update_vel_xy(self, vel: aux.Point) -> None:
         """

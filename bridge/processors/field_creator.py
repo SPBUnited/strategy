@@ -30,7 +30,7 @@ class FieldCreator(BaseProcessor):
         """
         Инициализация
         """
-        super(FieldCreator, self).initialize(data_bus)
+        super().initialize(data_bus)
         self.vision_reader = DataReader(data_bus, config.VISION_DETECTIONS_TOPIC)
         self.box_feedback_reader = DataReader(data_bus, config.BOX_FEEDBACK_TOPIC)
         self.field_writer = DataWriter(data_bus, const.FIELD_TOPIC, 20)
@@ -80,30 +80,27 @@ class FieldCreator(BaseProcessor):
             # TODO: Barrier states
             for robot_det in detection.robots_blue:
                 b_bots_id.append(robot_det.robot_id)
-                b_bots_pos[robot_det.robot_id].append(
-                    aux.Point(robot_det.x, robot_det.y)
-                )
+                b_bots_pos[robot_det.robot_id].append(aux.Point(robot_det.x, robot_det.y))
                 b_bots_ang[robot_det.robot_id].append(robot_det.orientation)
 
             for robot_det in detection.robots_yellow:
                 y_bots_id.append(robot_det.robot_id)
-                y_bots_pos[robot_det.robot_id].append(
-                    aux.Point(robot_det.x, robot_det.y)
-                )
+                y_bots_pos[robot_det.robot_id].append(aux.Point(robot_det.x, robot_det.y))
                 y_bots_ang[robot_det.robot_id].append(robot_det.orientation)
 
         if len(balls) != 0:
             balls_sum = aux.Point(0, 0)
+            balls_num = 0
             for ball in balls:
-                balls_sum += ball
-            ball = balls_sum / len(balls)
-            self.field.update_ball(ball, time())
+                if (ball - self.field.ball.get_pos()).mag() / (time() - self.field.ball.last_update_) < const.BALL_MAX_SPEED:
+                    balls_sum += ball
+                    balls_num += 1
+            if balls_num != 0:
+                ball = balls_sum / balls_num
+                self.field.update_ball(ball, time())
         elif self.field.robot_with_ball is not None:
             ally = self.field.robot_with_ball
-            ball = (
-                ally.get_pos()
-                + aux.rotate(aux.RIGHT, ally.get_angle()) * ally.get_radius() / 2
-            )
+            ball = ally.get_pos() + aux.rotate(aux.RIGHT, ally.get_angle()) * ally.get_radius() / 2
             self.field.update_ball(ball, time())
 
         self.field.robot_with_ball = None

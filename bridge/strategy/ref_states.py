@@ -31,10 +31,17 @@ def timeout(field: fld.Field, waypoints: list[wp.Waypoint]) -> None:
 
 def prepare_penalty(field: fld.Field, waypoints: list[wp.Waypoint], we_active: bool) -> None:
     """Подготовка пенальти по команде от судей"""
-    stopped_robots = []
+    stopped_robots: list[int] = []
+    penalty_kicker = None
     for ally in field.allies:
-        if ally.is_used() and ally.r_id not in [field.gk_id, const.PENALTY_KICKER]:
-            stopped_robots.append(ally.r_id)
+        if ally.is_used() and ally.r_id not in [field.gk_id]:
+            if penalty_kicker:
+                stopped_robots.append(ally.r_id)
+            else:
+                penalty_kicker = ally.r_id
+
+    if penalty_kicker is None:
+        return
 
     x0 = 700
     delta_x = const.ROBOT_R * 2.5
@@ -44,17 +51,17 @@ def prepare_penalty(field: fld.Field, waypoints: list[wp.Waypoint], we_active: b
         y0 = -2500
 
     if we_active:
-        waypoints[const.PENALTY_KICKER] = wp.Waypoint(
+        waypoints[penalty_kicker] = wp.Waypoint(
             aux.Point(250 * field.polarity, 0),
-            aux.angle_to_point(field.allies[const.PENALTY_KICKER].get_pos(), field.ball.get_pos()),
+            aux.angle_to_point(field.allies[penalty_kicker].get_pos(), field.ball.get_pos()),
             wp.WType.S_ENDPOINT,
         )
     else:
         x0 *= -1
         delta_x *= -1
-        waypoints[const.PENALTY_KICKER] = wp.Waypoint(
+        waypoints[penalty_kicker] = wp.Waypoint(
             aux.Point((x0 - delta_x) * field.polarity, y0),
-            aux.angle_to_point(field.allies[const.PENALTY_KICKER].get_pos(), field.ball.get_pos()),
+            aux.angle_to_point(field.allies[penalty_kicker].get_pos(), field.ball.get_pos()),
             wp.WType.S_ENDPOINT,
         )
 
@@ -88,10 +95,12 @@ def prepare_penalty(field: fld.Field, waypoints: list[wp.Waypoint], we_active: b
 
 def penalty_kick(field: fld.Field, waypoints: list[wp.Waypoint]) -> None:
     """Пенальти (атака)"""
-    field.allies[const.PENALTY_KICKER].dribbler_speed_ = 10
-    kick_delta = 350
-
     ball = field.ball.get_pos()
+
+    penalty_kicker = fld.find_nearest_robot(ball, field.allies).r_id
+    field.allies[penalty_kicker].dribbler_speed_ = 10
+    kick_delta = 150
+
     enemy_gk = field.enemies[const.ENEMY_GK].get_pos()
 
     if abs(aux.get_angle_between_points(enemy_gk, ball, field.enemy_goal.up)) > abs(
@@ -101,7 +110,7 @@ def penalty_kick(field: fld.Field, waypoints: list[wp.Waypoint]) -> None:
     else:
         target = aux.Point(field.enemy_goal.center.x, -kick_delta)
 
-    waypoints[const.PENALTY_KICKER] = wp.Waypoint(ball, aux.angle_to_point(ball, target), wp.WType.S_BALL_KICK)
+    waypoints[penalty_kicker] = wp.Waypoint(ball, aux.angle_to_point(ball, target), wp.WType.S_BALL_KICK)
 
 
 def prepare_kickoff(field: fld.Field, waypoints: list[wp.Waypoint], we_active: bool) -> None:
@@ -139,7 +148,7 @@ def prepare_kickoff(field: fld.Field, waypoints: list[wp.Waypoint], we_active: b
         if field.allies[i].is_used() and field.allies[i].r_id != field.gk_id:
             robot_pos = field.allies[i].get_pos()
             best_pos = None
-            min_dist: float
+            min_dist: float = 0.0
             for pos in enumerate(poses):
                 dist = aux.dist(pos[1], robot_pos)
                 if best_pos is None or dist < min_dist:
