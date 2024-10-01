@@ -19,6 +19,7 @@ from bridge.auxiliary.cells_tools import Cell, get_cells
 from random import random
 
 from scipy.optimize import minimize, dual_annealing
+from scipy.stats import qmc
 import numpy as np
 from concurrent.futures import ThreadPoolExecutor
 import bridge.strategy.accessories as acc
@@ -28,7 +29,7 @@ import bridge.strategy.accessories as acc
 class ExplorePasses(BaseProcessor):
     """class that creates the field"""
 
-    processing_pause: typing.Optional[float] = 0.1
+    processing_pause: typing.Optional[float] = 0.2
     reduce_pause_on_process_time: bool = True
     # commands_sink_reader: DataReader = attr.ib(init=False)
     # box_feedback_reader: DataReader = attr.ib(init=False)
@@ -47,7 +48,7 @@ class ExplorePasses(BaseProcessor):
         self._ssl_converter = SSL_WrapperPacket()
         self.field = fld.Field(self.ally_color)
 
-    def process_cell(self, point: aux.Point) -> Any:
+    def process_cell(self, point) -> Any:
         def wrp_fnc(x) -> float:
             point = aux.Point(x[0], x[1])
             return -acc.estimate_point(
@@ -61,7 +62,7 @@ class ExplorePasses(BaseProcessor):
         # tmp = aux.Point(2250 * random(), 3000 * random() - 1500)
         res = minimize(
             wrp_fnc,
-            np.array([point.x, point.y]),
+            point,
             bounds=[(-const.FIELD_WIDTH / 2, const.FIELD_WIDTH / 2), (-const.FIELD_HEIGH / 2, const.FIELD_HEIGH / 2)],
             method="Nelder-Mead",
         )
@@ -81,8 +82,6 @@ class ExplorePasses(BaseProcessor):
             return
 
 
-
-        print(self.field.ally_color)
         points = []
 
         _max = -100
@@ -92,14 +91,21 @@ class ExplorePasses(BaseProcessor):
         #    self.field,
         #    [e.get_pos() for e in self.field.enemies],
         # )
-        tmp_data = [aux.Point(2000, 0), aux.Point(4000, 200), aux.Point(4000, -200)]
-        # for x in range(int(-const.FIELD_WIDTH / 2), int(const.FIELD_WIDTH / 2) + 1, 2000):
-        #     for y in range(int(-const.FIELD_HEIGH / 2), int(const.FIELD_HEIGH / 2) + 1, 2000):
-        #         tmp_data.append(aux.Point(x, y))
+        # tmp_data = [aux.Point(2000, 0), aux.Point(4000, 200), aux.Point(4000, -200)]
+        sampler = qmc.Halton(d=2)
+        start_points = sampler.random(10)
+
+
+
+        x_range = [-const.FIELD_WIDTH / 2, const.FIELD_WIDTH / 2]
+        y_range = [-const.FIELD_HEIGH / 2, const.FIELD_HEIGH / 2]
+
+        start_points[:, 0] = start_points[:, 0] * (x_range[1] - x_range[0]) + x_range[0]
+        start_points[:, 1] = start_points[:, 1] * (y_range[1] - y_range[0]) + y_range[0]
 
 
         with ThreadPoolExecutor(max_workers=1) as executor:
-            futures = executor.map(self.process_cell, tmp_data)
+            futures = executor.map(self.process_cell, start_points)
 
             for res in futures:
                 if -res.get("fun") > _max:
@@ -123,8 +129,6 @@ class ExplorePasses(BaseProcessor):
                 best.append(point)
 
         best = sorted(best, key=lambda x: -x[1])
-
-        print(best[0], best[len(best) - 1])
 
         self.passes_writer.write(best)
 

@@ -203,7 +203,6 @@ class SSLController(BaseProcessor):
             best = points.content
             for p in best:
                 mult = (p[1] + 1) / 2
-                print(p[1])
                 self.field.strategy_image.draw_dot(p[0], (mult * 255, 0, 0), 35)
 
         self.control_assign()

@@ -238,8 +238,6 @@ class Strategy:
         """
         field.strategy_image.draw_dot(field.ally_goal.center, (0, 0, 0), 100)
 
-
-        print(field.enemies[3].get_pos())
         if self.game_status not in [GameStates.KICKOFF, GameStates.PENALTY]:
             if (
                 self.active_team == ActiveTeam.ALL
