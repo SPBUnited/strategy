@@ -17,7 +17,7 @@ class Color(Enum):
 # GAME SETTING CONSTS
 DIV = "C"
 COLOR = Color.YELLOW
-POLARITY = 1  # -1 если ворота синих на +x; 1 если ворота синих на -x
+POLARITY = -1  # -1 если ворота синих на +x; 1 если ворота синих на -x
 
 IS_SIMULATOR_USED = False
 IS_DRIBBLER_USED = True  # dribbler and upper_kick
@@ -84,7 +84,7 @@ for i in range(TEAM_ROBOTS_MAX_COUNT):
 TOPIC_SINK = "control-sink"
 FIELD_TOPIC = "field-topic"
 IMAGE_TOPIC = "image-topic"
-PASSES_TOPIC = "field-topic"
+PASSES_TOPIC = "passes-topic"
 ##################################################
 
 ##################################################
@@ -107,6 +107,9 @@ GRAVEYARD_POS_X = -10000
 
 BALL_MAX_SPEED = 10000  # for filter random balls
 
+FIELD_WIDTH = 9000
+FIELD_HEIGH = 6000
+
 GOAL_DX = 4500
 GOAL_DY = 1000
 GOAL_PEN_DX = 1000
@@ -114,6 +117,8 @@ GOAL_PEN_DY = 2000
 
 GK_FORW = 200 + ROBOT_R
 if DIV == "C":
+    FIELD_WIDTH = 4500
+    FIELD_HEIGH = 3000
     GOAL_DX = 2250
     GOAL_DY = 800
     GOAL_PEN_DX = 500

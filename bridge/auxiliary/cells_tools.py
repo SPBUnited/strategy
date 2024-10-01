@@ -1,7 +1,9 @@
 import math
 from typing import Optional, Any
 
-import bridge.auxiliary as aux
+from bridge.auxiliary import aux, fld, rbt
+from bridge import const
+
 
 class Peak(aux.Point):
     def __init__(self, pos: aux.Point) -> None:
@@ -225,3 +227,64 @@ class Cell:
             return True
         else:
             return False
+
+
+def get_cells(
+    kick_point: aux.Point, field: fld.Field, enemies: list[aux.Point] = []
+) -> list[Cell]:
+    left_top_cell = Peak(aux.Point(0, const.FIELD_HEIGH / 2))
+    right_top_cell = Peak(aux.Point(const.FIELD_WIDTH / 2, const.FIELD_HEIGH / 2))
+    right_down_cell = Peak(aux.Point(const.FIELD_WIDTH / 2, -const.FIELD_HEIGH / 2))
+    left_down_cell = Peak(aux.Point(0, -const.FIELD_HEIGH / 2))
+
+    cells = [Cell([left_top_cell, right_top_cell, right_down_cell, left_down_cell])]
+
+    for enemy in enemies:
+        new_cells = []
+        for cell in cells:
+            new_cell = cell.intersect_cell(enemy, field.enemy_goal.center)
+            if new_cell:
+                new_cells.append(new_cell)
+        cells += new_cells
+
+        new_cells = []
+        cells_to_delete: list[int] = []
+
+        for idx, cell in enumerate(cells):
+            vec = (enemy - kick_point).unity()
+
+            tangents = aux.get_tangent_points(enemy, kick_point, const.ROBOT_R)
+            if len(tangents) < 2:
+                continue
+
+            side = aux.sign(
+                aux.vec_mult((tangents[0] - kick_point), (enemy - kick_point))
+            )
+
+            new_cell = cell.intersect_cell(enemy - vec, enemy, "R")
+            if new_cell:
+                is_cropped = cell.crop_cell(kick_point, tangents[0], side, "R")
+                if not is_cropped:
+                    is_cropped = cell.crop_cell(kick_point, tangents[1], -side, "R")
+                    if not is_cropped:
+                        cells_to_delete = [idx] + cells_to_delete
+                        # порядок важен, т к при удалении меняются индексы
+
+                is_cropped = new_cell.crop_cell(kick_point, tangents[0], side, "R")
+                if not is_cropped:
+                    is_cropped = new_cell.crop_cell(kick_point, tangents[1], -side, "R")
+
+                if is_cropped:
+                    new_cells.append(new_cell)
+            else:
+                vec0 = tangents[0] - kick_point
+                cell.crop_cell(tangents[0] - vec0, tangents[0], side, "R")
+                vec1 = tangents[1] - kick_point
+                cell.crop_cell(tangents[1] - vec1, tangents[1], -side, "R")
+
+        for idx in cells_to_delete:  # NOTE
+            cells.pop(idx)
+
+        cells += new_cells
+
+    return cells

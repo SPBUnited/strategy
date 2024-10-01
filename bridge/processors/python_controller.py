@@ -49,6 +49,8 @@ class SSLController(BaseProcessor):
         Инициализировать контроллер
         """
         super().initialize(data_bus)
+        self.passes_reader = DataReader(data_bus, const.PASSES_TOPIC)
+
         self.field_reader = DataReader(data_bus, const.FIELD_TOPIC)
         self.referee_reader = DataReader(data_bus, config.REFEREE_COMMANDS_TOPIC)
         self.commands_sink_writer = DataWriter(data_bus, const.TOPIC_SINK, 20)
@@ -190,6 +192,12 @@ class SSLController(BaseProcessor):
         self.read_vision()
         self.process_referee_cmd()
         self.control_loop()
+
+        points = self.passes_reader.read_last()
+        if points is not None:
+            best = points.content
+            for p in best:
+                self.field.strategy_image.draw_dot(p[0], (255, 255, 255), 35)
 
         self.control_assign()
         self.draw_image()

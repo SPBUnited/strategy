@@ -3,6 +3,7 @@ Processor that creates the field
 """
 
 import typing
+from typing import Any
 from time import time
 
 import attr
@@ -13,6 +14,8 @@ from strategy_bridge.processors import BaseProcessor
 
 from bridge import const
 from bridge.auxiliary import aux, fld
+from bridge.auxiliary.cells_tools import Cell, get_cells
+
 
 from scipy.optimize import minimize, dual_annealing
 import numpy as np
@@ -21,21 +24,17 @@ import bridge.strategy.accessories as acc
 
 
 @attr.s(auto_attribs=True)
-class FieldCreator(BaseProcessor):
+class ExplorePasses(BaseProcessor):
     """class that creates the field"""
 
-    processing_pause: typing.Optional[float] = 0.01
+    processing_pause: typing.Optional[float] = 0.2
     reduce_pause_on_process_time: bool = False
     # commands_sink_reader: DataReader = attr.ib(init=False)
     # box_feedback_reader: DataReader = attr.ib(init=False)
     # field_writer: DataWriter = attr.ib(init=False)
     _ssl_converter: SSL_WrapperPacket = attr.ib(init=False)
 
-    def __init__(self):
-        self.points = None
-        self.passes_writer = None
-        self.field_reader = None
-        self.field = None
+    ally_color: const.Color = const.Color.BLUE
 
     def initialize(self, data_bus: DataBus) -> None:
         """
@@ -45,18 +44,23 @@ class FieldCreator(BaseProcessor):
         self.field_reader = DataReader(data_bus, const.FIELD_TOPIC)
         self.passes_writer = DataWriter(data_bus, const.PASSES_TOPIC, 20)
         self._ssl_converter = SSL_WrapperPacket()
-        self.field = None
+        self.field = fld.Field(self.ally_color)
 
-    def process_cell(self, cell):
-        def wrp_fnc(x):
+    def process_cell(self, cell: Cell) -> Any:
+        def wrp_fnc(x) -> float:
             point = aux.Point(x[0], x[1])
-            return -acc.estimate_point(point, self.field.ball.get_pos(), self.field.enemies)
+            return -acc.estimate_point(
+                point,
+                self.field.ball.get_pos(),
+                self.field,
+                [e.get_pos() for e in self.field.enemies],
+            )
 
         tmp = aux.average_point(cell.peaks)
         res = minimize(
             wrp_fnc,
             np.array([tmp.x, tmp.y]),
-            bounds=[(0, 4500), (-3000, 3000)],
+            bounds=[(0, 2250), (-1500, 1500)],
             method="Nelder-Mead",
         )
         return res
@@ -66,13 +70,22 @@ class FieldCreator(BaseProcessor):
         Метод обратного вызова процесса
         """
 
-        self.field = self.field_reader.read_last()
-        if self.field is None:
+        new_field = self.field_reader.read_last()
+        if new_field is not None:
+            updated_field = new_field.content
+            self.field.update_field(updated_field)
+        else:
             return
 
         points = []
 
-        cells = acc.get_cells(self.field.ball.get_pos(), self.field.enemies)
+        _max = -100
+
+        cells = get_cells(  # ALARM DONT WORK FUCK
+            self.field.ball.get_pos(),
+            self.field,
+            [e.get_pos() for e in self.field.enemies],
+        )
 
         with ThreadPoolExecutor(max_workers=1) as executor:
             futures = executor.map(self.process_cell, cells)
@@ -87,11 +100,15 @@ class FieldCreator(BaseProcessor):
                     )
                 )
 
-        min_distance = 1000
+        min_distance = 30
+        points = sorted(points, key=lambda x: -x[1])
         best = []
 
         for point in points:
-            if all((point[0] - existing_point[0]).mag() >= min_distance for existing_point in best):
+            if all(
+                (point[0] - existing_point[0]).mag() >= min_distance
+                for existing_point in best
+            ):
                 best.append(point)
 
         best = sorted(best, key=lambda x: -x[1])

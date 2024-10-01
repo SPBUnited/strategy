@@ -4,107 +4,112 @@ from typing import Optional
 from bridge import const
 from bridge.auxiliary import aux, fld, rbt
 
-from bridge.auxiliary.cells_tools import Cell, Peak
-
-
-goal_hull_ = [
-    aux.Point(const.FIELD_WIDTH, const.GOAL_PEN_DY),
-    aux.Point(const.FIELD_WIDTH // 2 - const.GOAL_PEN_DX, const.GOAL_PEN_DY),
-    aux.Point(const.FIELD_WIDTH // 2 - const.GOAL_PEN_DX, -const.GOAL_PEN_DY),
-    aux.Point(const.FIELD_WIDTH, -const.GOAL_PEN_DY),
-]
-
-goal_up = aux.Point(const.FIELD_WIDTH // 2, const.GOAL_SIZE / 2)
-goal_center = aux.Point(const.FIELD_WIDTH // 2, 0)
-goal_down = aux.Point(const.FIELD_WIDTH // 2, -const.GOAL_SIZE / 2)
-
 OBSTACLE_ANGLE = math.pi / 6
 GOAL_VIEW_ANGLE = math.pi / 4
 GOAL_HULL_DIST = 200.0
 SHOOT_ANGLE = math.pi / 8
 
-def estimate_pass_point(field: fld.Field, frm: Optional[aux.Point], to: Optional[aux.Point]) -> float:
+OBSTACLE_ANGLE = math.pi / 20
+GOAL_VIEW_ANGLE = math.pi / 20
+GOAL_HULL_DIST = 100.0
+SHOOT_ANGLE = math.pi / 20
+
+
+def estimate_pass_point(
+    enemies: list[aux.Point],
+    frm: aux.Point,
+    to: aux.Point,
+) -> float:
     """
-    Оценивает пас из точки "frm" в точку "to, возвращая положительное значение до 0.8
+    Оценивает пас из точки "frm" в точку "to", возвращая положительное значение до 1
     """
-    if frm is None or to is None:
-        return 0
-    positions: list[tuple[int, aux.Point]] = []
+    lerp: float = 0.0
 
-    poses = field.enemies if not const.SELF_PLAY else field.allies
-    for robot in poses:
-        if robot.is_used() and robot.get_pos() != to:
-            positions.append((robot.r_id, robot.get_pos()))
-    positions = sorted(positions, key=lambda x: x[1].y)
+    for enemy in enemies:
+        frm_enemy = aux.dist(frm, enemy)
+        if frm_enemy > const.ROBOT_R:
+            if frm_enemy <= aux.dist(frm, to):
+                tgs = aux.get_tangent_points(enemy, frm, const.ROBOT_R)
+                if len(tgs) < 2:
+                    continue
 
-    tangents: list[tuple[int, list[aux.Point]]] = []
-    for p in positions:
-        tgs = aux.get_tangent_points(p[1], frm, const.ROBOT_R)
-        if len(tgs) < 2:
-            continue
-        tangents.append((p[0], tgs))
+                ang1 = aux.get_angle_between_points(to, frm, tgs[0])
+                ang2 = aux.get_angle_between_points(to, frm, tgs[1])
 
-    min_ = 10e3
+                ang = min(abs(ang1), abs(ang2))
+                if (
+                    ang1 * ang2 < 0
+                    and abs(ang1) < math.pi / 2
+                    and abs(ang2) < math.pi / 2
+                ):
+                    ang *= -1  # enemy between to and frm
+            else:  # circle around enemy
+                enemy_to = aux.dist(enemy, to)
 
-    shadows_bots = []
-    for tangent in tangents:
-        ang1 = aux.get_angle_between_points(to, frm, tangent[1][0])
-        ang2 = aux.get_angle_between_points(to, frm, tangent[1][1])
+                enemy_angle = math.asin(const.ROBOT_R / frm_enemy)
+                to_enemy_angle = 2 * math.asin((enemy_to / 2) / frm_enemy)
+                ang = to_enemy_angle - enemy_angle
 
-        if ang1 * ang2 < 0 and abs(ang1) < math.pi / 2 and abs(ang2) < math.pi / 2:
-            shadows_bots.append(tangent[0])
-        ang1 = abs(ang1)
-        ang2 = abs(ang2)
-        # if ang1 > 180:
-        #     ang1 = 360 - ang1
-        # if ang2 > 180:
-        #     ang2 = 360 - ang2
+            if ang < OBSTACLE_ANGLE:
+                delta_lerp = abs((OBSTACLE_ANGLE - ang) / OBSTACLE_ANGLE) ** 1.5
 
-        if ang1 < min_:
-            min_ = ang1
-        if ang2 < min_:
-            min_ = ang2
-    # if minId == -1:
-    #     return 0
+                lerp += delta_lerp
 
-    if min_ == 10e3 or len(shadows_bots) != 0:
-        return 0
-    dist = (frm - to).mag() / 1000
-    max_ang = abs(aux.wind_down_angle(2 * math.atan2(const.ROBOT_SPEED, -0.25 * dist + 4.5)))
-    # max_ang = 10
-    return min(abs(min_ / max_ang), 1)
+    return lerp  # 0 - perfect; bigger => worse
 
 
-def choose_kick_point(
-    field: fld.Field,
-    kicker_id: int,
-    goal: Optional[fld.Goal] = None,
-    ball_pos: Optional[aux.Point] = None,
-    interfering_robots: Optional[list[rbt.Robot]] = None,
-) -> aux.Point:
-    """
-    Выбирает оптимальную точку в воротах для удара
-    """
-    if goal is None:
-        goal = field.enemy_goal
-    if ball_pos is None:
-        ball_pos = field.ball.get_pos()
-    if interfering_robots is None:
-        interfering_robots = field.enemies
-        if const.SELF_PLAY:
-            interfering_robots = field.allies
+def estimate_goal_view(point: aux.Point, field: fld.Field) -> float:
+    goal_angle = abs(
+        aux.get_angle_between_points(field.enemy_goal.up, point, field.enemy_goal.down)
+    )
 
-    A, C = choose_segment_in_goal(field, kicker_id, goal, ball_pos, interfering_robots)
-    B = ball_pos
+    return min(goal_angle / GOAL_VIEW_ANGLE, 1)  # 1 - perfect; smaller => worse
 
-    tmp1 = (C - B).mag()
-    tmp2 = (A - B).mag()
-    CA = A - C
-    pnt = A
-    if tmp2 != 0:
-        pnt = C + CA * 0.5 * (tmp1 / tmp2)
 
-    return pnt
+def estimate_dist_to_goal(point: aux.Point, field: fld.Field) -> float:
+    dist_to_goal_zone = aux.dist(
+        point, aux.nearest_point_on_poly(point, field.enemy_goal.hull)
+    )
+    if aux.is_point_inside_poly(point, field.enemy_goal.hull):
+        dist_to_goal_zone *= -1
+
+    return max(1 - dist_to_goal_zone / GOAL_HULL_DIST, 0)
+
+
+def estimate_shoot(
+    point: aux.Point, field: fld.Field, enemies: list[aux.Point]
+) -> float:
+    lerp: float = 0.0
+
+    for enemy in enemies:
+        frm_enemy = aux.dist(point, enemy)
+        if frm_enemy > const.ROBOT_R:
+
+            ang1 = aux.get_angle_between_points(field.enemy_goal.down, point, enemy)
+            ang2 = aux.get_angle_between_points(field.enemy_goal.up, point, enemy)
+
+            ang = min(abs(ang1), abs(ang2))
+            if ang1 * ang2 < 0 and abs(ang1) < math.pi / 2 and abs(ang2) < math.pi / 2:
+                ang *= -1  # enemy between to and frm
+
+            if ang < SHOOT_ANGLE:
+                delta_lerp = abs((SHOOT_ANGLE - ang) / SHOOT_ANGLE) ** 1.5
+
+                lerp += delta_lerp
+
+    return lerp  # 0 - perfect; bigger => worse
+
+
+def estimate_point(
+    point: aux.Point, kick_point: aux.Point, field: fld.Field, enemies: list[aux.Point]
+) -> float:
+    lerp1 = estimate_pass_point(enemies, kick_point, point)
+    lerp2 = estimate_goal_view(point, field)
+    lerp3 = estimate_dist_to_goal(point, field)
+    lerp4 = estimate_shoot(point, field, enemies)
+
+    lerp = lerp2 - lerp1 - lerp3 - lerp4  # lerp2 - lerp1 - lerp3 - lerp4
+    return lerp  # 1 - perfect; smaller => worse
 
 
 def choose_segment_in_goal(
@@ -120,7 +125,10 @@ def choose_segment_in_goal(
     positions = []
     for robot in interfering_robots:
         if robot != field.allies[kicker_id]:
-            if aux.dist(robot.get_pos(), goal.center) < aux.dist(goal.center, ball_pos) and robot.is_used():
+            if (
+                aux.dist(robot.get_pos(), goal.center) < aux.dist(goal.center, ball_pos)
+                and robot.is_used()
+            ):
                 positions.append(robot.get_pos())
 
     positions = sorted(positions, key=lambda x: x.y * -goal.eye_up.y)
@@ -177,60 +185,34 @@ def choose_segment_in_goal(
 
     return (segments[maxId], segments[maxId + 1])
 
-def get_cells(kick_point: aux.Point, enemies: list[aux.Point] = []) -> list[Cell]:
-    left_top_cell = Peak(aux.Point(0, const.FIELD_HEIGH / 2))
-    right_top_cell = Peak(aux.Point(const.FIELD_WIDTH / 2, const.FIELD_HEIGH / 2))
-    right_down_cell = Peak(aux.Point(const.FIELD_WIDTH / 2, -const.FIELD_HEIGH / 2))
-    left_down_cell = Peak(aux.Point(0, -const.FIELD_HEIGH / 2))
 
-    cells = [Cell([left_top_cell, right_top_cell, right_down_cell, left_down_cell])]
+def choose_kick_point(
+    field: fld.Field,
+    kicker_id: int,
+    goal: Optional[fld.Goal] = None,
+    ball_pos: Optional[aux.Point] = None,
+    interfering_robots: Optional[list[rbt.Robot]] = None,
+) -> aux.Point:
+    """
+    Выбирает оптимальную точку в воротах для удара
+    """
+    if goal is None:
+        goal = field.enemy_goal
+    if ball_pos is None:
+        ball_pos = field.ball.get_pos()
+    if interfering_robots is None:
+        interfering_robots = field.enemies
+        if const.SELF_PLAY:
+            interfering_robots = field.allies
 
-    for enemy in enemies:
-        new_cells = []
-        for cell in cells:
-            new_cell = cell.intersect_cell(enemy, goal_center)
-            if new_cell:
-                new_cells.append(new_cell)
-        cells += new_cells
+    A, C = choose_segment_in_goal(field, kicker_id, goal, ball_pos, interfering_robots)
+    B = ball_pos
 
-        new_cells = []
-        cells_to_delete: list[int] = []
+    tmp1 = (C - B).mag()
+    tmp2 = (A - B).mag()
+    CA = A - C
+    pnt = A
+    if tmp2 != 0:
+        pnt = C + CA * 0.5 * (tmp1 / tmp2)
 
-        for idx, cell in enumerate(cells):
-            vec = (enemy - kick_point).unity()
-
-            tangents = aux.get_tangent_points(enemy, kick_point, const.ROBOT_R)
-            if len(tangents) < 2:
-                continue
-
-            side = aux.sign(
-                aux.vec_mult((tangents[0] - kick_point), (enemy - kick_point))
-            )
-
-            new_cell = cell.intersect_cell(enemy - vec, enemy, "R")
-            if new_cell:
-                is_cropped = cell.crop_cell(kick_point, tangents[0], side, "R")
-                if not is_cropped:
-                    is_cropped = cell.crop_cell(kick_point, tangents[1], -side, "R")
-                    if not is_cropped:
-                        cells_to_delete = [idx] + cells_to_delete
-                        # порядок важен, т к при удалении меняются индексы
-
-                is_cropped = new_cell.crop_cell(kick_point, tangents[0], side, "R")
-                if not is_cropped:
-                    is_cropped = new_cell.crop_cell(kick_point, tangents[1], -side, "R")
-
-                if is_cropped:
-                    new_cells.append(new_cell)
-            else:
-                vec0 = tangents[0] - kick_point
-                cell.crop_cell(tangents[0] - vec0, tangents[0], side, "R")
-                vec1 = tangents[1] - kick_point
-                cell.crop_cell(tangents[1] - vec1, tangents[1], -side, "R")
-
-        for idx in cells_to_delete:  # NOTE
-            cells.pop(idx)
-
-        cells += new_cells
-
-    return cells
+    return pnt
