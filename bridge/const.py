@@ -15,7 +15,7 @@ class Color(Enum):
 
 ##################################################
 # GAME SETTING CONSTS
-DIV = "C"
+DIV = "B"
 COLOR = Color.YELLOW
 POLARITY = -1  # -1 если ворота синих на +x; 1 если ворота синих на -x
 

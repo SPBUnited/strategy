@@ -4,10 +4,10 @@ from typing import Optional
 from bridge import const
 from bridge.auxiliary import aux, fld, rbt
 
-OBSTACLE_ANGLE = math.pi / 60
-GOAL_VIEW_ANGLE = math.pi / 40
-GOAL_HULL_DIST = 100.0
-SHOOT_ANGLE = math.pi / 80
+OBSTACLE_ANGLE = math.pi / 6
+GOAL_VIEW_ANGLE = math.pi / 4
+GOAL_HULL_DIST = 200.0
+SHOOT_ANGLE = math.pi / 8
 
 
 def estimate_pass_point(

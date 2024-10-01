@@ -236,6 +236,10 @@ class Strategy:
         """
         Рассчитать конечные точки для каждого робота
         """
+        field.strategy_image.draw_dot(field.ally_goal.center, (0, 0, 0), 100)
+
+
+        print(field.enemies[3].get_pos())
         if self.game_status not in [GameStates.KICKOFF, GameStates.PENALTY]:
             if (
                 self.active_team == ActiveTeam.ALL
@@ -257,8 +261,9 @@ class Strategy:
 
         # self.game_status = GameStates.RUN
         if field.ally_color == const.COLOR:
-            print("-" * 32)
-            print(self.game_status, "\twe_active:", self.we_active)
+            # print("-" * 32)
+            # print(self.game_status, "\twe_active:", self.we_active)
+            pass
 
         # self.debug(field, waypoints)
         # return waypoints

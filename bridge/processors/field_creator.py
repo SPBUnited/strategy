@@ -1,7 +1,7 @@
 """
 Processor that creates the field
 """
-
+import math
 import typing
 from time import time
 
@@ -42,9 +42,9 @@ class FieldCreator(BaseProcessor):
         Метод обратного вызова процесса
         """
 
-        queue = self.vision_reader.read_new()
-        if not queue:
-            return
+        # queue = self.vision_reader.read_new()
+        # if not queue:
+        #     return
 
         # print("field delay:", time() - self.field.last_update)
         balls: list[aux.Point] = []
@@ -57,36 +57,43 @@ class FieldCreator(BaseProcessor):
         y_bots_ang: list[list] = [[] for _ in range(const.TEAM_ROBOTS_MAX_COUNT)]
         # field_info = np.zeros(const.GEOMETRY_PACKET_SIZE)
 
-        for ssl_package in queue:
-            try:
-                ssl_package_content = ssl_package.content
-            except AttributeError:
-                continue
+        # for ssl_package in queue:
+        #     try:
+        #         ssl_package_content = ssl_package.content
+        #     except AttributeError:
+        #         continue
+        #
+        #     ssl_package_content = self._ssl_converter.FromString(ssl_package_content)
+        #     # geometry = ssl_package_content.geometry
+        #     # if geometry:
+        #     #     field_info[0] = geometry.field.field_length
+        #     #     field_info[1] = geometry.field.field_width
+        #     #     if geometry.field.field_length != 0 and geometry.field.goal_width != 0:
+        #     #         const.GOAL_DX = geometry.field.field_length / 2
+        #     #         const.GOAL_DY = geometry.field.goal_width
+        #
+        #     detection = ssl_package_content.detection
+        #     # camera_id = detection.camera_id
+        #     for ball in detection.balls:
+        balls.append(aux.Point(100, 120))
 
-            ssl_package_content = self._ssl_converter.FromString(ssl_package_content)
-            # geometry = ssl_package_content.geometry
-            # if geometry:
-            #     field_info[0] = geometry.field.field_length
-            #     field_info[1] = geometry.field.field_width
-            #     if geometry.field.field_length != 0 and geometry.field.goal_width != 0:
-            #         const.GOAL_DX = geometry.field.field_length / 2
-            #         const.GOAL_DY = geometry.field.goal_width
+        # TODO: Barrier states
+        for i in range(5):
+            b_bots_id.append(i)
+            b_bots_pos[i].append(aux.Point(800, -400) + aux.Point(0, i * 200) - aux.Point(0, 1000) * math.sin(time()))
+            b_bots_ang[i].append(0)
+        #
+        # b_bots_id.append(4)
+        # b_bots_pos[4].append(aux.Point(1000, 0))
+        # b_bots_ang[4].append(0)
+        #
+        # y_bots_id.append(4)
+        # y_bots_pos[4].append(aux.Point(1000, 0))
+        # y_bots_ang[4].append(0)
 
-            detection = ssl_package_content.detection
-            # camera_id = detection.camera_id
-            for ball in detection.balls:
-                balls.append(aux.Point(ball.x, ball.y))
-
-            # TODO: Barrier states
-            for robot_det in detection.robots_blue:
-                b_bots_id.append(robot_det.robot_id)
-                b_bots_pos[robot_det.robot_id].append(aux.Point(robot_det.x, robot_det.y))
-                b_bots_ang[robot_det.robot_id].append(robot_det.orientation)
-
-            for robot_det in detection.robots_yellow:
-                y_bots_id.append(robot_det.robot_id)
-                y_bots_pos[robot_det.robot_id].append(aux.Point(robot_det.x, robot_det.y))
-                y_bots_ang[robot_det.robot_id].append(robot_det.orientation)
+        # y_bots_id.append(robot_det.robot_id)
+        # y_bots_pos[robot_det.robot_id].append(aux.Point(robot_det.x, robot_det.y))
+        # y_bots_ang[robot_det.robot_id].append(robot_det.orientation)
 
         if len(balls) != 0:
             balls_sum = aux.Point(0, 0)

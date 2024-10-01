@@ -3,8 +3,10 @@
 """
 
 import time
+import pygame
 
 import attr
+import numpy as np
 from strategy_bridge.bus import DataBus, DataReader, DataWriter
 from strategy_bridge.common import config
 from strategy_bridge.model.referee import RefereeCommand
@@ -17,6 +19,7 @@ from bridge.auxiliary import aux, fld
 from bridge.drawing import Image
 from bridge.router import router
 from bridge.strategy import strategy
+from bridge.strategy.accessories import estimate_point
 
 
 @attr.s(auto_attribs=True)
@@ -139,7 +142,7 @@ class SSLController(BaseProcessor):
             return
 
         if cur_state == state_machine.State.STOP or (
-            cur_active not in [const.Color.ALL, self.field.ally_color]
+                cur_active not in [const.Color.ALL, self.field.ally_color]
         ):
             self.router.avoid_ball(True)
 
@@ -193,12 +196,72 @@ class SSLController(BaseProcessor):
         self.process_referee_cmd()
         self.control_loop()
 
+        #
+
         points = self.passes_reader.read_last()
         if points is not None:
             best = points.content
             for p in best:
+                mult = (p[1] + 1) / 2
                 print(p[1])
-                self.field.strategy_image.draw_dot(p[0], (255, 255, 255), 35)
+                self.field.strategy_image.draw_dot(p[0], (mult * 255, 0, 0), 35)
 
         self.control_assign()
         self.draw_image()
+
+        # self.draw_heat_map(self.field.ball.get_pos(), [e.get_pos() for e in self.field.enemies])
+
+    def draw_heat_map(self, kick_point: aux.Point, enemies: list[aux.Point] = []):
+        pygame.init()
+
+        SCREEN_WIDTH, SCREEN_HEIGH = 1200, 900
+        window = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGH))
+        pygame.display.set_caption("Heatmap")
+
+        scale_x = const.FIELD_WIDTH // 2 / SCREEN_WIDTH
+        scale_y = const.FIELD_HEIGH / SCREEN_HEIGH
+
+        dots_value = np.zeros((SCREEN_WIDTH, SCREEN_HEIGH))
+
+        _max = -100
+        sv = None
+
+        # Основной цикл отрисовки
+        running = True
+        while running:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    running = False
+
+            for pixel_x in range(SCREEN_WIDTH):
+                for pixel_y in range(SCREEN_HEIGH):
+                    point = aux.Point(
+                        pixel_x * scale_x,
+                        -(pixel_y - SCREEN_HEIGH / 2) * scale_y,
+                    )  # Преобразование к координатам на поле
+                    lerp = aux.minmax(estimate_point(point, kick_point, self.field, enemies), -1, 1)
+
+                    # Выбор цвета на основе значения lerp
+                    if lerp > 0.5:
+                        color = (int(255 * 2 * (1 - lerp)), 255, 0)
+                    elif lerp > 0:
+                        color = (255, int(255 * 2 * lerp), 0)
+                    else:
+                        color = (int(255 * (1 + lerp / 2)), 0, 0)
+
+                    # Рисование пикселя на экране
+                    pygame.draw.rect(window, color, pygame.Rect(pixel_x, pixel_y, 1, 1))
+
+                    # Обновление максимального значения
+                    if lerp > _max:
+                        _max = lerp
+                        sv = point
+
+                    dots_value[pixel_x][pixel_y] = lerp
+                    print(f"{pixel_x / 1200 * 100:.1f} %")
+
+                    # Обновление экрана
+                    pygame.display.flip()
+
+        # Корректное завершение Pygame
+        pygame.quit()
