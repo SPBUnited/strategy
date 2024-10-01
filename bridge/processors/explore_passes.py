@@ -16,6 +16,8 @@ from bridge import const
 from bridge.auxiliary import aux, fld
 from bridge.auxiliary.cells_tools import Cell, get_cells
 
+from random import random
+
 
 from scipy.optimize import minimize, dual_annealing
 import numpy as np
@@ -27,7 +29,7 @@ import bridge.strategy.accessories as acc
 class ExplorePasses(BaseProcessor):
     """class that creates the field"""
 
-    processing_pause: typing.Optional[float] = 0.2
+    processing_pause: typing.Optional[float] = 0.02
     reduce_pause_on_process_time: bool = False
     # commands_sink_reader: DataReader = attr.ib(init=False)
     # box_feedback_reader: DataReader = attr.ib(init=False)
@@ -56,7 +58,8 @@ class ExplorePasses(BaseProcessor):
                 [e.get_pos() for e in self.field.enemies],
             )
 
-        tmp = aux.average_point(cell.peaks)
+        # tmp = aux.average_point(cell.peaks)
+        tmp = aux.Point(2250 * random(), 3000 * random() - 1500)
         res = minimize(
             wrp_fnc,
             np.array([tmp.x, tmp.y]),
@@ -81,14 +84,14 @@ class ExplorePasses(BaseProcessor):
 
         _max = -100
 
-        cells = get_cells(  # ALARM DONT WORK FUCK
-            self.field.ball.get_pos(),
-            self.field,
-            [e.get_pos() for e in self.field.enemies],
-        )
+        # cells = get_cells(  # ALARM DONT WORK FUCK
+        #    self.field.ball.get_pos(),
+        #    self.field,
+        #    [e.get_pos() for e in self.field.enemies],
+        # )
 
         with ThreadPoolExecutor(max_workers=1) as executor:
-            futures = executor.map(self.process_cell, cells)
+            futures = executor.map(self.process_cell, range(10))
 
             for res in futures:
                 if -res.get("fun") > _max:

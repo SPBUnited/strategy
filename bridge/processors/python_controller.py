@@ -197,6 +197,7 @@ class SSLController(BaseProcessor):
         if points is not None:
             best = points.content
             for p in best:
+                print(p[1])
                 self.field.strategy_image.draw_dot(p[0], (255, 255, 255), 35)
 
         self.control_assign()
