@@ -92,7 +92,11 @@ class FieldCreator(BaseProcessor):
             balls_sum = aux.Point(0, 0)
             balls_num = 0
             for ball in balls:
-                if (ball - self.field.ball.get_pos()).mag() / (time() - self.field.ball.last_update_) < const.BALL_MAX_SPEED:
+                if (
+                    const.IS_SIMULATOR_USED
+                    or (ball - self.field.ball.get_pos()).mag() / (time() - self.field.ball.last_update_)
+                    < const.BALL_MAX_SPEED
+                ):
                     balls_sum += ball
                     balls_num += 1
             if balls_num != 0:

@@ -71,9 +71,9 @@ class Field:
         self.last_update = 0.0
         self.robot_with_ball: Optional[rbt.Robot] = None
 
-        self.strategy_image: drawing.Image = drawing.Image()
-        self.router_image: drawing.Image = drawing.Image()
-        self.path_image: drawing.Image = drawing.Image()
+        self.strategy_image = drawing.Image(drawing.ImageTopic.STRATEGY)
+        self.router_image = drawing.Image(drawing.ImageTopic.ROUTER)
+        self.path_image = drawing.Image(drawing.ImageTopic.PATH_GENERATION)
 
         self.ally_color = color
         if self.ally_color == const.COLOR:

@@ -2,9 +2,20 @@
 draw field with robots and trajectory
 """
 
+from enum import Enum
+from typing import Optional
 
 from bridge import const
 from bridge.auxiliary import aux
+
+
+class ImageTopic(Enum):
+    """Topic for commands to draw"""
+
+    STRATEGY = 0
+    ROUTER = 1
+    PATH_GENERATION = 2
+    PASSES = 3
 
 
 class Command:
@@ -26,8 +37,12 @@ class Image:
     class with image's specs
     """
 
-    def __init__(self) -> None:
+    def __init__(self, topic: Optional[ImageTopic] = None) -> None:
         self.commands: list[Command] = []
+        self.topic: Optional[ImageTopic] = topic
+
+    def clear(self) -> None:
+        self.commands = []
 
     def draw_dot(
         self,
