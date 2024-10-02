@@ -47,6 +47,7 @@ class ExplorePasses(BaseProcessor):
         self.passes_writer = DataWriter(data_bus, const.PASSES_TOPIC, 20)
         self._ssl_converter = SSL_WrapperPacket()
         self.field = fld.Field(self.ally_color)
+        self.best: tuple[aux.Point, float] = []
 
     def process_cell(self, point) -> Any:
         def wrp_fnc(x) -> float:
@@ -81,7 +82,6 @@ class ExplorePasses(BaseProcessor):
         else:
             return
 
-
         points = []
 
         _max = -100
@@ -93,9 +93,7 @@ class ExplorePasses(BaseProcessor):
         # )
         # tmp_data = [aux.Point(2000, 0), aux.Point(4000, 200), aux.Point(4000, -200)]
         sampler = qmc.Halton(d=2)
-        start_points = sampler.random(10)
-
-
+        start_points = sampler.random(5)
 
         x_range = [-const.FIELD_WIDTH / 2, const.FIELD_WIDTH / 2]
         y_range = [-const.FIELD_HEIGH / 2, const.FIELD_HEIGH / 2]
@@ -103,6 +101,10 @@ class ExplorePasses(BaseProcessor):
         start_points[:, 0] = start_points[:, 0] * (x_range[1] - x_range[0]) + x_range[0]
         start_points[:, 1] = start_points[:, 1] * (y_range[1] - y_range[0]) + y_range[0]
 
+        additional_points = np.array([[point[0].x, point[0].y] for point in self.best])
+
+        if len(additional_points) > 0:
+            start_points = np.concatenate((start_points, additional_points), axis=0)
 
         with ThreadPoolExecutor(max_workers=1) as executor:
             futures = executor.map(self.process_cell, start_points)
@@ -131,5 +133,7 @@ class ExplorePasses(BaseProcessor):
         best = sorted(best, key=lambda x: -x[1])
 
         self.passes_writer.write(best)
+
+        self.best = best.copy()
 
         print(time() - t)

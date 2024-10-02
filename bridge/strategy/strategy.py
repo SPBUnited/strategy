@@ -236,7 +236,7 @@ class Strategy:
         """
         Рассчитать конечные точки для каждого робота
         """
-        field.strategy_image.draw_dot(field.ally_goal.center, (0, 0, 0), 100)
+        field.strategy_image.draw_dot(field.enemy_goal.center, (0, 0, 0), 100)
 
         if self.game_status not in [GameStates.KICKOFF, GameStates.PENALTY]:
             if (
