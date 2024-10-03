@@ -28,15 +28,15 @@ class Drawer(BaseProcessor):
         self.field_reader = DataReader(data_bus, const.FIELD_TOPIC)
         self.image_reader = DataReader(data_bus, const.IMAGE_TOPIC)
 
-        width, heigh = 1200, 900
-        goal_dx, goal_dy = abs(const.GOAL_DX), abs(const.GOAL_DY)
-        print(const.GOAL_DX, const.GOAL_DY)
+        width = 1200
+        heigh = int(width / const.GOAL_DX * const.FIELD_DY)
+        goal_dx, goal_dy = abs(const.GOAL_DX), abs(const.FIELD_DY)
         self.scale = min(width / 2 / goal_dx, heigh / 2 / goal_dy)
         self.size_x = goal_dx * self.scale * 2
         self.size_y = goal_dy * self.scale * 2
 
         pygame.init()
-        self.screen = pygame.display.set_mode((width, heigh), pygame.RESIZABLE)
+        self.screen = pygame.display.set_mode((width, heigh))
         pygame.display.set_caption("Football Field")
         self.middle_x, self.middle_y = self.screen.get_size()
         self.middle_x = round(self.middle_x / 2)
@@ -46,33 +46,57 @@ class Drawer(BaseProcessor):
         self.left_border = self.middle_x - goal_dx * self.scale
         self.right_border = self.middle_x + goal_dx * self.scale
 
+        self.images: list[tuple[drawing.Image, CheckBox]] = []
+        box_pos = (10, 10)
+        for topic in drawing.ImageTopic:
+            self.images += [(drawing.Image(topic), CheckBox(self.screen, box_pos, topic.name))]
+            box_pos = (box_pos[0], box_pos[1] + 20)
+        self.images[drawing.ImageTopic.STRATEGY.value][1].is_pressed = True
+
+        pygame.font.init()
+
     def process(self) -> None:
 
-        message_img = self.image_reader.read_last()
+        message_img = self.image_reader.read_new()
         message_fld = self.field_reader.read_last()
         if message_img is None or message_fld is None:
             return
 
-        external_image: drawing.Image = message_img.content
         field: fld.Field = message_fld.content
+        for ext_image in message_img:
+            image: drawing.Image = ext_image.content
+            if image.topic is not None:
+                self.images[image.topic.value] = (
+                    image,
+                    self.images[image.topic.value][1],
+                )
+
+        field_image = drawing.Image()
 
         for rbt in field.allies:
             if rbt.is_used():
-                external_image.draw_robot(rbt.get_pos(), rbt.get_angle())
+                field_image.draw_robot(rbt.get_pos(), rbt.get_angle())
         for rbt in field.enemies:
             if rbt.is_used():
-                external_image.draw_robot(rbt.get_pos(), rbt.get_angle(), (255, 255, 0))
+                field_image.draw_robot(rbt.get_pos(), rbt.get_angle(), (255, 255, 0))
 
-        external_image.draw_dot(field.ball.get_pos(), (255, 0, 0), const.BALL_R)
+        field_image.draw_dot(field.ball.get_pos(), (255, 0, 0), const.BALL_R)
         if field.ball_start_point is not None:
-            external_image.draw_dot(field.ball_start_point, (255, 0, 0), const.BALL_R // 2)
+            field_image.draw_dot(field.ball_start_point, (255, 0, 0), const.BALL_R // 2)
 
-        for command in external_image.commands:
-            self.scale_dots(command)
-            self.complete_command(command)
+        self.update_boxes()
+
+        for image_box in self.images:
+            if image_box[1].is_pressed:
+                for command in image_box[0].commands:
+                    cmd = self.scale_dots(command)
+                    self.complete_command(cmd)
+
+        for command in field_image.commands:
+            cmd = self.scale_dots(command)
+            self.complete_command(cmd)
 
         pygame.display.flip()
-        pygame.event.get()
 
         self.draw_field()
         for goal in [field.ally_goal, field.enemy_goal]:
@@ -97,6 +121,15 @@ class Drawer(BaseProcessor):
                 (goal_down.x, goal_down.y),
                 10,
             )
+
+    def update_boxes(self) -> None:
+        ev = pygame.event.get()
+        for event in ev:
+            for img_box in self.images:
+                img_box[1].update(event)
+
+        for img_box in self.images:
+            img_box[1].render_checkbox()
 
     def draw_field(self) -> None:
         """
@@ -156,10 +189,67 @@ class Drawer(BaseProcessor):
                     round(command.size),
                 )
 
-    def scale_dots(self, command: drawing.Command) -> None:
+    def scale_dots(self, command: drawing.Command) -> drawing.Command:
         """Scale dots from coordinates to pixels"""
-        for i, _ in enumerate(command.dots):
-            command.dots[i] = (
-                command.dots[i][0] * self.scale + self.middle_x,
-                -command.dots[i][1] * self.scale + self.middle_y,
+        scaled_command = drawing.Command(command.color, command.dots.copy(), command.size)
+        for i, _ in enumerate(scaled_command.dots):
+            scaled_command.dots[i] = (
+                scaled_command.dots[i][0] * self.scale + self.middle_x,
+                -scaled_command.dots[i][1] * self.scale + self.middle_y,
             )
+        return scaled_command
+
+
+class CheckBox:
+    def __init__(
+        self,
+        surface: pygame.Surface,
+        pos: tuple[int, int],
+        text: str,
+        is_pressed: bool = False,
+    ) -> None:
+        self.surface = surface
+
+        self.x: int = pos[0]
+        self.y: int = pos[1]
+        self.text: str = text
+
+        self.is_pressed: bool = is_pressed
+
+        self.checkbox_size = 16
+        self.checkbox_obj = pygame.Rect(self.x, self.y, self.checkbox_size, self.checkbox_size)
+        self.font = pygame.font.SysFont("Open Sans", 25)
+        self.font_surf = self.font.render(self.text, True, (255, 255, 255))
+        _, h = self.font.size(self.text)
+        self.font_pos = (
+            self.x + self.checkbox_size * 1.5,
+            self.y - h / 2 + self.checkbox_size / 2,
+        )
+
+    def render_checkbox(self) -> None:
+        pygame.draw.rect(self.surface, (230, 230, 230), self.checkbox_obj)
+        pygame.draw.rect(self.surface, (0, 0, 0), self.checkbox_obj, 1)
+
+        if self.is_pressed:
+            offset = 2
+            obj = pygame.Rect(
+                self.x + offset,
+                self.y + offset,
+                self.checkbox_size - offset * 2,
+                self.checkbox_size - offset * 2,
+            )
+            pygame.draw.rect(self.surface, (0, 0, 0), obj)
+
+        self.surface.blit(self.font_surf, self.font_pos)
+
+    def update(self, event_object: pygame.event.Event) -> bool:
+        if event_object.type == pygame.MOUSEBUTTONDOWN:
+            x, y = pygame.mouse.get_pos()
+            px, py, w, h = self.checkbox_obj
+            if px < x < px + w and py < y < py + h:
+                if self.is_pressed:
+                    self.is_pressed = False
+                else:
+                    self.is_pressed = True
+
+        return self.is_pressed

@@ -69,10 +69,15 @@ def set_forwards_wps(field: fld.Field, waypoints: list[wp.Waypoint], forwards: l
     pos_num = len(forwards)
 
     k = -1 if const.SELF_PLAY else 1
+    # poses = [
+    #     aux.Point(-1500 * field.polarity * k, 1250),
+    #     aux.Point(-1500 * field.polarity * k, -1250),
+    #     aux.Point(-1000 * field.polarity * k, 0),
+    # ]
     poses = [
-        aux.Point(-1500 * field.polarity * k, 1250),
-        aux.Point(-1500 * field.polarity * k, -1250),
-        aux.Point(-1000 * field.polarity * k, 0),
+        aux.Point(-3500 * field.polarity * k, 1250),
+        aux.Point(-3500 * field.polarity * k, -1250),
+        aux.Point(-3000 * field.polarity * k, 0),
     ]
     poses = poses[: (pos_num + 1)]
     bad_pos = aux.find_nearest_point(field.ball.get_pos(), poses)

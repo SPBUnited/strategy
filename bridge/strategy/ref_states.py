@@ -70,7 +70,7 @@ def prepare_penalty(field: fld.Field, waypoints: list[wp.Waypoint], we_active: b
     for robot_id in stopped_robots:
         robot_pos = field.allies[robot_id].get_pos()
         best_pos = None
-        min_dist: float
+        min_dist: float = 0.0
         for pos in enumerate(poses):
             dist = aux.dist(pos[1], robot_pos)
             if best_pos is None or dist < min_dist:

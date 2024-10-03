@@ -16,7 +16,6 @@ from strategy_bridge.utils.debugger import debugger
 import bridge.processors.referee_state_processor as state_machine
 from bridge import const
 from bridge.auxiliary import aux, fld
-from bridge.drawing import Image
 from bridge.router import router
 from bridge.strategy import strategy
 from bridge.strategy.accessories import estimate_point
@@ -95,16 +94,14 @@ class SSLController(BaseProcessor):
 
     def draw_image(self) -> None:
         """Send commands to drawer processor"""
-        if self.field.ally_color == const.Color.YELLOW:
-            full_image = Image()
+        if self.field.ally_color == const.COLOR:
             for image in [
                 self.field.strategy_image,
-                # self.field.router_image,
-            ]:  # self.field.path_image
-                if image:
-                    full_image.commands += image.commands
-                    image.commands = []
-            self.image_writer.write(full_image)
+                self.field.router_image,
+                self.field.path_image,
+            ]:
+                self.image_writer.write(image)
+                image.clear()
 
     def control_loop(self) -> None:
         """
@@ -141,9 +138,7 @@ class SSLController(BaseProcessor):
         if cur_cmd.state == -1:
             return
 
-        if cur_state == state_machine.State.STOP or (
-                cur_active not in [const.Color.ALL, self.field.ally_color]
-        ):
+        if cur_state == state_machine.State.STOP or (cur_active not in [const.Color.ALL, self.field.ally_color]):
             self.router.avoid_ball(True)
 
         if cur_cmd.state != self.cur_cmd_state:
@@ -170,9 +165,7 @@ class SSLController(BaseProcessor):
                 self.wait_ball_moved = self.field.ball.get_pos()
         else:
             if self.wait_10_sec_flag and time.time() - self.wait_10_sec > 10:
-                self.state_machine.make_transition_(
-                    state_machine.Command.PASS_10_SECONDS
-                )
+                self.state_machine.make_transition_(state_machine.Command.PASS_10_SECONDS)
                 self.state_machine.active_team(0)
                 self.wait_10_sec_flag = False
                 self.wait_ball_moved_flag = False
@@ -205,8 +198,8 @@ class SSLController(BaseProcessor):
             for p in best:
                 mult = (p[1] + 1) / 2
                 print()
-            # p = best[0]
-            # mult = (p[1] + 1) / 2
+                # p = best[0]
+                # mult = (p[1] + 1) / 2
                 self.field.strategy_image.draw_dot(p[0], (mult * 255, 0, 0), 35)
 
         self.control_assign()
