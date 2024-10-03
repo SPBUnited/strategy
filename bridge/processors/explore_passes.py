@@ -92,14 +92,26 @@ class ExplorePasses(BaseProcessor):
         #    [e.get_pos() for e in self.field.enemies],
         # )
         # tmp_data = [aux.Point(2000, 0), aux.Point(4000, 200), aux.Point(4000, -200)]
-        sampler = qmc.Halton(d=2)
-        start_points = sampler.random(5)
-
+        # sampler = qmc.Halton(d=2)
+        # start_points = sampler.random(5)
+        #
         x_range = [-const.FIELD_WIDTH / 2, const.FIELD_WIDTH / 2]
         y_range = [-const.FIELD_HEIGH / 2, const.FIELD_HEIGH / 2]
+        #
+        # start_points[:, 0] = start_points[:, 0] * (x_range[1] - x_range[0]) + x_range[0]
+        # start_points[:, 1] = start_points[:, 1] * (y_range[1] - y_range[0]) + y_range[0]
 
-        start_points[:, 0] = start_points[:, 0] * (x_range[1] - x_range[0]) + x_range[0]
-        start_points[:, 1] = start_points[:, 1] * (y_range[1] - y_range[0]) + y_range[0]
+        a, b = 2, 1
+        x = np.random.beta(a, b, size=5)
+
+        # Масштабирование координат по оси x в заданный диапазон
+        x = x * (x_range[1] - x_range[0]) + x_range[0]
+
+        # Генерация координат по оси y с равномерным распределением
+        y = np.random.uniform(low=y_range[0], high=y_range[1], size=5)
+
+        # Объединяем координаты в массив точек
+        start_points = np.vstack((x, y)).T
 
         additional_points = np.array([[point[0].x, point[0].y] for point in self.best])
 
@@ -132,8 +144,12 @@ class ExplorePasses(BaseProcessor):
 
         best = sorted(best, key=lambda x: -x[1])
 
+        # tmp = []
+        # for p in start_points:
+        #     tmp.append((aux.Point(p[0], p[1]), 1))
+
         self.passes_writer.write(best)
 
         self.best = best.copy()
 
-        print(time() - t)
+        # print(time() - t)

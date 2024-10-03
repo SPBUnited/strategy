@@ -75,7 +75,7 @@ class FieldCreator(BaseProcessor):
         #     detection = ssl_package_content.detection
         #     # camera_id = detection.camera_id
         #     for ball in detection.balls:
-        balls.append(aux.Point(100, 120))
+        balls.append(aux.Point(0, 0))
 
         # TODO: Barrier states
         for i in range(5):

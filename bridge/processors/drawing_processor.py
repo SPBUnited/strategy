@@ -29,7 +29,8 @@ class Drawer(BaseProcessor):
         self.image_reader = DataReader(data_bus, const.IMAGE_TOPIC)
 
         width, heigh = 1200, 900
-        goal_dx, goal_dy = abs(const.GOAL_DX), abs(1500)
+        goal_dx, goal_dy = abs(const.GOAL_DX), abs(const.GOAL_DY)
+        print(const.GOAL_DX, const.GOAL_DY)
         self.scale = min(width / 2 / goal_dx, heigh / 2 / goal_dy)
         self.size_x = goal_dx * self.scale * 2
         self.size_y = goal_dy * self.scale * 2

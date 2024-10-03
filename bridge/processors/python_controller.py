@@ -201,16 +201,18 @@ class SSLController(BaseProcessor):
         points = self.passes_reader.read_last()
         if points is not None:
             best = points.content
-            print('___')
-            # for p in best:
-            #     mult = (p[1] + 1) / 2
-            #     print(p[1])
-            p = best[0]
-            mult = (p[1] + 1) / 2
-            self.field.strategy_image.draw_dot(p[0], (mult * 255, 0, 0), 35)
+            # print('___')
+            for p in best:
+                mult = (p[1] + 1) / 2
+                print()
+            # p = best[0]
+            # mult = (p[1] + 1) / 2
+                self.field.strategy_image.draw_dot(p[0], (mult * 255, 0, 0), 35)
 
         self.control_assign()
         self.draw_image()
+
+        print(time.time() - self.cur_time)
 
         # self.draw_heat_map(self.field.ball.get_pos(), [e.get_pos() for e in self.field.enemies])
 

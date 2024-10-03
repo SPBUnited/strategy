@@ -13,9 +13,16 @@ class Color(Enum):
     YELLOW = 2
 
 
+class Div(Enum):
+    """Класс с цветами"""
+
+    B = 1
+    C = 2
+
+
 ##################################################
 # GAME SETTING CONSTS
-DIV = "B"
+DIV = Div.B
 COLOR = Color.YELLOW
 POLARITY = -1  # -1 если ворота синих на +x; 1 если ворота синих на -x
 
@@ -116,7 +123,7 @@ GOAL_PEN_DX = 1000
 GOAL_PEN_DY = 2000
 
 GK_FORW = 200 + ROBOT_R
-if DIV == "C":
+if DIV == DIV.C:
     FIELD_WIDTH = 4500
     FIELD_HEIGH = 3000
     GOAL_DX = 2250
@@ -141,7 +148,6 @@ KEEP_BALL_DIST = 500 + ROBOT_R
 MIN_GOOD_ANGLE = 90
 ROBOT_SPEED = 1.5
 FULL_DELAY = 0.16
-
 
 # VOLTAGES
 VOLTAGE_PASS = 7
