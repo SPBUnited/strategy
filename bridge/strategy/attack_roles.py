@@ -10,10 +10,10 @@ kick = kicker.KickerAux()
 
 
 def attacker(
-    field: fld.Field,
-    waypoints: list[wp.Waypoint],
-    attacker_id: int,
-    forwards: list[rbt.Robot],
+        field: fld.Field,
+        waypoints: list[wp.Waypoint],
+        attacker_id: int,
+        forwards: list[rbt.Robot],
 ) -> None:
     """Логика действий для робота с мячом"""
     attacker = field.allies[attacker_id]
@@ -64,7 +64,8 @@ def choose_receiver(field: fld.Field, forwards: list[rbt.Robot]) -> tuple[Option
     return receiver_id, score
 
 
-def set_forwards_wps(field: fld.Field, waypoints: list[wp.Waypoint], forwards: list[rbt.Robot]) -> None:
+def set_forwards_wps(field: fld.Field, waypoints: list[wp.Waypoint], forwards: list[rbt.Robot],
+                     pass_points: list[aux.Point]) -> None:
     """Расставляет роботов по точкам для получения паса"""
     pos_num = len(forwards)
 
@@ -74,19 +75,17 @@ def set_forwards_wps(field: fld.Field, waypoints: list[wp.Waypoint], forwards: l
     #     aux.Point(-1500 * field.polarity * k, -1250),
     #     aux.Point(-1000 * field.polarity * k, 0),
     # ]
-    poses = [
-        aux.Point(-3500 * field.polarity * k, 1250),
-        aux.Point(-3500 * field.polarity * k, -1250),
-        aux.Point(-3000 * field.polarity * k, 0),
-    ]
-    poses = poses[: (pos_num + 1)]
-    bad_pos = aux.find_nearest_point(field.ball.get_pos(), poses)
+    # poses = [
+    #     aux.Point(-3500 * field.polarity * k, 1250),
+    #     aux.Point(-3500 * field.polarity * k, -1250),
+    #     aux.Point(-3000 * field.polarity * k, 0),
+    # ]
+    # poses = poses[: (pos_num + 1)]
+    # bad_pos = aux.find_nearest_point(field.ball.get_pos(), poses)
 
     used_forwards: list[int] = []
 
-    for pos in poses:
-        if pos == bad_pos:
-            continue
+    for pos in pass_points:
         if len(used_forwards) == pos_num:
             return
         pop = fld.find_nearest_robot(pos, forwards, used_forwards)
@@ -124,10 +123,10 @@ def pass_kicker(field: fld.Field, kicker_id: int, receiver_id: int) -> wp.Waypoi
 
 
 def pass_receiver(
-    field: fld.Field,
-    waypoints: list[wp.Waypoint],
-    receiver_id: int,
-    receive_point: aux.Point,
+        field: fld.Field,
+        waypoints: list[wp.Waypoint],
+        receiver_id: int,
+        receive_point: aux.Point,
 ) -> None:
     """
     Отдает пас от робота kicker_id роботу receiver_id

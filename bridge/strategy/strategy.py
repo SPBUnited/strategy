@@ -13,12 +13,15 @@ from enum import Enum
 from time import time
 from typing import Optional
 
+import numpy as np
+
 import bridge.router.waypoint as wp
 from bridge import const
 from bridge.auxiliary import aux, fld, rbt
 from bridge.processors.referee_state_processor import Color as ActiveTeam
 from bridge.processors.referee_state_processor import State as GameStates
 from bridge.strategy import attack_roles, defense_roles, kicker, ref_states
+import bridge.strategy.accessories as acc
 
 
 class States(Enum):
@@ -74,9 +77,9 @@ class Strategy:
     """Основной класс с кодом стратегии"""
 
     def __init__(
-        self,
-        dbg_game_status: GameStates = GameStates.RUN,
-        dbg_state: States = States.ATTACK,
+            self,
+            dbg_game_status: GameStates = GameStates.RUN,
+            dbg_state: States = States.ATTACK,
     ) -> None:
 
         self.game_status = dbg_game_status
@@ -95,6 +98,30 @@ class Strategy:
         self.flag = 0
 
         self.zero_pos: Optional[aux.Point] = None
+
+        self.pass_points: list[aux.Point] = []
+
+    def process_pass_points(self, field: fld.Field, pass_points: list[tuple[aux.Point, float]]) -> None:
+        best = [pass_points[0]]
+        for i, p in enumerate(pass_points, 1):
+            if p[1] > best[0][1] * (1 - 1 / (i + 1)):
+                best.append(p)
+
+        # old = [
+        #     (p, acc.estimate_point(p, field.ball.get_pos(), field, [e.get_pos() for e in field.active_enemies()]))
+        #     for p in self.pass_points
+        # ]
+        #
+        # for i, p in enumerate(old):
+        #     if p[1] > best[0][1] * 0:
+        #         best.append(p)
+
+        # Я кароче ничего не придумал, как сделать так, чтобы точки не скакали. Если в жизни все будет ок то я на это забью
+
+        for p in best:
+            mult = (p[1] + 1) / 2
+            field.strategy_image.draw_dot(p[0], (mult * 255, 0, 0), 65)
+        self.pass_points = [p[0] for p in best]
 
     def change_game_state(self, new_state: GameStates, upd_active_team: ActiveTeam) -> None:
         """Изменение состояния игры и цвета команды"""
@@ -186,7 +213,7 @@ class Strategy:
         # Вычисление конечных точек, которые зависят от положения робота и создание путевых точек
         self.forwards = find_role(field, robot_roles, Role.FORWARD)
         if self.forwards is not None:
-            attack_roles.set_forwards_wps(field, waypoints, self.forwards)
+            attack_roles.set_forwards_wps(field, waypoints, self.forwards, self.pass_points)
 
         if Role.ATTACKER in robot_roles:
             attacker_id = find_role(field, robot_roles, Role.ATTACKER)[0].r_id
@@ -288,10 +315,10 @@ class Strategy:
         return [Role.GOALKEEPER, Role.ATTACKER] + roles
 
     def manage_roles(
-        self,
-        field: fld.Field,
-        roles: list[Role],
-        enemies_near_goal: list[aux.Point],
+            self,
+            field: fld.Field,
+            roles: list[Role],
+            enemies_near_goal: list[aux.Point],
     ) -> list[Role]:
         pass_defenders_num = len(find_role(field, roles, Role.PASS_DEFENDER))
         if pass_defenders_num > len(enemies_near_goal):
@@ -305,11 +332,11 @@ class Strategy:
         return sorted(roles, key=lambda x: x.value)
 
     def choose_robots_for_roles(
-        self,
-        field: fld.Field,
-        roles: list[Role],
-        wall_pos: aux.Point,
-        enemies_near_goal: list[aux.Point],
+            self,
+            field: fld.Field,
+            roles: list[Role],
+            wall_pos: aux.Point,
+            enemies_near_goal: list[aux.Point],
     ) -> list[Role]:
         robot_roles: list[Role] = [Role.UNAVAILABLE for _ in range(const.TEAM_ROBOTS_MAX_COUNT)]
         used_ids: list[int] = []

@@ -4,6 +4,7 @@
 
 import time
 import pygame
+import math
 
 import attr
 import numpy as np
@@ -128,11 +129,19 @@ class SSLController(BaseProcessor):
                 self.commands_sink_writer.write(self.field.allies[i])
                 self.field.allies[i].clear_fields()
 
+    def get_pass_points(self) -> None:
+        """
+        Получить точки для пасов
+        """
+        points = self.passes_reader.read_last()
+        if points is not None:
+            points = points.content
+            self.strategy.process_pass_points(self.field, points)
+
     def process_referee_cmd(self) -> None:
         """Get referee commands"""
         cur_cmd = self.get_last_referee_command()
         cur_state, cur_active = self.state_machine.get_state()
-        self.strategy.change_game_state(cur_state, cur_active)
         self.router.avoid_ball(False)
 
         if cur_cmd.state == -1:
@@ -176,6 +185,9 @@ class SSLController(BaseProcessor):
                 self.wait_ball_moved_flag = False
         self.tmp += 1
 
+        cur_state, cur_active = self.state_machine.get_state()
+        self.strategy.change_game_state(cur_state, cur_active)
+
     @debugger
     def process(self) -> None:
         """
@@ -187,20 +199,8 @@ class SSLController(BaseProcessor):
 
         self.read_vision()
         self.process_referee_cmd()
+        self.get_pass_points()
         self.control_loop()
-
-        #
-
-        points = self.passes_reader.read_last()
-        if points is not None:
-            best = points.content
-            # print('___')
-            for p in best:
-                mult = (p[1] + 1) / 2
-                print()
-                # p = best[0]
-                # mult = (p[1] + 1) / 2
-                self.field.strategy_image.draw_dot(p[0], (mult * 255, 0, 0), 35)
 
         self.control_assign()
         self.draw_image()

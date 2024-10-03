@@ -15,7 +15,6 @@ class Goal:
     """
 
     def __init__(self, goal_dx: float, goal_dy: float, pen_dx: float, pen_dy: float) -> None:
-
         # Абсолютный центр
         self.center = aux.Point(goal_dx, 0)
 
@@ -140,6 +139,20 @@ class Field:
         self.ball_history_idx = 0
         self.ball_start_point: Optional[aux.Point] = self.ball.get_pos()
 
+    def active_allies(self, include_gk=False):
+        res = []
+        for r in self.allies:
+            if r.is_used and (include_gk or r.r_id != self.gk_id):
+                res.append(r)
+        return res
+
+    def active_enemies(self, include_gk=False):
+        res = []
+        for r in self.enemies:
+            if r.is_used and (include_gk or r.r_id != self.gk_id):
+                res.append(r)
+        return res
+
     def update_field(self, new_field: "Field") -> None:
         self.robot_with_ball = new_field.robot_with_ball
         self.last_update = new_field.last_update
@@ -235,10 +248,10 @@ class Field:
         """
         vec_to_point = point - self.ball.get_pos()
         return (
-            self.ball.get_vel().mag() * (cos(vec_to_point.arg() - self.ball.get_vel().arg()) ** 5)
-            > const.INTERCEPT_SPEED * 5
-            and self.robot_with_ball is None
-            and abs(vec_to_point.arg() - self.ball.get_vel().arg()) < pi / 2
+                self.ball.get_vel().mag() * (cos(vec_to_point.arg() - self.ball.get_vel().arg()) ** 5)
+                > const.INTERCEPT_SPEED * 5
+                and self.robot_with_ball is None
+                and abs(vec_to_point.arg() - self.ball.get_vel().arg()) < pi / 2
         )
 
     def is_ball_moves_to_goal(self) -> bool:
@@ -275,10 +288,10 @@ def find_nearest_robot(point: aux.Point, team: list[rbt.Robot], avoid: list[int]
 
 
 def find_nearest_robots(
-    point: aux.Point,
-    team: list[rbt.Robot],
-    num: Optional[int] = None,
-    avoid: Optional[list[int]] = None,
+        point: aux.Point,
+        team: list[rbt.Robot],
+        num: Optional[int] = None,
+        avoid: Optional[list[int]] = None,
 ) -> list[rbt.Robot]:
     """
     Найти num роботов из team, ближайших к точке point

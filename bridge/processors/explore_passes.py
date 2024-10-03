@@ -56,7 +56,7 @@ class ExplorePasses(BaseProcessor):
                 point,
                 self.field.ball.get_pos(),
                 self.field,
-                [e.get_pos() for e in self.field.enemies],
+                [e.get_pos() for e in self.field.active_enemies()],
             )
 
         # tmp = aux.average_point(cell.peaks)
@@ -131,7 +131,7 @@ class ExplorePasses(BaseProcessor):
                     )
                 )
 
-        min_distance = 30
+        min_distance = 500
         points = sorted(points, key=lambda x: -x[1])
         best = []
 
@@ -141,8 +141,6 @@ class ExplorePasses(BaseProcessor):
                     for existing_point in best
             ):
                 best.append(point)
-
-        best = sorted(best, key=lambda x: -x[1])
 
         # tmp = []
         # for p in start_points:
