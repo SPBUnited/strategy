@@ -22,18 +22,18 @@ class Div(Enum):
 
 ##################################################
 # GAME SETTING CONSTS
-DIV = Div.B
-COLOR = Color.YELLOW
+DIV = Div.C
+COLOR = Color.BLUE
 POLARITY = -1  # -1 если ворота синих на +x; 1 если ворота синих на -x
 
 
-IS_SIMULATOR_USED = True
+IS_SIMULATOR_USED = False
 IS_DRIBBLER_USED = True  # dribbler and upper_kick
 SELF_PLAY = False
 
-GK = 0
+GK = 8
 PENALTY_KICKER = 5
-ENEMY_GK = 0
+ENEMY_GK = 1
 
 CAMERAS_COUNT: int = 4
 MAX_BALLS_IN_CAMERA: int = 64
@@ -154,7 +154,7 @@ ROBOT_SPEED = 1.5
 FULL_DELAY = 0.16
 
 # VOLTAGES
-VOLTAGE_PASS = 10
+VOLTAGE_PASS = 15
 VOLTAGE_SHOOT = 15
 VOLTAGE_UP = 15
 VOLTAGE_ZERO = min(VOLTAGE_PASS, VOLTAGE_SHOOT, VOLTAGE_UP)

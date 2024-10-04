@@ -14,7 +14,9 @@ class Goal:
     Структура, описывающая ключевые точки ворот
     """
 
-    def __init__(self, goal_dx: float, goal_dy: float, pen_dx: float, pen_dy: float) -> None:
+    def __init__(
+        self, goal_dx: float, goal_dy: float, pen_dx: float, pen_dy: float
+    ) -> None:
         # Абсолютный центр
         self.center = aux.Point(goal_dx, 0)
 
@@ -135,23 +137,20 @@ class Field:
             self.allies = [*self.y_team]
             self.enemies = [*self.b_team]
 
+        self._active_allies: list[rbt.Robot] = []
+        self._active_enemies: list[rbt.Robot] = []
+
         self.ball_history: list[Optional[aux.Point]] = [None] * round(0.2 / const.Ts)
         self.ball_history_idx = 0
         self.ball_start_point: Optional[aux.Point] = self.ball.get_pos()
 
-    def active_allies(self, include_gk=False):
-        res = []
-        for r in self.allies:
-            if r.is_used and (include_gk or r.r_id != self.gk_id):
-                res.append(r)
-        return res
+    def active_allies(self, include_gk: bool = False) -> list[rbt.Robot]:
+        """Sth"""
+        return self._active_allies
 
-    def active_enemies(self, include_gk=False):
-        res = []
-        for r in self.enemies:
-            if r.is_used and (include_gk or r.r_id != self.gk_id):
-                res.append(r)
-        return res
+    def active_enemies(self, include_gk: bool = False) -> list[rbt.Robot]:
+        """Sth"""
+        return self._active_enemies
 
     def update_field(self, new_field: "Field") -> None:
         self.robot_with_ball = new_field.robot_with_ball
@@ -168,6 +167,16 @@ class Field:
 
             robot._is_used = new_field.all_bots[i]._is_used
             robot.last_update_ = new_field.all_bots[i].last_update_
+
+        self._active_allies = []
+        for r in self.allies:
+            if r.is_used() and r.r_id != self.gk_id:
+                self._active_allies.append(r)
+
+        self._active_enemies = []
+        for r in self.enemies:
+            if r.is_used() and r.r_id != self.enemy_gk_id:
+                self._active_enemies.append(r)
 
     def update_ball(self, pos: aux.Point, t: float) -> None:
         """
@@ -190,8 +199,12 @@ class Field:
         """
         Определить, находится ли мяч внутри дрибблера
         """
-        return (robo.get_pos() - self.ball.get_pos()).mag() < const.BALL_GRABBED_DIST and abs(
-            aux.wind_down_angle((self.ball.get_pos() - robo.get_pos()).arg() - robo.get_angle())
+        return (
+            robo.get_pos() - self.ball.get_pos()
+        ).mag() < const.BALL_GRABBED_DIST and abs(
+            aux.wind_down_angle(
+                (self.ball.get_pos() - robo.get_pos()).arg() - robo.get_angle()
+            )
         ) < const.BALL_GRABBED_ANGLE
 
     def is_ball_in(self, robo: rbt.Robot) -> bool:
@@ -200,14 +213,18 @@ class Field:
         """
         return robo == self.robot_with_ball
 
-    def update_blu_robot(self, idx: int, pos: aux.Point, angle: float, t: float) -> None:
+    def update_blu_robot(
+        self, idx: int, pos: aux.Point, angle: float, t: float
+    ) -> None:
         """
         Обновить положение робота синей команды
         !!! Вызывать один раз за итерацию с постоянной частотой !!!
         """
         self.b_team[idx].update(pos, angle, t)
 
-    def update_yel_robot(self, idx: int, pos: aux.Point, angle: float, t: float) -> None:
+    def update_yel_robot(
+        self, idx: int, pos: aux.Point, angle: float, t: float
+    ) -> None:
         """
         Обновить положение робота желтой команды
         !!! Вызывать один раз за итерацию с постоянной частотой !!!
@@ -234,7 +251,10 @@ class Field:
         """
         Определить, остановился ли мяч в штрафной зоне
         """
-        return aux.is_point_inside_poly(self.ball.get_pos(), self.ally_goal.hull) and not self.is_ball_moves()
+        return (
+            aux.is_point_inside_poly(self.ball.get_pos(), self.ally_goal.hull)
+            and not self.is_ball_moves()
+        )
 
     def is_ball_moves(self) -> bool:
         """
@@ -248,10 +268,11 @@ class Field:
         """
         vec_to_point = point - self.ball.get_pos()
         return (
-                self.ball.get_vel().mag() * (cos(vec_to_point.arg() - self.ball.get_vel().arg()) ** 5)
-                > const.INTERCEPT_SPEED * 5
-                and self.robot_with_ball is None
-                and abs(vec_to_point.arg() - self.ball.get_vel().arg()) < pi / 2
+            self.ball.get_vel().mag()
+            * (cos(vec_to_point.arg() - self.ball.get_vel().arg()) ** 5)
+            > const.INTERCEPT_SPEED * 5
+            and self.robot_with_ball is None
+            and abs(vec_to_point.arg() - self.ball.get_vel().arg()) < pi / 2
         )
 
     def is_ball_moves_to_goal(self) -> bool:
@@ -271,7 +292,9 @@ class Field:
         return inter is not None and self.ball.get_vel().mag() > const.INTERCEPT_SPEED
 
 
-def find_nearest_robot(point: aux.Point, team: list[rbt.Robot], avoid: list[int] = []) -> rbt.Robot:
+def find_nearest_robot(
+    point: aux.Point, team: list[rbt.Robot], avoid: list[int] = []
+) -> Optional[rbt.Robot]:
     """
     Найти ближайший робот из массива team к точке point, игнорируя точки avoid
     """
@@ -284,14 +307,16 @@ def find_nearest_robot(point: aux.Point, team: list[rbt.Robot], avoid: list[int]
         if aux.dist(point, player.get_pos()) < min_dist:
             min_dist = aux.dist(point, player.get_pos())
             robo_id = i
+    if robo_id == -1:
+        return None
     return team[robo_id]
 
 
 def find_nearest_robots(
-        point: aux.Point,
-        team: list[rbt.Robot],
-        num: Optional[int] = None,
-        avoid: Optional[list[int]] = None,
+    point: aux.Point,
+    team: list[rbt.Robot],
+    num: Optional[int] = None,
+    avoid: Optional[list[int]] = None,
 ) -> list[rbt.Robot]:
     """
     Найти num роботов из team, ближайших к точке point

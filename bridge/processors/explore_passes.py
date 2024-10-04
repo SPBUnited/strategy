@@ -36,7 +36,7 @@ class ExplorePasses(BaseProcessor):
     # field_writer: DataWriter = attr.ib(init=False)
     _ssl_converter: SSL_WrapperPacket = attr.ib(init=False)
 
-    ally_color: const.Color = const.Color.YELLOW
+    ally_color: const.Color = const.Color.BLUE
 
     def initialize(self, data_bus: DataBus) -> None:
         """
@@ -48,6 +48,17 @@ class ExplorePasses(BaseProcessor):
         self._ssl_converter = SSL_WrapperPacket()
         self.field = fld.Field(self.ally_color)
         self.best: tuple[aux.Point, float] = []
+
+        a, b = 2, 1
+        x = np.random.beta(a, b, size=5)
+        x_range = [-const.FIELD_WIDTH / 2, const.FIELD_WIDTH / 2]
+        y_range = [-const.FIELD_HEIGH / 2, const.FIELD_HEIGH / 2]
+
+        x = x * (x_range[1] - x_range[0]) + x_range[0]
+
+        y = np.random.uniform(low=y_range[0], high=y_range[1], size=5)
+
+        self.start_points = np.vstack((x, y)).T
 
     def process_cell(self, point) -> Any:
         def wrp_fnc(x) -> float:
@@ -64,7 +75,10 @@ class ExplorePasses(BaseProcessor):
         res = minimize(
             wrp_fnc,
             point,
-            bounds=[(-const.FIELD_WIDTH / 2, const.FIELD_WIDTH / 2), (-const.FIELD_HEIGH / 2, const.FIELD_HEIGH / 2)],
+            bounds=[
+                (-const.FIELD_WIDTH / 2, const.FIELD_WIDTH / 2),
+                (-const.FIELD_HEIGH / 2, const.FIELD_HEIGH / 2),
+            ],
             method="Nelder-Mead",
         )
         return res
@@ -95,23 +109,12 @@ class ExplorePasses(BaseProcessor):
         # sampler = qmc.Halton(d=2)
         # start_points = sampler.random(5)
         #
-        x_range = [-const.FIELD_WIDTH / 2, const.FIELD_WIDTH / 2]
-        y_range = [-const.FIELD_HEIGH / 2, const.FIELD_HEIGH / 2]
+
         #
         # start_points[:, 0] = start_points[:, 0] * (x_range[1] - x_range[0]) + x_range[0]
         # start_points[:, 1] = start_points[:, 1] * (y_range[1] - y_range[0]) + y_range[0]
 
-        a, b = 2, 1
-        x = np.random.beta(a, b, size=5)
-
-        # Масштабирование координат по оси x в заданный диапазон
-        x = x * (x_range[1] - x_range[0]) + x_range[0]
-
-        # Генерация координат по оси y с равномерным распределением
-        y = np.random.uniform(low=y_range[0], high=y_range[1], size=5)
-
-        # Объединяем координаты в массив точек
-        start_points = np.vstack((x, y)).T
+        start_points = self.start_points
 
         additional_points = np.array([[point[0].x, point[0].y] for point in self.best])
 
@@ -137,8 +140,8 @@ class ExplorePasses(BaseProcessor):
 
         for point in points:
             if all(
-                    (point[0] - existing_point[0]).mag() >= min_distance
-                    for existing_point in best
+                (point[0] - existing_point[0]).mag() >= min_distance
+                for existing_point in best
             ):
                 best.append(point)
 

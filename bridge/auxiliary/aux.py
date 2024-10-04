@@ -295,6 +295,7 @@ def find_nearest_point(
             min_dist = dist(p, point)
             closest = point
     return closest
+    
 
 
 def wind_down_angle(angle: float) -> float:
