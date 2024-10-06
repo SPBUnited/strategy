@@ -3,11 +3,8 @@
 """
 
 import time
-import pygame
-import math
 
 import attr
-import numpy as np
 from strategy_bridge.bus import DataBus, DataReader, DataWriter
 from strategy_bridge.common import config
 from strategy_bridge.model.referee import RefereeCommand
@@ -19,7 +16,6 @@ from bridge import const
 from bridge.auxiliary import aux, fld
 from bridge.router import router
 from bridge.strategy import strategy
-from bridge.strategy.accessories import estimate_point
 
 
 @attr.s(auto_attribs=True)
@@ -33,10 +29,6 @@ class SSLController(BaseProcessor):
     max_commands_to_persist: int = 20
 
     ally_color: const.Color = const.Color.BLUE
-
-    field_reader: DataReader = attr.ib(init=False)
-    referee_reader: DataReader = attr.ib(init=False)
-    commands_sink_writer: DataWriter = attr.ib(init=False)
 
     dbg_game_status: strategy.GameStates = strategy.GameStates.TIMEOUT
     dbg_state: strategy.States = strategy.States.DEBUG
@@ -147,9 +139,7 @@ class SSLController(BaseProcessor):
         if cur_cmd.state == -1:
             return
 
-        if cur_state == state_machine.State.STOP or (
-            cur_active not in [const.Color.ALL, self.field.ally_color]
-        ):
+        if cur_state == state_machine.State.STOP or (cur_active not in [const.Color.ALL, self.field.ally_color]):
             self.router.avoid_ball(True)
 
         if cur_cmd.state != self.cur_cmd_state:
@@ -176,9 +166,7 @@ class SSLController(BaseProcessor):
                 self.wait_ball_moved = self.field.ball.get_pos()
         else:
             if self.wait_10_sec_flag and time.time() - self.wait_10_sec > 10:
-                self.state_machine.make_transition_(
-                    state_machine.Command.PASS_10_SECONDS
-                )
+                self.state_machine.make_transition_(state_machine.Command.PASS_10_SECONDS)
                 self.state_machine.active_team(0)
                 self.wait_10_sec_flag = False
                 self.wait_ball_moved_flag = False

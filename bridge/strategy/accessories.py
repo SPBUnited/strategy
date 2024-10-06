@@ -32,11 +32,7 @@ def estimate_pass_point(
                 ang2 = aux.get_angle_between_points(to, frm, tgs[1])
 
                 ang = min(abs(ang1), abs(ang2))
-                if (
-                    ang1 * ang2 < 0
-                    and abs(ang1) < math.pi / 2
-                    and abs(ang2) < math.pi / 2
-                ):
+                if ang1 * ang2 < 0 and abs(ang1) < math.pi / 2 and abs(ang2) < math.pi / 2:
                     ang *= -1  # enemy between to and frm
             else:  # circle around enemy
                 enemy_to = aux.dist(enemy, to)
@@ -54,26 +50,20 @@ def estimate_pass_point(
 
 
 def estimate_goal_view(point: aux.Point, field: fld.Field) -> float:
-    goal_angle = abs(
-        aux.get_angle_between_points(field.enemy_goal.up, point, field.enemy_goal.down)
-    )
+    goal_angle = abs(aux.get_angle_between_points(field.enemy_goal.up, point, field.enemy_goal.down))
 
     return min(goal_angle / GOAL_VIEW_ANGLE, 1)  # 1 - perfect; smaller => worse
 
 
 def estimate_dist_to_goal(point: aux.Point, field: fld.Field) -> float:
-    dist_to_goal_zone = aux.dist(
-        point, aux.nearest_point_on_poly(point, field.enemy_goal.hull)
-    )
+    dist_to_goal_zone = aux.dist(point, aux.nearest_point_on_poly(point, field.enemy_goal.hull))
     if aux.is_point_inside_poly(point, field.enemy_goal.hull):
         dist_to_goal_zone *= -1
 
     return max(1 - dist_to_goal_zone / GOAL_HULL_DIST, 0)
 
 
-def estimate_shoot(
-    point: aux.Point, field: fld.Field, enemies: list[aux.Point]
-) -> float:
+def estimate_shoot(point: aux.Point, field: fld.Field, enemies: list[aux.Point]) -> float:
     lerp: float = 0.0
 
     for enemy in enemies:
@@ -96,8 +86,14 @@ def estimate_shoot(
 
 
 def estimate_point(
-    point: aux.Point, kick_point: aux.Point, field: fld.Field, enemies: list[aux.Point]
+    field: fld.Field,
+    point: aux.Point,
+    kick_point: aux.Point,
+    enemies: Optional[list[aux.Point]] = None,
 ) -> float:
+    if enemies is None:
+        enemies = [e.get_pos() for e in field.active_enemies()]
+
     lerp1 = estimate_pass_point(enemies, kick_point, point)
     lerp2 = estimate_goal_view(point, field)
     lerp3 = estimate_dist_to_goal(point, field)
@@ -120,10 +116,7 @@ def choose_segment_in_goal(
     positions = []
     for robot in interfering_robots:
         if robot != field.allies[kicker_id]:
-            if (
-                aux.dist(robot.get_pos(), goal.center) < aux.dist(goal.center, ball_pos)
-                and robot.is_used()
-            ):
+            if aux.dist(robot.get_pos(), goal.center) < aux.dist(goal.center, ball_pos) and robot.is_used():
                 positions.append(robot.get_pos())
 
     positions = sorted(positions, key=lambda x: x.y * -goal.eye_up.y)

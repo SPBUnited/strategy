@@ -219,7 +219,7 @@ class Router:
 
             for obstacle in field.enemies:  # in [field.enemies, field.allies]
                 dist = (obstacle.get_pos() - robot.get_pos()).mag()
-                if obstacle.is_used() and dist > obstacle.get_radius() + robot.get_radius():
+                if obstacle.is_used() and dist > obstacle.get_radius() + robot.get_radius() and dist > 1000:
                     obstacles_dist.append((obstacle.to_entity(), dist))
 
             sorted_obstacles = sorted(obstacles_dist, key=lambda x: x[1])
@@ -252,7 +252,7 @@ class Router:
             radius = (
                 obstacle.get_radius()
                 + const.ROBOT_R
-                + time_to_reach * obstacle.get_vel().mag() * 0.3  # <-- coefficient of fear [0; 1] (for moving obst)
+                + time_to_reach * obstacle.get_vel().mag() * 0.25  # <-- coefficient of fear [0; 1] (for moving obst)
             )
             # field.path_image.draw_dot(
             #     center,

@@ -80,16 +80,12 @@ class FieldCreator(BaseProcessor):
             # TODO: Barrier states
             for robot_det in detection.robots_blue:
                 b_bots_id.append(robot_det.robot_id)
-                b_bots_pos[robot_det.robot_id].append(
-                    aux.Point(robot_det.x, robot_det.y)
-                )
+                b_bots_pos[robot_det.robot_id].append(aux.Point(robot_det.x, robot_det.y))
                 b_bots_ang[robot_det.robot_id].append(robot_det.orientation)
 
             for robot_det in detection.robots_yellow:
                 y_bots_id.append(robot_det.robot_id)
-                y_bots_pos[robot_det.robot_id].append(
-                    aux.Point(robot_det.x, robot_det.y)
-                )
+                y_bots_pos[robot_det.robot_id].append(aux.Point(robot_det.x, robot_det.y))
                 y_bots_ang[robot_det.robot_id].append(robot_det.orientation)
 
         if len(balls) != 0:
@@ -98,8 +94,7 @@ class FieldCreator(BaseProcessor):
             for ball in balls:
                 if (
                     const.IS_SIMULATOR_USED
-                    or (ball - self.field.ball.get_pos()).mag()
-                    / (time() - self.field.ball.last_update_)
+                    or (ball - self.field.ball.get_pos()).mag() / (time() - self.field.ball.last_update_)
                     < const.BALL_MAX_SPEED
                 ):
                     balls_sum += ball
@@ -109,10 +104,7 @@ class FieldCreator(BaseProcessor):
                 self.field.update_ball(ball, time())
         elif self.field.robot_with_ball is not None:
             ally = self.field.robot_with_ball
-            ball = (
-                ally.get_pos()
-                + aux.rotate(aux.RIGHT, ally.get_angle()) * ally.get_radius() / 2
-            )
+            ball = ally.get_pos() + aux.rotate(aux.RIGHT, ally.get_angle()) * ally.get_radius() / 2
             self.field.update_ball(ball, time())
 
         self.field.robot_with_ball = None

@@ -115,34 +115,37 @@ def penalty_kick(field: fld.Field, waypoints: list[wp.Waypoint]) -> None:
 
 def prepare_kickoff(field: fld.Field, waypoints: list[wp.Waypoint], we_active: bool) -> None:
     """Настройка перед состоянием kickoff по команде судей"""
+    poses: list[aux.Point]
     if we_active:
-        if const.DIV == "B":
-            poses = [
-                aux.Point(250 * field.polarity, 0),
-                aux.Point(2000 * field.polarity, 0),
-                aux.Point(3500 * field.polarity, 0),
-                aux.Point(300 * field.polarity, 2000),
-                aux.Point(300 * field.polarity, -2000),
-            ]
-        elif const.DIV == "C":
-            poses = [
-                aux.Point(250 * field.polarity, 0),
-                aux.Point(300 * field.polarity, 1000),
-            ]
+        match const.DIV:
+            case const.Div.B:
+                poses = [
+                    aux.Point(250 * field.polarity, 0),
+                    aux.Point(2000 * field.polarity, 0),
+                    aux.Point(3500 * field.polarity, 0),
+                    aux.Point(300 * field.polarity, 2000),
+                    aux.Point(300 * field.polarity, -2000),
+                ]
+            case const.Div.C:
+                poses = [
+                    aux.Point(250 * field.polarity, 0),
+                    aux.Point(300 * field.polarity, 1000),
+                ]
     else:
-        if const.DIV == "B":
-            poses = [
-                aux.Point(650 * field.polarity, -150),
-                aux.Point(650 * field.polarity, 150),
-                aux.Point(3500 * field.polarity, -150),
-                aux.Point(3500 * field.polarity, 150),
-                aux.Point(300 * field.polarity, 1250),
-            ]
-        elif const.DIV == "C":
-            poses = [
-                aux.Point(650 * field.polarity, 0),
-                aux.Point(1500 * field.polarity, 0),
-            ]
+        match const.DIV:
+            case const.Div.B:
+                poses = [
+                    aux.Point(650 * field.polarity, -150),
+                    aux.Point(650 * field.polarity, 150),
+                    aux.Point(3500 * field.polarity, -150),
+                    aux.Point(3500 * field.polarity, 150),
+                    aux.Point(300 * field.polarity, 1250),
+                ]
+            case const.Div.C:
+                poses = [
+                    aux.Point(650 * field.polarity, 0),
+                    aux.Point(1500 * field.polarity, 0),
+                ]
 
     for i in range(const.TEAM_ROBOTS_MAX_COUNT):
         if field.allies[i].is_used() and field.allies[i].r_id != field.gk_id:
@@ -182,10 +185,10 @@ def kickoff(field: fld.Field, waypoints: list[wp.Waypoint], we_active: bool) -> 
             aux.angle_to_point(field.ball.get_pos(), field.enemy_goal.center),
             wp.WType.S_BALL_KICK_UP,
         )
-    else:
-        target = aux.point_on_line(field.ball.get_pos(), field.ally_goal.center, 250)
-        waypoints[go_kick.r_id] = wp.Waypoint(
-            target,
-            aux.angle_to_point(field.allies[go_kick.r_id].get_pos(), field.ball.get_pos()),
-            wp.WType.S_IGNOREOBSTACLES,
-        )
+    # else:
+    #     target = aux.point_on_line(field.ball.get_pos(), field.ally_goal.center, 250)
+    #     waypoints[go_kick.r_id] = wp.Waypoint(
+    #         target,
+    #         aux.angle_to_point(field.allies[go_kick.r_id].get_pos(), field.ball.get_pos()),
+    #         wp.WType.S_IGNOREOBSTACLES,
+    #     )

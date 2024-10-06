@@ -55,6 +55,8 @@ class Drawer(BaseProcessor):
 
         pygame.font.init()
 
+        self.font = pygame.font.SysFont("Open Sans", 25)
+
     def process(self) -> None:
 
         message_img = self.image_reader.read_new()
@@ -73,12 +75,14 @@ class Drawer(BaseProcessor):
 
         field_image = drawing.Image()
 
-        for rbt in field.allies:
+        for rbt in field.get_blu_team():
             if rbt.is_used():
                 field_image.draw_robot(rbt.get_pos(), rbt.get_angle())
-        for rbt in field.enemies:
+                field_image.print(rbt.get_pos(), str(rbt.r_id))
+        for rbt in field.get_yel_team():
             if rbt.is_used():
                 field_image.draw_robot(rbt.get_pos(), rbt.get_angle(), (255, 255, 0))
+                field_image.print(rbt.get_pos(), str(rbt.r_id), (0, 0, 0))
 
         field_image.draw_dot(field.ball.get_pos(), (255, 0, 0), const.BALL_R)
         if field.ball_start_point is not None:
@@ -92,9 +96,16 @@ class Drawer(BaseProcessor):
                     cmd = self.scale_dots(command)
                     self.complete_command(cmd)
 
+                for prnt in image_box[0].prints:
+                    pos = self.cord_to_pixels(prnt[0])
+                    self.print_text(pos, prnt[1], prnt[2])
+
         for command in field_image.commands:
             cmd = self.scale_dots(command)
             self.complete_command(cmd)
+        for prnt in field_image.prints:
+            pos = self.cord_to_pixels(prnt[0])
+            self.print_text(pos, prnt[1], prnt[2])
 
         pygame.display.flip()
 
@@ -189,15 +200,29 @@ class Drawer(BaseProcessor):
                     round(command.size),
                 )
 
+    def print_text(self, pos: tuple[int, int], text: str, color: tuple[int, int, int]) -> None:
+        """Print text"""
+        font_surf = self.font.render(text, True, color)
+        w, h = self.font.size(text)
+        font_pos = (
+            pos[0] - w / 2,
+            pos[1] - h / 2,
+        )
+        self.screen.blit(font_surf, font_pos)
+
     def scale_dots(self, command: drawing.Command) -> drawing.Command:
         """Scale dots from coordinates to pixels"""
         scaled_command = drawing.Command(command.color, command.dots.copy(), command.size)
         for i, _ in enumerate(scaled_command.dots):
-            scaled_command.dots[i] = (
-                scaled_command.dots[i][0] * self.scale + self.middle_x,
-                -scaled_command.dots[i][1] * self.scale + self.middle_y,
-            )
+            scaled_command.dots[i] = self.cord_to_pixels(scaled_command.dots[i])
         return scaled_command
+
+    def cord_to_pixels(self, point: tuple[float, float]) -> tuple[int, int]:
+        """Scale single dot from coordinates to pixels"""
+        return (
+            int(point[0] * self.scale + self.middle_x),
+            int(-point[1] * self.scale + self.middle_y),
+        )
 
 
 class CheckBox:

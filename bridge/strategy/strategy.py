@@ -13,15 +13,12 @@ from enum import Enum
 from time import time
 from typing import Optional
 
-import numpy as np
-
 import bridge.router.waypoint as wp
 from bridge import const
 from bridge.auxiliary import aux, fld, rbt
 from bridge.processors.referee_state_processor import Color as ActiveTeam
 from bridge.processors.referee_state_processor import State as GameStates
 from bridge.strategy import attack_roles, defense_roles, kicker, ref_states
-import bridge.strategy.accessories as acc
 
 
 class States(Enum):
@@ -89,9 +86,7 @@ class Strategy:
         self.timer = time()
 
         self.forwards: list[rbt.Robot] = []
-        self.prev_roles: list[Role] = [
-            Role.UNAVAILABLE for _ in range(const.TEAM_ROBOTS_MAX_COUNT)
-        ]
+        self.prev_roles: list[Role] = [Role.UNAVAILABLE for _ in range(const.TEAM_ROBOTS_MAX_COUNT)]
 
         self.kick = kicker.KickerAux()
 
@@ -103,9 +98,7 @@ class Strategy:
 
         self.pass_points: list[tuple[aux.Point, float]] = []
 
-    def process_pass_points(
-        self, field: fld.Field, pass_points: list[tuple[aux.Point, float]]
-    ) -> None:
+    def process_pass_points(self, field: fld.Field, pass_points: list[tuple[aux.Point, float]]) -> None:
         best = []
         for i, p in enumerate(pass_points):
             print(p[0])
@@ -123,14 +116,9 @@ class Strategy:
 
         # Я кароче ничего не придумал, как сделать так, чтобы точки не скакали. Если в жизни все будет ок то я на это забью
 
-        for p in best:
-            mult = (p[1] + 1) / 2
-            field.strategy_image.draw_dot(p[0], (int(mult * 255), 0, 0), 65)
         self.pass_points = best
 
-    def change_game_state(
-        self, new_state: GameStates, upd_active_team: ActiveTeam
-    ) -> None:
+    def change_game_state(self, new_state: GameStates, upd_active_team: ActiveTeam) -> None:
         """Изменение состояния игры и цвета команды"""
         self.game_status = new_state
         self.active_team = upd_active_team
@@ -140,10 +128,7 @@ class Strategy:
         Рассчитать конечные точки для каждого робота
         """
         if self.game_status not in [GameStates.KICKOFF, GameStates.PENALTY]:
-            if (
-                self.active_team == ActiveTeam.ALL
-                or field.ally_color == self.active_team
-            ):
+            if self.active_team == ActiveTeam.ALL or field.ally_color == self.active_team:
                 self.we_active = True
             else:
                 self.we_active = False
@@ -180,12 +165,8 @@ class Strategy:
                 if self.we_active:
                     ref_states.penalty_kick(field, waypoints)
                 else:
-                    robot_with_ball = fld.find_nearest_robot(
-                        field.ball.get_pos(), field.enemies
-                    )
-                    waypoints[field.gk_id] = defense_roles.goalk(
-                        field, [], robot_with_ball
-                    )
+                    robot_with_ball = fld.find_nearest_robot(field.ball.get_pos(), field.enemies)
+                    waypoints[field.gk_id] = defense_roles.goalk(field, [], robot_with_ball)
             case GameStates.PREPARE_KICKOFF:
                 ref_states.prepare_kickoff(field, waypoints, self.we_active)
             case GameStates.KICKOFF:
@@ -216,9 +197,7 @@ class Strategy:
 
         # Выбор роботов для всех ролей, с учетом вычисленных выше точек
         roles = self.manage_roles(field, roles, enemies_near_goal)
-        robot_roles = self.choose_robots_for_roles(
-            field, roles, wall_pos, enemies_near_goal.copy()
-        )
+        robot_roles = self.choose_robots_for_roles(field, roles, wall_pos, enemies_near_goal.copy())
 
         if field.ally_color == const.COLOR:
             print("Roles", field.ally_color)
@@ -229,37 +208,25 @@ class Strategy:
         # Вычисление конечных точек, которые зависят от положения робота и создание путевых точек
         self.forwards = find_role(field, robot_roles, Role.FORWARD)
         if self.forwards is not None:
-            attack_roles.set_forwards_wps(
-                field, waypoints, self.forwards, self.pass_points
-            )
+            attack_roles.set_forwards_wps(field, waypoints, self.forwards, self.pass_points)
 
         if Role.ATTACKER in robot_roles:
             attacker_id = find_role(field, robot_roles, Role.ATTACKER)[0].r_id
-            attack_roles.attacker(
-                field, waypoints, attacker_id, self.pass_points, self.forwards
-            )
+            attack_roles.attacker(field, waypoints, attacker_id, self.pass_points, self.forwards)
 
         pass_defenders = find_role(field, robot_roles, Role.PASS_DEFENDER)
         if len(pass_defenders) > 0:
-            defense_roles.set_pass_defenders_wps(
-                field, waypoints, pass_defenders, enemies_near_goal
-            )
+            defense_roles.set_pass_defenders_wps(field, waypoints, pass_defenders, enemies_near_goal)
 
         wallliners = find_role(field, robot_roles, Role.WALLLINER)
         if len(wallliners) > 0:
             defense_roles.set_wallliners_wps(field, waypoints, wallliners, wall_enemy)
 
         if Role.GOALKEEPER in robot_roles:
-            robot_with_ball = fld.find_nearest_robot(
-                field.ball.get_pos(), field.enemies
-            )
-            waypoints[field.gk_id] = defense_roles.goalk(
-                field, wallliners, robot_with_ball
-            )
+            robot_with_ball = fld.find_nearest_robot(field.ball.get_pos(), field.enemies)
+            waypoints[field.gk_id] = defense_roles.goalk(field, wallliners, robot_with_ball)
 
-    def debug(
-        self, field: fld.Field, waypoints: list[wp.Waypoint]
-    ) -> list[wp.Waypoint]:
+    def debug(self, field: fld.Field, waypoints: list[wp.Waypoint]) -> list[wp.Waypoint]:
         """Отладка"""
         # waypoints[10] = wp.Waypoint(aux.Point(200, 0), 1.5, wp.WType.S_VELOCITY)
         # field.allies[10].set_dribbler_speed(15)
@@ -339,14 +306,7 @@ class Strategy:
         print(free_allies)
 
         ball_pos = aux.minmax(field.ball.get_pos().x, const.GOAL_DX)
-        atks = (
-            round(
-                free_allies
-                / (2 * const.GOAL_DX)
-                * (-ball_pos * field.polarity + const.GOAL_DX)
-            )
-            + atk_min
-        )
+        atks = round(free_allies / (2 * const.GOAL_DX) * (-ball_pos * field.polarity + const.GOAL_DX)) + atk_min
         defs = free_allies - (atks - atk_min) + def_min
 
         roles = ATTACK_ROLES[:atks] + DEFENSE_ROLES[:defs]
@@ -380,9 +340,7 @@ class Strategy:
         wall_pos: aux.Point,
         enemies_near_goal: list[aux.Point],
     ) -> list[Role]:
-        robot_roles: list[Role] = [
-            Role.UNAVAILABLE for _ in range(const.TEAM_ROBOTS_MAX_COUNT)
-        ]
+        robot_roles: list[Role] = [Role.UNAVAILABLE for _ in range(const.TEAM_ROBOTS_MAX_COUNT)]
         used_ids: list[int] = []
 
         for robot_id, role in enumerate(self.prev_roles):
@@ -405,30 +363,40 @@ class Strategy:
                 case Role.GOALKEEPER:
                     robot_id = field.gk_id
                 case Role.ATTACKER:
-                    if (
-                        field.robot_with_ball not in field.allies
-                        or field.robot_with_ball == field.allies[field.gk_id]
-                    ):
-                        robot_id = fld.find_nearest_robot(
-                            field.ball.get_pos(), field.allies, used_ids
-                        ).r_id
+                    if field.robot_with_ball not in field.allies or field.robot_with_ball == field.allies[field.gk_id]:
+                        robot_id = fld.find_nearest_robot(field.ball.get_pos(), field.allies, used_ids).r_id
                     else:
                         robot_id = field.robot_with_ball.r_id
                 case Role.PASS_DEFENDER:
                     enemy = enemies_near_goal.pop(0)
-                    robot_id = fld.find_nearest_robot(
-                        enemy, field.allies, used_ids
-                    ).r_id
+                    robot_id = fld.find_nearest_robot(enemy, field.allies, used_ids).r_id
                 case Role.WALLLINER:
-                    robot_id = fld.find_nearest_robot(
-                        wall_pos, field.allies, used_ids
-                    ).r_id
+                    robot_id = fld.find_nearest_robot(wall_pos, field.allies, used_ids).r_id
                 case Role.FORWARD:
-                    robot_id = fld.find_nearest_robot(
-                        field.enemy_goal.center, field.allies, used_ids
-                    ).r_id
+                    robot_id = fld.find_nearest_robot(field.enemy_goal.center, field.allies, used_ids).r_id
             robot_roles[robot_id] = role
             used_ids.append(robot_id)
+
+        for r_id, rbt_rl in enumerate(robot_roles):
+            if rbt_rl != Role.UNAVAILABLE:
+                match rbt_rl:
+                    case Role.GOALKEEPER:
+                        text = "GK"
+                        clr = 200
+                    case Role.ATTACKER:
+                        text = "AT"
+                        clr = 255
+                    case Role.PASS_DEFENDER:
+                        text = "PD"
+                        clr = 127
+                    case Role.WALLLINER:
+                        text = "WL"
+                        clr = 127
+                    case Role.FORWARD:
+                        text = "FRW"
+                        clr = 127
+                text_pos = field.allies[r_id].get_pos() + aux.Point(0, const.ROBOT_R * 1.5)
+                field.strategy_image.print(text_pos, text, (clr, clr, clr))
 
         self.prev_roles = robot_roles
         return robot_roles
@@ -443,9 +411,7 @@ def delete_role(roles: list[Role], role_to_delete: Role) -> None:
     roles.pop()
 
 
-def find_role(
-    field: fld.Field, roles: list[Role], role_to_find: Role
-) -> list[rbt.Robot]:
+def find_role(field: fld.Field, roles: list[Role], role_to_find: Role) -> list[rbt.Robot]:
     """Возвращает массив со всеми роботами роли role_to_find"""
     robots: list[rbt.Robot] = []
     for i, role in enumerate(roles):
@@ -455,9 +421,7 @@ def find_role(
     return robots
 
 
-def replace_role(
-    roles: list[Role], old_role: Role, new_role: Role, count: int = 1
-) -> list[Role]:
+def replace_role(roles: list[Role], old_role: Role, new_role: Role, count: int = 1) -> list[Role]:
     """Заменяет old_role на new_role, выполняется count раз"""
     num = 0
     for i, role in enumerate(roles):

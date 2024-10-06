@@ -1,41 +1,12 @@
-import math
-from typing import Optional, Any
+from typing import Any, Optional
 
-from bridge.auxiliary import aux, fld, rbt
 from bridge import const
-
-
-class Peak(aux.Point):
-    def __init__(self, pos: aux.Point) -> None:
-        super().__init__(pos.x, pos.y)
-        self.neighbors: list[Cell] = []
-
-    def __eq__(self, p: Any) -> bool:
-        try:
-            return abs(self.x - p.x) < 0.1 and abs(self.y - p.y) < 0.1
-        except TypeError:
-            return False
-
-    def __str__(self) -> str:
-        return f"x = {self.x:.2f},\ty = {self.y:.2f}"
-
-    def add_neighbor_(self, new_neighbor: "Cell") -> None:
-        """add new neighbor to peak"""
-        if new_neighbor not in self.neighbors:
-            self.neighbors.append(new_neighbor)
-
-    def remove_neighbor_(self, neighbor_to_remove: "Cell") -> None:
-        """remove one neighbor for peak"""
-        if neighbor_to_remove in self.neighbors:
-            self.neighbors.remove(neighbor_to_remove)
+from bridge.auxiliary import aux, fld
 
 
 class Cell:
-    def __init__(self, peaks: list[Peak]) -> None:
-        self.peaks: list[Peak] = peaks
-
-        for peak in self.peaks:
-            peak.add_neighbor_(self)
+    def __init__(self, peaks: list[aux.Point]) -> None:
+        self.peaks: list[aux.Point] = peaks
 
     def __eq__(self, obj: Any) -> bool:
         try:
@@ -43,85 +14,11 @@ class Cell:
         except TypeError:
             return False
 
-    def add_peak(self, peak: Peak) -> None:
-        """add new peak and update peak's neighbors"""
-        self.peaks.append(peak)
-        peak.add_neighbor_(self)
-
-        for neighbor in self.get_all_neighbors():  # maybe side_neighbors is enough
-            neighbors_peaks = neighbor.peaks
-            for i, _ in enumerate(neighbors_peaks):
-                if (
-                    aux.is_point_on_line(
-                        peak, neighbors_peaks[i - 1], neighbors_peaks[i], "S"
-                    )
-                    and peak not in neighbor.peaks
-                ):
-                    peak.add_neighbor_(neighbor)
-                    neighbor.paste_new_peak(peak)
-                    break
-
-    def remove_peak(self, peak: Peak) -> None:
-        """remove peak from cell"""
-        self.peaks.remove(peak)
-        peak.remove_neighbor_(self)
-
-    def paste_new_peak(self, new_peak: Peak) -> bool:
-        """paste new peak in right position"""
-        for i, _ in enumerate(self.peaks):
-            if aux.is_point_on_line(new_peak, self.peaks[i - 1], self.peaks[i], "S"):
-                self.peaks = self.peaks[i:] + self.peaks[:i]
-                self.add_peak(new_peak)
-                return True
-        return False
-
-    def get_all_neighbors(self) -> list["Cell"]:
-        """return list of neighbors of cell"""
-        neighbors: list[Cell] = []
-        for peak in self.peaks:
-            for neighbor in peak.neighbors:
-                if neighbor not in neighbors:
-                    neighbors += [neighbor]
-
-        return neighbors
-
-    def get_peak_neighbors(self) -> list["Cell"]:
-        """return list of neighbors (by only one peak) of cell"""
-        neighbors_by_peak: list["Cell"] = []
-        neighbors_by_side: list["Cell"] = []
-        for peak in self.peaks:
-            for neighbor in peak.neighbors:
-                if neighbor not in (neighbors_by_peak + neighbors_by_side):
-                    neighbors_by_peak.append(neighbor)
-                elif neighbor in neighbors_by_peak:
-                    neighbors_by_peak.remove(neighbor)
-                    neighbors_by_side.append(neighbor)
-
-        return neighbors_by_peak
-
-    def get_side_neighbors(self) -> list["Cell"]:
-        """return list of neighbors (by side) of cell"""
-        neighbors_by_peak: list["Cell"] = []
-        neighbors_by_side: list["Cell"] = []
-        for peak in self.peaks:
-            for neighbor in peak.neighbors:
-                if neighbor != self:
-                    if neighbor not in (neighbors_by_peak + neighbors_by_side):
-                        neighbors_by_peak.append(neighbor)
-                    elif neighbor in neighbors_by_peak:
-                        neighbors_by_peak.remove(neighbor)
-                        neighbors_by_side.append(neighbor)
-
-        return neighbors_by_side
-
     def print(self) -> None:
         """print all peaks of cell"""
         print("cell peaks:")
         for peak in self.peaks:
-            print("\t", peak, "\t", len(peak.neighbors))
-        print(
-            f"cell neighbors : peak {len(self.get_peak_neighbors())}, side {len(self.get_side_neighbors())}"
-        )
+            print("\t", peak)
 
     def get_line_intersections(
         self, line_start: aux.Point, line_end: aux.Point, is_inf: str = "L"
@@ -140,21 +37,14 @@ class Cell:
                 line_end,
                 "S" + is_inf,
             )
-            if inter is not None and (
-                len(intersections) == 0
-                or inter != intersections[-1][0]  # if intersection is peak
-            ):
+            if inter is not None and (len(intersections) == 0 or inter != intersections[-1][0]):  # if intersection is peak
                 intersections.append((inter, index))
 
-        if (
-            intersections and intersections[0][0] == intersections[-1][0]
-        ):  # if intersection is peak
+        if intersections and intersections[0][0] == intersections[-1][0]:  # if intersection is peak
             intersections.pop()
         return intersections
 
-    def intersect_cell(
-        self, line_start: aux.Point, line_end: aux.Point, is_inf: str = "L"
-    ) -> Optional["Cell"]:
+    def intersect_cell(self, line_start: aux.Point, line_end: aux.Point, is_inf: str = "L") -> Optional["Cell"]:
         """
         if the line intersects a cell, changes it and returns a new one (only convex cells)
         is_inf: "S" - segment, "R" - ray, "L" - line
@@ -167,34 +57,23 @@ class Cell:
         if inter1 == inter2:
             return None
 
-        new_cell = Cell(self.peaks[idx2:] + self.peaks[:idx1])
+        new_cell_peaks = self.peaks[idx1:idx2]
 
-        for peak in self.peaks[:idx1] + self.peaks[idx2:]:
-            self.remove_peak(peak)
+        if new_cell_peaks[-1] != inter2:
+            new_cell_peaks += [inter2]
+        if new_cell_peaks[0] != inter1:
+            new_cell_peaks += [inter1]
 
-        if new_cell.peaks[-1] == inter1:
-            new_peak1 = new_cell.peaks[-1]
-        elif self.peaks[0] == inter1:
-            new_peak1 = self.peaks[0]
-        else:
-            new_peak1 = Peak(inter1)
+        new_cell = Cell(new_cell_peaks)
 
-        if self.peaks[-1] == inter2:
-            new_peak2 = self.peaks[-1]
-        elif new_cell.peaks[0] == inter2:
-            new_peak2 = new_cell.peaks[0]
-        else:
-            new_peak2 = Peak(inter2)
+        updated_peaks = self.peaks[idx2:] + self.peaks[0:idx1]  # + [inter1, inter2]
 
-        if new_cell.peaks[-1] != new_peak1:
-            new_cell.add_peak(new_peak1)
-        if new_cell.peaks[0] != new_peak2:
-            new_cell.add_peak(new_peak2)
+        if updated_peaks[-1] != inter1:
+            updated_peaks += [inter1]
+        if updated_peaks[0] != inter2:
+            updated_peaks += [inter2]
 
-        if self.peaks[-1] != new_peak2:
-            self.add_peak(new_peak2)
-        if self.peaks[0] != new_peak1:
-            self.add_peak(new_peak1)
+        self.peaks = updated_peaks
 
         return new_cell
 
@@ -214,28 +93,19 @@ class Cell:
         cropped_part = self.intersect_cell(line_start, line_end, is_inf)
         if cropped_part:
             center = aux.average_point(self.peaks)
-            sign = aux.sign(
-                aux.vec_mult((center - line_start), (line_end - line_start))
-            )
+            sign = aux.sign(aux.vec_mult((center - line_start), (line_end - line_start)))
             if sign != side_to_delete:
-                for peak in self.peaks.copy():
-                    self.remove_peak(peak)
                 self.peaks = cropped_part.peaks
-            else:
-                for peak in cropped_part.peaks.copy():
-                    cropped_part.remove_peak(peak)
             return True
         else:
             return False
 
 
-def get_cells(
-    kick_point: aux.Point, field: fld.Field, enemies: list[aux.Point] = []
-) -> list[Cell]:
-    left_top_cell = Peak(aux.Point(0, const.FIELD_HEIGH / 2))
-    right_top_cell = Peak(aux.Point(const.FIELD_WIDTH / 2, const.FIELD_HEIGH / 2))
-    right_down_cell = Peak(aux.Point(const.FIELD_WIDTH / 2, -const.FIELD_HEIGH / 2))
-    left_down_cell = Peak(aux.Point(0, -const.FIELD_HEIGH / 2))
+def get_cells(kick_point: aux.Point, field: fld.Field, enemies: list[aux.Point] = []) -> list[Cell]:
+    left_top_cell = aux.Point(0, const.FIELD_DY)
+    right_top_cell = aux.Point(const.FIELD_DX, const.FIELD_DY)
+    right_down_cell = aux.Point(const.FIELD_DX, -const.FIELD_DY)
+    left_down_cell = aux.Point(0, -const.FIELD_DY)
 
     cells = [Cell([left_top_cell, right_top_cell, right_down_cell, left_down_cell])]
 
@@ -257,9 +127,7 @@ def get_cells(
             if len(tangents) < 2:
                 continue
 
-            side = aux.sign(
-                aux.vec_mult((tangents[0] - kick_point), (enemy - kick_point))
-            )
+            side = aux.sign(aux.vec_mult((tangents[0] - kick_point), (enemy - kick_point)))
 
             new_cell = cell.intersect_cell(enemy - vec, enemy, "R")
             if new_cell:

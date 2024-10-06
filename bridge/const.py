@@ -16,24 +16,25 @@ class Color(Enum):
 class Div(Enum):
     """Класс с цветами"""
 
+    A = 0
     B = 1
     C = 2
 
 
 ##################################################
 # GAME SETTING CONSTS
-DIV = Div.C
+DIV = Div.B
 COLOR = Color.BLUE
-POLARITY = -1  # -1 если ворота синих на +x; 1 если ворота синих на -x
+POLARITY = 1  # -1 если ворота синих на +x; 1 если ворота синих на -x
 
 
-IS_SIMULATOR_USED = False
+IS_SIMULATOR_USED = True
 IS_DRIBBLER_USED = True  # dribbler and upper_kick
 SELF_PLAY = False
 
-GK = 8
-PENALTY_KICKER = 5
-ENEMY_GK = 1
+GK = 0
+PENALTY_KICKER = 1
+ENEMY_GK = 0
 
 CAMERAS_COUNT: int = 4
 MAX_BALLS_IN_CAMERA: int = 64
@@ -115,27 +116,31 @@ GRAVEYARD_POS_X = -10000
 
 BALL_MAX_SPEED = 10000  # for filter random balls
 
-FIELD_WIDTH = 9000
-FIELD_HEIGH = 6000
+match DIV:
+    case Div.A:
+        GOAL_DX = 1 / 0  # не дорос ещё
 
-GOAL_DX = 4500
-GOAL_DY = 1000
-GOAL_PEN_DX = 1000
-GOAL_PEN_DY = 2000
+    case Div.B:
+        GOAL_DX = 4500
+        GOAL_DY = 1000
+        GOAL_PEN_DX = 1000
+        GOAL_PEN_DY = 2000
 
-FIELD_DY = 3000
+        FIELD_DX = GOAL_DX
+        FIELD_DY = 3000
 
-GK_FORW = 200 + ROBOT_R
-if DIV == DIV.C:
-    FIELD_WIDTH = 4500
-    FIELD_HEIGH = 3000
-    GOAL_DX = 2250
-    GOAL_DY = 800
-    GOAL_PEN_DX = 500
-    GOAL_PEN_DY = 1350
+        GK_FORW = 200 + ROBOT_R
 
-    GK_FORW = 100 + ROBOT_R
-    FIELD_DY = 1500
+    case Div.C:
+        GOAL_DX = 2250
+        GOAL_DY = 800
+        GOAL_PEN_DX = 500
+        GOAL_PEN_DY = 1350
+
+        FIELD_DX = GOAL_DX
+        FIELD_DY = 1500
+
+        GK_FORW = 100 + ROBOT_R
 
 KICK_ALIGN_DIST = 150
 GRAB_ALIGN_DIST = 130
