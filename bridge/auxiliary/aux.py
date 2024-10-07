@@ -381,13 +381,13 @@ def circles_inter(p0: Point, p1: Point, r0: float, r1: float) -> tuple[Point, Po
     return Point(x3, y3), Point(x4, y4)
 
 
-def get_tangent_points(point0: Point, point1: Point, r: float) -> Optional[list[Point]]:
+def get_tangent_points(point0: Point, point1: Point, r: float) -> list[Point]:
     """
     Get tangents (point0 - center of circle)
     """
     d = dist(point0, point1)
     if d < r:
-        return None
+        return []
     elif d == r:
         return [point1]
     else:
@@ -485,7 +485,7 @@ def is_in_range(x: float, r: list) -> bool:
     return x == minmax(x, r[0], r[1])
 
 
-def range_minus(mns0: list, mns1: list) -> list:
+def range_minus(mns0: list, mns1: list) -> list[list[float]]:
     """
     Вычитает из списка множеств mns0 список множеств mns1.
     множества задаются как (min, max) - где min, max - крайние значения.
@@ -523,17 +523,15 @@ def get_minmax_idxs(numbers: list[float], mode: str, dp: float = 0) -> list[int]
     Функция ищет в списке крайнее значение(я) и возвращает его(их) индекс(ы) в списке.
     Режимы: 'min', 'max'.
     """
-    if numbers:
-        idxs_return = [0]
-    else:
-        idxs_return = []
+    idxs_return: list[int] = []
     for idx, number in enumerate(numbers):
-        if abs(number - numbers[idxs_return[0]]) < numbers[idxs_return[0]] * dp / 100:
+        if idxs_return:
+            if abs(number - numbers[idxs_return[0]]) < numbers[idxs_return[0]] * dp / 100:
+                idxs_return.append(idx)
+            elif (mode == "min" and number < numbers[idxs_return[0]]) or (mode == "max" and number > numbers[idxs_return[0]]):
+                idxs_return = [idx]
+        else:
             idxs_return.append(idx)
-        elif (mode == "min" and number < numbers[idxs_return[0]]) or (mode == "max" and number > numbers[idxs_return[0]]):
-            idxs_return = [idx]
-    if not idxs_return[0]:
-        idxs_return.pop(0)
     return idxs_return
 
 

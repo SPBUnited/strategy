@@ -42,10 +42,8 @@ class Entity:
 
         self.kf = KalmanFilter(dim_x=4, dim_z=2)
         self.kf.H = np.array([[1, 0, 0, 0], [0, 0, 1, 0]])
-        # self.kf.R *= 0.01
-        # self.kf.P *= 100.0
-        self.kf.R *= 0.000001
-        self.kf.P *= 100000.0
+        self.kf.R *= 0.001
+        self.kf.P *= 900000.0
 
         self._angle = angle
         self._anglevel = 0.0
@@ -62,7 +60,7 @@ class Entity:
         """
         dt = t - self.last_update_
         self.kf.F = np.array([[1, dt, 0, 0], [0, 1, 0, 0], [0, 0, 1, dt], [0, 0, 0, 1]])
-        self.kf.Q = Q_discrete_white_noise(dim=2, dt=dt, var=1, block_size=2)
+        self.kf.Q = Q_discrete_white_noise(dim=2, dt=dt, var=35, block_size=2)
         self.kf.predict()
         self.kf.update(np.array([pos.x, pos.y]))
         state = self.kf.x.copy()

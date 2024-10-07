@@ -183,12 +183,13 @@ class Router:
                 help_p = aux.point_on_line(robo.get_pos(), start_p.point(), const.ROBOT_R + robo.get_radius())
                 point_go_now = PointTree(help_p.x, help_p.y)
                 flag_way = False
-            if aux.dist(end_p.point(), robo.get_pos()) < const.ROBOT_R + robo.get_radius():
+            if (end_p.point() - robo.get_pos()).mag() < const.ROBOT_R + robo.get_radius() and (end_p.point() - robo.get_pos()).mag() > 10:
                 help_p = aux.point_on_line(robo.get_pos(), end_p.point(), const.ROBOT_R + robo.get_radius())
                 end_p = PointTree(help_p.x, help_p.y)
         for robo in all_robots:
-            if aux.dist(end_p.point(), robo.get_pos()) < const.ROBOT_R + robo.get_radius():
+            if (end_p.point() - robo.get_pos()).mag() < const.ROBOT_R + robo.get_radius() and (end_p.point() - robo.get_pos()).mag() > 10:
                 flag_way = False
+                print(end_p.point(), robo.get_pos())
         while n_steps < n_max and n_steps < len(queue) and flag_way:
             # if idx == 1:
             #     print(n_steps, field.ally_color == const.Color.BLUE)
@@ -210,11 +211,17 @@ class Router:
                         # print(point_mas.x, point_mas.y)
                         old_way_l += aux.dist(point_mas.point(), point_mas.father.point())
                         point_mas = point_mas.father
+                        # if idx == 1:
+                        #     field.image.draw_dot(point_mas.point(), (int(255 * (idx + 1) / 3), 0, 0), 50)
                     new_way_l = aux.dist(end_p.point(), queue[n_steps].point())
                     point_mas = queue[n_steps]
+                    # if idx == 1:
+                    #     field.image.draw_dot(point_mas.point(), (int(255 * (idx + 1) / 3), 0, 0), 50)
                     while point_mas.father is not None:
                         new_way_l += aux.dist(point_mas.point(), point_mas.father.point())
                         point_mas = point_mas.father
+                        # if idx == 1:
+                        #     field.image.draw_dot(point_mas.point(), (int(255 * (idx + 1) / 3), 0, 0), 50)
                     if old_way_l < new_way_l:
                         flag = 0
                 if flag:
@@ -231,7 +238,7 @@ class Router:
                         # print(point_mas.x, point_mas.y)
                     point_go_now = point_mas
                     if n_max == float("inf"):
-                        n_max = n_steps + 5
+                        n_max = n_steps + 10
             else:
                 min_num_on_way = -1
                 min_dist_on_way = float("inf")
@@ -289,14 +296,16 @@ class Router:
             n_steps += 1
         # if idx == 0:
         #     print(point_go_now.x, point_go_now.y)
-        # if idx < 3:
-        #     # print('imhere')
-        #     point_mas = end_p
-        #     while point_mas.father is not None:
-        #         field.image.draw_dot(point_mas.point(), (int(255 * (idx + 1) / 3), 0, 0), 50)
-        #         point_mas = point_mas.father
-        #     field.image.draw_dot(end_p.point(), (0, int(255 * (idx + 1) / 3), int(255 * (idx + 1) / 3)), 100)
-        #     field.image.draw_dot(start_p.point(), size_in_mms=50)
+        if idx == 2:
+            # print('imhere')
+            point_mas = end_p
+            while point_mas.father is not None:
+                field.image.draw_dot(point_mas.point(), (int(255 * (idx + 1) / 3), 0, 0), 50)
+                point_mas = point_mas.father
+            field.image.draw_dot(end_p.point(), (0, int(255 * (idx + 1) / 3), int(255 * (idx + 1) / 3)), 100)
+            field.image.draw_dot(start_p.point(), size_in_mms=50)
+            if point_go_now:
+                print(point_go_now.point(), field.ball.get_pos())
         if finish or point_go_now is None:
             return None
         return wp.Waypoint(point_go_now.point(), self.routes[idx].get_next_wp().angle, wp.WType.R_PASSTHROUGH)
