@@ -39,7 +39,6 @@ class SSLController(BaseProcessor):
     commands_sink_writer: DataWriter = attr.ib(init=False)
 
     dbg_game_status: strategy.GameStates = strategy.GameStates.TIMEOUT
-    dbg_state: strategy.States = strategy.States.DEBUG
 
     cur_time = time.time()
     delta_t = 0.0
@@ -148,7 +147,7 @@ class SSLController(BaseProcessor):
             return
 
         if cur_state == state_machine.State.STOP or (
-            cur_active not in [const.Color.ALL, self.field.ally_color]
+                cur_active not in [const.Color.ALL, self.field.ally_color]
         ):
             self.router.avoid_ball(True)
 
@@ -203,12 +202,10 @@ class SSLController(BaseProcessor):
 
         self.read_vision()
         # self.process_referee_cmd()
-        self.get_pass_points()
+        # self.get_pass_points()
         self.control_loop()
 
         self.control_assign()
         self.draw_image()
-
-        print(time.time() - self.cur_time)
 
         # self.draw_heat_map(self.field.ball.get_pos(), [e.get_pos() for e in self.field.enemies])

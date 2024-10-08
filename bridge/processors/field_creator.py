@@ -15,6 +15,29 @@ from bridge import const
 from bridge.auxiliary import aux, fld
 
 
+class SmallField():
+    def __init__(self):
+        self.center = aux.Point()
+
+    def offset_x(self):
+        return self.center.x
+
+    def offset_y(self):
+        return self.center.y
+
+    def check_border_x(self, val: float) -> bool:
+        return aux.sign(val) == aux.sign(self.center.x)
+
+    def check_border_y(self, val: float) -> bool:
+        return aux.sign(val) == aux.sign(self.center.y)
+
+    def check_border(self, x: float, y: float):
+        return self.check_border_x(x) and self.check_border_y(y)
+
+
+smallField = SmallField()
+
+
 @attr.s(auto_attribs=True)
 class FieldCreator(BaseProcessor):
     """class that creates the field"""
@@ -75,20 +98,26 @@ class FieldCreator(BaseProcessor):
             detection = ssl_package_content.detection
             # camera_id = detection.camera_id
             for ball in detection.balls:
-                balls.append(aux.Point(ball.x, ball.y))
+                if not smallField.check_border(ball.x, ball.y):
+                    continue
+                balls.append(aux.Point(ball.x - smallField.offset_x(), ball.y - smallField.offset_y()))
 
             # TODO: Barrier states
             for robot_det in detection.robots_blue:
+                if not smallField.check_border(robot_det.x, robot_det.y):
+                    continue
                 b_bots_id.append(robot_det.robot_id)
                 b_bots_pos[robot_det.robot_id].append(
-                    aux.Point(robot_det.x, robot_det.y)
+                    aux.Point(robot_det.x - smallField.offset_x(), robot_det.y - smallField.offset_y())
                 )
                 b_bots_ang[robot_det.robot_id].append(robot_det.orientation)
 
             for robot_det in detection.robots_yellow:
+                if not smallField.check_border(robot_det.x, robot_det.y):
+                    continue
                 y_bots_id.append(robot_det.robot_id)
                 y_bots_pos[robot_det.robot_id].append(
-                    aux.Point(robot_det.x, robot_det.y)
+                    aux.Point(robot_det.x - smallField.offset_x(), robot_det.y - smallField.offset_y())
                 )
                 y_bots_ang[robot_det.robot_id].append(robot_det.orientation)
 
@@ -97,10 +126,10 @@ class FieldCreator(BaseProcessor):
             balls_num = 0
             for ball in balls:
                 if (
-                    const.IS_SIMULATOR_USED
-                    or (ball - self.field.ball.get_pos()).mag()
-                    / (time() - self.field.ball.last_update_)
-                    < const.BALL_MAX_SPEED
+                        const.IS_SIMULATOR_USED
+                        or (ball - self.field.ball.get_pos()).mag()
+                        / (time() - self.field.ball.last_update_)
+                        < const.BALL_MAX_SPEED
                 ):
                     balls_sum += ball
                     balls_num += 1
@@ -110,8 +139,8 @@ class FieldCreator(BaseProcessor):
         elif self.field.robot_with_ball is not None:
             ally = self.field.robot_with_ball
             ball = (
-                ally.get_pos()
-                + aux.rotate(aux.RIGHT, ally.get_angle()) * ally.get_radius() / 2
+                    ally.get_pos()
+                    + aux.rotate(aux.RIGHT, ally.get_angle()) * ally.get_radius() / 2
             )
             self.field.update_ball(ball, time())
 

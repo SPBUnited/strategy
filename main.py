@@ -26,16 +26,15 @@ if __name__ == "__main__":
         VisionDetectionsCollector(
             processing_pause=0.001
         ),  # TODO: move to field creator
-        RefereeCommandsCollector(processing_pause=0.001),
+        # RefereeCommandsCollector(processing_pause=0.001),
         FieldCreator(processing_pause=0.01),
         SSLController(
             ally_color=const.COLOR,
             processing_pause=const.Ts,
             reduce_pause_on_process_time=True,
             dbg_game_status=strategy.GameStates.RUN,
-            dbg_state=strategy.States.ATTACK,
         ),
-        ExplorePasses(ally_color=const.COLOR),
+        # ExplorePasses(ally_color=const.COLOR),
         # SSLController(
         #     ally_color=const.Color.YELLOW,
         #     processing_pause=const.Ts,
