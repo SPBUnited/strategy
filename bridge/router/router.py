@@ -219,7 +219,7 @@ class Router:
 
             for obstacle in field.enemies:  # in [field.enemies, field.allies]
                 dist = (obstacle.get_pos() - robot.get_pos()).mag()
-                if obstacle.is_used() and dist > obstacle.get_radius() + robot.get_radius() and dist > 1000:
+                if obstacle.is_used() and dist > obstacle.get_radius() + robot.get_radius():
                     obstacles_dist.append((obstacle.to_entity(), dist))
 
             sorted_obstacles = sorted(obstacles_dist, key=lambda x: x[1])
@@ -260,7 +260,8 @@ class Router:
             #     radius,
             # )
             if (
-                aux.line_circle_intersect(
+                aux.dist(position, center) < const.VIEW_DIST
+                and aux.line_circle_intersect(
                     position,
                     target,
                     center,

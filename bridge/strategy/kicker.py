@@ -79,7 +79,6 @@ class KickerAux:
             aux.dist(field.allies[kicker_id].get_pos(), field.ball.get_pos()) > 200
             or abs(aux.wind_down_angle(field.allies[kicker_id].get_angle() - angle_to_target)) > 1
         ):
-            # print(aux.dist(field.allies[kicker_id].get_pos(), field.ball.get_pos()), aux.wind_down_angle(field.allies[kicker_id].get_angle() - angle_to_target))
             field.allies[kicker_id].kicker_voltage_ = const.VOLTAGE_ZERO
         elif style == "PASS":
             field.allies[kicker_id].kicker_voltage_ = const.VOLTAGE_PASS

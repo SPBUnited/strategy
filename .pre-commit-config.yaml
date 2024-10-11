@@ -38,7 +38,7 @@ repos:
         - "--line-length=125"
 
 - repo: https://github.com/PyCQA/flake8
-  rev: 3.7.9
+  rev: 4.0.1
   hooks:
     - id: flake8
       name: Flake8 PEP check
