@@ -92,7 +92,7 @@ class FieldCreator(BaseProcessor):
             for ball in balls:
                 if (
                     const.IS_SIMULATOR_USED
-                    or (ball - self.field.ball.get_pos()).mag() / (time() - self.field.ball.last_update_)
+                    or (ball - self.field.ball.get_pos()).mag() / (time() - self.field.ball_real_update_time)
                     < const.BALL_MAX_SPEED
                 ):
                     balls_sum += ball
@@ -100,9 +100,10 @@ class FieldCreator(BaseProcessor):
             if balls_num != 0:
                 ball = balls_sum / balls_num
                 self.field.update_ball(ball, time())
+                self.field.ball_real_update_time = time()
         elif self.field.robot_with_ball is not None:
             ally = self.field.robot_with_ball
-            ball = ally.get_pos() + aux.rotate(aux.RIGHT, ally.get_angle()) * ally.get_radius() / 2
+            ball = ally.get_pos() + aux.rotate(aux.RIGHT, ally.get_angle()) * ally.get_radius() / 1.5
             self.field.update_ball(ball, time())
 
         self.field.robot_with_ball = None

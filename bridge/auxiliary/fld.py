@@ -142,6 +142,8 @@ class Field:
         self.ball_history_idx = 0
         self.ball_start_point: Optional[aux.Point] = self.ball.get_pos()
 
+        self.ball_real_update_time = 0.0
+
     def active_allies(self, include_gk: bool = False) -> list[rbt.Robot]:
         """return allies on field"""
         return self._active_allies

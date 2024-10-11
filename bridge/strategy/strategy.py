@@ -11,7 +11,6 @@ import math
 # !v DEBUG ONLY
 from enum import Enum
 from time import time
-from typing import Optional
 
 import bridge.router.waypoint as wp
 from bridge import const
@@ -94,29 +93,7 @@ class Strategy:
 
         self.flag = 0
 
-        self.zero_pos: Optional[aux.Point] = None
-
         self.pass_points: list[tuple[aux.Point, float]] = []
-
-    def process_pass_points(self, field: fld.Field, pass_points: list[tuple[aux.Point, float]]) -> None:
-        best = []
-        for i, p in enumerate(pass_points):
-            print(p[0])
-            if p[1] > 0:
-                best.append(p)
-
-        # old = [
-        #     (p, acc.estimate_point(p, field.ball.get_pos(), field, [e.get_pos() for e in field.active_enemies()]))
-        #     for p in self.pass_points
-        # ]
-        #
-        # for i, p in enumerate(old):
-        #     if p[1] > best[0][1] * 0:
-        #         best.append(p)
-
-        # Я кароче ничего не придумал, как сделать так, чтобы точки не скакали. Если в жизни все будет ок то я на это забью
-
-        self.pass_points = best
 
     def change_game_state(self, new_state: GameStates, upd_active_team: ActiveTeam) -> None:
         """Изменение состояния игры и цвета команды"""
