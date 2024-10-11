@@ -143,11 +143,11 @@ class Field:
         self.ball_start_point: Optional[aux.Point] = self.ball.get_pos()
 
     def active_allies(self, include_gk: bool = False) -> list[rbt.Robot]:
-        """Sth"""
+        """return allies on field"""
         return self._active_allies
 
     def active_enemies(self, include_gk: bool = False) -> list[rbt.Robot]:
-        """Sth"""
+        """return enemies on field"""
         return self._active_enemies
 
     def update_field(self, new_field: "Field") -> None:

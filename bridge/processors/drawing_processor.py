@@ -134,8 +134,9 @@ class Drawer(BaseProcessor):
             )
 
     def update_boxes(self) -> None:
-        ev = pygame.event.get()
-        for event in ev:
+        """check clicks on boxes and render its"""
+        events = pygame.event.get()
+        for event in events:
             for img_box in self.images:
                 img_box[1].update(event)
 
@@ -203,10 +204,10 @@ class Drawer(BaseProcessor):
     def print_text(self, pos: tuple[int, int], text: str, color: tuple[int, int, int]) -> None:
         """Print text"""
         font_surf = self.font.render(text, True, color)
-        w, h = self.font.size(text)
+        width, heigh = self.font.size(text)
         font_pos = (
-            pos[0] - w / 2,
-            pos[1] - h / 2,
+            pos[0] - width / 2,
+            pos[1] - heigh / 2,
         )
         self.screen.blit(font_surf, font_pos)
 
@@ -226,6 +227,8 @@ class Drawer(BaseProcessor):
 
 
 class CheckBox:
+    """class for clickable box"""
+
     def __init__(
         self,
         surface: pygame.Surface,
@@ -245,13 +248,14 @@ class CheckBox:
         self.checkbox_obj = pygame.Rect(self.x, self.y, self.checkbox_size, self.checkbox_size)
         self.font = pygame.font.SysFont("Open Sans", 25)
         self.font_surf = self.font.render(self.text, True, (255, 255, 255))
-        _, h = self.font.size(self.text)
+        _, heigh = self.font.size(self.text)
         self.font_pos = (
             self.x + self.checkbox_size * 1.5,
-            self.y - h / 2 + self.checkbox_size / 2,
+            self.y - heigh / 2 + self.checkbox_size / 2,
         )
 
     def render_checkbox(self) -> None:
+        """render checkbox"""
         pygame.draw.rect(self.surface, (230, 230, 230), self.checkbox_obj)
         pygame.draw.rect(self.surface, (0, 0, 0), self.checkbox_obj, 1)
 
@@ -268,10 +272,11 @@ class CheckBox:
         self.surface.blit(self.font_surf, self.font_pos)
 
     def update(self, event_object: pygame.event.Event) -> bool:
+        """check click on box"""
         if event_object.type == pygame.MOUSEBUTTONDOWN:
             x, y = pygame.mouse.get_pos()
-            px, py, w, h = self.checkbox_obj
-            if px < x < px + w and py < y < py + h:
+            pos_x, pos_y, w, heigh = self.checkbox_obj
+            if pos_x < x < pos_x + w and pos_y < y < pos_y + heigh:
                 if self.is_pressed:
                     self.is_pressed = False
                 else:

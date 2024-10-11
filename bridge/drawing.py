@@ -44,6 +44,7 @@ class Image:
         self.prints: list[tuple[tuple[float, float], str, tuple[int, int, int]]] = []
 
     def clear(self) -> None:
+        """clear the image"""
         self.commands = []
         self.prints = []
 

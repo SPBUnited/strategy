@@ -15,11 +15,11 @@ class Route:
     Класс описание произвольного маршрута
     """
 
-    def __init__(self, rbt: rbt.Robot):
+    def __init__(self, robot: rbt.Robot):
         """
         Конструктор
         """
-        self._robot = [wp.Waypoint(rbt.get_pos(), rbt._angle, wp.WType.T_ROBOT)]
+        self._robot = [wp.Waypoint(robot.get_pos(), robot._angle, wp.WType.T_ROBOT)]
         self._destination = [wp.Waypoint(aux.GRAVEYARD_POS, 0, wp.WType.T_GRAVEYARD)]
         self._routewp: list[wp.Waypoint] = []
         # self.__route = [*self.robot, *self.__routewp, *self.__destination]
@@ -35,13 +35,13 @@ class Route:
             wp.WType.S_BALL_PASS,
         ]
 
-    def update(self, rbt: rbt.Robot) -> None:
+    def update(self, robot: rbt.Robot) -> None:
         """
         Обновить маршрут
 
         Обновляет текущее положение робота в маршрутной карте
         """
-        self._robot = [wp.Waypoint(rbt.get_pos(), rbt.get_angle(), wp.WType.T_ROBOT)]
+        self._robot = [wp.Waypoint(robot.get_pos(), robot.get_angle(), wp.WType.T_ROBOT)]
 
     def clear(self) -> None:
         """
@@ -129,6 +129,7 @@ class Route:
         return string
 
     def kicker_control(self, robot: rbt.Robot) -> None:
+        """control voltage and autokick"""
         end_point = self.get_dest_wp()
 
         if end_point.type in self.ball_wp_types and self.get_length() < 300:
@@ -155,6 +156,7 @@ class Route:
                 robot.auto_kick_ = 0
 
     def vel_control(self, robot: rbt.Robot, field: fld.Field) -> tuple[aux.Point, float]:
+        """set vel using waypoint"""
         target_point = self.get_next_wp()
         end_point = self.get_dest_wp()
 

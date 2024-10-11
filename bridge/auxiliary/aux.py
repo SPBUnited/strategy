@@ -92,7 +92,7 @@ class Point:
 
     def __eq__(self, p: typing.Any) -> bool:
         try:
-            return abs(self.x - p.x) < 0.1 and abs(self.y - p.y) < 0.1
+            return dist(self, p) < 0.1
         except TypeError:
             return False
 
@@ -266,7 +266,7 @@ def rotate(p: Point, angle: float) -> Point:
     )
 
 
-def find_nearest_point(p: Point, points: list[Point], exclude: list[Point] = []) -> Point:  #
+def find_nearest_point(p: Point, points: list[Point], exclude: list[Point] = []) -> Point:
     """
     Найти ближайшую точку к p из облака points, игнорируя точки exclude
     """
@@ -428,12 +428,13 @@ def get_tangent_points(point0: Point, point1: Point, r: float) -> list[Point]:
     d = dist(point0, point1)
     if d < r:
         return []
-    elif d == r:
+
+    if d == r:
         return [point1]
-    else:
-        midx, midy = (point0.x + point1.x) / 2, (point0.y + point1.y) / 2
-        p2, p3 = circles_inter(point0, Point(midx, midy), r, d / 2)
-        return [p2, p3]
+
+    midx, midy = (point0.x + point1.x) / 2, (point0.y + point1.y) / 2
+    p2, p3 = circles_inter(point0, Point(midx, midy), r, d / 2)
+    return [p2, p3]
 
 
 def get_angle_between_points(a: Point, b: Point, c: Point) -> float:
@@ -485,4 +486,5 @@ def nearest_point_on_circle(a: Point, c: Point, radius: float) -> Point:
 
 
 def is_point_on_line(point: Point, line_start: Point, line_end: Point, is_inf: str = "L") -> bool:
-    return dist(point, closest_point_on_line(line_start, line_end, point, is_inf)) < 0.1
+    """Return true if point is locating on line"""
+    return point == closest_point_on_line(line_start, line_end, point, is_inf)

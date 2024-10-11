@@ -4,7 +4,6 @@ Processor that creates the field
 
 import typing
 from concurrent.futures import ThreadPoolExecutor
-from time import time
 from typing import Any
 
 import attr
@@ -28,9 +27,7 @@ class ExplorePasses(BaseProcessor):
     ally_color: const.Color = const.Color.BLUE
 
     def initialize(self, data_bus: DataBus) -> None:
-        """
-        Инициализация
-        """
+        """Инициализация"""
         super().initialize(data_bus)
         self.field_reader = DataReader(data_bus, const.FIELD_TOPIC)
         self.passes_writer = DataWriter(data_bus, const.PASSES_TOPIC, 20)
@@ -52,6 +49,8 @@ class ExplorePasses(BaseProcessor):
         self.start_points = np.vstack((x, y)).T
 
     def process_cell(self, point: tuple[float, float]) -> Any:
+        """surf to local minimum from point"""
+
         def wrp_fnc(x: tuple[float, float]) -> float:
             point = aux.Point(x[0], x[1])
             return -acc.estimate_point(
@@ -77,7 +76,6 @@ class ExplorePasses(BaseProcessor):
         """
         Метод обратного вызова процесса
         """
-        time()
         new_field = self.field_reader.read_last()
         if new_field is not None:
             updated_field = new_field.content
@@ -89,9 +87,9 @@ class ExplorePasses(BaseProcessor):
 
         _max = -100
 
-        # cells = get_cells(  # ALARM DONT WORK FUCK
-        #    self.field.ball.get_pos(),
-        #    self.field,
+        # cells = get_cells(  # ALARM DONT WORK FUCK   (;-;)
+        #    self.field.ball.get_pos(),                 /|\
+        #    self.field,                                / \
         #    [e.get_pos() for e in self.field.enemies],
         # )
         # tmp_data = [aux.Point(2000, 0), aux.Point(4000, 200), aux.Point(4000, -200)]

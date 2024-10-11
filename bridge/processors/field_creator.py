@@ -73,11 +73,9 @@ class FieldCreator(BaseProcessor):
             #         const.GOAL_DY = geometry.field.goal_width
 
             detection = ssl_package_content.detection
-            # camera_id = detection.camera_id
             for ball in detection.balls:
                 balls.append(aux.Point(ball.x, ball.y))
 
-            # TODO: Barrier states
             for robot_det in detection.robots_blue:
                 b_bots_id.append(robot_det.robot_id)
                 b_bots_pos[robot_det.robot_id].append(aux.Point(robot_det.x, robot_det.y))
