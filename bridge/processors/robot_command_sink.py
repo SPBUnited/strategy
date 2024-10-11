@@ -29,12 +29,10 @@ class CommandSink(BaseProcessor):
     commands_writer: DataWriter = attr.ib(init=False)
 
     b_control_team = [
-        rbt.Robot(aux.GRAVEYARD_POS, 0, const.ROBOT_R, const.Color.BLUE, i, 0)
-        for i in range(const.TEAM_ROBOTS_MAX_COUNT)
+        rbt.Robot(aux.GRAVEYARD_POS, 0, const.ROBOT_R, const.Color.BLUE, i, 0) for i in range(const.TEAM_ROBOTS_MAX_COUNT)
     ]
     y_control_team = [
-        rbt.Robot(aux.GRAVEYARD_POS, 0, const.ROBOT_R, const.Color.YELLOW, i, 0)
-        for i in range(const.TEAM_ROBOTS_MAX_COUNT)
+        rbt.Robot(aux.GRAVEYARD_POS, 0, const.ROBOT_R, const.Color.YELLOW, i, 0) for i in range(const.TEAM_ROBOTS_MAX_COUNT)
     ]
 
     def initialize(self, data_bus: DataBus) -> None:
@@ -74,9 +72,7 @@ class CommandSink(BaseProcessor):
             if ctrl_id is None:
                 continue
 
-            if (
-                not const.IS_SIMULATOR_USED and ctrl_id in const.REVERSED_KICK
-            ):  # because all robots are reversed :)
+            if not const.IS_SIMULATOR_USED and ctrl_id in const.REVERSED_KICK:  # because all robots are reversed :)
                 r.kick_forward_, r.kick_up_ = r.kick_up_, r.kick_forward_
                 if r.auto_kick_ == 2:
                     r.auto_kick_ = 1
@@ -131,11 +127,7 @@ class CommandSink(BaseProcessor):
                 rules.append(0)
         else:
             for i in range(const.TEAM_ROBOTS_MAX_COUNT):
-                control_team = (
-                    self.y_control_team
-                    if self.y_control_team[i].is_used()
-                    else self.b_control_team
-                )
+                control_team = self.y_control_team if self.y_control_team[i].is_used() else self.b_control_team
 
                 # if self.y_control_team[i].is_used():
                 #     pass

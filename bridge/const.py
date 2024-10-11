@@ -14,37 +14,29 @@ class Color(Enum):
 
 
 class Div(Enum):
-    """Класс с цветами"""
+    """Класс с разными дивизионами"""
 
+    A = 0  # XD
     B = 1
     C = 2
 
 
 ##################################################
 # GAME SETTING CONSTS
-DIV = Div.C
+DIV = Div.B
 COLOR = Color.BLUE
-POLARITY = -1  # -1 если ворота синих на +x; 1 если ворота синих на -x
+POLARITY = 1  # -1 если ворота синих на +x; 1 если ворота синих на -x
 
 
-IS_SIMULATOR_USED = False
+IS_SIMULATOR_USED = True
 IS_DRIBBLER_USED = True  # dribbler and upper_kick
 SELF_PLAY = False
 
-GK = 8
-PENALTY_KICKER = 5
-ENEMY_GK = 1
-
-CAMERAS_COUNT: int = 4
-MAX_BALLS_IN_CAMERA: int = 64
-MAX_BALLS_IN_FIELD: int = CAMERAS_COUNT * MAX_BALLS_IN_CAMERA
-BALL_PACKET_SIZE: int = 2
+GK = 0
+ENEMY_GK = 0
 
 ROBOTS_MAX_COUNT: int = 32
 TEAM_ROBOTS_MAX_COUNT: int = ROBOTS_MAX_COUNT // 2
-SINGLE_ROBOT_PACKET_SIZE = 5
-ROBOT_TEAM_PACKET_SIZE: int = SINGLE_ROBOT_PACKET_SIZE * TEAM_ROBOTS_MAX_COUNT
-
 GEOMETRY_PACKET_SIZE: int = 2
 
 CONTROL_MAPPING: dict[int, int] = {
@@ -115,27 +107,36 @@ GRAVEYARD_POS_X = -10000
 
 BALL_MAX_SPEED = 10000  # for filter random balls
 
-FIELD_WIDTH = 9000
-FIELD_HEIGH = 6000
+match DIV:
+    case Div.A:
+        GOAL_DX = 1 / 0  # не дорос ещё
 
-GOAL_DX = 4500
-GOAL_DY = 1000
-GOAL_PEN_DX = 1000
-GOAL_PEN_DY = 2000
+    case Div.B:
+        GOAL_DX = 4500
+        GOAL_DY = 1000
+        GOAL_PEN_DX = 1000
+        GOAL_PEN_DY = 2000
 
-FIELD_DY = 3000
+        FIELD_DX = GOAL_DX
+        FIELD_DY = 3000
 
-GK_FORW = 200 + ROBOT_R
-if DIV == DIV.C:
-    FIELD_WIDTH = 4500
-    FIELD_HEIGH = 3000
-    GOAL_DX = 2250
-    GOAL_DY = 800
-    GOAL_PEN_DX = 500
-    GOAL_PEN_DY = 1350
+        GK_FORW = 200 + ROBOT_R
 
-    GK_FORW = 100 + ROBOT_R
-    FIELD_DY = 1500
+    case Div.C:
+        GOAL_DX = 2250
+        GOAL_DY = 800
+        GOAL_PEN_DX = 500
+        GOAL_PEN_DY = 1350
+
+        FIELD_DX = GOAL_DX
+        FIELD_DY = 1500
+
+        GK_FORW = 100 + ROBOT_R
+
+
+# ROUTE CONSTS
+KEEP_BALL_DIST = 500 + ROBOT_R
+VIEW_DIST = 1500
 
 KICK_ALIGN_DIST = 150
 GRAB_ALIGN_DIST = 130
@@ -144,14 +145,6 @@ KICK_ALIGN_ANGLE = 0.07
 KICK_ALIGN_OFFSET = 20
 BALL_GRABBED_DIST = 115
 BALL_GRABBED_ANGLE = 0.8
-
-# ROUTE CONSTS
-KEEP_BALL_DIST = 500 + ROBOT_R
-
-# SOME STRATEGY TRASH
-MIN_GOOD_ANGLE = 90
-ROBOT_SPEED = 1.5
-FULL_DELAY = 0.16
 
 # VOLTAGES
 VOLTAGE_PASS = 15

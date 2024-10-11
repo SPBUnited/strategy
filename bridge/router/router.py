@@ -252,7 +252,7 @@ class Router:
             radius = (
                 obstacle.get_radius()
                 + const.ROBOT_R
-                + time_to_reach * obstacle.get_vel().mag() * 0.3  # <-- coefficient of fear [0; 1] (for moving obst)
+                + time_to_reach * obstacle.get_vel().mag() * 0.25  # <-- coefficient of fear [0; 1] (for moving obst)
             )
             # field.path_image.draw_dot(
             #     center,
@@ -260,7 +260,8 @@ class Router:
             #     radius,
             # )
             if (
-                aux.line_circle_intersect(
+                aux.dist(position, center) < const.VIEW_DIST
+                and aux.line_circle_intersect(
                     position,
                     target,
                     center,

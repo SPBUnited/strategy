@@ -47,7 +47,8 @@ def set_wall_targets(field: fld.Field, num: int, ball: aux.Point) -> list[aux.Po
         return [
             field.ally_goal.frw + field.ally_goal.eye_up * const.ROBOT_R * (-(num - 1) + 2 * i) for i in range(num)
         ]  # ball in goal.hull
-    elif aux.dist(ball, intersections[0]) > aux.dist(ball, intersections[1]):
+
+    if aux.dist(ball, intersections[0]) > aux.dist(ball, intersections[1]):
         intersections[1], intersections[0] = intersections[0], intersections[1]
 
     length = min((ball - intersections[0]).mag(), (ball - intersections[1]).mag())

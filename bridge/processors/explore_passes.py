@@ -3,56 +3,44 @@ Processor that creates the field
 """
 
 import typing
+from concurrent.futures import ThreadPoolExecutor
 from typing import Any
-from time import time
 
 import attr
+import numpy as np
+from scipy.optimize import minimize
 from strategy_bridge.bus import DataBus, DataReader, DataWriter
-from strategy_bridge.common import config
-from strategy_bridge.pb.messages_robocup_ssl_wrapper_pb2 import SSL_WrapperPacket
 from strategy_bridge.processors import BaseProcessor
 
-from bridge import const
-from bridge.auxiliary import aux, fld
-from bridge.auxiliary.cells_tools import Cell, get_cells
-
-from random import random
-
-from scipy.optimize import minimize, dual_annealing
-from scipy.stats import qmc
-import numpy as np
-from concurrent.futures import ThreadPoolExecutor
 import bridge.strategy.accessories as acc
+from bridge import const, drawing
+from bridge.auxiliary import aux, fld
 
 
 @attr.s(auto_attribs=True)
 class ExplorePasses(BaseProcessor):
     """class that creates the field"""
 
-    processing_pause: typing.Optional[float] = 0.2
+    processing_pause: typing.Optional[float] = 0.1
     reduce_pause_on_process_time: bool = True
-    # commands_sink_reader: DataReader = attr.ib(init=False)
-    # box_feedback_reader: DataReader = attr.ib(init=False)
-    # field_writer: DataWriter = attr.ib(init=False)
-    _ssl_converter: SSL_WrapperPacket = attr.ib(init=False)
 
     ally_color: const.Color = const.Color.BLUE
 
     def initialize(self, data_bus: DataBus) -> None:
-        """
-        Инициализация
-        """
+        """Инициализация"""
         super().initialize(data_bus)
         self.field_reader = DataReader(data_bus, const.FIELD_TOPIC)
         self.passes_writer = DataWriter(data_bus, const.PASSES_TOPIC, 20)
-        self._ssl_converter = SSL_WrapperPacket()
+        self.image_writer = DataWriter(data_bus, const.IMAGE_TOPIC, 20)
+
         self.field = fld.Field(self.ally_color)
-        self.best: tuple[aux.Point, float] = []
+        self.image = drawing.Image(drawing.ImageTopic.PASSES)
+        self.best: list[tuple[aux.Point, float]] = []
 
         a, b = 2, 1
         x = np.random.beta(a, b, size=5)
-        x_range = [-const.FIELD_WIDTH / 2, const.FIELD_WIDTH / 2]
-        y_range = [-const.FIELD_HEIGH / 2, const.FIELD_HEIGH / 2]
+        x_range = [-const.FIELD_DX, const.FIELD_DX]
+        y_range = [-const.FIELD_DY, const.FIELD_DY]
 
         x = x * (x_range[1] - x_range[0]) + x_range[0]
 
@@ -60,14 +48,15 @@ class ExplorePasses(BaseProcessor):
 
         self.start_points = np.vstack((x, y)).T
 
-    def process_cell(self, point) -> Any:
-        def wrp_fnc(x) -> float:
+    def process_cell(self, point: tuple[float, float]) -> Any:
+        """surf to local minimum from point"""
+
+        def wrp_fnc(x: tuple[float, float]) -> float:
             point = aux.Point(x[0], x[1])
             return -acc.estimate_point(
+                self.field,
                 point,
                 self.field.ball.get_pos(),
-                self.field,
-                [e.get_pos() for e in self.field.active_enemies()],
             )
 
         # tmp = aux.average_point(cell.peaks)
@@ -76,8 +65,8 @@ class ExplorePasses(BaseProcessor):
             wrp_fnc,
             point,
             bounds=[
-                (-const.FIELD_WIDTH / 2, const.FIELD_WIDTH / 2),
-                (-const.FIELD_HEIGH / 2, const.FIELD_HEIGH / 2),
+                (-const.FIELD_DX, const.FIELD_DX),
+                (-const.FIELD_DY, const.FIELD_DY),
             ],
             method="Nelder-Mead",
         )
@@ -87,22 +76,20 @@ class ExplorePasses(BaseProcessor):
         """
         Метод обратного вызова процесса
         """
-        t = time()
         new_field = self.field_reader.read_last()
         if new_field is not None:
             updated_field = new_field.content
             self.field.update_field(updated_field)
-
         else:
             return
 
-        points = []
+        points: list[tuple[aux.Point, float]] = []
 
         _max = -100
 
-        # cells = get_cells(  # ALARM DONT WORK FUCK
-        #    self.field.ball.get_pos(),
-        #    self.field,
+        # cells = get_cells(  # ALARM DONT WORK FUCK   (;-;)
+        #    self.field.ball.get_pos(),                 /|\
+        #    self.field,                                / \
         #    [e.get_pos() for e in self.field.enemies],
         # )
         # tmp_data = [aux.Point(2000, 0), aux.Point(4000, 200), aux.Point(4000, -200)]
@@ -130,19 +117,16 @@ class ExplorePasses(BaseProcessor):
                 points.append(
                     (
                         aux.Point(res.get("x")[0], res.get("x")[1]),
-                        aux.minmax(-res.get("fun"), -1, 1),
+                        aux.minmax(-res.get("fun"), -2, 1),
                     )
                 )
 
         min_distance = 500
         points = sorted(points, key=lambda x: -x[1])
-        best = []
+        best: list[tuple[aux.Point, float]] = []
 
         for point in points:
-            if all(
-                (point[0] - existing_point[0]).mag() >= min_distance
-                for existing_point in best
-            ):
+            if all((point[0] - existing_point[0]).mag() >= min_distance for existing_point in best):
                 best.append(point)
 
         # tmp = []
@@ -152,5 +136,17 @@ class ExplorePasses(BaseProcessor):
         self.passes_writer.write(best)
 
         self.best = best.copy()
+
+        for p in best:
+            if p[1] > 0.5:
+                color = (int(255 * 2 * (1 - p[1])), 255, 0)
+            elif p[1] > 0:
+                color = (255, int(255 * 2 * p[1]), 0)
+            else:
+                color = (int(255 * (1 + p[1] / 2)), 0, 0)
+            self.image.draw_dot(p[0], color, 65)
+
+        self.image_writer.write(self.image)
+        self.image.clear()
 
         # print(time() - t)

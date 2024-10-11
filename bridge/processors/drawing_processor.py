@@ -55,6 +55,8 @@ class Drawer(BaseProcessor):
 
         pygame.font.init()
 
+        self.font = pygame.font.SysFont("Open Sans", 25)
+
     def process(self) -> None:
 
         message_img = self.image_reader.read_new()
@@ -73,12 +75,14 @@ class Drawer(BaseProcessor):
 
         field_image = drawing.Image()
 
-        for rbt in field.allies:
+        for rbt in field.get_blu_team():
             if rbt.is_used():
                 field_image.draw_robot(rbt.get_pos(), rbt.get_angle())
-        for rbt in field.enemies:
+                field_image.print(rbt.get_pos(), str(rbt.r_id))
+        for rbt in field.get_yel_team():
             if rbt.is_used():
                 field_image.draw_robot(rbt.get_pos(), rbt.get_angle(), (255, 255, 0))
+                field_image.print(rbt.get_pos(), str(rbt.r_id), (0, 0, 0))
 
         field_image.draw_dot(field.ball.get_pos(), (255, 0, 0), const.BALL_R)
         if field.ball_start_point is not None:
@@ -92,9 +96,16 @@ class Drawer(BaseProcessor):
                     cmd = self.scale_dots(command)
                     self.complete_command(cmd)
 
+                for prnt in image_box[0].prints:
+                    pos = self.cord_to_pixels(prnt[0])
+                    self.print_text(pos, prnt[1], prnt[2])
+
         for command in field_image.commands:
             cmd = self.scale_dots(command)
             self.complete_command(cmd)
+        for prnt in field_image.prints:
+            pos = self.cord_to_pixels(prnt[0])
+            self.print_text(pos, prnt[1], prnt[2])
 
         pygame.display.flip()
 
@@ -123,8 +134,9 @@ class Drawer(BaseProcessor):
             )
 
     def update_boxes(self) -> None:
-        ev = pygame.event.get()
-        for event in ev:
+        """check clicks on boxes and render its"""
+        events = pygame.event.get()
+        for event in events:
             for img_box in self.images:
                 img_box[1].update(event)
 
@@ -189,18 +201,34 @@ class Drawer(BaseProcessor):
                     round(command.size),
                 )
 
+    def print_text(self, pos: tuple[int, int], text: str, color: tuple[int, int, int]) -> None:
+        """Print text"""
+        font_surf = self.font.render(text, True, color)
+        width, heigh = self.font.size(text)
+        font_pos = (
+            pos[0] - width / 2,
+            pos[1] - heigh / 2,
+        )
+        self.screen.blit(font_surf, font_pos)
+
     def scale_dots(self, command: drawing.Command) -> drawing.Command:
         """Scale dots from coordinates to pixels"""
         scaled_command = drawing.Command(command.color, command.dots.copy(), command.size)
         for i, _ in enumerate(scaled_command.dots):
-            scaled_command.dots[i] = (
-                scaled_command.dots[i][0] * self.scale + self.middle_x,
-                -scaled_command.dots[i][1] * self.scale + self.middle_y,
-            )
+            scaled_command.dots[i] = self.cord_to_pixels(scaled_command.dots[i])
         return scaled_command
+
+    def cord_to_pixels(self, point: tuple[float, float]) -> tuple[int, int]:
+        """Scale single dot from coordinates to pixels"""
+        return (
+            int(point[0] * self.scale + self.middle_x),
+            int(-point[1] * self.scale + self.middle_y),
+        )
 
 
 class CheckBox:
+    """class for clickable box"""
+
     def __init__(
         self,
         surface: pygame.Surface,
@@ -220,13 +248,14 @@ class CheckBox:
         self.checkbox_obj = pygame.Rect(self.x, self.y, self.checkbox_size, self.checkbox_size)
         self.font = pygame.font.SysFont("Open Sans", 25)
         self.font_surf = self.font.render(self.text, True, (255, 255, 255))
-        _, h = self.font.size(self.text)
+        _, heigh = self.font.size(self.text)
         self.font_pos = (
             self.x + self.checkbox_size * 1.5,
-            self.y - h / 2 + self.checkbox_size / 2,
+            self.y - heigh / 2 + self.checkbox_size / 2,
         )
 
     def render_checkbox(self) -> None:
+        """render checkbox"""
         pygame.draw.rect(self.surface, (230, 230, 230), self.checkbox_obj)
         pygame.draw.rect(self.surface, (0, 0, 0), self.checkbox_obj, 1)
 
@@ -243,10 +272,11 @@ class CheckBox:
         self.surface.blit(self.font_surf, self.font_pos)
 
     def update(self, event_object: pygame.event.Event) -> bool:
+        """check click on box"""
         if event_object.type == pygame.MOUSEBUTTONDOWN:
             x, y = pygame.mouse.get_pos()
-            px, py, w, h = self.checkbox_obj
-            if px < x < px + w and py < y < py + h:
+            pos_x, pos_y, w, heigh = self.checkbox_obj
+            if pos_x < x < pos_x + w and pos_y < y < pos_y + heigh:
                 if self.is_pressed:
                     self.is_pressed = False
                 else:
