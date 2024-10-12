@@ -280,8 +280,6 @@ class Strategy:
 
         free_allies = max(0, free_allies + total_active)
 
-        print(free_allies)
-
         ball_pos = aux.minmax(field.ball.get_pos().x, const.GOAL_DX)
         atks = round(free_allies / (2 * const.GOAL_DX) * (-ball_pos * field.polarity + const.GOAL_DX)) + atk_min
         defs = free_allies - (atks - atk_min) + def_min
@@ -290,7 +288,6 @@ class Strategy:
 
         res_roles = [Role.GOALKEEPER, Role.ATTACKER] + roles
         total_active += 1
-        print(total_active)
         return res_roles[:total_active]
 
     def manage_roles(
@@ -359,19 +356,19 @@ class Strategy:
                 match rbt_rl:
                     case Role.GOALKEEPER:
                         text = "GK"
-                        clr = 200
+                        clr = 255
                     case Role.ATTACKER:
                         text = "AT"
                         clr = 255
                     case Role.PASS_DEFENDER:
                         text = "PD"
-                        clr = 127
+                        clr = 150
                     case Role.WALLLINER:
                         text = "WL"
-                        clr = 127
+                        clr = 100
                     case Role.FORWARD:
                         text = "FRW"
-                        clr = 127
+                        clr = 200
                 text_pos = field.allies[r_id].get_pos() + aux.Point(0, const.ROBOT_R * 1.5)
                 field.strategy_image.print(text_pos, text, (clr, clr, clr))
 

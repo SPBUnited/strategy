@@ -79,7 +79,7 @@ def set_forwards_wps(
     pos_num = len(forwards)
     poses = pass_points.copy()
 
-    if len(pass_points) == 0:
+    if field.ally_color != const.COLOR:
         k = -1 if const.SELF_PLAY else 1
         # poses = [
         #     aux.Point(-1500 * field.polarity * k, 1250),
@@ -93,16 +93,6 @@ def set_forwards_wps(
         ]
         poses = poses[: (pos_num + 1)]
 
-    # used_forwards: list[int] = []
-    # for pos in poses:
-    #     if len(used_forwards) == pos_num:
-    #         return
-    #     pop = fld.find_nearest_robot(pos[0], forwards, used_forwards)
-    #     if pop is None:
-    #         continue
-    #     used_forwards.append(pop.r_id)
-    #     pass_receiver(field, waypoints, pop.r_id, pos[0])
-
     used_poses: list[aux.Point] = []
 
     for forward in forwards:
@@ -113,7 +103,7 @@ def set_forwards_wps(
         for pos in poses:  # TODO сделать зависимость от времени до паса
             if pos[0] in used_poses:
                 continue
-            est = pos[1] - aux.dist(pos[0], forward.get_pos()) / 5000  # <- coefficient of fear to move to far point
+            est = pos[1] - aux.dist(pos[0], forward.get_pos()) / 1000  # <- coefficient of fear to move to far point
             if best_pos_est is None or est > best_pos_est:
                 best_pos = pos[0]
                 best_pos_est = pos[1]
