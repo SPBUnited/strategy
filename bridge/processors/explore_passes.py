@@ -58,7 +58,7 @@ class ExplorePasses(BaseProcessor):
             ],
             method="Nelder-Mead",
         )
-        return (aux.Point(res.get("x")[0], res.get("x")[1]), res.get("fun"))
+        return (aux.Point(res.get("x")[0], res.get("x")[1]), -res.get("fun"))
 
     def process(self) -> None:
         """
