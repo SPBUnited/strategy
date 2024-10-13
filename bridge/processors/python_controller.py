@@ -128,7 +128,7 @@ class SSLController(BaseProcessor):
         points = self.passes_reader.read_last()
         if points is not None:
             points = points.content
-            self.strategy.process_pass_points(self.field, points)
+            self.strategy.pass_points = points
 
     def process_referee_cmd(self) -> None:
         """Get referee commands"""
@@ -197,6 +197,4 @@ class SSLController(BaseProcessor):
         self.control_assign()
         self.draw_image()
 
-        print(time.time() - self.cur_time)
-
-        # self.draw_heat_map(self.field.ball.get_pos(), [e.get_pos() for e in self.field.enemies])
+        print("Strategy long:", time.time() - self.cur_time)

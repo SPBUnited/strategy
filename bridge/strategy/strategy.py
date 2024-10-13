@@ -11,7 +11,6 @@ import math
 # !v DEBUG ONLY
 from enum import Enum
 from time import time
-from typing import Optional
 
 import bridge.router.waypoint as wp
 from bridge import const
@@ -94,29 +93,7 @@ class Strategy:
 
         self.flag = 0
 
-        self.zero_pos: Optional[aux.Point] = None
-
         self.pass_points: list[tuple[aux.Point, float]] = []
-
-    def process_pass_points(self, field: fld.Field, pass_points: list[tuple[aux.Point, float]]) -> None:
-        best = []
-        for i, p in enumerate(pass_points):
-            print(p[0])
-            if p[1] > 0:
-                best.append(p)
-
-        # old = [
-        #     (p, acc.estimate_point(p, field.ball.get_pos(), field, [e.get_pos() for e in field.active_enemies()]))
-        #     for p in self.pass_points
-        # ]
-        #
-        # for i, p in enumerate(old):
-        #     if p[1] > best[0][1] * 0:
-        #         best.append(p)
-
-        # Я кароче ничего не придумал, как сделать так, чтобы точки не скакали. Если в жизни все будет ок то я на это забью
-
-        self.pass_points = best
 
     def change_game_state(self, new_state: GameStates, upd_active_team: ActiveTeam) -> None:
         """Изменение состояния игры и цвета команды"""
@@ -303,8 +280,6 @@ class Strategy:
 
         free_allies = max(0, free_allies + total_active)
 
-        print(free_allies)
-
         ball_pos = aux.minmax(field.ball.get_pos().x, const.GOAL_DX)
         atks = round(free_allies / (2 * const.GOAL_DX) * (-ball_pos * field.polarity + const.GOAL_DX)) + atk_min
         defs = free_allies - (atks - atk_min) + def_min
@@ -313,7 +288,6 @@ class Strategy:
 
         res_roles = [Role.GOALKEEPER, Role.ATTACKER] + roles
         total_active += 1
-        print(total_active)
         return res_roles[:total_active]
 
     def manage_roles(
@@ -382,19 +356,19 @@ class Strategy:
                 match rbt_rl:
                     case Role.GOALKEEPER:
                         text = "GK"
-                        clr = 200
+                        clr = 255
                     case Role.ATTACKER:
                         text = "AT"
                         clr = 255
                     case Role.PASS_DEFENDER:
                         text = "PD"
-                        clr = 127
+                        clr = 150
                     case Role.WALLLINER:
                         text = "WL"
-                        clr = 127
+                        clr = 100
                     case Role.FORWARD:
                         text = "FRW"
-                        clr = 127
+                        clr = 200
                 text_pos = field.allies[r_id].get_pos() + aux.Point(0, const.ROBOT_R * 1.5)
                 field.strategy_image.print(text_pos, text, (clr, clr, clr))
 

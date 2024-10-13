@@ -77,6 +77,7 @@ def set_forwards_wps(
 ) -> None:
     """Расставляет роботов по точкам для получения паса"""
     pos_num = len(forwards)
+    poses = pass_points.copy()
 
     if field.ally_color != const.COLOR:
         k = -1 if const.SELF_PLAY else 1
@@ -85,24 +86,31 @@ def set_forwards_wps(
         #     aux.Point(-1500 * field.polarity * k, -1250),
         #     aux.Point(-1000 * field.polarity * k, 0),
         # ]
-        pass_points = [
-            (aux.Point(-3500 * field.polarity * k, 1250), 0),
-            (aux.Point(-3500 * field.polarity * k, -1250), 0),
-            (aux.Point(-3000 * field.polarity * k, 0), 0),
+        poses = [
+            (aux.Point(-3500 * field.polarity * k, 1250), 1),
+            (aux.Point(-3500 * field.polarity * k, -1250), 1),
+            (aux.Point(-3000 * field.polarity * k, 0), 1),
         ]
-        pass_points = pass_points[: (pos_num + 1)]
+        poses = poses[: (pos_num + 1)]
 
-    used_forwards: list[int] = []
+    used_poses: list[aux.Point] = []
 
-    for pos in pass_points:
-        print(pos[0])
-        if len(used_forwards) == pos_num:
-            return
-        pop = fld.find_nearest_robot(pos[0], forwards, used_forwards)
-        if pop is None:
+    for forward in forwards:
+        if len(poses) - len(used_poses) == 0:
             continue
-        used_forwards.append(pop.r_id)
-        pass_receiver(field, waypoints, pop.r_id, pos[0])
+        best_pos: Optional[aux.Point] = None
+        best_pos_est: Optional[float] = None
+        for pos in poses:  # TODO сделать зависимость от времени до паса
+            if pos[0] in used_poses:
+                continue
+            est = pos[1] - aux.dist(pos[0], forward.get_pos()) / 1000  # <- coefficient of fear to move to far point
+            if best_pos_est is None or est > best_pos_est:
+                best_pos = pos[0]
+                best_pos_est = pos[1]
+
+        if best_pos is not None:
+            used_poses.append(best_pos)
+            pass_receiver(field, waypoints, forward.r_id, best_pos)
 
 
 def pass_kicker(field: fld.Field, kicker_id: int, receiver_id: int) -> wp.Waypoint:
