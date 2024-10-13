@@ -140,17 +140,23 @@ class Field:
 
         self.ball_history: list[Optional[aux.Point]] = [None] * round(0.2 / const.Ts)
         self.ball_history_idx = 0
-        self.ball_start_point: Optional[aux.Point] = self.ball.get_pos()
+        self.ball_start_point: aux.Point = self.ball.get_pos()
 
         self.ball_real_update_time = 0.0
 
     def active_allies(self, include_gk: bool = False) -> list[rbt.Robot]:
         """return allies on field"""
-        return self._active_allies
+        robots = self._active_allies
+        if include_gk and self.allies[self.gk_id].is_used():
+            robots.append(self.allies[self.gk_id])
+        return robots
 
     def active_enemies(self, include_gk: bool = False) -> list[rbt.Robot]:
         """return enemies on field"""
-        return self._active_enemies
+        robots = self._active_enemies
+        if include_gk and self.enemies[self.enemy_gk_id].is_used():
+            robots.append(self.enemies[self.enemy_gk_id])
+        return robots
 
     def update_field(self, new_field: "Field") -> None:
         self.robot_with_ball = new_field.robot_with_ball
@@ -160,13 +166,7 @@ class Field:
         self.ball_start_point = new_field.ball_start_point
 
         for i, robot in enumerate(self.all_bots):
-            robot._pos = new_field.all_bots[i]._pos
-            robot._vel = new_field.all_bots[i]._vel
-            robot._angle = new_field.all_bots[i]._angle
-            robot._anglevel = new_field.all_bots[i]._anglevel
-
-            robot._is_used = new_field.all_bots[i]._is_used
-            robot.last_update_ = new_field.all_bots[i].last_update_
+            robot.update_(new_field.all_bots[i])
 
         self._active_allies = []
         for r in self.allies:
@@ -184,8 +184,11 @@ class Field:
         !!! Вызывать один раз за итерацию с постоянной частотой !!!
         """
         self.ball.update(pos, 0, t)
-
-        self.ball_start_point = self.ball_history[self.ball_history_idx]
+        old_ball = self.ball_history[self.ball_history_idx]
+        if old_ball is None:
+            self.ball_start_point = self.ball.get_pos() - self.ball.get_vel()
+        else:
+            self.ball_start_point = old_ball
 
         self.ball_history[self.ball_history_idx] = self.ball.get_pos()
         self.ball_history_idx += 1
@@ -277,7 +280,7 @@ class Field:
             self.ball.get_pos(),
             "SR",
         )
-        return inter is not None and self.ball.get_vel().mag() > const.INTERCEPT_SPEED
+        return inter is not None and self.is_ball_moves()
 
 
 def find_nearest_robot(point: aux.Point, team: list[rbt.Robot], avoid: list[int] = []) -> rbt.Robot:

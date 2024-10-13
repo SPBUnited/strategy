@@ -206,7 +206,6 @@ def set_pass_defenders_wps(
 def goalk(
     field: fld.Field,
     wallliners: list[rbt.Robot],
-    robot_with_ball: Optional[rbt.Robot],
 ) -> wp.Waypoint:
     """
     Управление вратарём и стенкой

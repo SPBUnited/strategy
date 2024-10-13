@@ -1,9 +1,4 @@
-"""Верхнеуровневый код стратегии"""
-
-# pylint: disable=redefined-outer-name
-
-# @package Strategy
-# Расчет требуемых положений роботов исходя из ситуации на поле
+"""High-level strategy code"""
 
 
 import math
@@ -11,6 +6,7 @@ import math
 # !v DEBUG ONLY
 from enum import Enum
 from time import time
+from typing import Optional
 
 import bridge.router.waypoint as wp
 from bridge import const
@@ -20,23 +16,17 @@ from bridge.processors.referee_state_processor import State as GameStates
 from bridge.strategy import attack_roles, defense_roles, kicker, ref_states
 
 
-class States(Enum):
-    """Класс с глобальными состояниями игры"""
-
-    DEBUG = 0
-    DEFENSE = 1
-    ATTACK = 2
-
-
 class Role(Enum):
-    """Класс с ролями"""
+    """Class with robot's roles"""
 
     GOALKEEPER = 0
     ATTACKER = 1
 
-    PASS_DEFENDER = 3
-    WALLLINER = 2
+    PASS_DEFENDER = 2
+    WALLLINER = 3
+
     FORWARD = 11
+    PASS_RECEIVER = 12
 
     UNAVAILABLE = 100
 
@@ -60,9 +50,9 @@ class FloatingBorder:
         if val > self.border:
             self.border = self.low
             return True
-        else:
-            self.border = self.high
-            return False
+
+        self.border = self.high
+        return False
 
     def is_lower(self, val: float) -> bool:
         """Return False if higher, return True if lower"""
@@ -70,18 +60,16 @@ class FloatingBorder:
 
 
 class Strategy:
-    """Основной класс с кодом стратегии"""
+    """Main class of strategy"""
 
     def __init__(
         self,
         dbg_game_status: GameStates = GameStates.RUN,
-        dbg_state: States = States.ATTACK,
     ) -> None:
 
         self.game_status = dbg_game_status
         self.active_team: ActiveTeam = ActiveTeam.ALL
         self.we_active = False
-        self.state = dbg_state
         self.timer = time()
 
         self.forwards: list[rbt.Robot] = []
@@ -96,16 +84,14 @@ class Strategy:
         self.pass_points: list[tuple[aux.Point, float]] = []
 
     def change_game_state(self, new_state: GameStates, upd_active_team: ActiveTeam) -> None:
-        """Изменение состояния игры и цвета команды"""
+        """Change game state and active team's color"""
         self.game_status = new_state
         self.active_team = upd_active_team
 
     def process(self, field: fld.Field) -> list[wp.Waypoint]:
-        """
-        Рассчитать конечные точки для каждого робота
-        """
+        """Game State Management"""
         if self.game_status not in [GameStates.KICKOFF, GameStates.PENALTY]:
-            if self.active_team == ActiveTeam.ALL or field.ally_color == self.active_team:
+            if self.active_team in [ActiveTeam.ALL, field.ally_color]:
                 self.we_active = True
             else:
                 self.we_active = False
@@ -142,8 +128,7 @@ class Strategy:
                 if self.we_active:
                     ref_states.penalty_kick(field, waypoints)
                 else:
-                    robot_with_ball = fld.find_nearest_robot(field.ball.get_pos(), field.enemies)
-                    waypoints[field.gk_id] = defense_roles.goalk(field, [], robot_with_ball)
+                    waypoints[field.gk_id] = defense_roles.goalk(field, [])
             case GameStates.PREPARE_KICKOFF:
                 ref_states.prepare_kickoff(field, waypoints, self.we_active)
             case GameStates.KICKOFF:
@@ -159,21 +144,18 @@ class Strategy:
 
     def run(self, field: fld.Field, waypoints: list[wp.Waypoint]) -> None:
         """
-        Определение глобального состояния игры
-        roles - роли роботов, отсортированные по приоритету
-        robot_roles - список соответствия id робота и его роли
+        Assigning roles to robots and managing them
+            roles - robot roles sorted by priority
+            robot_roles - list of robot id and role matches
         """
 
-        # Определение набора ролей для роботов
-        roles = self.choose_roles(field)
-
-        # Вычисление конечных точек, которые не зависят от выбранного робота
+        # Calculating endpoints that are not affected by robot selection
         wall_enemy = defense_roles.set_wall_enemy(field)
         wall_pos = defense_roles.calc_wall_pos(field, wall_enemy)
         enemies_near_goal = defense_roles.get_enemies_near_goal(field)
 
-        # Выбор роботов для всех ролей, с учетом вычисленных выше точек
-        roles = self.manage_roles(field, roles, enemies_near_goal)
+        # Selecting roles based on calculated points
+        roles = self.manage_roles(field, self.choose_roles(field), enemies_near_goal)
         robot_roles = self.choose_robots_for_roles(field, roles, wall_pos, enemies_near_goal.copy())
 
         if field.ally_color == const.COLOR:
@@ -182,7 +164,7 @@ class Strategy:
                 if role != Role.UNAVAILABLE:
                     print("  ", idx, role)
 
-        # Вычисление конечных точек, которые зависят от положения робота и создание путевых точек
+        # Calculate remaining endpoints and create waypoints
         self.forwards = find_role(field, robot_roles, Role.FORWARD)
         if self.forwards is not None:
             attack_roles.set_forwards_wps(field, waypoints, self.forwards, self.pass_points)
@@ -199,12 +181,15 @@ class Strategy:
         if len(wallliners) > 0:
             defense_roles.set_wallliners_wps(field, waypoints, wallliners, wall_enemy)
 
+        pass_receivers = find_role(field, robot_roles, Role.PASS_RECEIVER)
+        if len(pass_receivers) > 0:
+            attack_roles.set_pass_receivers_wps(field, waypoints, pass_receivers)
+
         if Role.GOALKEEPER in robot_roles:
-            robot_with_ball = fld.find_nearest_robot(field.ball.get_pos(), field.enemies)
-            waypoints[field.gk_id] = defense_roles.goalk(field, wallliners, robot_with_ball)
+            waypoints[field.gk_id] = defense_roles.goalk(field, wallliners)
 
     def debug(self, field: fld.Field, waypoints: list[wp.Waypoint]) -> list[wp.Waypoint]:
-        """Отладка"""
+        """Debug"""
         # waypoints[10] = wp.Waypoint(aux.Point(200, 0), 1.5, wp.WType.S_VELOCITY)
         # field.allies[10].set_dribbler_speed(15)
         # waypoints[10] = self.kick.shoot_to_goal(
@@ -244,9 +229,7 @@ class Strategy:
         return waypoints
 
     def choose_roles(self, field: fld.Field) -> list[Role]:
-        """
-        Определение ролей для роботов на поле
-        """
+        """Defining a set of roles depending on the situation on the field"""
 
         ATTACK_ROLES = [
             Role.FORWARD,
@@ -296,6 +279,7 @@ class Strategy:
         roles: list[Role],
         enemies_near_goal: list[aux.Point],
     ) -> list[Role]:
+        """Fixes possible errors in the set of roles"""
         pass_defenders_num = len(find_role(field, roles, Role.PASS_DEFENDER))
         if pass_defenders_num > len(enemies_near_goal):
             roles = replace_role(
@@ -314,25 +298,22 @@ class Strategy:
         wall_pos: aux.Point,
         enemies_near_goal: list[aux.Point],
     ) -> list[Role]:
+        """Selects a robot for each role (based on role's priority)"""
         robot_roles: list[Role] = [Role.UNAVAILABLE for _ in range(const.TEAM_ROBOTS_MAX_COUNT)]
         used_ids: list[int] = []
 
-        for robot_id, role in enumerate(self.prev_roles):
-            if role in [
-                Role.FORWARD,
-                Role.WALLLINER,
-                # Role.PASS_DEFENDER, TODO
-            ] and field.is_ball_moves_to_point(field.allies[robot_id].get_pos()):
-                used_ids.append(robot_id)
-                robot_roles[robot_id] = role
+        for r_id, role in enumerate(self.prev_roles):  # fix defenders's roles if they are caching a ball
+            if role in [Role.WALLLINER, Role.PASS_DEFENDER] and field.is_ball_moves_to_point(field.allies[r_id].get_pos()):
+                used_ids.append(r_id)
+                robot_roles[r_id] = role
                 delete_role(roles, role)
 
         # used_ids.append(13)
         # robot_roles[13] = Role.WALLLINER
         # delete_role(roles, Role.WALLLINER)
 
-        for i, role in enumerate(roles):
-            robot_id = -1
+        for role in roles:
+            robot_id: Optional[int] = None
             match role:
                 case Role.GOALKEEPER:
                     robot_id = field.gk_id
@@ -348,8 +329,16 @@ class Strategy:
                     robot_id = fld.find_nearest_robot(wall_pos, field.allies, used_ids).r_id
                 case Role.FORWARD:
                     robot_id = fld.find_nearest_robot(field.enemy_goal.center, field.allies, used_ids).r_id
-            robot_roles[robot_id] = role
-            used_ids.append(robot_id)
+
+            if robot_id is not None:
+                robot_roles[robot_id] = role
+                used_ids.append(robot_id)
+
+        for robot in field.active_allies():
+            if field.is_ball_moves_to_point(
+                robot.get_pos()
+            ):  # and self.prev_roles[robot.r_id] not in [Role.WALLLINER, Role.PASS_DEFENDER]
+                robot_roles[robot.r_id] = Role.PASS_RECEIVER
 
         for r_id, rbt_rl in enumerate(robot_roles):
             if rbt_rl != Role.UNAVAILABLE:
@@ -369,6 +358,9 @@ class Strategy:
                     case Role.FORWARD:
                         text = "FRW"
                         clr = 200
+                    case Role.PASS_RECEIVER:
+                        text = "PR"
+                        clr = 255
                 text_pos = field.allies[r_id].get_pos() + aux.Point(0, const.ROBOT_R * 1.5)
                 field.strategy_image.print(text_pos, text, (clr, clr, clr))
 
@@ -377,7 +369,7 @@ class Strategy:
 
 
 def delete_role(roles: list[Role], role_to_delete: Role) -> None:
-    """Удаляет роль из массива (если роли в массиве нет, удаляет роль самого низкого приоритета)"""
+    """Removes a role from an array (if the role is not in the array, removes the role with the lowest priority)"""
     for i, role in enumerate(roles):
         if role == role_to_delete:
             roles.pop(i)
@@ -386,7 +378,7 @@ def delete_role(roles: list[Role], role_to_delete: Role) -> None:
 
 
 def find_role(field: fld.Field, roles: list[Role], role_to_find: Role) -> list[rbt.Robot]:
-    """Возвращает массив со всеми роботами роли role_to_find"""
+    """Returns an array with all robots of the role 'role_to_find'"""
     robots: list[rbt.Robot] = []
     for i, role in enumerate(roles):
         if role == role_to_find:
@@ -396,7 +388,7 @@ def find_role(field: fld.Field, roles: list[Role], role_to_find: Role) -> list[r
 
 
 def replace_role(roles: list[Role], old_role: Role, new_role: Role, count: int = 1) -> list[Role]:
-    """Заменяет old_role на new_role, выполняется count раз"""
+    """Replaces 'old_role' with 'new_role', executed 'count' times"""
     num = 0
     for i, role in enumerate(roles):
         if role == old_role:

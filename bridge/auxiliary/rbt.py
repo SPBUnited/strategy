@@ -161,6 +161,18 @@ class Robot(entity.Entity):
         self.kick_up_ = 0
         self.last_update_ = t
 
+    def update_(self, new_entity: "Robot") -> None:
+        """
+        Обновить состояние робота используя готовые данные
+        """
+        self._pos = new_entity.get_pos()
+        self._vel = new_entity.get_vel()
+        self._angle = new_entity.get_angle()
+        self._anglevel = new_entity.get_anglevel()
+
+        self._is_used = new_entity.is_used()
+        self.last_update_ = new_entity.last_update()
+
     def kick_forward(self) -> None:
         """
         Ударить вперед

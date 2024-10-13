@@ -119,25 +119,19 @@ def pass_kicker(field: fld.Field, kicker_id: int, receiver_id: int) -> wp.Waypoi
     Должна вызываться в конечном автомате постоянно, пока первый робот не даст пас
     """
     receiver = field.allies[receiver_id]
-    if not field.is_ball_moves_to_point(receiver.get_pos()):
-        # waypoints[kicker_id] = wp.Waypoint(
-        #     field.ball.get_pos(),
-        #     aux.angle_to_point(field.ball.get_pos(), receiver.get_pos()),
-        #     wp.WType.S_BALL_PASS,
-        # )
-        # print("pass to", receiver_id)
-        waypoint = kick.pass_to_point(field, field.allies[kicker_id], receiver.get_pos())
-        field.strategy_image.draw_dot(
-            field.ball.get_pos()
-            + aux.rotate(
-                aux.RIGHT,
-                aux.angle_to_point(field.ball.get_pos(), receiver.get_pos()),
-            ),
-            (255, 0, 255),
-            5,
-        )
-    else:
-        waypoint = wp.Waypoint(aux.Point(0, 0), 0, wp.WType.S_STOP)
+    # if not field.is_ball_moves_to_point(receiver.get_pos()):
+    waypoint = kick.pass_to_point(field, field.allies[kicker_id], receiver.get_pos())
+    field.strategy_image.draw_dot(
+        field.ball.get_pos()
+        + aux.rotate(
+            aux.RIGHT,
+            aux.angle_to_point(field.ball.get_pos(), receiver.get_pos()),
+        ),
+        (255, 0, 255),
+        5,
+    )
+    # else: #TODO bad case
+    #     waypoint = wp.Waypoint(aux.Point(0, 0), 0, wp.WType.S_STOP)
 
     return waypoint
 
@@ -149,27 +143,32 @@ def pass_receiver(
     receive_point: aux.Point,
 ) -> None:
     """
-    Отдает пас от робота kicker_id роботу receiver_id
-    Должна вызываться в конечном автомате постоянно, пока второй робот не поймает мяч
-    TODO: прописать действия отдающего пас робота после удара и принимающего пас робота до удара
+    Ловит мяч
     """
     receiver = field.allies[receiver_id]
-    if field.is_ball_moves_to_point(receiver.get_pos()) and field.ball_start_point is not None:
+
+    waypoints[receiver_id] = wp.Waypoint(
+        receive_point,
+        aux.angle_to_point(receiver.get_pos(), field.ball.get_pos()),
+        wp.WType.S_ENDPOINT,
+    )
+    field.strategy_image.draw_dot(receive_point, (255, 255, 0), 5)
+
+
+def set_pass_receivers_wps(
+    field: fld.Field,
+    waypoints: list[wp.Waypoint],
+    receivers: list[rbt.Robot],
+) -> None:
+    for receiver in receivers:
         target = aux.closest_point_on_line(field.ball_start_point, field.ball.get_pos(), receiver.get_pos(), "R")
         field.strategy_image.draw_line(target, receiver.get_pos(), (255, 127, 0), 2)
         field.strategy_image.draw_dot(target, (128, 128, 255), const.ROBOT_R)
 
         receiver.set_dribbler_speed(15)
 
-        waypoints[receiver_id] = wp.Waypoint(
+        waypoints[receiver.r_id] = wp.Waypoint(
             target,
             aux.angle_to_point(field.ball.get_pos(), field.ball_start_point),
             wp.WType.S_ENDPOINT,
         )
-    else:
-        waypoints[receiver_id] = wp.Waypoint(
-            receive_point,
-            aux.angle_to_point(receiver.get_pos(), field.ball.get_pos()),
-            wp.WType.S_ENDPOINT,
-        )
-        field.strategy_image.draw_dot(receive_point, (255, 255, 0), 5)

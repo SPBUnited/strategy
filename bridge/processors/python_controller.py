@@ -31,7 +31,6 @@ class SSLController(BaseProcessor):
     ally_color: const.Color = const.Color.BLUE
 
     dbg_game_status: strategy.GameStates = strategy.GameStates.TIMEOUT
-    dbg_state: strategy.States = strategy.States.DEBUG
 
     cur_time = time.time()
     delta_t = 0.0
