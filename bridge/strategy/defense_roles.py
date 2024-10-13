@@ -131,7 +131,7 @@ def set_wallliners_wps(
     projections = sorted(projections, key=lambda x: x[0])
     poses = sorted(poses, key=lambda x: x.y)
 
-    wp_type = wp.WType.R_IGNORE_GOAl_HULL
+    wp_type = wp.WType.S_IGNOREOBSTACLES
     if aux.is_point_inside_poly(field.ball.get_pos(), field.ally_goal.big_hull):
         wp_type = wp.WType.S_ENDPOINT
 

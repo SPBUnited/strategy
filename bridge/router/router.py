@@ -49,7 +49,7 @@ class Router:
         """
         Установить единственную путевую точку для робота с индексом idx
         """
-        if idx != field.gk_id and target.type != wp.WType.R_IGNORE_GOAl_HULL:
+        if idx != field.gk_id:
             dest_pos = target.pos
             for goal in [field.ally_goal, field.enemy_goal]:
                 if aux.is_point_inside_poly(dest_pos, goal.big_hull):
@@ -104,7 +104,7 @@ class Router:
                 align_wp = self.calc_grab_wp(idx)
                 self.routes[idx].insert_wp(align_wp)
 
-            if idx == field.gk_id or self.routes[idx].get_dest_wp().type == wp.WType.R_IGNORE_GOAl_HULL:
+            if idx == field.gk_id or self.routes[idx].get_dest_wp().type:
                 pth_wp = self.calc_passthrough_wp(field, idx)
                 if pth_wp is not None:
                     self.routes[idx].insert_wp(pth_wp)
