@@ -1,16 +1,17 @@
-import bridge.const as const
+"""Control for game states from referee"""
 import bridge.router.waypoint as wp
+from bridge import const
 from bridge.auxiliary import aux, fld
 
 
-def halt(field: fld.Field, waypoints: list[wp.Waypoint]) -> None:  # TODO: проверить что роботы останавливаются на самом деле
+def halt(field: fld.Field, waypoints: list[wp.Waypoint]) -> None:
     """Пауза по команде от судей"""
     for i in range(const.TEAM_ROBOTS_MAX_COUNT):
         if field.allies[i].is_used():
             waypoint = wp.Waypoint(
                 field.allies[i].get_pos(),
                 field.allies[i].get_angle(),
-                wp.WType.S_ENDPOINT,
+                wp.WType.S_STOP,
             )
             waypoints[i] = waypoint
 

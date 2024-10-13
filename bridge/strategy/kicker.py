@@ -12,6 +12,8 @@ from bridge.auxiliary import aux, fld, rbt
 
 
 class KickerAux:
+    """Class for smart turns with ball"""
+
     def __init__(self) -> None:
         self.twist_w: float = 0.5
         self.kick_await_timer: Optional[float] = None
@@ -35,16 +37,17 @@ class KickerAux:
         if const.IS_SIMULATOR_USED:
             angle = aux.angle_to_point(ball, receive_pos)
             return wp.Waypoint(ball, angle, wp.WType.S_BALL_KICK)
-        elif field.is_ball_in(kicker):
+
+        if field.is_ball_in(kicker):
             return self.twisted(field, kicker, receive_pos)
         # elif aux.dist(ball, nearest_enemy.get_pos()) > 500:
         #     angle = aux.angle_to_point(kicker.get_pos(), ball)
         # angle = aux.angle_to_point(ball, receive_pos)
         #     return wp.Waypoint(ball, angle, wp.WType.S_BALL_KICK)
-        else:
-            self.reset_kick_consts()
-            angle = aux.angle_to_point(kicker.get_pos(), ball)
-            return wp.Waypoint(ball, angle, wp.WType.S_BALL_GRAB)
+
+        self.reset_kick_consts()
+        angle = aux.angle_to_point(kicker.get_pos(), ball)
+        return wp.Waypoint(ball, angle, wp.WType.S_BALL_GRAB)
 
     def shoot_to_goal(self, field: fld.Field, kicker: rbt.Robot, shoot_point: aux.Point) -> wp.Waypoint:
         "Удар по воротам"
@@ -57,15 +60,15 @@ class KickerAux:
         if const.IS_SIMULATOR_USED:
             angle = aux.angle_to_point(ball, shoot_point)
             return wp.Waypoint(ball, angle, wp.WType.S_BALL_KICK)
-        elif field.is_ball_in(kicker):
+
+        if field.is_ball_in(kicker):
             if aux.dist(ball, field.enemy_goal.center) < 1000:
-                return self.angry_turn(kicker, shoot_point)
+                return angry_turn(kicker, shoot_point)
             return self.twisted(field, kicker, shoot_point)
         # elif aux.dist(ball, nearest_enemy.get_pos()) < 500:
-        else:
-            self.reset_kick_consts()
-            angle = aux.angle_to_point(kicker.get_pos(), ball)
-            return wp.Waypoint(ball, angle, wp.WType.S_BALL_GRAB)
+        self.reset_kick_consts()
+        angle = aux.angle_to_point(kicker.get_pos(), ball)
+        return wp.Waypoint(ball, angle, wp.WType.S_BALL_GRAB)
         # else:
         #     target = aux.Point(shoot_point.x, 0)
         #     angle = aux.angle_to_point(ball, target)
@@ -155,14 +158,16 @@ class KickerAux:
             waypoint.pos.x += 100
         return waypoint
 
-    def angry_turn(self, kicker: rbt.Robot, kick_point: aux.Point) -> wp.Waypoint:
-        x = aux.wind_down_angle(aux.angle_to_point(kicker.get_pos(), kick_point) - kicker.get_angle())
-        waypoint = spin_with_ball(1 * aux.sign(x))
-        if abs(x) > const.KICK_ALIGN_ANGLE:
-            kicker.set_dribbler_speed(12)
-        else:
-            kicker.kick_forward()
-        return waypoint
+
+def angry_turn(kicker: rbt.Robot, kick_point: aux.Point) -> wp.Waypoint:
+    """Turn without stopping"""
+    x = aux.wind_down_angle(aux.angle_to_point(kicker.get_pos(), kick_point) - kicker.get_angle())
+    waypoint = spin_with_ball(1 * aux.sign(x))
+    if abs(x) > const.KICK_ALIGN_ANGLE:
+        kicker.set_dribbler_speed(12)
+    else:
+        kicker.kick_forward()
+    return waypoint
 
 
 def spin_with_ball(w: float) -> wp.Waypoint:

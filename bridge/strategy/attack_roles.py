@@ -1,3 +1,4 @@
+"""Control for attack roles"""
 from typing import Optional
 
 from bridge import const

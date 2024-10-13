@@ -150,12 +150,11 @@ class Strategy:
         """
 
         # Calculating endpoints that are not affected by robot selection
-        wall_enemy = defense_roles.set_wall_enemy(field)
-        wall_pos = defense_roles.calc_wall_pos(field, wall_enemy)
+        wall_pos = defense_roles.calc_wall_pos(field)
         enemies_near_goal = defense_roles.get_enemies_near_goal(field)
 
         # Selecting roles based on calculated points
-        roles = self.manage_roles(field, self.choose_roles(field), enemies_near_goal)
+        roles = manage_roles(field, choose_roles(field), enemies_near_goal)
         robot_roles = self.choose_robots_for_roles(field, roles, wall_pos, enemies_near_goal.copy())
 
         if field.ally_color == const.COLOR:
@@ -179,7 +178,7 @@ class Strategy:
 
         wallliners = find_role(field, robot_roles, Role.WALLLINER)
         if len(wallliners) > 0:
-            defense_roles.set_wallliners_wps(field, waypoints, wallliners, wall_enemy)
+            defense_roles.set_wallliners_wps(field, waypoints, wallliners)
 
         pass_receivers = find_role(field, robot_roles, Role.PASS_RECEIVER)
         if len(pass_receivers) > 0:
@@ -227,69 +226,6 @@ class Strategy:
         field.strategy_image.draw_dot(pos, (0, 0, 0), const.ROBOT_R)
 
         return waypoints
-
-    def choose_roles(self, field: fld.Field) -> list[Role]:
-        """Defining a set of roles depending on the situation on the field"""
-
-        ATTACK_ROLES = [
-            Role.FORWARD,
-            Role.FORWARD,
-            Role.FORWARD,
-            Role.FORWARD,
-            Role.FORWARD,
-            Role.FORWARD,
-        ]
-
-        DEFENSE_ROLES = [
-            Role.WALLLINER,
-            Role.PASS_DEFENDER,
-            Role.WALLLINER,
-            Role.PASS_DEFENDER,
-            Role.WALLLINER,
-            Role.WALLLINER,
-        ]
-
-        # atk_min = 1
-        # def_min = 2
-        atk_min = 1
-        def_min = 1
-
-        free_allies = -atk_min - def_min - 1
-        total_active = 0
-
-        for ally in field.allies:
-            if ally.is_used() and ally.r_id != field.gk_id:
-                total_active += 1
-
-        free_allies = max(0, free_allies + total_active)
-
-        ball_pos = aux.minmax(field.ball.get_pos().x, const.GOAL_DX)
-        atks = round(free_allies / (2 * const.GOAL_DX) * (-ball_pos * field.polarity + const.GOAL_DX)) + atk_min
-        defs = free_allies - (atks - atk_min) + def_min
-
-        roles = ATTACK_ROLES[:atks] + DEFENSE_ROLES[:defs]
-
-        res_roles = [Role.GOALKEEPER, Role.ATTACKER] + roles
-        total_active += 1
-        return res_roles[:total_active]
-
-    def manage_roles(
-        self,
-        field: fld.Field,
-        roles: list[Role],
-        enemies_near_goal: list[aux.Point],
-    ) -> list[Role]:
-        """Fixes possible errors in the set of roles"""
-        pass_defenders_num = len(find_role(field, roles, Role.PASS_DEFENDER))
-        if pass_defenders_num > len(enemies_near_goal):
-            roles = replace_role(
-                roles,
-                Role.PASS_DEFENDER,
-                Role.WALLLINER,
-                pass_defenders_num - len(enemies_near_goal),
-            )
-
-        return sorted(roles, key=lambda x: x.value)
 
     def choose_robots_for_roles(
         self,
@@ -366,6 +302,70 @@ class Strategy:
 
         self.prev_roles = robot_roles
         return robot_roles
+
+
+def choose_roles(field: fld.Field) -> list[Role]:
+    """Defining a set of roles depending on the situation on the field"""
+
+    attackers = [
+        Role.FORWARD,
+        Role.FORWARD,
+        Role.FORWARD,
+        Role.FORWARD,
+        Role.FORWARD,
+        Role.FORWARD,
+    ]
+
+    defenders = [
+        Role.WALLLINER,
+        Role.PASS_DEFENDER,
+        Role.WALLLINER,
+        Role.PASS_DEFENDER,
+        Role.WALLLINER,
+        Role.WALLLINER,
+    ]
+
+    # atk_min = 1
+    # def_min = 2
+    atk_min = 1
+    def_min = 1
+
+    free_allies = -atk_min - def_min - 1
+    total_active = 0
+
+    for ally in field.allies:
+        if ally.is_used() and ally.r_id != field.gk_id:
+            total_active += 1
+
+    free_allies = max(0, free_allies + total_active)
+
+    ball_pos = aux.minmax(field.ball.get_pos().x, const.GOAL_DX)
+    atks = round(free_allies / (2 * const.GOAL_DX) * (-ball_pos * field.polarity + const.GOAL_DX)) + atk_min
+    defs = free_allies - (atks - atk_min) + def_min
+
+    roles = attackers[:atks] + defenders[:defs]
+
+    res_roles = [Role.GOALKEEPER, Role.ATTACKER] + roles
+    total_active += 1
+    return res_roles[:total_active]
+
+
+def manage_roles(
+    field: fld.Field,
+    roles: list[Role],
+    enemies_near_goal: list[aux.Point],
+) -> list[Role]:
+    """Fixes possible errors in the set of roles"""
+    pass_defenders_num = len(find_role(field, roles, Role.PASS_DEFENDER))
+    if pass_defenders_num > len(enemies_near_goal):
+        roles = replace_role(
+            roles,
+            Role.PASS_DEFENDER,
+            Role.WALLLINER,
+            pass_defenders_num - len(enemies_near_goal),
+        )
+
+    return sorted(roles, key=lambda x: x.value)
 
 
 def delete_role(roles: list[Role], role_to_delete: Role) -> None:

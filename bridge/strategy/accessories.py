@@ -6,13 +6,13 @@ from bridge.auxiliary import aux, fld, rbt
 
 OBSTACLE_ANGLE = math.pi / 6
 GOAL_VIEW_ANGLE = math.pi / 4
-GOAL_HULL_DIST = 200.0
+DANGER_ZONE_DIST = 200.0
 SHOOT_ANGLE = math.pi / 8
-if const.DIV == const.Div.C:
-    OBSTACLE_ANGLE = math.pi / 6
-    GOAL_VIEW_ANGLE = math.pi / 4
-    GOAL_HULL_DIST = 200.0
-    SHOOT_ANGLE = math.pi / 8
+# if const.DIV == const.Div.C:
+#     OBSTACLE_ANGLE = math.pi / 6
+#     GOAL_VIEW_ANGLE = math.pi / 4
+#     DANGER_ZONE_DIST = 200.0
+#     SHOOT_ANGLE = math.pi / 8
 
 
 def estimate_pass_point(
@@ -20,9 +20,7 @@ def estimate_pass_point(
     frm: aux.Point,
     to: aux.Point,
 ) -> float:
-    """
-    Оценивает пас из точки "frm" в точку "to", возвращая положительное значение до 1
-    """
+    """Gives a score for a point based on a pass to it"""
     lerp: float = 0.0
 
     for enemy in enemies:
@@ -55,20 +53,27 @@ def estimate_pass_point(
 
 
 def estimate_goal_view(point: aux.Point, field: fld.Field) -> float:
+    """Gives a score for a point based on the angular size of the gate from it"""
     goal_angle = abs(aux.get_angle_between_points(field.enemy_goal.up, point, field.enemy_goal.down))
 
     return min(goal_angle / GOAL_VIEW_ANGLE, 1)  # 1 - perfect; smaller => worse
 
 
-def estimate_dist_to_goal(point: aux.Point, field: fld.Field) -> float:
+def estimate_dist_to_boarder(point: aux.Point, field: fld.Field) -> float:
+    """Gives a score for a point based on its distance to the non-playing area"""
     dist_to_goal_zone = aux.dist(point, aux.nearest_point_on_poly(point, field.enemy_goal.hull))
     if aux.is_point_inside_poly(point, field.enemy_goal.hull):
         dist_to_goal_zone *= -1
 
-    return max(1 - dist_to_goal_zone / GOAL_HULL_DIST, 0)
+    dist_to_field_boarder = aux.dist(point, aux.nearest_point_on_poly(point, field.hull))
+
+    dist_to_danger_zone = min(dist_to_goal_zone, dist_to_field_boarder)
+
+    return max(1 - dist_to_danger_zone / DANGER_ZONE_DIST, 0)
 
 
 def estimate_shoot(point: aux.Point, field: fld.Field, enemies: list[aux.Point]) -> float:
+    """Gives a score for a point based on a shot from it on goal"""
     lerp: float = 0.0
 
     for enemy in enemies:
@@ -96,15 +101,16 @@ def estimate_point(
     kick_point: aux.Point,
     enemies: Optional[list[aux.Point]] = None,
 ) -> float:
+    """Gives a score for a point based on different metrics"""
     if enemies is None:
         enemies = [e.get_pos() for e in field.active_enemies()]
 
     lerp1 = estimate_pass_point(enemies, kick_point, point)
     lerp2 = estimate_goal_view(point, field)
-    lerp3 = estimate_dist_to_goal(point, field)
+    lerp3 = estimate_dist_to_boarder(point, field)
     lerp4 = estimate_shoot(point, field, enemies)
 
-    lerp = lerp2 - lerp1 - lerp3 - lerp4  # lerp2 - lerp1 - lerp3 - lerp4
+    lerp = lerp2 - lerp1 - lerp3 - lerp4
     return lerp  # 1 - perfect; smaller => worse
 
 
@@ -115,9 +121,7 @@ def choose_segment_in_goal(
     ball_pos: aux.Point,
     interfering_robots: list[rbt.Robot],
 ) -> tuple[aux.Point, aux.Point]:
-    """
-    Выбирает самый большой угловой промежуток на воротах (если смотреть из точки ball_pos)
-    """
+    """Выбирает самый большой угловой промежуток на воротах (если смотреть из точки ball_pos)"""
     positions = []
     for robot in interfering_robots:
         if robot != field.allies[kicker_id]:

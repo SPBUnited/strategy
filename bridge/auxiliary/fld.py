@@ -135,6 +135,13 @@ class Field:
             self.allies = [*self.y_team]
             self.enemies = [*self.b_team]
 
+        self.hull = [
+            aux.Point(const.FIELD_DX, const.FIELD_DY),
+            aux.Point(const.FIELD_DX, -const.FIELD_DY),
+            aux.Point(-const.FIELD_DX, -const.FIELD_DY),
+            aux.Point(-const.FIELD_DX, const.FIELD_DY),
+        ]
+
         self._active_allies: list[rbt.Robot] = []
         self._active_enemies: list[rbt.Robot] = []
 

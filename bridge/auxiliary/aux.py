@@ -339,7 +339,7 @@ def point_on_line(robo: Point, point: Point, distance: float) -> Point:
     return Point(new_x, new_y)
 
 
-def lerp(p1: typing.Any, p2: typing.Any, t: float) -> typing.Any:
+def lerp(p1: Point, p2: Point, t: float) -> Point:
     """
     Получить линейно интерполированное значение
     """
