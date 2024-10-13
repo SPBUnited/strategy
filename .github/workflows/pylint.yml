@@ -22,4 +22,4 @@ jobs:
         pip install -r requirements.txt
     - name: Analysing the code with pylint
       run: |
-        pylint --rcfile=.pylintrc $(git ls-files '*.py')
+        pylint --fail-under 9 --rcfile=.pylintrc $(git ls-files '*.py')
