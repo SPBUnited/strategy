@@ -1,9 +1,18 @@
 """Processor to get referee commands"""
 
+import typing
 from enum import Enum
+from time import time
 from typing import Optional
 
-from bridge.const import Color
+import attr
+from strategy_bridge.bus import DataBus, DataReader, DataWriter
+from strategy_bridge.common import config
+from strategy_bridge.model.referee import RefereeCommand
+from strategy_bridge.processors import BaseProcessor
+
+from bridge import const
+from bridge.auxiliary import aux, fld
 
 
 class State(Enum):
@@ -49,7 +58,7 @@ class StateMachine:
     def __init__(self, initial_state: State = State.HALT) -> None:
         self.__state = initial_state
         self.__transitions: dict = {}
-        self.__active = Color.ALL
+        self.__active = const.Color.ALL
 
         self.add_transition(State.HALT, State.STOP, Command.STOP)
         self.add_transition(State.HALT, State.RUN, Command.FORCE_START)
@@ -110,15 +119,93 @@ class StateMachine:
     def active_team(self, num: int) -> None:
         """Set active team"""
         if num == 0:
-            self.__active = Color.ALL
+            self.__active = const.Color.ALL
         elif num == 1:
-            self.__active = Color.BLUE
+            self.__active = const.Color.BLUE
         elif num == 2:
-            self.__active = Color.YELLOW
+            self.__active = const.Color.YELLOW
 
-    def get_state(self) -> tuple[State, Color]:
+    def get_state(self) -> tuple[State, const.Color]:
         """Returns the current state"""
         return self.__state, self.__active
 
     def __str__(self) -> str:
         return f"State: {self.__state}, Active: {self.__active}"
+
+
+@attr.s(auto_attribs=True)
+class RefereeStateProcessor(BaseProcessor):
+    """Class to work with referee commands"""
+
+    processing_pause: typing.Optional[float] = 0.001
+    reduce_pause_on_process_time: bool = False
+
+    def initialize(self, data_bus: DataBus) -> None:
+        """
+        Инициализация
+        """
+        super().initialize(data_bus)
+        self.field_reader = DataReader(data_bus, const.FIELD_TOPIC)
+        self.referee_reader = DataReader(data_bus, config.REFEREE_COMMANDS_TOPIC)
+
+        self.gamestate_writer = DataWriter(data_bus, const.GAMESTATE_TOPIC, 1)
+
+        self.field = fld.Field(const.COLOR)
+
+        # Referee fields
+        self.state_machine = StateMachine()
+        self.cur_cmd_state = None
+        self.wait_10_sec_flag = False
+        self.wait_10_sec = 0.0
+        self.wait_ball_moved_flag = False
+        self.wait_ball_moved = aux.Point(0, 0)
+
+    def process(self) -> None:
+        """
+        Метод обратного вызова процесса
+        """
+        new_field = self.field_reader.read_last()
+        if new_field is not None:
+            self.field = new_field.content
+
+        new_commands = self.referee_reader.read_new()
+
+        for new_command in new_commands:
+            cur_cmd: RefereeCommand = new_command.content
+
+            cur_state, _ = self.state_machine.get_state()
+
+            if cur_cmd.state != self.cur_cmd_state:
+                self.state_machine.make_transition(cur_cmd.state)
+                self.state_machine.active_team(cur_cmd.commandForTeam)
+                self.cur_cmd_state = cur_cmd.state
+                cur_state, _ = self.state_machine.get_state()
+
+                self.wait_10_sec_flag = False
+                self.wait_ball_moved_flag = False
+
+                if cur_state in [
+                    State.KICKOFF,
+                    State.FREE_KICK,
+                    State.PENALTY,
+                ]:
+                    self.wait_10_sec_flag = True
+                    self.wait_10_sec = time()
+                if cur_state in [
+                    State.KICKOFF,
+                    State.FREE_KICK,
+                ]:
+                    self.wait_ball_moved_flag = True
+            else:
+                if self.wait_10_sec_flag and time() - self.wait_10_sec > 10:
+                    self.state_machine.make_transition_(Command.PASS_10_SECONDS)
+                    self.state_machine.active_team(0)
+                    self.wait_10_sec_flag = False
+                    self.wait_ball_moved_flag = False
+                if self.wait_ball_moved_flag and self.field.is_ball_moves():
+                    self.state_machine.make_transition_(Command.BALL_MOVED)
+                    self.state_machine.active_team(0)
+                    self.wait_10_sec_flag = False
+                    self.wait_ball_moved_flag = False
+
+            self.gamestate_writer.write(self.state_machine.get_state())

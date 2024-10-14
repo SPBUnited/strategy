@@ -83,6 +83,17 @@ class FOLP:
         self._out = self._int / self._t
         return self._out
 
+    def process_(self, x: float, dT: float) -> float:
+        """
+        Рассчитать и получить следующее значение выхода звена
+
+        x - новое значение входа
+        """
+        err = x - self._out
+        self._int += err * dT
+        self._out = self._int / self._t
+        return self._out
+
     def get_val(self) -> float:
         """
         Получить последнее значение выхода звена без расчета
@@ -120,6 +131,16 @@ class Integrator:
         x - новое значение входа
         """
         self._int += x * self._ts
+        self._out = self._int
+        return self._out
+
+    def process_(self, x: float, dT: float) -> float:
+        """
+        Рассчитать и получить следующее значение выхода звена
+
+        x - новое значение входа
+        """
+        self._int += x * dT
         self._out = self._int
         return self._out
 
@@ -207,6 +228,28 @@ class PISD:
         # self.__out = u_clipped
         # if u != aux.minmax(u, max_out):
         self.__int.process(xerr + k_d * x_i)
+
+        self.__out = u
+
+        return self.__out
+
+    def process_(self, xerr: float, x_i: float, dT: float) -> float:
+        """
+        Рассчитать следующий тик регулятора
+        """
+        gain, k_d, k_i, max_out = self.__get_gains()
+
+        s = xerr + k_d * x_i + k_i * self.__int.get_val()
+        u = gain * s
+
+        # u_clipped = aux.minmax(u, max_out)
+
+        # if u != u_clipped:
+        #     self.__int.process(xerr + k_d * x_i)
+
+        # self.__out = u_clipped
+        # if u != aux.minmax(u, max_out):
+        self.__int.process_(xerr + k_d * x_i, dT)
 
         self.__out = u
 

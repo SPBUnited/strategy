@@ -33,7 +33,7 @@ class ExplorePasses(BaseProcessor):
         """Инициализация"""
         super().initialize(data_bus)
         self.field_reader = DataReader(data_bus, const.FIELD_TOPIC)
-        self.passes_writer = DataWriter(data_bus, const.PASSES_TOPIC, 20)
+        self.passes_writer = DataWriter(data_bus, const.PASSES_TOPIC, 1)
         self.image_writer = DataWriter(data_bus, const.IMAGE_TOPIC, 20)
 
         self.field = fld.Field(self.ally_color)

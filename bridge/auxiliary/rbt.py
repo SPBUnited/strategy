@@ -21,12 +21,10 @@ class Robot(entity.Entity):
         R: float,
         color: const.Color,
         r_id: int,
-        ctrl_id: int,
     ) -> None:
         super().__init__(pos, angle, R)
 
         self.r_id = r_id
-        self.ctrl_id = ctrl_id
         self._is_used = 0
         self.color = color
         self.last_update_ = 0.0
@@ -129,6 +127,7 @@ class Robot(entity.Entity):
         return self.r_id == robo.r_id and self.color == robo.color
 
     def to_entity(self) -> entity.Entity:
+
         ent = entity.Entity(self._pos, self._angle, self._radius)
         ent._vel = self._vel
         # ent._acc = self._acc
@@ -267,8 +266,7 @@ class Robot(entity.Entity):
         """
         Выполнить тик низкоуровневых регуляторов скорости робота
 
-        vel - требуемый вектор скорости [мм/с] \\
-        wvel - требуемая угловая скорость [рад/с]
+        vel - требуемый вектор скорости [мм/с]
         """
         global_speed_x = self.xx_flp.process(vel.x)
         global_speed_y = self.yy_flp.process(vel.y)
@@ -293,7 +291,36 @@ class Robot(entity.Entity):
         # self.speed_y = vec_speed * math.sin(ang)
 
     def update_vel_w(self, wvel: float) -> None:
+        """Update robot angle vel"""
         self.speed_r = 1 / self.k_ww * wvel
+
+    def update_vel_xy_(self, vel: aux.Point, dT: float) -> None:
+        """
+        Выполнить тик низкоуровневых регуляторов скорости робота
+
+        vel - требуемый вектор скорости [мм/с]
+        """
+        global_speed_x = self.xx_flp.process_(vel.x, dT)
+        global_speed_y = self.yy_flp.process_(vel.y, dT)
+
+        global_speed = aux.Point(global_speed_x, global_speed_y)
+
+        speed = -aux.rotate(global_speed, -self._angle)
+
+        self.speed_x = 1 / self.k_xx * speed.x
+        self.speed_y = 1 / self.k_yy * speed.y
+
+        # if abs(self.speed_r) > const.MAX_SPEED_R:
+        #     self.speed_r = math.copysign(const.MAX_SPEED_R, self.speed_r)
+
+        # vec_speed = math.sqrt(self.speed_x**2 + self.speed_y**2)
+        # r_speed = abs(self.speed_r)
+        # if not const.IS_SIMULATOR_USED:
+        #     vec_speed *= abs((const.MAX_SPEED_R - r_speed) / const.MAX_SPEED_R) ** 2
+        # ang = math.atan2(self.speed_y, self.speed_x)
+
+        # self.speed_x = vec_speed * math.cos(ang)
+        # self.speed_y = vec_speed * math.sin(ang)
 
     def clamp_motors(self) -> None:
         """

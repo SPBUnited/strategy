@@ -81,8 +81,9 @@ for i in range(TEAM_ROBOTS_MAX_COUNT):
     except KeyError:
         CONTROL_MAPPING[i] = -1
 
-TOPIC_SINK = "control-sink"
+CONTROL_TOPIC = "control-topic"
 FIELD_TOPIC = "field-topic"
+GAMESTATE_TOPIC = "gamestate-topic"
 IMAGE_TOPIC = "image-topic"
 PASSES_TOPIC = "passes-topic"
 ##################################################

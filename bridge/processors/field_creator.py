@@ -21,9 +21,6 @@ class FieldCreator(BaseProcessor):
 
     processing_pause: typing.Optional[float] = 0.01
     reduce_pause_on_process_time: bool = False
-    # commands_sink_reader: DataReader = attr.ib(init=False)
-    # box_feedback_reader: DataReader = attr.ib(init=False)
-    # field_writer: DataWriter = attr.ib(init=False)
     _ssl_converter: SSL_WrapperPacket = attr.ib(init=False)
 
     def initialize(self, data_bus: DataBus) -> None:
@@ -33,7 +30,7 @@ class FieldCreator(BaseProcessor):
         super().initialize(data_bus)
         self.vision_reader = DataReader(data_bus, config.VISION_DETECTIONS_TOPIC)
         self.box_feedback_reader = DataReader(data_bus, config.BOX_FEEDBACK_TOPIC)
-        self.field_writer = DataWriter(data_bus, const.FIELD_TOPIC, 20)
+        self.field_writer = DataWriter(data_bus, const.FIELD_TOPIC, 1)
         self._ssl_converter = SSL_WrapperPacket()
         self.field = fld.Field(const.COLOR)
 
@@ -133,11 +130,20 @@ class FieldCreator(BaseProcessor):
             else:
                 robot.used(1)
 
+        active_allies = []
+        for r in self.field.allies:
+            if r.is_used() and r.r_id != self.field.gk_id:
+                active_allies.append(r)
+        self.field.update_active_allies(active_allies)
+
+        active_enemies = []
+        for r in self.field.enemies:
+            if r.is_used() and r.r_id != self.field.enemy_gk_id:
+                active_enemies.append(r)
+        self.field.update_active_enemies(active_enemies)
+
         self.field.last_update = time()
         self.field_writer.write(self.field)
-
-        # if len(b_bots_pos[0]) > 0:
-        #     print(b_bots_pos[0][0])
 
         # feedback_queue = self.box_feedback_reader.read_new()
         # if feedback_queue:

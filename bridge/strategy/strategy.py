@@ -11,7 +11,6 @@ from typing import Optional
 import bridge.router.waypoint as wp
 from bridge import const
 from bridge.auxiliary import aux, fld, rbt
-from bridge.processors.referee_state_processor import Color as ActiveTeam
 from bridge.processors.referee_state_processor import State as GameStates
 from bridge.strategy import attack_roles, defense_roles, kicker, ref_states
 
@@ -68,7 +67,7 @@ class Strategy:
     ) -> None:
 
         self.game_status = dbg_game_status
-        self.active_team: ActiveTeam = ActiveTeam.ALL
+        self.active_team: const.Color = const.Color.ALL
         self.we_active = False
         self.timer = time()
 
@@ -83,7 +82,7 @@ class Strategy:
 
         self.pass_points: list[tuple[aux.Point, float]] = []
 
-    def change_game_state(self, new_state: GameStates, upd_active_team: ActiveTeam) -> None:
+    def change_game_state(self, new_state: GameStates, upd_active_team: const.Color) -> None:
         """Change game state and active team's color"""
         self.game_status = new_state
         self.active_team = upd_active_team
@@ -91,7 +90,7 @@ class Strategy:
     def process(self, field: fld.Field) -> list[wp.Waypoint]:
         """Game State Management"""
         if self.game_status not in [GameStates.KICKOFF, GameStates.PENALTY]:
-            if self.active_team in [ActiveTeam.ALL, field.ally_color]:
+            if self.active_team in [const.Color.ALL, field.ally_color]:
                 self.we_active = True
             else:
                 self.we_active = False

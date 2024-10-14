@@ -88,7 +88,6 @@ class Field:
             self.polarity = const.POLARITY
 
         self.ball = entity.Entity(aux.GRAVEYARD_POS, 0, const.BALL_R, 0.2)
-        ctrl_mapping = const.CONTROL_MAPPING
         self.b_team = [
             rbt.Robot(
                 aux.GRAVEYARD_POS,
@@ -96,7 +95,6 @@ class Field:
                 const.ROBOT_R,
                 const.Color.BLUE,
                 i,
-                ctrl_mapping[i],
             )
             for i in range(const.TEAM_ROBOTS_MAX_COUNT)
         ]
@@ -107,7 +105,6 @@ class Field:
                 const.ROBOT_R,
                 const.Color.YELLOW,
                 i,
-                ctrl_mapping[i],
             )
             for i in range(const.TEAM_ROBOTS_MAX_COUNT)
         ]
@@ -151,6 +148,11 @@ class Field:
 
         self.ball_real_update_time = 0.0
 
+    def clear_images(self) -> None:
+        self.strategy_image.clear()
+        self.router_image.clear()
+        self.path_image.clear()
+
     def active_allies(self, include_gk: bool = False) -> list[rbt.Robot]:
         """return allies on field"""
         robots = self._active_allies
@@ -172,18 +174,11 @@ class Field:
         self.ball = new_field.ball
         self.ball_start_point = new_field.ball_start_point
 
+        self.update_active_allies(new_field.active_allies())
+        self.update_active_enemies(new_field.active_enemies())
+
         for i, robot in enumerate(self.all_bots):
             robot.update_(new_field.all_bots[i])
-
-        self._active_allies = []
-        for r in self.allies:
-            if r.is_used() and r.r_id != self.gk_id:
-                self._active_allies.append(r)
-
-        self._active_enemies = []
-        for r in self.enemies:
-            if r.is_used() and r.r_id != self.enemy_gk_id:
-                self._active_enemies.append(r)
 
     def update_ball(self, pos: aux.Point, t: float) -> None:
         """
@@ -232,6 +227,14 @@ class Field:
         !!! Вызывать один раз за итерацию с постоянной частотой !!!
         """
         self.y_team[idx].update(pos, angle, t)
+
+    def update_active_enemies(self, active_enemies: list[rbt.Robot]) -> None:
+        """Обновляет список активных роботов-союзников"""
+        self._active_enemies = active_enemies
+
+    def update_active_allies(self, active_allies: list[rbt.Robot]) -> None:
+        """Обновляет список активных роботов-противников"""
+        self._active_allies = active_allies
 
     def get_blu_team(self) -> list[rbt.Robot]:
         """

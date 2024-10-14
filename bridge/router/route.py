@@ -3,6 +3,7 @@
 """
 
 import math
+from time import time
 from typing import Optional
 
 import bridge.router.waypoint as wp
@@ -34,6 +35,7 @@ class Route:
             wp.WType.S_BALL_KICK_UP,
             wp.WType.S_BALL_PASS,
         ]
+        self.last_update = time()
 
     def update(self, robot: rbt.Robot) -> None:
         """
@@ -166,7 +168,7 @@ class Route:
 
         transl_vel: Optional[aux.Point] = None
 
-        if target_point.type == wp.WType.S_STOP:
+        if end_point.type == wp.WType.S_STOP:
             transl_vel = aux.Point(0, 0)
             angle = robot.get_angle()
         elif target_point.type == wp.WType.R_PASSTHROUGH:  # TODO fix bad vel control
@@ -209,6 +211,8 @@ class Route:
         """
         Двигаться по маршруту route
         """
+        dT = time() - self.last_update
+        self.last_update = time()
         if self.get_next_type() == wp.WType.S_VELOCITY:
             waypoint = self.get_dest_wp()
             robot.kicker_charge_enable_ = 1
@@ -225,11 +229,11 @@ class Route:
         self.kicker_control(robot)
 
         vel, angle = self.vel_control(robot, field)  # in global coordinate system
-        robot.update_vel_xy(vel)
+        robot.update_vel_xy_(vel, dT)
 
         aerr = aux.wind_down_angle(angle - robot.get_angle())
         if const.IS_SIMULATOR_USED:
-            ang_vel = robot.angle_reg.process(aerr, -robot.get_anglevel())
+            ang_vel = robot.angle_reg.process_(aerr, -robot.get_anglevel(), dT)
             robot.update_vel_w(ang_vel)
         else:
             robot.delta_angle = math.log(18 / math.pi * abs(aerr) + 1) * aux.sign(aerr) * (100 / math.log(18 + 1))

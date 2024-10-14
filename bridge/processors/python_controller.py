@@ -6,16 +6,23 @@ import time
 
 import attr
 from strategy_bridge.bus import DataBus, DataReader, DataWriter
-from strategy_bridge.common import config
-from strategy_bridge.model.referee import RefereeCommand
 from strategy_bridge.processors import BaseProcessor
 from strategy_bridge.utils.debugger import debugger
 
-import bridge.processors.referee_state_processor as state_machine
+import bridge.router.waypoint as wp
 from bridge import const
-from bridge.auxiliary import aux, fld
-from bridge.router import router
+from bridge.auxiliary import fld
+from bridge.processors.referee_state_processor import State
 from bridge.strategy import strategy
+
+
+class RobotCommand:
+    """Command to control robot"""
+
+    def __init__(self, r_id: int, color: const.Color, waypoint: wp.Waypoint) -> None:
+        self.r_id: int = r_id
+        self.color: const.Color = color
+        self.waypoint: wp.Waypoint = waypoint
 
 
 @attr.s(auto_attribs=True)
@@ -30,7 +37,7 @@ class SSLController(BaseProcessor):
 
     ally_color: const.Color = const.Color.BLUE
 
-    dbg_game_status: strategy.GameStates = strategy.GameStates.TIMEOUT
+    dbg_game_state: State = State.RUN
 
     cur_time = time.time()
     delta_t = 0.0
@@ -44,34 +51,17 @@ class SSLController(BaseProcessor):
         """
         super().initialize(data_bus)
         self.passes_reader = DataReader(data_bus, const.PASSES_TOPIC)
-
         self.field_reader = DataReader(data_bus, const.FIELD_TOPIC)
-        self.referee_reader = DataReader(data_bus, config.REFEREE_COMMANDS_TOPIC)
-        self.commands_sink_writer = DataWriter(data_bus, const.TOPIC_SINK, 20)
+        self.gamestate_reader = DataReader(data_bus, const.GAMESTATE_TOPIC)
+
+        self.robot_control_writer = DataWriter(data_bus, const.CONTROL_TOPIC, 50)
         self.image_writer = DataWriter(data_bus, const.IMAGE_TOPIC, 20)
 
         self.field = fld.Field(self.ally_color)
-        self.router = router.Router(self.field)
+        self.game_state: tuple[State, const.Color] = self.dbg_game_state, const.Color.ALL
 
         self.strategy = strategy.Strategy()
-
-        # Referee fields
-        self.state_machine = state_machine.StateMachine()
-        self.cur_cmd_state = None
-        self.wait_10_sec_flag = False
-        self.wait_10_sec = 0.0
-        self.wait_ball_moved_flag = False
-        self.wait_ball_moved = aux.Point(0, 0)
-        self.tmp = 0
-
-    def get_last_referee_command(self) -> RefereeCommand:
-        """
-        Получить последнюю команду рефери
-        """
-        referee_commands = self.referee_reader.read_new()
-        if referee_commands:
-            return referee_commands[-1].content
-        return RefereeCommand(-1, 0, False)
+        self.waypoints: list[wp.Waypoint] = []
 
     def read_vision(self) -> None:
         """
@@ -84,42 +74,6 @@ class SSLController(BaseProcessor):
         else:
             print("No new field")
 
-    def draw_image(self) -> None:
-        """Send commands to drawer processor"""
-        if self.field.ally_color == const.COLOR:
-            for image in [
-                self.field.strategy_image,
-                self.field.router_image,
-                self.field.path_image,
-            ]:
-                self.image_writer.write(image)
-                image.clear()
-
-    def control_loop(self) -> None:
-        """
-        Рассчитать стратегию, тактику и физику для роботов на поле
-        """
-        self.router.update(self.field)
-        waypoints = self.strategy.process(self.field)
-
-        for i in range(const.TEAM_ROBOTS_MAX_COUNT):
-            self.router.get_route(i).clear()
-            self.router.set_dest(i, waypoints[i], self.field)
-        self.router.reroute(self.field)
-
-        for i in range(const.TEAM_ROBOTS_MAX_COUNT):
-            self.router.get_route(i).go_route(self.field.allies[i], self.field)
-
-    def control_assign(self) -> None:
-        """
-        Определить связь номеров роботов с каналами управления
-        """
-        for i in range(const.TEAM_ROBOTS_MAX_COUNT):
-            if self.field.allies[i].is_used():
-                self.field.allies[i].color = self.ally_color
-                self.commands_sink_writer.write(self.field.allies[i])
-                self.field.allies[i].clear_fields()
-
     def get_pass_points(self) -> None:
         """
         Получить точки для пасов
@@ -131,53 +85,32 @@ class SSLController(BaseProcessor):
 
     def process_referee_cmd(self) -> None:
         """Get referee commands"""
-        cur_cmd = self.get_last_referee_command()
-        cur_state, cur_active = self.state_machine.get_state()
-        self.router.avoid_ball(False)
+        new_state = self.gamestate_reader.read_last()
+        if new_state is not None:
+            self.game_state = new_state.content
+            print(self.game_state)
 
-        if cur_cmd.state == -1:
-            return
+    def control_loop(self) -> None:
+        """
+        Рассчитать стратегию, тактику и физику для роботов на поле
+        """
+        cur_state, cur_active = self.game_state
 
-        if cur_state == state_machine.State.STOP or (cur_active not in [const.Color.ALL, self.field.ally_color]):
-            self.router.avoid_ball(True)
-
-        if cur_cmd.state != self.cur_cmd_state:
-            self.state_machine.make_transition(cur_cmd.state)
-            self.state_machine.active_team(cur_cmd.commandForTeam)
-            self.cur_cmd_state = cur_cmd.state
-            cur_state, _ = self.state_machine.get_state()
-
-            self.wait_10_sec_flag = False
-            self.wait_ball_moved_flag = False
-
-            if cur_state in [
-                state_machine.State.KICKOFF,
-                state_machine.State.FREE_KICK,
-                state_machine.State.PENALTY,
-            ]:
-                self.wait_10_sec_flag = True
-                self.wait_10_sec = time.time()
-            if cur_state in [
-                state_machine.State.KICKOFF,
-                state_machine.State.FREE_KICK,
-            ]:
-                self.wait_ball_moved_flag = True
-                self.wait_ball_moved = self.field.ball.get_pos()
-        else:
-            if self.wait_10_sec_flag and time.time() - self.wait_10_sec > 10:
-                self.state_machine.make_transition_(state_machine.Command.PASS_10_SECONDS)
-                self.state_machine.active_team(0)
-                self.wait_10_sec_flag = False
-                self.wait_ball_moved_flag = False
-            if self.wait_ball_moved_flag and self.field.is_ball_moves():
-                self.state_machine.make_transition_(state_machine.Command.BALL_MOVED)
-                self.state_machine.active_team(0)
-                self.wait_10_sec_flag = False
-                self.wait_ball_moved_flag = False
-        self.tmp += 1
-
-        cur_state, cur_active = self.state_machine.get_state()
         self.strategy.change_game_state(cur_state, cur_active)
+        self.waypoints = self.strategy.process(self.field)
+
+    def control_assign(self) -> None:
+        """Send commands to robots"""
+        for robot in self.field.active_allies(True):
+            message = RobotCommand(robot.r_id, robot.color, self.waypoints[robot.r_id])
+
+            self.robot_control_writer.write(message)
+
+    def send_image(self) -> None:
+        """Send commands to drawer processor"""
+        if self.field.ally_color == const.COLOR:
+            self.image_writer.write(self.field.strategy_image)
+        self.field.clear_images()
 
     @debugger
     def process(self) -> None:
@@ -189,11 +122,11 @@ class SSLController(BaseProcessor):
         self.cur_time = time.time()
 
         self.read_vision()
-        # self.process_referee_cmd()
+        self.process_referee_cmd()
         self.get_pass_points()
         self.control_loop()
 
         self.control_assign()
-        self.draw_image()
+        self.send_image()
 
         print("Strategy long:", time.time() - self.cur_time)

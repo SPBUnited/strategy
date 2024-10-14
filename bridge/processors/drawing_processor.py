@@ -17,7 +17,6 @@ class Drawer(BaseProcessor):
 
     processing_pause: typing.Optional[float] = 1 / 30
     reduce_pause_on_process_time: bool = True
-    max_commands_to_persist: int = 20
     commands_sink_reader: DataReader = attr.ib(init=False)
 
     def initialize(self, data_bus: DataBus) -> None:
