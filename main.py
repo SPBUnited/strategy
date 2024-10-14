@@ -13,7 +13,6 @@ from strategy_bridge.runner import Runner
 from bridge import const
 from bridge.processors.drawing_processor import Drawer
 from bridge.processors.field_creator import FieldCreator
-from bridge.processors.passes_explorer import ExplorePasses
 from bridge.processors.python_controller import SSLController
 from bridge.processors.referee_state_processor import RefereeStateProcessor, State
 from bridge.processors.router_processor import CommandSink
@@ -33,7 +32,7 @@ if __name__ == "__main__":
             reduce_pause_on_process_time=True,
             dbg_game_state=State.RUN,
         ),
-        ExplorePasses(ally_color=const.COLOR),
+        # ExplorePasses(ally_color=const.COLOR),
         SSLController(
             ally_color=const.Color.YELLOW,
             processing_pause=const.Ts,

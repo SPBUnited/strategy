@@ -174,8 +174,12 @@ class Field:
         self.ball = new_field.ball
         self.ball_start_point = new_field.ball_start_point
 
-        self.update_active_allies(new_field.active_allies())
-        self.update_active_enemies(new_field.active_enemies())
+        if self.ally_color == new_field.ally_color:
+            self.update_active_allies(new_field.active_allies())
+            self.update_active_enemies(new_field.active_enemies())
+        else:
+            self.update_active_allies(new_field.active_enemies())
+            self.update_active_enemies(new_field.active_allies())
 
         for i, robot in enumerate(self.all_bots):
             robot.update_(new_field.all_bots[i])

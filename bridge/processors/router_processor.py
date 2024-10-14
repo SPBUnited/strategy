@@ -72,11 +72,12 @@ class CommandSink(BaseProcessor):
             if self.field_b.last_update != updated_field.last_update:
                 self.field_b.update_field(updated_field)
                 self.field_y.update_field(updated_field)
+                self.router_b.update(self.field_b)
+                self.router_y.update(self.field_y)
                 updated = True
 
         cmds = self.commands_sink_reader.read_new()
         for cmd in cmds:
-            print(len(cmds))
             command: RobotCommand = cmd.content
             if command.color == const.Color.BLUE:
                 self.waypoints_b[command.r_id] = command.waypoint
@@ -86,8 +87,6 @@ class CommandSink(BaseProcessor):
 
         if updated:
             for color in [const.Color.BLUE, const.Color.YELLOW]:
-                self.router[color].update(self.field[color])
-
                 for i in range(const.TEAM_ROBOTS_MAX_COUNT):
                     if self.field[color].allies[i].is_used():
                         self.field[color].allies[i].clear_fields()
