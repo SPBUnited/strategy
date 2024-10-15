@@ -34,9 +34,9 @@ class KickerAux:
             self.set_voltage(field, kicker.r_id, receive_pos, "SHOOT")
 
         fld.find_nearest_robot(ball, field.enemies)
-        if const.IS_SIMULATOR_USED:
+        if 1 or const.IS_SIMULATOR_USED:
             angle = aux.angle_to_point(ball, receive_pos)
-            return wp.Waypoint(ball, angle, wp.WType.S_BALL_KICK)
+            return wp.Waypoint(ball, angle, wp.WType.S_BALL_PASS)
 
         if field.is_ball_in(kicker):
             return self.twisted(field, kicker, receive_pos)
@@ -52,12 +52,12 @@ class KickerAux:
     def shoot_to_goal(self, field: fld.Field, kicker: rbt.Robot, shoot_point: aux.Point) -> wp.Waypoint:
         "Удар по воротам"
 
-        print(shoot_point)
+        # print(shoot_point)
         ball = field.ball.get_pos()
         self.set_voltage(field, kicker.r_id, shoot_point, "SHOOT")
 
         fld.find_nearest_robot(ball, field.enemies)
-        if const.IS_SIMULATOR_USED:
+        if 1 or const.IS_SIMULATOR_USED:
             angle = aux.angle_to_point(ball, shoot_point)
             return wp.Waypoint(ball, angle, wp.WType.S_BALL_KICK)
 

@@ -220,8 +220,8 @@ class Strategy:
             self.timer = time()
         angle += math.pi / 4
         waypoints[idd] = wp.Waypoint(pos, angle, wp.WType.S_ENDPOINT)
-        print("vel", field.allies[idd].get_vel().mag())
-        print("dist to pos", (field.allies[idd].get_pos() - pos).mag())
+        # print("vel", field.allies[idd].get_vel().mag())
+        # print("dist to pos", (field.allies[idd].get_pos() - pos).mag())
         field.strategy_image.draw_dot(pos, (0, 0, 0), const.ROBOT_R)
 
         return waypoints

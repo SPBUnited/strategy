@@ -25,7 +25,7 @@ def attacker(
         field.ball.get_pos(),
         kick_point,
     )
-    print("Kick est: ", kick_est)
+    # print("Kick est: ", kick_est)
     field.strategy_image.draw_dot(kick_point, (255, 0, 0), 15)
 
     if aux.is_point_inside_poly(field.ball.get_pos(), field.ally_goal.hull) and not field.is_ball_moves_to_goal():
@@ -33,24 +33,11 @@ def attacker(
         return
 
     # if self.pass_or_kick_decision_border.is_lower(kick_est) and len(forwards) > 0:
-    if kick_est > 0.5 and len(pass_points) > 0 and len(forwards) > 0:
-        pass_point = pass_points[0]
-        receiver = fld.find_nearest_robot(pass_point[0], forwards)
-        # print(pass_est, kick_est)
-        if pass_point is not None and pass_point[1] > kick_est and receiver is not None:
-            waypoints[attacker_id] = pass_kicker(field, attacker_id, receiver.r_id)
-            if waypoints[attacker_id].type == wp.WType.S_BALL_KICK:
-                enemy_near = fld.find_nearest_robot(attacker.get_pos(), field.enemies)
-                if enemy_near is not None:
-                    enemy_point = aux.closest_point_on_line(
-                        attacker.get_pos(),
-                        attacker.get_pos() + aux.rotate(aux.RIGHT, attacker.get_angle()) * const.ROBOT_R * 5,
-                        enemy_near.get_pos(),
-                        "S",
-                    )
-                    if aux.dist(enemy_near.get_pos(), enemy_point) < const.ROBOT_R:
-                        waypoints[attacker_id].type = wp.WType.S_BALL_KICK_UP
-            # print("attacker: pass to", receiver_id)
+    if kick_est > 1 and len(forwards) > 0:
+        receiver_id, pass_est = choose_receiver(field, forwards)
+
+        if receiver_id is not None and pass_est is not None:
+            waypoints[attacker_id] = pass_kicker(field, attacker_id, receiver_id)
             return
 
     waypoints[attacker_id] = kick.shoot_to_goal(field, attacker, kick_point)
@@ -62,8 +49,7 @@ def choose_receiver(field: fld.Field, forwards: list[rbt.Robot]) -> tuple[Option
     receiver_id = None
     receiver_score = None
     for forward in forwards:
-        pass_score = acc.estimate_point(field, field.ball.get_pos(), forward.get_pos())
-
+        pass_score = acc.estimate_point(field, forward.get_pos(), field.ball.get_pos())
         if receiver_id is None or pass_score > receiver_score:
             receiver_id = forward.r_id
             receiver_score = pass_score

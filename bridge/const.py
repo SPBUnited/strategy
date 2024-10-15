@@ -24,22 +24,23 @@ class Div(Enum):
 ##################################################
 # GAME SETTING CONSTS
 DIV = Div.B
-COLOR = Color.BLUE
+COLOR = Color.YELLOW
 POLARITY = 1  # -1 если ворота синих на +x; 1 если ворота синих на -x
 
 
-IS_SIMULATOR_USED = True
+IS_SIMULATOR_USED = False
 IS_DRIBBLER_USED = True  # dribbler and upper_kick
 SELF_PLAY = False
 
-GK = 0
-ENEMY_GK = 0
+GK = 9
+ENEMY_GK = 3
 
 ROBOTS_MAX_COUNT: int = 32
 TEAM_ROBOTS_MAX_COUNT: int = ROBOTS_MAX_COUNT // 2
 GEOMETRY_PACKET_SIZE: int = 2
 
 CONTROL_MAPPING: dict[int, int] = {
+    # vision_id: control_id,
     # 0: 8,
     # 1: 9,
     # 2: 10,
@@ -113,7 +114,7 @@ match DIV:
         GOAL_DX = 1 / 0  # не дорос ещё
 
     case Div.B:
-        GOAL_DX = 4500
+        GOAL_DX = 4000
         GOAL_DY = 1000
         GOAL_PEN_DX = 1000
         GOAL_PEN_DY = 2000

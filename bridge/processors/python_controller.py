@@ -88,7 +88,6 @@ class SSLController(BaseProcessor):
         new_state = self.gamestate_reader.read_last()
         if new_state is not None:
             self.game_state = new_state.content
-            print(self.game_state)
 
     def control_loop(self) -> None:
         """

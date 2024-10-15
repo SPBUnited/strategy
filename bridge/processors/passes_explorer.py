@@ -117,6 +117,8 @@ class ExplorePasses(BaseProcessor):
         best: list[tuple[aux.Point, float]] = []
 
         for point in points:
+            if aux.dist(point[0], aux.closest_point_on_line(self.field.ball.get_pos(), self.field.enemy_goal.center, point[0])) < 2 * const.ROBOT_R:
+                continue
             if all(aux.dist(point[0], existing_point[0]) >= DISTANCE_BETWEEN_POINTS for existing_point in best):
                 best.append(point)
 

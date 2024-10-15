@@ -11,12 +11,13 @@ import zmq
 from strategy_bridge.bus import DataBus, DataReader, DataWriter
 from strategy_bridge.common import config
 from strategy_bridge.processors import BaseProcessor
+from strategy_bridge.model.referee import RefereeCommand
 
 from bridge import const
 from bridge.auxiliary import aux, fld
 from bridge.processors.python_controller import RobotCommand
-from bridge.router import router
-from bridge.router import waypoint as wp
+from bridge.router import router, waypoint as wp
+from bridge.processors.python_controller import State
 
 
 @attr.s(auto_attribs=True)
@@ -35,6 +36,7 @@ class CommandSink(BaseProcessor):
         super().initialize(data_bus)
         self.field_reader = DataReader(data_bus, const.FIELD_TOPIC)
         self.commands_sink_reader = DataReader(data_bus, const.CONTROL_TOPIC)
+        self.gamestate_reader = DataReader(data_bus, const.GAMESTATE_TOPIC)
         self.image_writer = DataWriter(data_bus, const.IMAGE_TOPIC, 20)
 
         self.field_b = fld.Field(const.Color.BLUE)
@@ -75,6 +77,12 @@ class CommandSink(BaseProcessor):
                 self.router_b.update(self.field_b)
                 self.router_y.update(self.field_y)
                 updated = True
+
+                message = self.gamestate_reader.read_last()
+                if message is not None:
+                    ref_state: RefereeCommand = message.content
+                    self.router_b.avoid_ball(ref_state[0] == State.STOP or ref_state[0] == State.FREE_KICK and ref_state[1] == const.Color.YELLOW)
+                    self.router_y.avoid_ball(ref_state[0] == State.STOP or ref_state[0] == State.FREE_KICK and ref_state[1] == const.Color.BLUE)
 
         cmds = self.commands_sink_reader.read_new()
         for cmd in cmds:
@@ -153,34 +161,34 @@ class CommandSink(BaseProcessor):
                         rules.append(0)
                     continue
 
-                robot = control_team[i]
+                control_robot = control_team[const.CONTROL_MAPPING[i]]
                 if i in const.REVERSED_KICK:
-                    robot.kick_forward_, robot.kick_up_ = robot.kick_up_, robot.kick_forward_
-                    if robot.auto_kick_ == 2:
-                        robot.auto_kick_ = 1
-                    elif robot.auto_kick_ == 1:
-                        robot.auto_kick_ = 2
+                    control_robot.kick_forward_, control_robot.kick_up_ = control_robot.kick_up_, control_robot.kick_forward_
+                    if control_robot.auto_kick_ == 2:
+                        control_robot.auto_kick_ = 1
+                    elif control_robot.auto_kick_ == 1:
+                        control_robot.auto_kick_ = 2
 
                 if not const.IS_DRIBBLER_USED:
                     if round(time() * 2) % 10 == 0:
-                        control_team[i].dribbler_enable_ = 1
-                        control_team[i].dribbler_speed_ = 1
+                        control_robot.dribbler_enable_ = 1
+                        control_robot.dribbler_speed_ = 1
                     else:
-                        control_team[i].dribbler_enable_ = 0
-                        control_team[i].dribbler_speed_ = 0
+                        control_robot.dribbler_enable_ = 0
+                        control_robot.dribbler_speed_ = 0
 
                 rules.append(0)
-                rules.append(control_team[i].speed_x)
-                rules.append(control_team[i].speed_y)
-                rules.append(control_team[i].delta_angle)
-                rules.append(control_team[i].kick_up_)
-                rules.append(control_team[i].kick_forward_)
-                rules.append(control_team[i].auto_kick_)
-                rules.append(control_team[i].kicker_voltage_)
-                rules.append(control_team[i].dribbler_enable_)
-                rules.append(control_team[i].dribbler_speed_)
-                rules.append(control_team[i].kicker_charge_enable_)
-                rules.append(control_team[i].beep)
+                rules.append(control_robot.speed_x)
+                rules.append(control_robot.speed_y)
+                rules.append(control_robot.delta_angle)
+                rules.append(control_robot.kick_up_)
+                rules.append(control_robot.kick_forward_)
+                rules.append(control_robot.auto_kick_)
+                rules.append(control_robot.kicker_voltage_)
+                rules.append(control_robot.dribbler_enable_)
+                rules.append(control_robot.dribbler_speed_)
+                rules.append(control_robot.kicker_charge_enable_)
+                rules.append(control_robot.beep)
                 rules.append(0)
             for _ in range(const.TEAM_ROBOTS_MAX_COUNT):
                 for _ in range(13):
