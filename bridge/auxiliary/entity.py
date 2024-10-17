@@ -4,7 +4,6 @@
 Хранит:
 - положение
 - скорость
-- ускорение
 - угол
 - радиус
 """
@@ -58,16 +57,13 @@ class Entity:
     def update(self, pos: aux.Point, angle: float, t: float) -> None:
         """
         Обновить положение и рассчитать исходя из этого скорость и ускорение
-        !!! Вызывать один раз за итерацию с постоянной частотой !!!
-
-        TODO Реализовать расчет скоростей и ускорений
         """
         dt = t - self.last_update_
         self.kf.F = np.array([[1, dt, 0, 0], [0, 1, 0, 0], [0, 0, 1, dt], [0, 0, 0, 1]])
         self.kf.Q = Q_discrete_white_noise(dim=2, dt=dt, var=35, block_size=2)
         self.kf.predict()
         self.kf.update(np.array([pos.x, pos.y]))
-        state = self.kf.x.copy()
+        state: np.ndarray = self.kf.x.copy()
         self._pos = aux.Point(state[0].item(), state[2].item())
         self._vel = aux.Point(state[1].item(), state[3].item())
 
@@ -95,10 +91,6 @@ class Entity:
     def get_vel(self) -> aux.Point:
         """Геттер скорости"""
         return self._vel
-
-    # def get_acc(self) -> aux.Point:
-    #     """Геттер ускорения"""
-    #     return self._acc
 
     def get_angle(self) -> float:
         """Геттер угла"""

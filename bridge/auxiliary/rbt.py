@@ -127,7 +127,6 @@ class Robot(entity.Entity):
         return self.r_id == robo.r_id and self.color == robo.color
 
     def to_entity(self) -> entity.Entity:
-
         ent = entity.Entity(self._pos, self._angle, self._radius)
         ent._vel = self._vel
         # ent._acc = self._acc

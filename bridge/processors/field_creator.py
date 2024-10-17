@@ -8,10 +8,11 @@ from time import time
 import attr
 from strategy_bridge.bus import DataBus, DataReader, DataWriter
 from strategy_bridge.common import config
+from strategy_bridge.larcmacs.receiver import ZmqReceiver
 from strategy_bridge.pb.messages_robocup_ssl_wrapper_pb2 import SSL_WrapperPacket
 from strategy_bridge.processors import BaseProcessor
 
-from bridge import const
+from bridge import const, drawing
 from bridge.auxiliary import aux, fld
 
 
@@ -28,20 +29,29 @@ class FieldCreator(BaseProcessor):
         Инициализация
         """
         super().initialize(data_bus)
-        self.vision_reader = DataReader(data_bus, config.VISION_DETECTIONS_TOPIC)
+        self.receiver = ZmqReceiver(port=config.VISION_DETECTIONS_SUBSCRIBE_PORT)
+
         self.box_feedback_reader = DataReader(data_bus, config.BOX_FEEDBACK_TOPIC)
         self.field_writer = DataWriter(data_bus, const.FIELD_TOPIC, 1)
         self._ssl_converter = SSL_WrapperPacket()
         self.field = fld.Field(const.COLOR)
+        self.field.field_image.timer = drawing.FeedbackTimer(time(), 5, 30)
 
     def process(self) -> None:
         """
         Метод обратного вызова процесса
         """
 
-        queue = self.vision_reader.read_new()
-        if not queue:
+        queue = []
+        message = self.receiver.next_message()
+        while message is not None:
+            queue.append(message)
+            message = self.receiver.next_message()
+
+        if len(queue) == 0:
             return
+
+        self.field.field_image.timer.start(time())
 
         # print("field delay:", time() - self.field.last_update)
         balls: list[aux.Point] = []
@@ -56,11 +66,11 @@ class FieldCreator(BaseProcessor):
 
         for ssl_package in queue:
             try:
-                ssl_package_content = ssl_package.content
-            except AttributeError:
+                ssl_package_content = self._ssl_converter.FromString(ssl_package)
+            except AttributeError:  # TODO понять и сделать везде
                 continue
 
-            ssl_package_content = self._ssl_converter.FromString(ssl_package_content)
+            # ssl_package_content = self._ssl_converter.FromString(ssl_package_content)
             # geometry = ssl_package_content.geometry
             # if geometry:
             #     field_info[0] = geometry.field.field_length
@@ -143,6 +153,7 @@ class FieldCreator(BaseProcessor):
         self.field.update_active_enemies(active_enemies)
 
         self.field.last_update = time()
+        self.field.field_image.timer.end(time())
         self.field_writer.write(self.field)
 
         # feedback_queue = self.box_feedback_reader.read_new()

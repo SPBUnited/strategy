@@ -38,6 +38,7 @@ class ExplorePasses(BaseProcessor):
 
         self.field = fld.Field(self.ally_color)
         self.image = drawing.Image(drawing.ImageTopic.PASSES)
+        self.image.timer = drawing.FeedbackTimer(time(), 200, 5)
         self.best: list[tuple[aux.Point, float]] = []
 
     def process_cell(self, point: tuple[float, float]) -> tuple[aux.Point, float]:
@@ -64,7 +65,7 @@ class ExplorePasses(BaseProcessor):
         """
         Метод обратного вызова процесса
         """
-        t = time()
+        time()
 
         new_field = self.field_reader.read_last()
         if new_field is not None:
@@ -72,6 +73,7 @@ class ExplorePasses(BaseProcessor):
             self.field.update_field(updated_field)
         else:
             return
+        self.image.timer.start(time())
 
         points: list[tuple[aux.Point, float]] = []
 
@@ -117,7 +119,12 @@ class ExplorePasses(BaseProcessor):
         best: list[tuple[aux.Point, float]] = []
 
         for point in points:
-            if aux.dist(point[0], aux.closest_point_on_line(self.field.ball.get_pos(), self.field.enemy_goal.center, point[0])) < 2 * const.ROBOT_R:
+            if (
+                aux.dist(
+                    point[0], aux.closest_point_on_line(self.field.ball.get_pos(), self.field.enemy_goal.center, point[0])
+                )
+                < 2 * const.ROBOT_R
+            ):
                 continue
             if all(aux.dist(point[0], existing_point[0]) >= DISTANCE_BETWEEN_POINTS for existing_point in best):
                 best.append(point)
@@ -140,10 +147,9 @@ class ExplorePasses(BaseProcessor):
                 color = (int(255 * (1 + est / 2)), 0, 0)
             self.image.draw_dot(p[0], color, 65)
 
+        self.image.timer.end(time())
         self.image_writer.write(self.image)
         self.image.clear()
-
-        print("Passes long:", time() - t)
 
     def estimate(self, point: aux.Point) -> float:
         """estimate pass to point"""

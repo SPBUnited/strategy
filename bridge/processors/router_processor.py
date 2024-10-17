@@ -10,14 +10,14 @@ import attr
 import zmq
 from strategy_bridge.bus import DataBus, DataReader, DataWriter
 from strategy_bridge.common import config
-from strategy_bridge.processors import BaseProcessor
 from strategy_bridge.model.referee import RefereeCommand
+from strategy_bridge.processors import BaseProcessor
 
-from bridge import const
+from bridge import const, drawing
 from bridge.auxiliary import aux, fld
-from bridge.processors.python_controller import RobotCommand
-from bridge.router import router, waypoint as wp
-from bridge.processors.python_controller import State
+from bridge.processors.python_controller import RobotCommand, State
+from bridge.router import router
+from bridge.router import waypoint as wp
 
 
 @attr.s(auto_attribs=True)
@@ -26,7 +26,7 @@ class CommandSink(BaseProcessor):
     Прослойка между стратегией и отправкой пакетов на роботов
     """
 
-    processing_pause: Optional[float] = 0.2
+    processing_pause: Optional[float] = 0.001
     reduce_pause_on_process_time: bool = False
 
     def initialize(self, data_bus: DataBus) -> None:
@@ -42,6 +42,8 @@ class CommandSink(BaseProcessor):
         self.field_b = fld.Field(const.Color.BLUE)
         self.field_y = fld.Field(const.Color.YELLOW)
         self.field: dict[const.Color, fld.Field] = {const.Color.BLUE: self.field_b, const.Color.YELLOW: self.field_y}
+
+        self.field[const.COLOR].router_image.timer = drawing.FeedbackTimer(time(), 10, 50)
 
         self.router_b = router.Router(self.field_b)
         self.router_y = router.Router(self.field_y)
@@ -81,8 +83,12 @@ class CommandSink(BaseProcessor):
                 message = self.gamestate_reader.read_last()
                 if message is not None:
                     ref_state: RefereeCommand = message.content
-                    self.router_b.avoid_ball(ref_state[0] == State.STOP or ref_state[0] == State.FREE_KICK and ref_state[1] == const.Color.YELLOW)
-                    self.router_y.avoid_ball(ref_state[0] == State.STOP or ref_state[0] == State.FREE_KICK and ref_state[1] == const.Color.BLUE)
+                    self.router_b.avoid_ball(
+                        ref_state[0] == State.STOP or ref_state[0] == State.FREE_KICK and ref_state[1] == const.Color.YELLOW
+                    )
+                    self.router_y.avoid_ball(
+                        ref_state[0] == State.STOP or ref_state[0] == State.FREE_KICK and ref_state[1] == const.Color.BLUE
+                    )
 
         cmds = self.commands_sink_reader.read_new()
         for cmd in cmds:
@@ -94,6 +100,7 @@ class CommandSink(BaseProcessor):
             updated = True
 
         if updated:
+            self.field[const.COLOR].router_image.timer.start(time())
             for color in [const.Color.BLUE, const.Color.YELLOW]:
                 for i in range(const.TEAM_ROBOTS_MAX_COUNT):
                     if self.field[color].allies[i].is_used():
@@ -104,6 +111,7 @@ class CommandSink(BaseProcessor):
                         self.router[color].reroute(i, self.field[color])
                         self.router[color].get_route(i).go_route(self.field[color].allies[i], self.field[color])
 
+            self.field[const.COLOR].router_image.timer.end(time())
             self.image_writer.write(self.field[const.COLOR].router_image)
             self.image_writer.write(self.field[const.COLOR].path_image)
             self.field_b.clear_images()

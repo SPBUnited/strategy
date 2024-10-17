@@ -21,12 +21,8 @@ class Route:
         Конструктор
         """
         self._robot = [wp.Waypoint(robot.get_pos(), robot._angle, wp.WType.T_ROBOT)]
-        self._destination = [wp.Waypoint(aux.GRAVEYARD_POS, 0, wp.WType.T_GRAVEYARD)]
+        self._destination = wp.Waypoint(aux.GRAVEYARD_POS, 0, wp.WType.T_GRAVEYARD)
         self._routewp: list[wp.Waypoint] = []
-        # self.__route = [*self.robot, *self.__routewp, *self.__destination]
-
-        self.go_flag = 0
-        self.go_time = 0
 
         self.ball_wp_types = [
             wp.WType.S_BALL_GO,
@@ -34,6 +30,7 @@ class Route:
             wp.WType.S_BALL_GRAB,
             wp.WType.S_BALL_KICK_UP,
             wp.WType.S_BALL_PASS,
+            wp.WType.S_BALL_TWIST,
         ]
         self.last_update = time()
 
@@ -55,19 +52,20 @@ class Route:
         """
         Получить маршрут в виде списка путевых точек
         """
-        return [*self._robot, *self._routewp, *self._destination]
+        return [*self._robot, *self._routewp, self._destination]
 
     def set_dest_wp(self, dest: wp.Waypoint) -> None:
         """
         Задать конечную точку
         """
-        self._destination = [dest]
+        self.clear()
+        self._destination = dest
 
     def get_dest_wp(self) -> wp.Waypoint:
         """
         Получить конечную точку
         """
-        return self._destination[0]
+        return self._destination
 
     def get_next_wp(self) -> wp.Waypoint:
         """
@@ -109,7 +107,7 @@ class Route:
         """
         Определить, используется ли маршрут
         """
-        return self._destination[0].type != wp.WType.T_GRAVEYARD
+        return self._destination.type != wp.WType.T_GRAVEYARD
 
     def get_length(self) -> float:
         """

@@ -2,7 +2,7 @@
 Модуль стратегии игры
 """
 
-import time
+from time import time
 
 import attr
 from strategy_bridge.bus import DataBus, DataReader, DataWriter
@@ -10,7 +10,7 @@ from strategy_bridge.processors import BaseProcessor
 from strategy_bridge.utils.debugger import debugger
 
 import bridge.router.waypoint as wp
-from bridge import const
+from bridge import const, drawing
 from bridge.auxiliary import fld
 from bridge.processors.referee_state_processor import State
 from bridge.strategy import strategy
@@ -39,7 +39,7 @@ class SSLController(BaseProcessor):
 
     dbg_game_state: State = State.RUN
 
-    cur_time = time.time()
+    cur_time = time()
     delta_t = 0.0
 
     ctrl_mapping = const.CONTROL_MAPPING
@@ -58,6 +58,7 @@ class SSLController(BaseProcessor):
         self.image_writer = DataWriter(data_bus, const.IMAGE_TOPIC, 20)
 
         self.field = fld.Field(self.ally_color)
+        self.field.strategy_image.timer = drawing.FeedbackTimer(time(), 0.05, 40)
         self.game_state: tuple[State, const.Color] = self.dbg_game_state, const.Color.ALL
 
         self.strategy = strategy.Strategy()
@@ -107,6 +108,7 @@ class SSLController(BaseProcessor):
 
     def send_image(self) -> None:
         """Send commands to drawer processor"""
+        self.field.strategy_image.timer.end(time())
         if self.field.ally_color == const.COLOR:
             self.image_writer.write(self.field.strategy_image)
         self.field.clear_images()
@@ -116,16 +118,16 @@ class SSLController(BaseProcessor):
         """
         Выполнить цикл процессора
         """
-
-        self.delta_t = time.time() - self.cur_time
-        self.cur_time = time.time()
+        self.field.strategy_image.timer.start(time())
+        self.delta_t = time() - self.cur_time
+        self.cur_time = time()
 
         self.read_vision()
-        self.process_referee_cmd()
+        # self.process_referee_cmd()
         self.get_pass_points()
         self.control_loop()
 
         self.control_assign()
         self.send_image()
 
-        print("Strategy long:", time.time() - self.cur_time)
+        print("Strategy long:", time() - self.cur_time)

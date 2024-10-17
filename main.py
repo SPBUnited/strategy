@@ -2,9 +2,7 @@
 Точка входа в стратегию
 """
 
-from strategy_bridge.processors import (  # BoxFeedbackCollector,
-    VisionDetectionsCollector,
-)
+# from strategy_bridge.processors import BoxFeedbackCollector
 from strategy_bridge.processors.referee_commands_collector import (
     RefereeCommandsCollector,
 )
@@ -13,8 +11,8 @@ from strategy_bridge.runner import Runner
 from bridge import const
 from bridge.processors.drawing_processor import Drawer
 from bridge.processors.field_creator import FieldCreator
-from bridge.processors.python_controller import SSLController
 from bridge.processors.passes_explorer import ExplorePasses
+from bridge.processors.python_controller import SSLController
 from bridge.processors.referee_state_processor import RefereeStateProcessor, State
 from bridge.processors.router_processor import CommandSink
 
@@ -23,7 +21,7 @@ if __name__ == "__main__":
     # config.init_logging("./logs")
 
     PROCESSORS = [
-        VisionDetectionsCollector(processing_pause=0.001),  # TODO: move to field creator
+        # VisionDetectionsCollector(processing_pause=0.001),  # TODO: move to field creator
         FieldCreator(processing_pause=0.01),
         RefereeCommandsCollector(processing_pause=0.001),
         RefereeStateProcessor(),

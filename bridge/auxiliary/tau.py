@@ -30,7 +30,7 @@ class FOD:
         """
         Рассчитать и получить следующее значение выхода звена
 
-        ВЫЗЫВАТЬ РАЗ В ПЕРИОД КВАНТВАНИЯ
+        ВЫЗЫВАТЬ РАЗ В ПЕРИОД КВАНТОВАНИЯ
 
         x - новое значение входа
         """
@@ -74,7 +74,7 @@ class FOLP:
         """
         Рассчитать и получить следующее значение выхода звена
 
-        ВЫЗЫВАТЬ РАЗ В ПЕРИОД КВАНТВАНИЯ
+        ВЫЗЫВАТЬ РАЗ В ПЕРИОД КВАНТОВАНИЯ
 
         x - новое значение входа
         """
@@ -92,6 +92,7 @@ class FOLP:
         err = x - self._out
         self._int += err * dT
         self._out = self._int / self._t
+        # self._out = self._int / math.pow(self._t, dT / self._t) #NOTE
         return self._out
 
     def get_val(self) -> float:
@@ -126,7 +127,7 @@ class Integrator:
         """
         Рассчитать и получить следующее значение выхода звена
 
-        ВЫЗЫВАТЬ РАЗ В ПЕРИОД КВАНТВАНИЯ
+        ВЫЗЫВАТЬ РАЗ В ПЕРИОД КВАНТОВАНИЯ
 
         x - новое значение входа
         """
@@ -164,7 +165,7 @@ class PISD:
     """
     Пропорционально-скользяще-интегральный регулятор
 
-    (В отличие от ПИД беред производную от скорости изменения регулируемой
+    (В отличие от ПИД берёт производную от скорости изменения регулируемой
     величины, а не ошибки)
     """
 
@@ -242,16 +243,11 @@ class PISD:
         s = xerr + k_d * x_i + k_i * self.__int.get_val()
         u = gain * s
 
-        # u_clipped = aux.minmax(u, max_out)
-
-        # if u != u_clipped:
-        #     self.__int.process(xerr + k_d * x_i)
-
-        # self.__out = u_clipped
-        # if u != aux.minmax(u, max_out):
         self.__int.process_(xerr + k_d * x_i, dT)
 
         self.__out = u
+
+        # self.__out = aux.minmax(u,max_out) #NOTE
 
         return self.__out
 

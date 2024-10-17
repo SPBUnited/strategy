@@ -70,6 +70,7 @@ class Field:
         self.last_update = 0.0
         self.robot_with_ball: Optional[rbt.Robot] = None
 
+        self.field_image = drawing.Image(drawing.ImageTopic.FIELD)
         self.strategy_image = drawing.Image(drawing.ImageTopic.STRATEGY)
         self.router_image = drawing.Image(drawing.ImageTopic.ROUTER)
         self.path_image = drawing.Image(drawing.ImageTopic.PATH_GENERATION)
@@ -149,6 +150,7 @@ class Field:
         self.ball_real_update_time = 0.0
 
     def clear_images(self) -> None:
+        """Clear old data from images"""
         self.strategy_image.clear()
         self.router_image.clear()
         self.path_image.clear()
@@ -187,7 +189,6 @@ class Field:
     def update_ball(self, pos: aux.Point, t: float) -> None:
         """
         Обновить положение мяча
-        !!! Вызывать один раз за итерацию с постоянной частотой !!!
         """
         self.ball.update(pos, 0, t)
         old_ball = self.ball_history[self.ball_history_idx]

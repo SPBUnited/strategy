@@ -27,15 +27,16 @@ class Drawer(BaseProcessor):
         self.field_reader = DataReader(data_bus, const.FIELD_TOPIC)
         self.image_reader = DataReader(data_bus, const.IMAGE_TOPIC)
 
-        width = 1200
-        heigh = int(width / const.GOAL_DX * const.FIELD_DY)
+        self.width = 1200
+        self.heigh = int(self.width / const.GOAL_DX * const.FIELD_DY)
         goal_dx, goal_dy = abs(const.GOAL_DX), abs(const.FIELD_DY)
-        self.scale = min(width / 2 / goal_dx, heigh / 2 / goal_dy)
+        self.scale = min(self.width / 2 / goal_dx, self.heigh / 2 / goal_dy)
         self.size_x = goal_dx * self.scale * 2
         self.size_y = goal_dy * self.scale * 2
 
         pygame.init()
-        self.screen = pygame.display.set_mode((width, heigh))
+        pygame.font.init()
+        self.screen = pygame.display.set_mode((self.width, self.heigh))
         pygame.display.set_caption("Football Field")
         self.middle_x, self.middle_y = self.screen.get_size()
         self.middle_x = round(self.middle_x / 2)
@@ -48,11 +49,13 @@ class Drawer(BaseProcessor):
         self.images: list[tuple[drawing.Image, CheckBox]] = []
         box_pos = (10, 10)
         for topic in drawing.ImageTopic:
+            if topic == drawing.ImageTopic.FIELD:
+                continue
             self.images += [(drawing.Image(topic), CheckBox(self.screen, box_pos, topic.name))]
             box_pos = (box_pos[0], box_pos[1] + 20)
         self.images[drawing.ImageTopic.STRATEGY.value][1].is_pressed = True
 
-        pygame.font.init()
+        self.timers_box = CheckBox(self.screen, (self.width - 26, 10), "DELAY | TPS", text_side="left", is_pressed=True)
 
         self.font = pygame.font.SysFont("Open Sans", 25)
 
@@ -66,13 +69,13 @@ class Drawer(BaseProcessor):
         field: fld.Field = message_fld.content
         for ext_image in message_img:
             image: drawing.Image = ext_image.content
-            if image.topic is not None:
+            if image.topic is not None and image.topic != drawing.ImageTopic.FIELD:
                 self.images[image.topic.value] = (
                     image,
                     self.images[image.topic.value][1],
                 )
 
-        field_image = drawing.Image()
+        field_image = field.field_image
 
         for rbt in field.get_blu_team():
             if rbt.is_used():
@@ -98,6 +101,10 @@ class Drawer(BaseProcessor):
                 for prnt in image_box[0].prints:
                     pos = self.cord_to_pixels(prnt[0])
                     self.print_text(pos, prnt[1], prnt[2])
+
+        if self.timers_box.is_pressed:
+            images = [field_image] + [img[0] for img in self.images]
+            self.draw_timers(images)
 
         for command in field_image.commands:
             cmd = self.scale_dots(command)
@@ -138,9 +145,50 @@ class Drawer(BaseProcessor):
         for event in events:
             for img_box in self.images:
                 img_box[1].update(event)
+            self.timers_box.update(event)
 
         for img_box in self.images:
             img_box[1].render_checkbox()
+            self.timers_box.render_checkbox()
+
+    def draw_timers(self, images: list[drawing.Image]) -> None:
+        """render and draw on screen all of timers"""
+        height = 10
+        boarder_surf = self.font.render("|", True, (255, 255, 255))
+
+        tps_x = self.width - 34 - self.font.size("TPS")[0]
+        boarder_x = self.width - 34 - self.font.size("| TPS")[0]
+        delay_x = self.width - 34 - self.font.size(" | TPS")[0]
+
+        for image in images:
+            if image.topic == drawing.ImageTopic.PATH_GENERATION:
+                continue
+            height += 20
+            if image.timer.delay_warning:
+                delay_color = (255, 0, 0)
+            else:
+                delay_color = (255, 255, 255)
+            delay_text = f"{image.timer.delay * 1000:.1f}"
+            delay_surf = self.font.render(delay_text, True, delay_color)
+            delay_pos = (
+                delay_x - self.font.size(delay_text)[0],
+                height,
+            )
+            self.screen.blit(delay_surf, delay_pos)
+
+            self.screen.blit(boarder_surf, (boarder_x, height))
+
+            if image.timer.tps_warning:
+                tps_color = (255, 0, 0)
+            else:
+                tps_color = (255, 255, 255)
+            tps_text = f"{image.timer.tps:5.1f}"
+            tps_surf = self.font.render(tps_text, True, tps_color)
+            tps_pos = (
+                tps_x,
+                height,
+            )
+            self.screen.blit(tps_surf, tps_pos)
 
     def draw_field(self) -> None:
         """
@@ -233,8 +281,10 @@ class CheckBox:
         surface: pygame.Surface,
         pos: tuple[int, int],
         text: str,
+        text_side: str = "right",
         is_pressed: bool = False,
     ) -> None:
+        """text_side = 1 if text righter than box, -1 if lefter"""
         self.surface = surface
 
         self.x: int = pos[0]
@@ -247,11 +297,19 @@ class CheckBox:
         self.checkbox_obj = pygame.Rect(self.x, self.y, self.checkbox_size, self.checkbox_size)
         self.font = pygame.font.SysFont("Open Sans", 25)
         self.font_surf = self.font.render(self.text, True, (255, 255, 255))
-        _, heigh = self.font.size(self.text)
-        self.font_pos = (
-            self.x + self.checkbox_size * 1.5,
-            self.y - heigh / 2 + self.checkbox_size / 2,
-        )
+        width, heigh = self.font.size(self.text)
+        if text_side == "right":
+            self.font_pos = (
+                self.x + self.checkbox_size * 1.5,
+                self.y - heigh / 2 + self.checkbox_size / 2,
+            )
+        elif text_side == "left":
+            self.font_pos = (
+                self.x - self.checkbox_size * 0.5 - width,
+                self.y - heigh / 2 + self.checkbox_size / 2,
+            )
+        else:
+            self.font_pos = (self.x, self.y)  # Wrong arg "text_side"
 
     def render_checkbox(self) -> None:
         """render checkbox"""

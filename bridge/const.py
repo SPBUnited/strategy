@@ -28,12 +28,12 @@ COLOR = Color.YELLOW
 POLARITY = 1  # -1 если ворота синих на +x; 1 если ворота синих на -x
 
 
-IS_SIMULATOR_USED = False
+IS_SIMULATOR_USED = True
 IS_DRIBBLER_USED = True  # dribbler and upper_kick
 SELF_PLAY = False
 
-GK = 9
-ENEMY_GK = 3
+GK = 0
+ENEMY_GK = 0
 
 ROBOTS_MAX_COUNT: int = 32
 TEAM_ROBOTS_MAX_COUNT: int = ROBOTS_MAX_COUNT // 2
