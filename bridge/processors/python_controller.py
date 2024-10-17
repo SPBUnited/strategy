@@ -119,8 +119,6 @@ class SSLController(BaseProcessor):
         Выполнить цикл процессора
         """
         self.field.strategy_image.timer.start(time())
-        self.delta_t = time() - self.cur_time
-        self.cur_time = time()
 
         self.read_vision()
         # self.process_referee_cmd()

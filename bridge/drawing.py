@@ -134,7 +134,7 @@ class FeedbackTimer:
         self.clean_memory()
         self.memory.append(time)
         if len(self.memory) > 1:
-            self.tps = len(self.memory) / (self.memory[-1] - self.memory[0])
+            self.tps = (len(self.memory) - 1) / (self.memory[-1] - self.memory[0])
             if self.tps < self.tps_lim:
                 self.tps_timer = time
 
