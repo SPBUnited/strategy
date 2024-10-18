@@ -37,9 +37,15 @@ class KickerAux:
         x = aux.angle_to_point(kicker.get_pos(), kick_point) - kicker.get_angle()
 
         nearest_enemy = fld.find_nearest_robot(kicker.get_pos(), field.enemies)
-        angle_to_enemy = aux.get_angle_between_points(nearest_enemy.get_pos(), kicker.get_pos(), kick_point)
-        angle_to_kick = aux.wind_down_angle(aux.angle_to_point(kicker.get_pos(), kick_point) - kicker.get_angle())
-        if aux.dist(nearest_enemy.get_pos(), kicker.get_pos()) < 500 and abs(angle_to_enemy) < abs(angle_to_kick):
+        angle_to_enemy = aux.get_angle_between_points(
+            nearest_enemy.get_pos(), kicker.get_pos(), kick_point
+        )
+        angle_to_kick = aux.wind_down_angle(
+            aux.angle_to_point(kicker.get_pos(), kick_point) - kicker.get_angle()
+        )
+        if aux.dist(nearest_enemy.get_pos(), kicker.get_pos()) < 500 and abs(
+            angle_to_enemy
+        ) < abs(angle_to_kick):
             if angle_to_enemy < 0 and x < 0:
                 x += 2 * math.pi
             elif angle_to_enemy > 0 and x > 0:
@@ -81,27 +87,39 @@ class KickerAux:
         return vel, wvel
 
 
-def pass_to_point(field: fld.Field, kicker: rbt.Robot, receive_pos: aux.Point) -> wp.Waypoint:
+def pass_to_point(
+    field: fld.Field, kicker: rbt.Robot, receive_pos: aux.Point
+) -> wp.Waypoint:
     "Пасс"
     ball = field.ball.get_pos()
 
     nearest_enemy = fld.find_nearest_robot(ball, field.enemies, [field.enemy_gk_id])
-    is_enemy_near = aux.dist(ball, nearest_enemy.get_pos()) + 1000 < aux.dist(ball, kicker.get_pos())
-    if const.IS_SIMULATOR_USED or not is_enemy_near:  # NOTE
+    is_enemy_near = aux.dist(ball, nearest_enemy.get_pos()) + 1000 < aux.dist(
+        ball, kicker.get_pos()
+    )
+    if (
+        const.IS_SIMULATOR_USED or not is_enemy_near and not field.is_ball_in(kicker)
+    ):  # NOTE
         angle = aux.angle_to_point(ball, receive_pos)
         return wp.Waypoint(ball, angle, wp.WType.S_BALL_KICK)
 
     angle = aux.angle_to_point(kicker.get_pos(), ball)
-    return wp.Waypoint(ball, angle, wp.WType.S_BALL_TWIST_PASS)
+    return wp.Waypoint(receive_pos, angle, wp.WType.S_BALL_TWIST_PASS)
 
 
-def shoot_to_goal(field: fld.Field, kicker: rbt.Robot, shoot_point: aux.Point) -> wp.Waypoint:
+def shoot_to_goal(
+    field: fld.Field, kicker: rbt.Robot, shoot_point: aux.Point
+) -> wp.Waypoint:
     "Удар по воротам"
     ball = field.ball.get_pos()
 
     nearest_enemy = fld.find_nearest_robot(ball, field.enemies, [field.enemy_gk_id])
-    is_enemy_near = aux.dist(ball, nearest_enemy.get_pos()) + 1000 < aux.dist(ball, kicker.get_pos())
-    if const.IS_SIMULATOR_USED or not is_enemy_near:  # NOTE
+    is_enemy_near = aux.dist(ball, nearest_enemy.get_pos()) - 1000 < aux.dist(
+        ball, kicker.get_pos()
+    )
+    if (
+        const.IS_SIMULATOR_USED or not is_enemy_near and not field.is_ball_in(kicker)
+    ):  # NOTE
         angle = aux.angle_to_point(ball, shoot_point)
         return wp.Waypoint(ball, angle, wp.WType.S_BALL_KICK)
 
@@ -109,7 +127,7 @@ def shoot_to_goal(field: fld.Field, kicker: rbt.Robot, shoot_point: aux.Point) -
     #     return angry_turn(kicker, shoot_point)
 
     angle = aux.angle_to_point(kicker.get_pos(), ball)
-    return wp.Waypoint(ball, angle, wp.WType.S_BALL_TWIST)
+    return wp.Waypoint(shoot_point, angle, wp.WType.S_BALL_TWIST)
 
 
 # def angry_turn(kicker: rbt.Robot, kick_point: aux.Point) -> wp.Waypoint:

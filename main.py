@@ -2,7 +2,7 @@
 Точка входа в стратегию
 """
 
-# from strategy_bridge.processors import BoxFeedbackCollector
+from strategy_bridge.processors.box_feedback_collector import BoxFeedbackCollector
 from strategy_bridge.processors.referee_commands_collector import (
     RefereeCommandsCollector,
 )
@@ -39,7 +39,7 @@ if __name__ == "__main__":
         # ),
         Drawer(),
         CommandSink(processing_pause=0.001),
-        # BoxFeedbackCollector(processing_pause=0.001),
+        BoxFeedbackCollector(processing_pause=0.001),
     ]
 
     RUNNER = Runner(processors=PROCESSORS)

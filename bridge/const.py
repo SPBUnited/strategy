@@ -28,7 +28,7 @@ COLOR = Color.YELLOW
 POLARITY = 1  # -1 если ворота синих на +x; 1 если ворота синих на -x
 
 
-IS_SIMULATOR_USED = True
+IS_SIMULATOR_USED = False
 IS_DRIBBLER_USED = True  # dribbler and upper_kick
 SELF_PLAY = False
 
@@ -152,14 +152,14 @@ KICK_ALIGN_DIST = 150
 KICK_ALIGN_OFFSET = 20
 
 # for grabbing ball
-GRAB_AREA = 250
-GRAB_DIST = 50
-GRAB_MULT = 2  # speed = dist * mult
-GRAB_OFFSET = 100
+GRAB_AREA = GRAB_ALIGN_DIST
+GRAB_DIST = 30
+GRAB_MULT = 3  # speed = dist * mult
+GRAB_OFFSET = 75
 
 
 # VOLTAGES
-VOLTAGE_PASS = 15
+VOLTAGE_PASS = 10
 VOLTAGE_SHOOT = 15
 VOLTAGE_UP = 15
 VOLTAGE_ZERO = min(VOLTAGE_PASS, VOLTAGE_SHOOT, VOLTAGE_UP)

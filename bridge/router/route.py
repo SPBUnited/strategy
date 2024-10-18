@@ -32,7 +32,9 @@ class Route:
 
         Обновляет текущее положение робота в маршрутной карте
         """
-        self._robot = [wp.Waypoint(robot.get_pos(), robot.get_angle(), wp.WType.T_ROBOT)]
+        self._robot = [
+            wp.Waypoint(robot.get_pos(), robot.get_angle(), wp.WType.T_ROBOT)
+        ]
 
     def clear(self) -> None:
         """Очистить промежуточные точки маршрута"""
@@ -119,14 +121,19 @@ class Route:
                     robot.kicker_voltage_ = const.VOLTAGE_UP
 
             is_aligned_by_angle = robot.is_kick_aligned_by_angle(end_point.angle)
-            if end_point.type in [wp.WType.S_BALL_KICK, wp.WType.S_BALL_PASS] and is_aligned_by_angle:
+            if (
+                end_point.type in [wp.WType.S_BALL_KICK, wp.WType.S_BALL_PASS]
+                and is_aligned_by_angle
+            ):
                 robot.auto_kick_ = 1
             elif end_point.type == wp.WType.S_BALL_KICK_UP and is_aligned_by_angle:
                 robot.auto_kick_ = 2
             else:
                 robot.auto_kick_ = 0
 
-    def vel_control(self, robot: rbt.Robot, field: fld.Field) -> tuple[aux.Point, float]:
+    def vel_control(
+        self, robot: rbt.Robot, field: fld.Field
+    ) -> tuple[aux.Point, float]:
         """set vel using waypoint"""
         target_point = self.get_next_wp()
         end_point = self.get_dest_wp()
@@ -185,13 +192,6 @@ class Route:
         dT = time() - self.last_update
         self.last_update = time()
 
-        if self.get_dest_wp().type in [
-            wp.WType.S_BALL_TWIST,
-            wp.WType.S_BALL_TWIST_PASS,
-        ] and field.is_ball_in(robot):
-            vel, wvel = self.twisted_kicker.twisted(field, robot, self.get_dest_wp().pos)
-            self.set_dest_wp(wp.Waypoint(vel, wvel, wp.WType.S_VELOCITY))
-
         if self.get_next_type() == wp.WType.S_VELOCITY:
             waypoint = self.get_dest_wp()
             robot.kicker_charge_enable_ = 1
@@ -232,13 +232,16 @@ class Route:
         offset_dist = aux.dist(
             aux.closest_point_on_line(
                 ball,
-                ball - aux.rotate(aux.RIGHT, self.get_dest_wp().angle) * const.GRAB_AREA,
+                ball
+                - aux.rotate(aux.RIGHT, self.get_dest_wp().angle) * const.GRAB_AREA,
                 robot.get_pos(),
                 "S",
             ),
             robot.get_pos(),
         )
-        dist_to_catch = (ball - aux.rotate(aux.RIGHT, self.get_dest_wp().angle) * const.GRAB_DIST) - robot.get_pos()
+        dist_to_catch = (
+            ball - aux.rotate(aux.RIGHT, self.get_dest_wp().angle) * const.GRAB_DIST
+        ) - robot.get_pos()
         # vel_to_catch = dist_to_catch * const.GRAB_MULT
 
         # board = min(offset_dist / const.GRAB_OFFSET, 1)
@@ -249,7 +252,10 @@ class Route:
             transl_vel,
             aux.rotate(aux.RIGHT, self.get_dest_wp().angle),
         )
-        vel_to_align = transl_vel - aux.rotate(aux.RIGHT, self.get_dest_wp().angle) * vel_to_align_r
+        vel_to_align = (
+            transl_vel
+            - aux.rotate(aux.RIGHT, self.get_dest_wp().angle) * vel_to_align_r
+        )
 
         vel_to_catch = aux.scal_mult(
             dist_to_catch * const.GRAB_MULT,

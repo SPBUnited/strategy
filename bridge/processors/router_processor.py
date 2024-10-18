@@ -42,19 +42,29 @@ class CommandSink(BaseProcessor):
 
         self.field_b = fld.Field(const.Color.BLUE)
         self.field_y = fld.Field(const.Color.YELLOW)
-        self.field: dict[const.Color, fld.Field] = {const.Color.BLUE: self.field_b, const.Color.YELLOW: self.field_y}
+        self.field: dict[const.Color, fld.Field] = {
+            const.Color.BLUE: self.field_b,
+            const.Color.YELLOW: self.field_y,
+        }
 
-        self.field[const.COLOR].router_image.timer = drawing.FeedbackTimer(time(), 10, 50)
+        self.field[const.COLOR].router_image.timer = drawing.FeedbackTimer(
+            time(), 10, 50
+        )
 
         self.router_b = router.Router(self.field_b)
         self.router_y = router.Router(self.field_y)
-        self.router: dict[const.Color, router.Router] = {const.Color.BLUE: self.router_b, const.Color.YELLOW: self.router_y}
+        self.router: dict[const.Color, router.Router] = {
+            const.Color.BLUE: self.router_b,
+            const.Color.YELLOW: self.router_y,
+        }
 
         self.waypoints_b: list[wp.Waypoint] = [
-            wp.Waypoint(aux.Point(0, 0), 0, wp.WType.S_STOP) for _ in range(const.TEAM_ROBOTS_MAX_COUNT)
+            wp.Waypoint(aux.Point(0, 0), 0, wp.WType.S_STOP)
+            for _ in range(const.TEAM_ROBOTS_MAX_COUNT)
         ]
         self.waypoints_y: list[wp.Waypoint] = [
-            wp.Waypoint(aux.Point(0, 0), 0, wp.WType.S_STOP) for _ in range(const.TEAM_ROBOTS_MAX_COUNT)
+            wp.Waypoint(aux.Point(0, 0), 0, wp.WType.S_STOP)
+            for _ in range(const.TEAM_ROBOTS_MAX_COUNT)
         ]
         self.waypoints: dict[const.Color, list[wp.Waypoint]] = {
             const.Color.BLUE: self.waypoints_b,
@@ -85,10 +95,14 @@ class CommandSink(BaseProcessor):
                 if message is not None:
                     ref_state: RefereeCommand = message.content
                     self.router_b.avoid_ball(
-                        ref_state[0] == State.STOP or ref_state[0] == State.FREE_KICK and ref_state[1] == const.Color.YELLOW
+                        ref_state[0] == State.STOP
+                        or ref_state[0] == State.FREE_KICK
+                        and ref_state[1] == const.Color.YELLOW
                     )
                     self.router_y.avoid_ball(
-                        ref_state[0] == State.STOP or ref_state[0] == State.FREE_KICK and ref_state[1] == const.Color.BLUE
+                        ref_state[0] == State.STOP
+                        or ref_state[0] == State.FREE_KICK
+                        and ref_state[1] == const.Color.BLUE
                     )
 
         cmds = self.commands_sink_reader.read_new()
@@ -108,9 +122,13 @@ class CommandSink(BaseProcessor):
                         self.field[color].allies[i].clear_fields()
                         self.router[color].get_route(i).clear()
 
-                        self.router[color].set_dest(i, self.waypoints[color][i], self.field[color])
+                        self.router[color].set_dest(
+                            i, self.waypoints[color][i], self.field[color]
+                        )
                         self.router[color].reroute(i, self.field[color])
-                        self.router[color].get_route(i).go_route(self.field[color].allies[i], self.field[color])
+                        self.router[color].get_route(i).go_route(
+                            self.field[color].allies[i], self.field[color]
+                        )
 
             self.field[const.COLOR].router_image.timer.end(time())
             self.image_writer.write(self.field[const.COLOR].router_image)
@@ -172,7 +190,10 @@ class CommandSink(BaseProcessor):
 
                 control_robot = control_team[const.CONTROL_MAPPING[i]]
                 if i in const.REVERSED_KICK:
-                    control_robot.kick_forward_, control_robot.kick_up_ = control_robot.kick_up_, control_robot.kick_forward_
+                    control_robot.kick_forward_, control_robot.kick_up_ = (
+                        control_robot.kick_up_,
+                        control_robot.kick_forward_,
+                    )
                     if control_robot.auto_kick_ == 2:
                         control_robot.auto_kick_ = 1
                     elif control_robot.auto_kick_ == 1:
