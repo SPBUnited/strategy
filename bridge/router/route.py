@@ -229,7 +229,6 @@ class Route:
         """Calculate speed for carefully grabbing a ball"""
         ball = self.get_dest_wp().pos
 
-        vel_to_align = transl_vel
         offset_dist = aux.dist(
             aux.closest_point_on_line(
                 ball,
@@ -240,11 +239,27 @@ class Route:
             robot.get_pos(),
         )
         dist_to_catch = (ball - aux.rotate(aux.RIGHT, self.get_dest_wp().angle) * const.GRAB_DIST) - robot.get_pos()
-        vel_to_catch = dist_to_catch * const.GRAB_MULT
+        # vel_to_catch = dist_to_catch * const.GRAB_MULT
+
+        # board = min(offset_dist / const.GRAB_OFFSET, 1)
+
+        # vel = aux.lerp(vel_to_catch, vel_to_align, board)
+
+        vel_to_align_r = aux.scal_mult(
+            transl_vel,
+            aux.rotate(aux.RIGHT, self.get_dest_wp().angle),
+        )
+        vel_to_align = transl_vel - aux.rotate(aux.RIGHT, self.get_dest_wp().angle) * vel_to_align_r
+
+        vel_to_catch = aux.scal_mult(
+            dist_to_catch * const.GRAB_MULT,
+            aux.rotate(aux.RIGHT, self.get_dest_wp().angle),
+        )
 
         board = min(offset_dist / const.GRAB_OFFSET, 1)
 
-        vel = aux.lerp(vel_to_catch, vel_to_align, board)
+        vel_r = vel_to_catch * (1 - board) + vel_to_align_r * board
+        vel = vel_to_align + aux.rotate(aux.RIGHT, self.get_dest_wp().angle) * vel_r
 
         print(vel_to_align, vel_to_catch, board)
 
