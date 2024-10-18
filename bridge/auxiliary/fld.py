@@ -170,6 +170,7 @@ class Field:
         return robots
 
     def update_field(self, new_field: "Field") -> None:
+        """Update with data from new_field"""
         self.robot_with_ball = new_field.robot_with_ball
         self.last_update = new_field.last_update
 

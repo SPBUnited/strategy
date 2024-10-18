@@ -1,6 +1,7 @@
 """
 Модуль для задания эталонных сигналов для отладки всякого
 """
+
 import math
 import time
 import typing
@@ -38,7 +39,11 @@ class Signal:
             self.amp = ampoffset[0]
             self.offset = ampoffset[1]
 
-        self.waveforms = {"SQUARE": self.square, "SINE": self.sine, "COSINE": self.cosine}
+        self.waveforms = {
+            "SQUARE": self.square,
+            "SINE": self.sine,
+            "COSINE": self.cosine,
+        }
 
     def get(self) -> float:
         """

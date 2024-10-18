@@ -163,7 +163,7 @@ def choose_segment_in_goal(
 
     segments.append(goal.down)
     max_ = 0.0
-    maxId = -1
+    max_id = -1
     for i in range(0, len(segments), 2):
         c = segments[i]
         a = segments[i + 1]
@@ -175,12 +175,12 @@ def choose_segment_in_goal(
         )  # Саша, я тут градусы на радианы заменил, надеюсь ничего не сломалось
         if ang > max_:
             max_ = ang
-            maxId = i
+            max_id = i
 
-    if maxId == -1:
+    if max_id == -1:
         return (goal.down, goal.up)
 
-    return (segments[maxId], segments[maxId + 1])
+    return (segments[max_id], segments[max_id + 1])
 
 
 def choose_kick_point(

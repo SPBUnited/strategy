@@ -97,8 +97,7 @@ class Cell:
             if sign != side_to_delete:
                 self.peaks = cropped_part.peaks
             return True
-        else:
-            return False
+        return False
 
 
 def get_cells(kick_point: aux.Point, field: fld.Field, enemies: list[aux.Point] = []) -> list[Cell]:

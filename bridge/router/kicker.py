@@ -87,7 +87,7 @@ def pass_to_point(field: fld.Field, kicker: rbt.Robot, receive_pos: aux.Point) -
 
     nearest_enemy = fld.find_nearest_robot(ball, field.enemies, [field.enemy_gk_id])
     is_enemy_near = aux.dist(ball, nearest_enemy.get_pos()) + 1000 < aux.dist(ball, kicker.get_pos())
-    if 1 and (const.IS_SIMULATOR_USED or not is_enemy_near):  # NOTE
+    if const.IS_SIMULATOR_USED or not is_enemy_near:  # NOTE
         angle = aux.angle_to_point(ball, receive_pos)
         return wp.Waypoint(ball, angle, wp.WType.S_BALL_KICK)
 
@@ -101,7 +101,7 @@ def shoot_to_goal(field: fld.Field, kicker: rbt.Robot, shoot_point: aux.Point) -
 
     nearest_enemy = fld.find_nearest_robot(ball, field.enemies, [field.enemy_gk_id])
     is_enemy_near = aux.dist(ball, nearest_enemy.get_pos()) + 1000 < aux.dist(ball, kicker.get_pos())
-    if 1 and (const.IS_SIMULATOR_USED or not is_enemy_near):  # NOTE
+    if const.IS_SIMULATOR_USED or not is_enemy_near:  # NOTE
         angle = aux.angle_to_point(ball, shoot_point)
         return wp.Waypoint(ball, angle, wp.WType.S_BALL_KICK)
 

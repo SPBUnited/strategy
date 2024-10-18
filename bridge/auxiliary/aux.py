@@ -455,7 +455,7 @@ def line_circle_intersect(x1: Point, x2: Point, c: Point, radius: float) -> Opti
     h = closest_point_on_line(x1, x2, c, "L")
     if radius < dist(c, h):
         return None
-    elif radius == dist(c, h):
+    if radius == dist(c, h):
         return [h]
 
     d = math.sqrt(radius**2 - dist(c, h) ** 2)
@@ -468,9 +468,9 @@ def line_circle_intersect(x1: Point, x2: Point, c: Point, radius: float) -> Opti
 
     if p1 != c1 and p2 != c2:
         return None
-    elif p1 != c1:
+    if p1 != c1:
         return [p2]
-    elif p2 != c2:
+    if p2 != c2:
         return [p1]
     return [p1, p2]
 
