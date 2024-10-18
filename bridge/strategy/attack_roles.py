@@ -1,13 +1,12 @@
 """Control for attack roles"""
+
 from typing import Optional
 
 from bridge import const
 from bridge.auxiliary import aux, fld, rbt
+from bridge.router import kicker
 from bridge.router import waypoint as wp
 from bridge.strategy import accessories as acc
-from bridge.strategy import kicker
-
-kick = kicker.KickerAux()
 
 
 def attacker(
@@ -18,7 +17,7 @@ def attacker(
     forwards: list[rbt.Robot],
 ) -> None:
     """Логика действий для робота с мячом"""
-    attacker = field.allies[attacker_id]
+    atk = field.allies[attacker_id]
     kick_point = acc.choose_kick_point(field, attacker_id)
     kick_est = acc.estimate_pass_point(
         [e.get_pos() for e in field.active_enemies()] + [field.enemies[field.enemy_gk_id].get_pos()],
@@ -40,7 +39,7 @@ def attacker(
             waypoints[attacker_id] = pass_kicker(field, attacker_id, receiver_id)
             return
 
-    waypoints[attacker_id] = kick.shoot_to_goal(field, attacker, kick_point)
+    waypoints[attacker_id] = kicker.shoot_to_goal(field, atk, kick_point)
     # print("attacker: shoot to goal")
 
 
@@ -107,18 +106,12 @@ def pass_kicker(field: fld.Field, kicker_id: int, receiver_id: int) -> wp.Waypoi
     """
     receiver = field.allies[receiver_id]
     # if not field.is_ball_moves_to_point(receiver.get_pos()):
-    waypoint = kick.pass_to_point(field, field.allies[kicker_id], receiver.get_pos())
-    field.strategy_image.draw_dot(
-        field.ball.get_pos()
-        + aux.rotate(
-            aux.RIGHT,
-            aux.angle_to_point(field.ball.get_pos(), receiver.get_pos()),
-        ),
-        (255, 0, 255),
-        5,
-    )
+    waypoint = kicker.pass_to_point(field, field.allies[kicker_id], receiver.get_pos())
     # else: #TODO bad case
     #     waypoint = wp.Waypoint(aux.Point(0, 0), 0, wp.WType.S_STOP)
+
+    # тут нужно пользоваться пониманием до куда мяч катится
+    # если мяч нормально летит, то забираем роль атакующего
 
     return waypoint
 
@@ -147,6 +140,7 @@ def set_pass_receivers_wps(
     waypoints: list[wp.Waypoint],
     receivers: list[rbt.Robot],
 ) -> None:
+    """Catch the ball for all receivers"""
     for receiver in receivers:
         target = aux.closest_point_on_line(field.ball_start_point, field.ball.get_pos(), receiver.get_pos(), "R")
         field.strategy_image.draw_line(target, receiver.get_pos(), (255, 127, 0), 2)

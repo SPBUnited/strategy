@@ -190,6 +190,12 @@ class Drawer(BaseProcessor):
             )
             self.screen.blit(tps_surf, tps_pos)
 
+            if image.topic is not None:
+                timer_name = image.topic.name[0]
+                name_surf = self.font.render(timer_name, True, (255, 255, 255))
+                name_pos = (self.width - 26, height)
+                self.screen.blit(name_surf, name_pos)
+
     def draw_field(self) -> None:
         """
         draw green field and white lines

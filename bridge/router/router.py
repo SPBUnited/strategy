@@ -94,15 +94,7 @@ class Router:
         if self.routes[idx].get_next_type() in [wp.WType.S_VELOCITY, wp.WType.S_STOP]:
             return
 
-        if (
-            self.routes[idx].get_next_type() == wp.WType.S_BALL_KICK
-            or self.routes[idx].get_next_type() == wp.WType.S_BALL_KICK_UP
-            or self.routes[idx].get_next_type() == wp.WType.S_BALL_PASS
-        ):
-            # if not field.allies[idx].is_kick_aligned(self.routes[idx].get_dest_wp()):
-            align_wp = self.calc_kick_wp(idx)
-            self.routes[idx].insert_wp(align_wp)
-        elif self.routes[idx].get_next_type() == wp.WType.S_BALL_GRAB:
+        if self.routes[idx].get_next_type() in wp.BALL_WP_TYPES:
             align_wp = self.calc_grab_wp(idx)
             self.routes[idx].insert_wp(align_wp)
 
@@ -169,21 +161,6 @@ class Router:
             if not is_inside:
                 self.routes[idx].insert_wp(pth_wp)
 
-    def calc_kick_wp(self, idx: int) -> wp.Waypoint:
-        """
-        Рассчитать точку для выравнивания по мячу
-        """
-        target_point = self.routes[idx].get_dest_wp()
-        target_pos = target_point.pos
-        target_angle = target_point.angle
-
-        align_pos = target_pos - aux.rotate(aux.RIGHT, target_angle) * const.KICK_ALIGN_DIST
-        align_angle = target_angle
-        align_type = wp.WType.R_BALL_ALIGN
-        # align_type = wp.WType.S_ENDPOINT
-        align_wp = wp.Waypoint(align_pos, align_angle, align_type)
-        return align_wp
-
     def calc_grab_wp(self, idx: int) -> wp.Waypoint:
         """
         Рассчитать точку для захвата мяча
@@ -194,8 +171,7 @@ class Router:
 
         align_pos = target_pos - aux.rotate(aux.RIGHT, target_angle) * const.GRAB_ALIGN_DIST
         align_angle = target_angle
-        align_type = wp.WType.R_BALL_ALIGN
-        # align_type = wp.WType.S_ENDPOINT
+        align_type = wp.WType.S_BALL_GRAB
         align_wp = wp.Waypoint(align_pos, align_angle, align_type)
         return align_wp
 

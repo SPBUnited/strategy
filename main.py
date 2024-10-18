@@ -21,7 +21,6 @@ if __name__ == "__main__":
     # config.init_logging("./logs")
 
     PROCESSORS = [
-        # VisionDetectionsCollector(processing_pause=0.001),  # TODO: move to field creator
         FieldCreator(processing_pause=0.01),
         RefereeCommandsCollector(processing_pause=0.001),
         RefereeStateProcessor(),
@@ -32,12 +31,12 @@ if __name__ == "__main__":
             dbg_game_state=State.RUN,
         ),
         ExplorePasses(ally_color=const.COLOR),
-        SSLController(
-            ally_color=const.Color.BLUE,
-            processing_pause=const.Ts,
-            reduce_pause_on_process_time=True,
-            dbg_game_state=State.RUN,
-        ),
+        # SSLController(
+        #     ally_color=const.Color.BLUE,
+        #     processing_pause=const.Ts,
+        #     reduce_pause_on_process_time=True,
+        #     dbg_game_state=State.RUN,
+        # ),
         Drawer(),
         CommandSink(processing_pause=0.001),
         # BoxFeedbackCollector(processing_pause=0.001),

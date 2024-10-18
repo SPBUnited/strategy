@@ -8,11 +8,11 @@ from enum import Enum
 from time import time
 from typing import Optional
 
-import bridge.router.waypoint as wp
 from bridge import const
 from bridge.auxiliary import aux, fld, rbt
 from bridge.processors.referee_state_processor import State as GameStates
-from bridge.strategy import attack_roles, defense_roles, kicker, ref_states
+from bridge.router import waypoint as wp
+from bridge.strategy import attack_roles, defense_roles, ref_states
 
 
 class Role(Enum):
@@ -73,8 +73,6 @@ class Strategy:
 
         self.forwards: list[rbt.Robot] = []
         self.prev_roles: list[Role] = [Role.UNAVAILABLE for _ in range(const.TEAM_ROBOTS_MAX_COUNT)]
-
-        self.kick = kicker.KickerAux()
 
         self.pass_or_kick_decision_border = FloatingBorder(0.2, 0.3)
 
@@ -197,7 +195,7 @@ class Strategy:
 
         match self.flag:
             case 0:
-                pos = aux.Point(-250, 1000)
+                pos = aux.Point(-2500, 1000)
                 angle = math.pi
 
             case 1:
@@ -205,17 +203,17 @@ class Strategy:
                 angle = math.pi
 
             case 2:
-                pos = aux.Point(-500, -2000)
-                angle = math.pi
+                pos = aux.Point(-500, -2500)
+                angle = math.pi / 2
 
             case 3:
                 pos = aux.Point(-750, 1200)
-                angle = math.pi
+                angle = 0
         idd = 1
-        if aux.in_place(field.allies[idd].get_pos(), pos, 50):
-            if time() - self.timer > 0.5:
-                self.flag += 1
-                self.flag = self.flag % 4
+        if aux.in_place(field.allies[idd].get_pos(), pos, 500):
+            # if time() - self.timer > 0.5:
+            self.flag += 1
+            self.flag = self.flag % 4
         else:
             self.timer = time()
         angle += math.pi / 4

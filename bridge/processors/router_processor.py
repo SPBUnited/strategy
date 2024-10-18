@@ -2,6 +2,7 @@
 Модуль-прослойка между стратегией и отправкой пакетов на роботов
 """
 
+import math
 import struct
 from time import time
 from typing import Optional
@@ -177,18 +178,16 @@ class CommandSink(BaseProcessor):
                     elif control_robot.auto_kick_ == 1:
                         control_robot.auto_kick_ = 2
 
-                if not const.IS_DRIBBLER_USED:
-                    if round(time() * 2) % 10 == 0:
-                        control_robot.dribbler_enable_ = 1
-                        control_robot.dribbler_speed_ = 1
-                    else:
-                        control_robot.dribbler_enable_ = 0
-                        control_robot.dribbler_speed_ = 0
+                angle_info = (
+                    math.log(18 / math.pi * abs(control_robot.delta_angle) + 1)
+                    * aux.sign(control_robot.delta_angle)
+                    * (100 / math.log(18 + 1))
+                )
 
                 rules.append(0)
                 rules.append(control_robot.speed_x)
                 rules.append(control_robot.speed_y)
-                rules.append(control_robot.delta_angle)
+                rules.append(angle_info)
                 rules.append(control_robot.kick_up_)
                 rules.append(control_robot.kick_forward_)
                 rules.append(control_robot.auto_kick_)

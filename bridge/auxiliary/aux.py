@@ -348,7 +348,7 @@ def lerp(p1: Point, p2: Point, t: float) -> Point:
 
 def minmax(x: float, a: float, b: Optional[float] = None) -> float:
     """
-    Получить ближайшее к x число из диапазона [a, b] или [b, a]
+    Получить ближайшее к x число из диапазона [a, b] или [-a, a]
     """
     if b is None:
         b = -a
