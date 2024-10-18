@@ -179,20 +179,20 @@ class Router:
         all_robots.append(field.ball)
         flag_way = True
         for robo in all_robots:
-            if aux.dist(start_p.point(), robo.get_pos()) < const.ROBOT_R + robo.get_radius():
+            if aux.dist(start_p.point(), robo.get_pos()) + 1 < const.ROBOT_R + robo.get_radius():
                 help_p = aux.point_on_line(robo.get_pos(), start_p.point(), const.ROBOT_R + robo.get_radius())
                 point_go_now = PointTree(help_p.x, help_p.y)
                 flag_way = False
-            if (end_p.point() - robo.get_pos()).mag() < const.ROBOT_R + robo.get_radius() and (end_p.point() - robo.get_pos()).mag() > 10:
+                print("CCC")
+            if (end_p.point() - robo.get_pos()).mag() + 1 < const.ROBOT_R + robo.get_radius():
                 help_p = aux.point_on_line(robo.get_pos(), end_p.point(), const.ROBOT_R + robo.get_radius())
                 end_p = PointTree(help_p.x, help_p.y)
+                print("BBB")
         for robo in all_robots:
-            if (end_p.point() - robo.get_pos()).mag() < const.ROBOT_R + robo.get_radius() and (end_p.point() - robo.get_pos()).mag() > 10:
+            if (end_p.point() - robo.get_pos()).mag() + 1 < const.ROBOT_R + robo.get_radius():
                 flag_way = False
-                print(end_p.point(), robo.get_pos())
+                print("AAA")
         while n_steps < n_max and n_steps < len(queue) and flag_way:
-            # if idx == 1:
-            #     print(n_steps, field.ally_color == const.Color.BLUE)
             on_way: list[int] = []
             for i, robot in enumerate(all_robots):
                 if aux.dist2line(
@@ -272,7 +272,7 @@ class Router:
                     if tangents:
                         if len(tangents) > 1:
                             for tang in tangents:
-                                tang = aux.point_on_line(wall.get_pos(), tang, (wall.get_radius() + const.ROBOT_R) * 1.1)
+                                tang = aux.point_on_line(wall.get_pos(), tang, (wall.get_radius() + const.ROBOT_R) * 1.5)
                                 all_angles.append(aux.get_angle_between_points(end_p.point(), queue[n_steps].point(), tang))
                                 all_dists.append(aux.dist(tang, queue[n_steps].point()))
                 idxs_max = aux.get_minmax_idxs(all_angles, "max")
@@ -296,7 +296,7 @@ class Router:
             n_steps += 1
         # if idx == 0:
         #     print(point_go_now.x, point_go_now.y)
-        if idx == 2:
+        if idx >= 0 and idx <= 2:
             # print('imhere')
             point_mas = end_p
             while point_mas.father is not None:
@@ -304,8 +304,6 @@ class Router:
                 point_mas = point_mas.father
             field.image.draw_dot(end_p.point(), (0, int(255 * (idx + 1) / 3), int(255 * (idx + 1) / 3)), 100)
             field.image.draw_dot(start_p.point(), size_in_mms=50)
-            if point_go_now:
-                print(point_go_now.point(), field.ball.get_pos())
         if finish or point_go_now is None:
             return None
         return wp.Waypoint(point_go_now.point(), self.routes[idx].get_next_wp().angle, wp.WType.R_PASSTHROUGH)

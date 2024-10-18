@@ -321,6 +321,7 @@ def exclude(team: list[rbt.Robot], avoid: list[rbt.Robot]) -> list[rbt.Robot]:
             new_team.append(i)
     return new_team
 
+
 def get_active_bots(team: list[rbt.Robot]) -> list[rbt.Robot]:
     """
     Возвращает используемых роботов команды

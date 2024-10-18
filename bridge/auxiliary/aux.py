@@ -528,7 +528,9 @@ def get_minmax_idxs(numbers: list[float], mode: str, dp: float = 0) -> list[int]
         if idxs_return:
             if abs(number - numbers[idxs_return[0]]) < numbers[idxs_return[0]] * dp / 100:
                 idxs_return.append(idx)
-            elif (mode == "min" and number < numbers[idxs_return[0]]) or (mode == "max" and number > numbers[idxs_return[0]]):
+            elif (mode == "min" and number < numbers[idxs_return[0]]) or (
+                mode == "max" and number > numbers[idxs_return[0]]
+            ):
                 idxs_return = [idx]
         else:
             idxs_return.append(idx)
