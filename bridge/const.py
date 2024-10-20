@@ -24,8 +24,8 @@ class Div(Enum):
 ##################################################
 # GAME SETTING CONSTS
 DIV = Div.B
-COLOR = Color.YELLOW
-POLARITY = 1  # -1 если ворота синих на +x; 1 если ворота синих на -x
+COLOR = Color.BLUE
+POLARITY = -1  # -1 если ворота синих на +x; 1 если ворота синих на -x
 
 
 IS_SIMULATOR_USED = False
@@ -155,7 +155,7 @@ KICK_ALIGN_OFFSET = 20
 GRAB_AREA = GRAB_ALIGN_DIST
 GRAB_DIST = 30
 GRAB_MULT = 3  # speed = dist * mult
-GRAB_OFFSET = 75
+GRAB_OFFSET_ANGLE = 0.5
 
 
 # VOLTAGES

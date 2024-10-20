@@ -59,7 +59,10 @@ class SSLController(BaseProcessor):
 
         self.field = fld.Field(self.ally_color)
         self.field.strategy_image.timer = drawing.FeedbackTimer(time(), 0.05, 40)
-        self.game_state: tuple[State, const.Color] = self.dbg_game_state, const.Color.ALL
+        self.game_state: tuple[State, const.Color] = (
+            self.dbg_game_state,
+            const.Color.ALL,
+        )
 
         self.strategy = strategy.Strategy()
         self.waypoints: list[wp.Waypoint] = []
@@ -121,11 +124,9 @@ class SSLController(BaseProcessor):
         self.field.strategy_image.timer.start(time())
 
         self.read_vision()
-        # self.process_referee_cmd()
+        self.process_referee_cmd()
         self.get_pass_points()
         self.control_loop()
 
         self.control_assign()
         self.send_image()
-
-        print("Strategy long:", time() - self.cur_time)

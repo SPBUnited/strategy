@@ -27,10 +27,12 @@ class Command:
         color: tuple[int, int, int],
         dots: list[tuple[float, float]],
         size: float,
+        scale: bool = True,
     ) -> None:
         self.color = color
         self.dots = dots
         self.size = size
+        self.scale = scale
 
 
 class Image:
@@ -43,21 +45,30 @@ class Image:
         self.timer: FeedbackTimer = FeedbackTimer(0, 1, 1)
 
         self.commands: list[Command] = []
-        self.prints: list[tuple[tuple[float, float], str, tuple[int, int, int]]] = []
+        self.rectangles: list[
+            tuple[tuple[int, int, int, int], tuple[int, int, int]]
+        ] = []
+        self.prints: list[
+            tuple[tuple[float, float], str, tuple[int, int, int], bool]
+        ] = []
 
     def clear(self) -> None:
         """clear the image"""
         self.commands = []
         self.prints = []
+        self.rectangles = []
 
     def draw_dot(
         self,
         pos: aux.Point,
         color: tuple[int, int, int] = (255, 0, 0),
         size_in_mms: float = 10,
+        need_to_scale: bool = True,
     ) -> None:
         """draw single point"""
-        self.commands.append(Command(color, [(pos.x, pos.y)], size_in_mms))
+        self.commands.append(
+            Command(color, [(pos.x, pos.y)], size_in_mms, need_to_scale)
+        )
 
     def draw_line(
         self,
@@ -65,11 +76,12 @@ class Image:
         dot2: aux.Point,
         color: tuple[int, int, int] = (255, 255, 255),
         size_in_pixels: int = 2,
+        need_to_scale: bool = True,
     ) -> None:
         """draw line"""
         new_dots = [(dot1.x, dot1.y), (dot2.x, dot2.y)]
 
-        self.commands.append(Command(color, new_dots, size_in_pixels))
+        self.commands.append(Command(color, new_dots, size_in_pixels, need_to_scale))
 
     def draw_poly(
         self,
@@ -84,6 +96,21 @@ class Image:
 
         self.commands.append(Command(color, new_dots, size_in_pixels))
 
+    def draw_rect(
+        self,
+        left: float,
+        top: float,
+        width: float,
+        heigh: float,
+        color: tuple[int, int, int],
+    ) -> None:
+        """Draw and fill the rectangle"""
+        left = min(left, left + width)
+        top = min(top, top + heigh)
+        self.rectangles.append(
+            ((int(left), int(top), int(abs(width)), int(abs(heigh))), color)
+        )
+
     def draw_robot(
         self,
         pos: aux.Point,
@@ -95,13 +122,21 @@ class Image:
         self.draw_dot(pos, color, const.ROBOT_R)
         self.draw_line(pos, pos + eye_vec, color, 2)
 
-    def draw_pixel(self, pos: tuple[int, int], color: tuple[int, int, int] = (255, 0, 0)) -> None:
+    def draw_pixel(
+        self, pos: tuple[int, int], color: tuple[int, int, int] = (255, 0, 0)
+    ) -> None:
         """draw single point"""
         self.commands.append(Command(color, [(pos[0], pos[1])], 1))
 
-    def print(self, pos: aux.Point, text: str, color: tuple[int, int, int] = (255, 255, 255)) -> None:
+    def print(
+        self,
+        pos: aux.Point,
+        text: str,
+        color: tuple[int, int, int] = (255, 255, 255),
+        need_to_scale: bool = True,
+    ) -> None:
         """print text"""
-        self.prints.append(((pos.x, pos.y), text, color))
+        self.prints.append(((pos.x, pos.y), text, color, need_to_scale))
 
 
 class FeedbackTimer:

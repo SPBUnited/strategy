@@ -51,11 +51,19 @@ class Drawer(BaseProcessor):
         for topic in drawing.ImageTopic:
             if topic == drawing.ImageTopic.FIELD:
                 continue
-            self.images += [(drawing.Image(topic), CheckBox(self.screen, box_pos, topic.name))]
+            self.images += [
+                (drawing.Image(topic), CheckBox(self.screen, box_pos, topic.name))
+            ]
             box_pos = (box_pos[0], box_pos[1] + 20)
         self.images[drawing.ImageTopic.STRATEGY.value][1].is_pressed = True
 
-        self.timers_box = CheckBox(self.screen, (self.width - 26, 10), "DELAY | TPS", text_side="left", is_pressed=True)
+        self.timers_box = CheckBox(
+            self.screen,
+            (self.width - 26, 10),
+            "DELAY | TPS",
+            text_side="left",
+            is_pressed=True,
+        )
 
         self.font = pygame.font.SysFont("Open Sans", 25)
 
@@ -94,12 +102,21 @@ class Drawer(BaseProcessor):
 
         for image_box in self.images:
             if image_box[1].is_pressed:
+                for rect in image_box[0].rectangles:
+                    self.draw_rectangle(rect)
+
                 for command in image_box[0].commands:
-                    cmd = self.scale_dots(command)
+                    if command.scale:
+                        cmd = self.scale_dots(command)
+                    else:
+                        cmd = command
                     self.complete_command(cmd)
 
                 for prnt in image_box[0].prints:
-                    pos = self.cord_to_pixels(prnt[0])
+                    if prnt[3]:
+                        pos = self.cord_to_pixels(prnt[0])
+                    else:
+                        pos = (int(prnt[0][0]), int(prnt[0][1]))
                     self.print_text(pos, prnt[1], prnt[2])
 
         if self.timers_box.is_pressed:
@@ -107,7 +124,10 @@ class Drawer(BaseProcessor):
             self.draw_timers(images)
 
         for command in field_image.commands:
-            cmd = self.scale_dots(command)
+            if command.scale:
+                cmd = self.scale_dots(command)
+            else:
+                cmd = command
             self.complete_command(cmd)
         for prnt in field_image.prints:
             pos = self.cord_to_pixels(prnt[0])
@@ -117,9 +137,11 @@ class Drawer(BaseProcessor):
 
         self.draw_field()
         for goal in [field.ally_goal, field.enemy_goal]:
-            new_dots = []
+            new_dots: list[aux.Point] = []
             for dot in goal.hull:
-                new_dots.append(dot * self.scale + aux.Point(self.middle_x, self.middle_y))
+                new_dots.append(
+                    dot * self.scale + aux.Point(self.middle_x, self.middle_y)
+                )
 
             for i, _ in enumerate(new_dots):
                 pygame.draw.line(
@@ -230,12 +252,16 @@ class Drawer(BaseProcessor):
             (self.middle_x, self.lower_border),
             2,
         )  # Вертикальная линия
-        pygame.draw.circle(self.screen, line_color, (self.middle_x, self.middle_y), 50, 2)  # Круг в центре
+        pygame.draw.circle(
+            self.screen, line_color, (self.middle_x, self.middle_y), 50, 2
+        )  # Круг в центре
 
     def complete_command(self, command: drawing.Command) -> None:
         """Draw something on a screen by command"""
         if len(command.dots) == 1:
-            pygame.draw.circle(self.screen, command.color, command.dots[0], command.size * self.scale)
+            pygame.draw.circle(
+                self.screen, command.color, command.dots[0], command.size * self.scale
+            )
         elif len(command.dots) == 2:
             pygame.draw.line(
                 self.screen,
@@ -254,7 +280,18 @@ class Drawer(BaseProcessor):
                     round(command.size),
                 )
 
-    def print_text(self, pos: tuple[int, int], text: str, color: tuple[int, int, int]) -> None:
+    def draw_rectangle(
+        self, rectangle: tuple[tuple[int, int, int, int], tuple[int, int, int]]
+    ) -> None:
+        """Draw rectangle on the screen"""
+        rect = pygame.Rect(
+            rectangle[0][0], rectangle[0][1], rectangle[0][2], rectangle[0][3]
+        )
+        pygame.draw.rect(self.screen, rectangle[1], rect)
+
+    def print_text(
+        self, pos: tuple[int, int], text: str, color: tuple[int, int, int]
+    ) -> None:
         """Print text"""
         font_surf = self.font.render(text, True, color)
         width, heigh = self.font.size(text)
@@ -266,7 +303,9 @@ class Drawer(BaseProcessor):
 
     def scale_dots(self, command: drawing.Command) -> drawing.Command:
         """Scale dots from coordinates to pixels"""
-        scaled_command = drawing.Command(command.color, command.dots.copy(), command.size)
+        scaled_command = drawing.Command(
+            command.color, command.dots.copy(), command.size
+        )
         for i, _ in enumerate(scaled_command.dots):
             scaled_command.dots[i] = self.cord_to_pixels(scaled_command.dots[i])
         return scaled_command
@@ -300,7 +339,9 @@ class CheckBox:
         self.is_pressed: bool = is_pressed
 
         self.checkbox_size = 16
-        self.checkbox_obj = pygame.Rect(self.x, self.y, self.checkbox_size, self.checkbox_size)
+        self.checkbox_obj = pygame.Rect(
+            self.x, self.y, self.checkbox_size, self.checkbox_size
+        )
         self.font = pygame.font.SysFont("Open Sans", 25)
         self.font_surf = self.font.render(self.text, True, (255, 255, 255))
         width, heigh = self.font.size(self.text)

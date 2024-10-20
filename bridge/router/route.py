@@ -179,7 +179,7 @@ class Route:
                 transl_vel = transl_vel.unity() * const.MAX_SPEED
 
             if target_point.type == wp.WType.S_BALL_GRAB:
-                transl_vel = self.get_grab_speed(robot, transl_vel)
+                transl_vel = self.get_grab_speed(robot.get_pos(), transl_vel, field)
 
             angle = end_point.angle
 
@@ -225,48 +225,56 @@ class Route:
             robot.get_pos() + aux.rotate(reg_vel, robot.get_angle()) * 10,
         )
 
-    def get_grab_speed(self, robot: rbt.Robot, transl_vel: aux.Point) -> aux.Point:
+    def get_grab_speed(
+        self, robot_pos: aux.Point, transl_vel: aux.Point, field: fld.Field
+    ) -> aux.Point:
         """Calculate speed for carefully grabbing a ball"""
         ball = self.get_dest_wp().pos
 
-        offset_dist = aux.dist(
-            aux.closest_point_on_line(
-                ball,
-                ball
-                - aux.rotate(aux.RIGHT, self.get_dest_wp().angle) * const.GRAB_AREA,
-                robot.get_pos(),
-                "S",
-            ),
-            robot.get_pos(),
-        )
+        grab_point = self.get_next_wp().pos
+
+        offset_angle = abs(aux.get_angle_between_points(grab_point, ball, robot_pos))
+
         dist_to_catch = (
             ball - aux.rotate(aux.RIGHT, self.get_dest_wp().angle) * const.GRAB_DIST
-        ) - robot.get_pos()
-        # vel_to_catch = dist_to_catch * const.GRAB_MULT
-
-        # board = min(offset_dist / const.GRAB_OFFSET, 1)
-
-        # vel = aux.lerp(vel_to_catch, vel_to_align, board)
+        ) - robot_pos
 
         vel_to_align_r = aux.scal_mult(
             transl_vel,
             aux.rotate(aux.RIGHT, self.get_dest_wp().angle),
         )
+
         vel_to_align = (
             transl_vel
             - aux.rotate(aux.RIGHT, self.get_dest_wp().angle) * vel_to_align_r
         )
 
-        vel_to_catch = aux.scal_mult(
+        vel_to_catch_r = aux.scal_mult(
             dist_to_catch * const.GRAB_MULT,
             aux.rotate(aux.RIGHT, self.get_dest_wp().angle),
         )
 
-        board = min(offset_dist / const.GRAB_OFFSET, 1)
+        board = min(
+            offset_angle / const.GRAB_OFFSET_ANGLE, 1
+        )  # 0 - go to ball; 1 - go to grab_point
 
-        vel_r = vel_to_catch * (1 - board) + vel_to_align_r * board
+        vel_r = vel_to_catch_r * (1 - board) + vel_to_align_r * board
         vel = vel_to_align + aux.rotate(aux.RIGHT, self.get_dest_wp().angle) * vel_r
 
-        print(vel_to_align, vel_to_catch, board)
+        middle = (120, 780)
+        size = 200
+        field.router_image.draw_rect(
+            middle[0] - size / 2, middle[1] - size / 2, size, size, (200, 200, 200)
+        )
+        field.router_image.print(
+            aux.Point(middle[0], middle[1] - size / 2 - 20),
+            "GRABBING A BALL",
+            need_to_scale=False,
+        )
+        scale = 2
+        ball_screen = (middle[0], middle[1] - size / 2 + 20)
+        field.router_image.draw_dot(
+            aux.Point(ball_screen[0], ball_screen[1]), (255, 100, 100), 50, False
+        )
 
         return vel

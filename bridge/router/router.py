@@ -129,10 +129,7 @@ class Router:
         if route_idx.get_next_type() in [wp.WType.S_VELOCITY, wp.WType.S_STOP]:
             return
 
-        if (
-            route_idx.get_next_type() in wp.BALL_WP_TYPES
-            and route_idx.get_dest_wp().type != wp.WType.S_BALL_GRAB
-        ):
+        if route_idx.get_next_type() in wp.BALL_WP_TYPES:
             align_wp = self.calc_grab_wp(idx)
             route_idx.insert_wp(align_wp)
 
