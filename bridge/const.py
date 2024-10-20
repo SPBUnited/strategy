@@ -25,10 +25,10 @@ class Div(Enum):
 # GAME SETTING CONSTS
 DIV = Div.B
 COLOR = Color.BLUE
-POLARITY = -1  # -1 если ворота синих на +x; 1 если ворота синих на -x
+POLARITY = 1  # -1 если ворота синих на +x; 1 если ворота синих на -x
 
 
-IS_SIMULATOR_USED = False
+IS_SIMULATOR_USED = True
 IS_DRIBBLER_USED = True  # dribbler and upper_kick
 SELF_PLAY = False
 
@@ -153,8 +153,8 @@ KICK_ALIGN_OFFSET = 20
 
 # for grabbing ball
 GRAB_AREA = GRAB_ALIGN_DIST
-GRAB_DIST = 30
-GRAB_MULT = 3  # speed = dist * mult
+GRAB_DIST = 50
+GRAB_MULT = 1  # speed = dist * mult
 GRAB_OFFSET_ANGLE = 0.5
 
 

@@ -2,6 +2,7 @@
 Класс, описывающий текущий маршрут робота
 """
 
+import math
 from time import time
 from typing import Optional
 
@@ -32,9 +33,7 @@ class Route:
 
         Обновляет текущее положение робота в маршрутной карте
         """
-        self._robot = [
-            wp.Waypoint(robot.get_pos(), robot.get_angle(), wp.WType.T_ROBOT)
-        ]
+        self._robot = [wp.Waypoint(robot.get_pos(), robot.get_angle(), wp.WType.T_ROBOT)]
 
     def clear(self) -> None:
         """Очистить промежуточные точки маршрута"""
@@ -121,19 +120,14 @@ class Route:
                     robot.kicker_voltage_ = const.VOLTAGE_UP
 
             is_aligned_by_angle = robot.is_kick_aligned_by_angle(end_point.angle)
-            if (
-                end_point.type in [wp.WType.S_BALL_KICK, wp.WType.S_BALL_PASS]
-                and is_aligned_by_angle
-            ):
+            if end_point.type in [wp.WType.S_BALL_KICK, wp.WType.S_BALL_PASS] and is_aligned_by_angle:
                 robot.auto_kick_ = 1
             elif end_point.type == wp.WType.S_BALL_KICK_UP and is_aligned_by_angle:
                 robot.auto_kick_ = 2
             else:
                 robot.auto_kick_ = 0
 
-    def vel_control(
-        self, robot: rbt.Robot, field: fld.Field
-    ) -> tuple[aux.Point, float]:
+    def vel_control(self, robot: rbt.Robot, field: fld.Field) -> tuple[aux.Point, float]:
         """set vel using waypoint"""
         target_point = self.get_next_wp()
         end_point = self.get_dest_wp()
@@ -162,24 +156,25 @@ class Route:
 
             angle = end_point.angle
         else:
-            if end_point.type in wp.BALL_WP_TYPES and self.get_length() < 500:
+            ball_escorting = end_point.type in wp.BALL_WP_TYPES and self.get_length() < 500
+            if ball_escorting:
                 robot.pos_reg_x.select_mode(tau.Mode.SOFT)
                 robot.pos_reg_y.select_mode(tau.Mode.SOFT)
-                transl_vel = field.ball.get_vel()
             else:
                 robot.pos_reg_x.select_mode(tau.Mode.NORMAL)
                 robot.pos_reg_y.select_mode(tau.Mode.NORMAL)
-                transl_vel = aux.Point(0, 0)
 
             u_x = robot.pos_reg_x.process(vec_err.x, -cur_vel.x)
             u_y = robot.pos_reg_y.process(vec_err.y, -cur_vel.y)
 
-            transl_vel += aux.Point(u_x, u_y)
+            transl_vel = aux.Point(u_x, u_y)
+            if target_point.type == wp.WType.S_BALL_GRAB:
+                transl_vel = get_grab_speed(robot.get_pos(), transl_vel, field, target_point)
+                if ball_escorting:
+                    transl_vel += field.ball.get_vel()
+
             if transl_vel.mag() > const.MAX_SPEED:
                 transl_vel = transl_vel.unity() * const.MAX_SPEED
-
-            if target_point.type == wp.WType.S_BALL_GRAB:
-                transl_vel = self.get_grab_speed(robot.get_pos(), transl_vel, field)
 
             angle = end_point.angle
 
@@ -225,56 +220,121 @@ class Route:
             robot.get_pos() + aux.rotate(reg_vel, robot.get_angle()) * 10,
         )
 
-    def get_grab_speed(
-        self, robot_pos: aux.Point, transl_vel: aux.Point, field: fld.Field
-    ) -> aux.Point:
-        """Calculate speed for carefully grabbing a ball"""
-        ball = self.get_dest_wp().pos
 
-        grab_point = self.get_next_wp().pos
+def get_grab_speed(robot_pos: aux.Point, transl_vel: aux.Point, field: fld.Field, grab_wp: wp.Waypoint) -> aux.Point:
+    """Calculate speed for carefully grabbing a ball"""
+    ball = field.ball.get_pos()
+    grab_point = grab_wp.pos
 
-        offset_angle = abs(aux.get_angle_between_points(grab_point, ball, robot_pos))
+    point_on_center_line = aux.closest_point_on_line(ball, grab_point, robot_pos, "S")
+    dist_to_center_line = aux.dist(robot_pos, point_on_center_line)
+    ball_dist_center_line = aux.dist(point_on_center_line, ball)
+    if ball_dist_center_line == 0:
+        offset_angle = 0.0
+    else:
+        offset_angle = math.atan(dist_to_center_line / ball_dist_center_line)
 
-        dist_to_catch = (
-            ball - aux.rotate(aux.RIGHT, self.get_dest_wp().angle) * const.GRAB_DIST
-        ) - robot_pos
+    dist_to_catch = (ball - aux.rotate(aux.RIGHT, grab_wp.angle) * const.GRAB_DIST) - robot_pos
 
-        vel_to_align_r = aux.scal_mult(
+    vel_to_catch = dist_to_catch * const.GRAB_MULT
+
+    vel_to_catch_r = aux.scal_mult(
+        vel_to_catch,
+        aux.rotate(aux.RIGHT, grab_wp.angle),
+    )
+
+    vel_to_align_r = aux.scal_mult(
+        transl_vel,
+        aux.rotate(aux.RIGHT, grab_wp.angle),
+    )
+
+    vel_to_align = transl_vel - aux.rotate(aux.RIGHT, grab_wp.angle) * vel_to_align_r
+
+    board = min(offset_angle / const.GRAB_OFFSET_ANGLE, 1)  # 0 - go to ball; 1 - go to grab_point
+
+    vel_r = vel_to_catch_r * (1 - board) + vel_to_align_r * board
+    vel = vel_to_align + aux.rotate(aux.RIGHT, grab_wp.angle) * vel_r
+
+    if aux.dist(robot_pos, grab_wp.pos) < 500:
+        draw_grabbing_image(
+            field,
+            grab_wp,
+            robot_pos,
             transl_vel,
-            aux.rotate(aux.RIGHT, self.get_dest_wp().angle),
+            vel_to_catch,
+            vel,
         )
 
-        vel_to_align = (
-            transl_vel
-            - aux.rotate(aux.RIGHT, self.get_dest_wp().angle) * vel_to_align_r
-        )
+    return vel
 
-        vel_to_catch_r = aux.scal_mult(
-            dist_to_catch * const.GRAB_MULT,
-            aux.rotate(aux.RIGHT, self.get_dest_wp().angle),
-        )
 
-        board = min(
-            offset_angle / const.GRAB_OFFSET_ANGLE, 1
-        )  # 0 - go to ball; 1 - go to grab_point
+def draw_grabbing_image(
+    field: fld.Field,
+    grab_wp: wp.Waypoint,
+    robot_pos: aux.Point,
+    vel_to_align: aux.Point,
+    vel_to_catch: aux.Point,
+    vel: aux.Point,
+) -> None:
+    """Draw a screen easily debug grabbing a ball"""
+    ball = field.ball.get_pos()
+    grab_point = grab_wp.pos
 
-        vel_r = vel_to_catch_r * (1 - board) + vel_to_align_r * board
-        vel = vel_to_align + aux.rotate(aux.RIGHT, self.get_dest_wp().angle) * vel_r
+    cord_scale = 0.8
+    vel_scale = 0.4
+    size = 200
+    angle = -grab_wp.angle - math.pi / 2
+    if ball.x > 0:
+        middle = aux.Point(120, 780)
+    else:
+        middle = aux.Point(1080, 780)
 
-        middle = (120, 780)
-        size = 200
-        field.router_image.draw_rect(
-            middle[0] - size / 2, middle[1] - size / 2, size, size, (200, 200, 200)
-        )
-        field.router_image.print(
-            aux.Point(middle[0], middle[1] - size / 2 - 20),
-            "GRABBING A BALL",
-            need_to_scale=False,
-        )
-        scale = 2
-        ball_screen = (middle[0], middle[1] - size / 2 + 20)
-        field.router_image.draw_dot(
-            aux.Point(ball_screen[0], ball_screen[1]), (255, 100, 100), 50, False
-        )
+    field.router_image.draw_rect(middle.x - size / 2, middle.y - size / 2, size, size, (200, 200, 200))
+    field.router_image.print(
+        middle - aux.Point(0, size / 2 + 10),
+        "GRABBING A BALL",
+        need_to_scale=False,
+    )
 
-        return vel
+    ball_screen = middle - aux.Point(0, size // 2 - 30)
+    center_boarder = convert_to_screen(ball_screen, cord_scale, angle, ball, grab_point)
+    center_boarder += aux.RIGHT / 2  # чтобы не мерцало, хз
+    field.router_image.draw_line(ball_screen, center_boarder, size_in_pixels=3, need_to_scale=False)
+
+    right_boarder = convert_to_screen(ball_screen, 1, -const.GRAB_OFFSET_ANGLE, ball_screen, center_boarder)
+    field.router_image.draw_line(ball_screen, right_boarder, size_in_pixels=3, need_to_scale=False)
+
+    left_boarder = convert_to_screen(ball_screen, 1, const.GRAB_OFFSET_ANGLE, ball_screen, center_boarder)
+    field.router_image.draw_line(ball_screen, left_boarder, size_in_pixels=3, need_to_scale=False)
+
+    robot_screen = convert_to_screen(ball_screen, cord_scale, angle, ball, robot_pos)
+    cropped_robot = aux.Point(
+        aux.minmax(robot_screen.x, middle.x - size / 2, middle.x + size / 2),
+        aux.minmax(robot_screen.y, middle.y - size / 2, middle.y + size / 2),
+    )
+    field.router_image.draw_dot(cropped_robot, (0, 0, 0), 80, False)
+
+    if cropped_robot == robot_screen:
+        vel_to_align_screen = convert_to_screen(robot_screen, vel_scale, angle, aux.Point(0, 0), vel_to_align)
+        field.router_image.draw_line(robot_screen, vel_to_align_screen, (100, 100, 200), 2, need_to_scale=False)
+        vel_to_catch_screen = convert_to_screen(robot_screen, vel_scale, angle, aux.Point(0, 0), vel_to_catch)
+        field.router_image.draw_line(robot_screen, vel_to_catch_screen, (200, 100, 100), 2, need_to_scale=False)
+        vel_screen = convert_to_screen(robot_screen, vel_scale, angle, aux.Point(0, 0), vel)
+        field.router_image.draw_line(robot_screen, vel_screen, (200, 100, 200), 3, need_to_scale=False)
+
+    field.router_image.draw_dot(ball_screen, (255, 100, 100), 50, False)
+
+
+def convert_to_screen(
+    ball_screen: aux.Point,
+    scale: float,
+    angle: float,
+    ball: aux.Point,
+    point: aux.Point,
+) -> aux.Point:
+    """Convert cord on field to cord on image"""
+    vec_from_ball = point - ball
+    scaled_vec = vec_from_ball * scale
+    rotated_vec = aux.rotate(scaled_vec, angle)
+    final_point = ball_screen + rotated_vec
+    return final_point
