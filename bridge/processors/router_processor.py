@@ -40,6 +40,8 @@ class CommandSink(BaseProcessor):
         self.gamestate_reader = DataReader(data_bus, const.GAMESTATE_TOPIC)
         self.image_writer = DataWriter(data_bus, const.IMAGE_TOPIC, 20)
 
+        self.tmp_timer = time()
+
         self.field_b = fld.Field(const.Color.BLUE)
         self.field_y = fld.Field(const.Color.YELLOW)
         self.field: dict[const.Color, fld.Field] = {
@@ -133,6 +135,13 @@ class CommandSink(BaseProcessor):
             self.field[const.COLOR].router_image.timer.end(time())
             self.image_writer.write(self.field[const.COLOR].router_image)
             self.image_writer.write(self.field[const.COLOR].path_image)
+            # else:
+            #     for color in [const.Color.BLUE, const.Color.YELLOW]:
+            #         for i in range(const.TEAM_ROBOTS_MAX_COUNT):
+            #             if self.field[color].allies[i].is_used():
+            #                 self.router[color].get_route(i).go_route(
+            #                     self.field[color].allies[i], self.field[color]
+            #                 )
             self.field_b.clear_images()
             self.field_y.clear_images()
 
@@ -179,16 +188,17 @@ class CommandSink(BaseProcessor):
                 rules.append(0)
         else:
             for i in range(const.TEAM_ROBOTS_MAX_COUNT):
-                if self.field_b.allies[i].is_used():
+                ctrl_idx = const.CONTROL_MAPPING[i]
+                if self.field_b.allies[ctrl_idx].is_used():
                     control_team = self.field_b.allies
-                elif self.field_y.allies[i].is_used():
+                elif self.field_y.allies[ctrl_idx].is_used():
                     control_team = self.field_y.allies
                 else:
                     for _ in range(13):
                         rules.append(0)
                     continue
 
-                control_robot = control_team[const.CONTROL_MAPPING[i]]
+                control_robot = control_team[ctrl_idx]
                 if i in const.REVERSED_KICK:
                     control_robot.kick_forward_, control_robot.kick_up_ = (
                         control_robot.kick_up_,

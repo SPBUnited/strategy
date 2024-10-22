@@ -20,14 +20,18 @@ def attacker(
     atk = field.allies[attacker_id]
     kick_point = acc.choose_kick_point(field, attacker_id)
     kick_est = acc.estimate_pass_point(
-        [e.get_pos() for e in field.active_enemies()] + [field.enemies[field.enemy_gk_id].get_pos()],
+        [e.get_pos() for e in field.active_enemies()]
+        + [field.enemies[field.enemy_gk_id].get_pos()],
         field.ball.get_pos(),
         kick_point,
     )
     # print("Kick est: ", kick_est)
     field.strategy_image.draw_dot(kick_point, (255, 0, 0), 15)
 
-    if aux.is_point_inside_poly(field.ball.get_pos(), field.ally_goal.hull) and not field.is_ball_moves_to_goal():
+    if (
+        aux.is_point_inside_poly(field.ball.get_pos(), field.ally_goal.hull)
+        and not field.is_ball_moves_to_goal()
+    ):
         waypoints[attacker_id] = wp.Waypoint(aux.Point(0, 0), 0, wp.WType.S_ENDPOINT)
         return
 
@@ -43,7 +47,9 @@ def attacker(
     # print("attacker: shoot to goal")
 
 
-def choose_receiver(field: fld.Field, forwards: list[rbt.Robot]) -> tuple[Optional[int], Optional[float]]:
+def choose_receiver(
+    field: fld.Field, forwards: list[rbt.Robot]
+) -> tuple[Optional[int], Optional[float]]:
     """Выбирает робота для получения паса"""
     receiver_id = None
     receiver_score = None
@@ -89,7 +95,9 @@ def set_forwards_wps(
         for pos in poses:  # TODO сделать зависимость от времени до паса
             if pos[0] in used_poses:
                 continue
-            est = pos[1] - aux.dist(pos[0], forward.get_pos()) / 1000  # <- coefficient of fear to move to far point
+            est = (
+                pos[1] - aux.dist(pos[0], forward.get_pos()) / 1000
+            )  # <- coefficient of fear to move to far point
             if best_pos_est is None or est > best_pos_est:
                 best_pos = pos[0]
                 best_pos_est = pos[1]
@@ -142,14 +150,14 @@ def set_pass_receivers_wps(
 ) -> None:
     """Catch the ball for all receivers"""
     for receiver in receivers:
-        target = aux.closest_point_on_line(field.ball_start_point, field.ball.get_pos(), receiver.get_pos(), "R")
+        target = aux.closest_point_on_line(
+            field.ball_start_point, field.ball.get_pos(), receiver.get_pos(), "R"
+        )
         field.strategy_image.draw_line(target, receiver.get_pos(), (255, 127, 0), 2)
         field.strategy_image.draw_dot(target, (128, 128, 255), const.ROBOT_R)
-
-        receiver.set_dribbler_speed(15)
 
         waypoints[receiver.r_id] = wp.Waypoint(
             target,
             aux.angle_to_point(field.ball.get_pos(), field.ball_start_point),
-            wp.WType.S_ENDPOINT,
+            wp.WType.S_CATCH_BALL,
         )

@@ -92,7 +92,7 @@ class FOLP:
         err = x - self._out
         self._int += err * dT
         self._out = self._int / self._t
-        # self._out = self._int / math.pow(self._t, dT / self._t) #NOTE
+        self._out = self._int / math.pow(self._t, dT / self._t)  # NOTE
         return self._out
 
     def get_val(self) -> float:

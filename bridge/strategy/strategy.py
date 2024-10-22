@@ -1,6 +1,5 @@
 """High-level strategy code"""
 
-
 import math
 
 # !v DEBUG ONLY
@@ -72,7 +71,9 @@ class Strategy:
         self.timer = time()
 
         self.forwards: list[rbt.Robot] = []
-        self.prev_roles: list[Role] = [Role.UNAVAILABLE for _ in range(const.TEAM_ROBOTS_MAX_COUNT)]
+        self.prev_roles: list[Role] = [
+            Role.UNAVAILABLE for _ in range(const.TEAM_ROBOTS_MAX_COUNT)
+        ]
 
         self.pass_or_kick_decision_border = FloatingBorder(0.2, 0.3)
 
@@ -80,7 +81,9 @@ class Strategy:
 
         self.pass_points: list[tuple[aux.Point, float]] = []
 
-    def change_game_state(self, new_state: GameStates, upd_active_team: const.Color) -> None:
+    def change_game_state(
+        self, new_state: GameStates, upd_active_team: const.Color
+    ) -> None:
         """Change game state and active team's color"""
         self.game_status = new_state
         self.active_team = upd_active_team
@@ -104,9 +107,9 @@ class Strategy:
             )
 
         # self.game_status = GameStates.RUN
-        if field.ally_color == const.COLOR:
-            print("-" * 32)
-            print(self.game_status, "\twe_active:", self.we_active)
+        # if field.ally_color == const.COLOR:
+        #     print("-" * 32)
+        #     print(self.game_status, "\twe_active:", self.we_active)
 
         # self.debug(field, waypoints)
         # return waypoints
@@ -152,7 +155,9 @@ class Strategy:
 
         # Selecting roles based on calculated points
         roles = manage_roles(field, choose_roles(field), enemies_near_goal)
-        robot_roles = self.choose_robots_for_roles(field, roles, wall_pos, enemies_near_goal.copy())
+        robot_roles = self.choose_robots_for_roles(
+            field, roles, wall_pos, enemies_near_goal.copy()
+        )
 
         if field.ally_color == const.COLOR:
             print("Roles", field.ally_color)
@@ -163,15 +168,21 @@ class Strategy:
         # Calculate remaining endpoints and create waypoints
         self.forwards = find_role(field, robot_roles, Role.FORWARD)
         if self.forwards is not None:
-            attack_roles.set_forwards_wps(field, waypoints, self.forwards, self.pass_points)
+            attack_roles.set_forwards_wps(
+                field, waypoints, self.forwards, self.pass_points
+            )
 
         if Role.ATTACKER in robot_roles:
             attacker_id = find_role(field, robot_roles, Role.ATTACKER)[0].r_id
-            attack_roles.attacker(field, waypoints, attacker_id, self.pass_points, self.forwards)
+            attack_roles.attacker(
+                field, waypoints, attacker_id, self.pass_points, self.forwards
+            )
 
         pass_defenders = find_role(field, robot_roles, Role.PASS_DEFENDER)
         if len(pass_defenders) > 0:
-            defense_roles.set_pass_defenders_wps(field, waypoints, pass_defenders, enemies_near_goal)
+            defense_roles.set_pass_defenders_wps(
+                field, waypoints, pass_defenders, enemies_near_goal
+            )
 
         wallliners = find_role(field, robot_roles, Role.WALLLINER)
         if len(wallliners) > 0:
@@ -184,10 +195,11 @@ class Strategy:
         if Role.GOALKEEPER in robot_roles:
             waypoints[field.gk_id] = defense_roles.goalk(field, wallliners)
 
-    def debug(self, field: fld.Field, waypoints: list[wp.Waypoint]) -> list[wp.Waypoint]:
+    def debug(
+        self, field: fld.Field, waypoints: list[wp.Waypoint]
+    ) -> list[wp.Waypoint]:
         """Debug"""
         # waypoints[10] = wp.Waypoint(aux.Point(200, 0), 1.5, wp.WType.S_VELOCITY)
-        # field.allies[10].set_dribbler_speed(15)
         # waypoints[10] = self.kick.shoot_to_goal(
         #     field, field.allies[10], field.enemy_goal.center
         # )
@@ -195,25 +207,25 @@ class Strategy:
 
         match self.flag:
             case 0:
-                pos = aux.Point(-2500, 1000)
+                pos = aux.Point(-500, 1000)
                 angle = math.pi
 
             case 1:
-                pos = aux.Point(-500, -1000)
+                pos = aux.Point(-500, 1200)
                 angle = math.pi
 
             case 2:
-                pos = aux.Point(-500, -2500)
+                pos = aux.Point(-500, -1700)
                 angle = math.pi / 2
 
             case 3:
                 pos = aux.Point(-750, 1200)
                 angle = 0
-        idd = 1
-        if aux.in_place(field.allies[idd].get_pos(), pos, 500):
-            # if time() - self.timer > 0.5:
-            self.flag += 1
-            self.flag = self.flag % 4
+        idd = 11
+        if aux.in_place(field.allies[idd].get_pos(), pos, 25):
+            if time() - self.timer > 0.5:
+                self.flag += 1
+                self.flag = self.flag % 4
         else:
             self.timer = time()
         angle += math.pi / 4
@@ -232,11 +244,18 @@ class Strategy:
         enemies_near_goal: list[aux.Point],
     ) -> list[Role]:
         """Selects a robot for each role (based on role's priority)"""
-        robot_roles: list[Role] = [Role.UNAVAILABLE for _ in range(const.TEAM_ROBOTS_MAX_COUNT)]
+        robot_roles: list[Role] = [
+            Role.UNAVAILABLE for _ in range(const.TEAM_ROBOTS_MAX_COUNT)
+        ]
         used_ids: list[int] = []
 
-        for r_id, role in enumerate(self.prev_roles):  # fix defenders's roles if they are caching a ball
-            if role in [Role.WALLLINER, Role.PASS_DEFENDER] and field.is_ball_moves_to_point(field.allies[r_id].get_pos()):
+        for r_id, role in enumerate(
+            self.prev_roles
+        ):  # fix defenders's roles if they are caching a ball
+            if role in [
+                Role.WALLLINER,
+                Role.PASS_DEFENDER,
+            ] and field.is_ball_moves_to_point(field.allies[r_id].get_pos()):
                 used_ids.append(r_id)
                 robot_roles[r_id] = role
                 delete_role(roles, role)
@@ -251,17 +270,28 @@ class Strategy:
                 case Role.GOALKEEPER:
                     robot_id = field.gk_id
                 case Role.ATTACKER:
-                    if field.robot_with_ball not in field.allies or field.robot_with_ball == field.allies[field.gk_id]:
-                        robot_id = fld.find_nearest_robot(field.ball.get_pos(), field.allies, used_ids).r_id
+                    if (
+                        field.robot_with_ball not in field.allies
+                        or field.robot_with_ball == field.allies[field.gk_id]
+                    ):
+                        robot_id = fld.find_nearest_robot(
+                            field.ball.get_pos(), field.allies, used_ids
+                        ).r_id
                     else:
                         robot_id = field.robot_with_ball.r_id
                 case Role.PASS_DEFENDER:
                     enemy = enemies_near_goal.pop(0)
-                    robot_id = fld.find_nearest_robot(enemy, field.allies, used_ids).r_id
+                    robot_id = fld.find_nearest_robot(
+                        enemy, field.allies, used_ids
+                    ).r_id
                 case Role.WALLLINER:
-                    robot_id = fld.find_nearest_robot(wall_pos, field.allies, used_ids).r_id
+                    robot_id = fld.find_nearest_robot(
+                        wall_pos, field.allies, used_ids
+                    ).r_id
                 case Role.FORWARD:
-                    robot_id = fld.find_nearest_robot(field.enemy_goal.center, field.allies, used_ids).r_id
+                    robot_id = fld.find_nearest_robot(
+                        field.enemy_goal.center, field.allies, used_ids
+                    ).r_id
 
             if robot_id is not None:
                 robot_roles[robot_id] = role
@@ -294,7 +324,9 @@ class Strategy:
                     case Role.PASS_RECEIVER:
                         text = "PR"
                         clr = 255
-                text_pos = field.allies[r_id].get_pos() + aux.Point(0, const.ROBOT_R * 1.5)
+                text_pos = field.allies[r_id].get_pos() + aux.Point(
+                    0, const.ROBOT_R * 1.5
+                )
                 field.strategy_image.print(text_pos, text, (clr, clr, clr))
 
         self.prev_roles = robot_roles
@@ -337,7 +369,14 @@ def choose_roles(field: fld.Field) -> list[Role]:
     free_allies = max(0, free_allies + total_active)
 
     ball_pos = aux.minmax(field.ball.get_pos().x, const.GOAL_DX)
-    atks = round(free_allies / (2 * const.GOAL_DX) * (-ball_pos * field.polarity + const.GOAL_DX)) + atk_min
+    atks = (
+        round(
+            free_allies
+            / (2 * const.GOAL_DX)
+            * (-ball_pos * field.polarity + const.GOAL_DX)
+        )
+        + atk_min
+    )
     defs = free_allies - (atks - atk_min) + def_min
 
     roles = attackers[:atks] + defenders[:defs]
@@ -374,7 +413,9 @@ def delete_role(roles: list[Role], role_to_delete: Role) -> None:
     roles.pop()
 
 
-def find_role(field: fld.Field, roles: list[Role], role_to_find: Role) -> list[rbt.Robot]:
+def find_role(
+    field: fld.Field, roles: list[Role], role_to_find: Role
+) -> list[rbt.Robot]:
     """Returns an array with all robots of the role 'role_to_find'"""
     robots: list[rbt.Robot] = []
     for i, role in enumerate(roles):
@@ -384,7 +425,9 @@ def find_role(field: fld.Field, roles: list[Role], role_to_find: Role) -> list[r
     return robots
 
 
-def replace_role(roles: list[Role], old_role: Role, new_role: Role, count: int = 1) -> list[Role]:
+def replace_role(
+    roles: list[Role], old_role: Role, new_role: Role, count: int = 1
+) -> list[Role]:
     """Replaces 'old_role' with 'new_role', executed 'count' times"""
     num = 0
     for i, role in enumerate(roles):

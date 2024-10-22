@@ -241,10 +241,22 @@ class Router:
         robot = field.allies[idx]
         target = self.routes[idx].get_next_wp().pos
 
+        obstacles_dist: list[tuple[Entity, float]]
         if obstacles is None:
-            obstacles_dist: list[tuple[Entity, float]] = [
-                (field.ball, aux.dist(field.ball.get_pos(), robot.get_pos()))
-            ]
+            if (
+                aux.line_circle_intersect(
+                    robot.get_pos(),
+                    target,
+                    field.ball.get_pos(),
+                    const.ROBOT_R + const.BALL_R,
+                )
+                is not None
+            ):
+                obstacles_dist = [
+                    (field.ball, aux.dist(field.ball.get_pos(), robot.get_pos()))
+                ]
+            else:
+                obstacles_dist = []
 
             for obstacle in field.enemies:  # in [field.enemies, field.allies]
                 dist = (obstacle.get_pos() - robot.get_pos()).mag()
@@ -287,12 +299,12 @@ class Router:
             radius = (
                 obstacle.get_radius()
                 + const.ROBOT_R
-                # + const.ROBOT_R
-                # * (self.cur_vel.mag() / const.MAX_SPEED)
-                # * 0.25  # <-- coefficient of fear [0; 1] for fast speed
-                # + time_to_reach
-                # * obstacle.get_vel().mag()
-                # * 0.5  # <-- coefficient of fear [0; 1], for moving obst
+                + const.ROBOT_R
+                * (self.cur_vel.mag() / const.MAX_SPEED)
+                * 0.5  # <-- coefficient of fear [0; 1] for fast speed
+                + time_to_reach
+                * obstacle.get_vel().mag()
+                * 0.5  # <-- coefficient of fear [0; 1], for moving obst
             )
             # field.path_image.draw_dot(
             #     center,

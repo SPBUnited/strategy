@@ -35,6 +35,8 @@ class WType(Enum):
     S_BALL_TWIST = 10  # Вращаться с мячом в захвате
     S_BALL_TWIST_PASS = 11  # Вращаться с мячом в захвате (ниже сила удара)
 
+    S_CATCH_BALL = 15  # S_ENDPOINT с включенным дрибблером
+
     R_PASSTHROUGH = 20  # Двигаться в точку не останавливаясь (промежуточная точка пути)
     R_BALL_ALIGN = 21  # Выровняться напротив мяча, приготовившись его захватить
 
@@ -66,4 +68,6 @@ class Waypoint:
         self.type = wp_type
 
     def __str__(self) -> str:
-        return f"WP:  {str(self.pos)}; angle = {self.angle:0.2f}; type =  {str(self.type)}"
+        return (
+            f"WP:  {str(self.pos)}; angle = {self.angle:0.2f}; type =  {str(self.type)}"
+        )

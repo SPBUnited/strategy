@@ -28,6 +28,7 @@ class Robot(entity.Entity):
         self._is_used = 0
         self.color = color
         self.last_update_ = 0.0
+        self.live_time_: typing.Optional[float] = None
 
         self.speed_x = 0.0
         self.speed_y = 0.0
@@ -73,8 +74,8 @@ class Robot(entity.Entity):
         # self.a0Flp = tau.FOLP(self.a0TF, const.Ts)
 
         # !v REAL
-        gains_full = [2.5, 0.15, 2.5, const.MAX_SPEED]
-        gains_soft = [2, 0.2, 2, const.SOFT_MAX_SPEED]
+        gains_full = [2.5, 0.05, -0.55, const.MAX_SPEED]
+        gains_soft = [1.5, 0.05, -0.35, const.MAX_SPEED]
         a_gains_full = [8, 0.1, 0, const.MAX_SPEED_R]
         # gains_soft = [10, 0.32, 0, const.SOFT_MAX_SPEED]
         # gains_soft = gains_full
@@ -139,6 +140,9 @@ class Robot(entity.Entity):
         """
         self._is_used = a
 
+        if a == 0:
+            self.live_time_ = None
+
     def is_used(self) -> int:
         """
         Узнать, используется ли робот
@@ -151,6 +155,12 @@ class Robot(entity.Entity):
         """
         return self.last_update_
 
+    def live_time(self) -> typing.Optional[float]:
+        """
+        Получить время последнего обновления робота
+        """
+        return self.live_time_
+
     def update(self, pos: aux.Point, angle: float, t: float) -> None:
         """
         Обновить состояние робота согласно SSL Vision
@@ -159,6 +169,9 @@ class Robot(entity.Entity):
         self.kick_forward_ = 0
         self.kick_up_ = 0
         self.last_update_ = t
+
+        if self.live_time_ is None:
+            self.live_time_ = t
 
     def update_(self, new_entity: "Robot") -> None:
         """
@@ -233,13 +246,16 @@ class Robot(entity.Entity):
         """
 
         commit_scale = 1.2 if self.is_kick_committed else 1
-        is_dist = (self.get_pos() - target.pos).mag() < const.KICK_ALIGN_DIST * const.KICK_ALIGN_DIST_MULT * commit_scale
+        is_dist = (
+            self.get_pos() - target.pos
+        ).mag() < const.KICK_ALIGN_DIST * const.KICK_ALIGN_DIST_MULT * commit_scale
         is_angle = self.is_kick_aligned_by_angle(target.angle)
         is_offset = (
             aux.dist(
                 aux.closest_point_on_line(
                     target.pos,
-                    target.pos - aux.rotate(aux.RIGHT, target.angle) * const.KICK_ALIGN_DIST,
+                    target.pos
+                    - aux.rotate(aux.RIGHT, target.angle) * const.KICK_ALIGN_DIST,
                     self._pos,
                 ),
                 self._pos,
@@ -260,7 +276,10 @@ class Robot(entity.Entity):
         Определить, выровнен ли робот относительно путевой точки target
         """
         commit_scale = 1.2 if self.is_kick_committed else 1
-        return abs(aux.wind_down_angle(self._angle - angle)) < const.KICK_ALIGN_ANGLE * commit_scale
+        return (
+            abs(aux.wind_down_angle(self._angle - angle))
+            < const.KICK_ALIGN_ANGLE * commit_scale
+        )
 
     def update_vel_xy(self, vel: aux.Point) -> None:
         """

@@ -127,6 +127,9 @@ class FieldCreator(BaseProcessor):
                 self.field.robot_with_ball = r
 
         for r_id in set(b_bots_id):
+            live_time = self.field.b_team[r_id].live_time()
+            if live_time is not None and time() - live_time > 0.5:
+                self.field.b_team[r_id].used(1)
             position = aux.average_point(b_bots_pos[r_id])
             angle = aux.average_angle(b_bots_ang[r_id])
             if position != self.field.b_team[r_id].get_pos() or const.IS_SIMULATOR_USED:
@@ -134,10 +137,11 @@ class FieldCreator(BaseProcessor):
         for robot in self.field.b_team:
             if time() - robot.last_update() > 0.5:
                 robot.used(0)
-            else:
-                robot.used(1)
 
         for r_id in set(y_bots_id):
+            live_time = self.field.y_team[r_id].live_time()
+            if live_time is not None and time() - live_time > 0.5:
+                self.field.y_team[r_id].used(1)
             position = aux.average_point(y_bots_pos[r_id])
             angle = aux.average_angle(y_bots_ang[r_id])
             if position != self.field.y_team[r_id].get_pos() or const.IS_SIMULATOR_USED:
@@ -145,8 +149,6 @@ class FieldCreator(BaseProcessor):
         for robot in self.field.y_team:
             if time() - robot.last_update() > 0.5:
                 robot.used(0)
-            else:
-                robot.used(1)
 
         active_allies = []
         for r in self.field.allies:
@@ -164,6 +166,6 @@ class FieldCreator(BaseProcessor):
         self.field.field_image.timer.end(time())
         self.field_writer.write(self.field)
 
-        feedback_queue = self.box_feedback_reader.read_new()
-        if feedback_queue:
-            print("feedback from box:", feedback_queue)
+        # feedback_queue = self.box_feedback_reader.read_new()
+        # if feedback_queue:
+        #     print("feedback from box:", feedback_queue)
